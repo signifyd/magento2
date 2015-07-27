@@ -1,0 +1,5 @@
+{
+  "project.name" : "magento2",
+  "phabricator.uri" : "https://signifyd.phacility.com/",
+  "history.immutable" : true
+}
