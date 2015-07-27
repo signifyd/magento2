@@ -1,0 +1,18 @@
+{
+  "name": "signifyd/connect",
+  "description": "Signifyd integration for Magento",
+  "require": {
+    "php": "~5.4.11|~5.5.0",
+    "magento/magento-composer-installer": "*"
+  },
+  "type": "magento2-module",
+  "version": "1.0",
+  "extra": {
+    "map": [
+      [
+        "*",
+        "Signifyd/Connect"
+      ]
+    ]
+  }
+}

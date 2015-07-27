@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../Magento/Store/etc/config.xsd">
+    <default>
+        <signifyd>
+            <general>
+                <enabled>1</enabled>
+                <key> </key>
+                <url>https://api.signifyd.com/v2</url>
+            </general>
+            <advanced>
+                <retrieve_score>1</retrieve_score>
+                <show_scores>0</show_scores>
+                <hold_orders>500</hold_orders>
+                <guarantee_positive_action>nothing</guarantee_positive_action>
+            </advanced>
+        </signifyd>
+    </default>
+</config>
