@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * ORM model declaration for case data
+ */
 class Casedata extends \Magento\Framework\Model\Resource\Db\AbstractDb
 {
     /**
@@ -10,5 +13,4 @@ class Casedata extends \Magento\Framework\Model\Resource\Db\AbstractDb
         $this->_init('signifyd_connect_case', 'order_increment');
         $this->_isPkAutoIncrement = false;
     }
-
 }
