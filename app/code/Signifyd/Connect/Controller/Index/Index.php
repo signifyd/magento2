@@ -3,6 +3,8 @@ namespace Signifyd\Connect\Controller\Index;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Psr\Log\LoggerInterface;
+use Signifyd\Connect\Lib\SDK\core\SignifydAPI;
+use Signifyd\Connect\Lib\SDK\core\SignifydSettings;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
@@ -19,14 +21,15 @@ class Index extends \Magento\Framework\App\Action\Action
      */
     protected $_logger;
 
+
+    /**
+     * @var SignifydAPI
+     */
+    protected $_api;
+
     // TEMPORARY: Prefer passing this around rather than storing
     protected $_case;
     protected $_order;
-
-    private function getApiKey()
-    {
-        return $this->_coreConfig->getValue('signifyd/general/key');
-    }
 
     private function getRawPost()
     {
@@ -61,26 +64,6 @@ class Index extends \Magento\Framework\App\Action\Action
         return '';
     }
 
-    // TODO: This should mostly live in the SDK
-    public function validRequest($request, $hash, $topic)
-    {
-        $check = base64_encode(hash_hmac('sha256', $request, $this->getApiKey(), true));
-
-        if ($check == $hash) {
-            return true;
-        }
-
-        else if ($topic == "cases/test"){
-            // In the case that this is a webhook test, the encoding ABCDE is allowed
-            $check = base64_encode(hash_hmac('sha256', $request, 'ABCDE', true));
-            if ($check == $hash) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     // TODO: Portions of this should live in the SDK
     public function initRequest($request, $topic)
     {
@@ -101,6 +84,20 @@ class Index extends \Magento\Framework\App\Action\Action
         parent::__construct($context);
         $this->_coreConfig = $scopeConfig;
         $this->_logger = $logger;
+
+        try {
+            $settings = new SignifydSettings();
+            $settings->apiKey = $scopeConfig->getValue('signifyd/general/key');
+            if(!$settings->apiKey)
+            {
+                $settings->apiKey = "ABCDE";
+            }
+            $settings->logInfo = true;
+            $this->_api = new SignifydAPI($settings);
+            $this->_logger->info(json_encode($settings));
+        } catch (\Exception $e) {
+            $this->_logger->error($e);
+        }
     }
 
     public function execute()
@@ -109,7 +106,7 @@ class Index extends \Magento\Framework\App\Action\Action
         $hash = $this->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
         $topic = $this->getHeader('X-SIGNIFYD-TOPIC');
         $this->_logger->info("Test log something");
-        if ($this->validRequest($rawRequest, $hash, $topic)) {
+        if ($this->_api->validWebhookRequest($rawRequest, $hash, $topic)) {
             $request = json_decode($rawRequest);
             $this->initRequest($request, $topic);
         }
