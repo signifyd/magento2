@@ -1,7 +1,7 @@
 <?php
 
 // namespace core;
-namespace Signifyd\Connect\Lib\SDK\core;
+namespace Signifyd\Connect\Lib\SDK\Core;
 
 /**
  * Class SignifydModel Base class for all API model data. Handles data validation

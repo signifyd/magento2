@@ -2,9 +2,11 @@
 namespace Signifyd\Connect\Controller\Index;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\ObjectManagerInterface;
+use Magento\Sales\Model\Order;
 use Psr\Log\LoggerInterface;
-use Signifyd\Connect\Lib\SDK\core\SignifydAPI;
-use Signifyd\Connect\Lib\SDK\core\SignifydSettings;
+use Signifyd\Connect\Lib\SDK\Core\SignifydAPI;
+use Signifyd\Connect\Lib\SDK\Core\SignifydSettings;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
@@ -21,16 +23,47 @@ class Index extends \Magento\Framework\App\Action\Action
      */
     protected $_logger;
 
+    /**
+     * @var \Magento\Framework\ObjectManagerInterface
+     */
+    protected $_objectManager;
 
     /**
      * @var SignifydAPI
      */
     protected $_api;
 
-    // TEMPORARY: Prefer passing this around rather than storing
-    protected $_case;
-    protected $_order;
+    /**
+     * @param Context $context
+     * @param ScopeConfigInterface $scopeConfig
+     * @param ObjectManagerInterface $objectManager
+     * @param LoggerInterface $logger
+     */
+    public function __construct(
+        Context $context,
+        ScopeConfigInterface $scopeConfig,
+        ObjectManagerInterface $objectManager,
+        LoggerInterface $logger
+    ) {
+        parent::__construct($context);
+        $this->_coreConfig = $scopeConfig;
+        $this->_logger = $logger;
 
+        try {
+            $settings = new SignifydSettings();
+            $settings->apiKey = $scopeConfig->getValue('signifyd/general/key');
+            $settings->logInfo = true;
+
+            $this->_api = new SignifydAPI($settings);
+            $this->_logger->info(json_encode($settings));
+        } catch (\Exception $e) {
+            $this->_logger->error($e);
+        }
+    }
+
+    /**
+     * @return string
+     */
     private function getRawPost()
     {
         if (isset($HTTP_RAW_POST_DATA) && $HTTP_RAW_POST_DATA) {
@@ -46,6 +79,10 @@ class Index extends \Magento\Framework\App\Action\Action
         return '';
     }
 
+    /**
+     * @param $header
+     * @return string
+     */
     private function getHeader($header)
     {
         // Some frameworks add an extra HTTP_ before the header, so check for both names
@@ -64,40 +101,71 @@ class Index extends \Magento\Framework\App\Action\Action
         return '';
     }
 
-    // TODO: Portions of this should live in the SDK
-    public function initRequest($request, $topic)
+    /**
+     * @param mixed $request
+     * @param string $topic
+     * @return array|null
+     */
+    private function initRequest($request, $topic)
     {
         // For the webhook test, all of the request data will be invalid
-        if ($topic == "cases/test") return;
+        if ($topic == "cases/test") return null;
+
+        /** @var $order \Magento\Sales\Model\Order */
+        $order = $this->_objectManager->get('Magento\Sales\Model\Order')->loadByIncrementId($request['orderId']);
+
+        /** @var $case \Signifyd\Connect\Model\Casedata */
+        $case = $this->_objectManager->get('Signifyd\Connect\Model\Casedata');
+        $case->load($request['orderId']);
+
+        return array(
+            "case" => $case,
+            "order" => $order,
+            "request" => $request
+        );
     }
 
-    /**
-     * @param Context $context
-     * @param ScopeConfigInterface $scopeConfig
-     * @param LoggerInterface $logger
-     */
-    public function __construct(
-        Context $context,
-        ScopeConfigInterface $scopeConfig,
-        LoggerInterface $logger
-    ) {
-        parent::__construct($context);
-        $this->_coreConfig = $scopeConfig;
-        $this->_logger = $logger;
+    private function updateCase($caseData)
+    {
+        /** @var $case \Signifyd\Connect\Model\Casedata */
+        $case = $caseData['case'];
+        $request = $caseData['request'];
 
-        try {
-            $settings = new SignifydSettings();
-            $settings->apiKey = $scopeConfig->getValue('signifyd/general/key');
-            if(!$settings->apiKey)
-            {
-                $settings->apiKey = "ABCDE";
-            }
-            $settings->logInfo = true;
-            $this->_api = new SignifydAPI($settings);
-            $this->_logger->info(json_encode($settings));
-        } catch (\Exception $e) {
-            $this->_logger->error($e);
+        if($case->getScore() != $request['score'] && $request['score'] != null)
+        {
+            $case->setScore($request['score']);
+            $this->handleScoreChange($caseData);
         }
+
+        if($case->getSignifydStatus() != $request['status'] && $request['status'] != null)
+        {
+            $case->setSignifydStatus($request['status']);
+            $this->handleStatusChange($caseData);
+        }
+
+        if($case->getGuarantee() != $request['guaranteeDisposition'] && $request['guaranteeDisposition'] != null)
+        {
+            $case->setGuarantee($request['guaranteeDisposition']);
+            $this->handleGuaranteeChange($caseData);
+        }
+
+        $case->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
+        $case->save();
+    }
+
+    private function handleScoreChange($caseData)
+    {
+        // TODO
+    }
+
+    private function handleStatusChange($caseData)
+    {
+        // TODO
+    }
+
+    private function handleGuaranteeChange($caseData)
+    {
+        // TODO
     }
 
     public function execute()
@@ -105,10 +173,12 @@ class Index extends \Magento\Framework\App\Action\Action
         $rawRequest = $this->getRawPost();
         $hash = $this->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
         $topic = $this->getHeader('X-SIGNIFYD-TOPIC');
-        $this->_logger->info("Test log something");
+        $this->_logger->info("Test log something $rawRequest $hash $topic");
+
         if ($this->_api->validWebhookRequest($rawRequest, $hash, $topic)) {
             $request = json_decode($rawRequest);
-            $this->initRequest($request, $topic);
+            $caseData = $this->initRequest($request, $topic);
+            $this->updateCase($caseData);
         }
     }
 }

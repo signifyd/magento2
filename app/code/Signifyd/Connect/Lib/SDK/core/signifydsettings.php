@@ -1,7 +1,7 @@
 <?php
 
 // namespace core;
-namespace Signifyd\Connect\Lib\SDK\core;
+namespace Signifyd\Connect\Lib\SDK\Core;
 
 /**
  * Class SignifydSettings
@@ -14,6 +14,11 @@ class SignifydSettings
      * You can find the key value at http://signifyd.com/settings/teams
      */
     public $apiKey;
+
+    /**
+     * @var string The base address for all API calls. Only needs modified in special circumstances
+     */
+    public $apiAddress = "https://api.signifyd.com/v2/";
 
     /**
      * @var bool Whether or not to validate inputs before executing API calls. For diagnostic purposes
@@ -54,7 +59,7 @@ class SignifydSettings
     public $loggerInfo;
 
     /**
-     * @var int CURL timeout value.
+     * @var int CURL timeout value.In seconds
      */
     public $timeout = 12;
 }

@@ -7,8 +7,14 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Address;
 use \Magento\Framework\ObjectManagerInterface;
 use Psr\Log\LoggerInterface;
-use Signifyd\Connect\Lib\SDK\core\SignifydAPI;
-use Signifyd\Connect\Lib\SDK\core\SignifydSettings;
+use Signifyd\Connect\Lib\SDK\Core\SignifydAPI;
+use Signifyd\Connect\Lib\SDK\Core\SignifydSettings;
+use Signifyd\Connect\Lib\SDK\Models\Address as SignifydAddress;
+use Signifyd\Connect\Lib\SDK\Models\Card;
+use Signifyd\Connect\Lib\SDK\Models\CaseModel;
+use Signifyd\Connect\Lib\SDK\Models\Purchase;
+use Signifyd\Connect\Lib\SDK\Models\Recipient;
+use Signifyd\Connect\Lib\SDK\Models\UserAccount;
 
 /**
  * Class PurchaseHelper
@@ -39,14 +45,15 @@ class PurchaseHelper
     )
     {
         $this->_logger = $logger;
+        $this->_objectManager = $objectManager;
         try {
             $settings = new SignifydSettings();
             $settings->apiKey = $scopeConfig->getValue('signifyd/general/key');
-            if(!$settings->apiKey)
-            {
-                $settings->apiKey = "ABCDE";
-            }
+            $this->_logger->info(json_encode($settings));
             $settings->logInfo = true;
+            $settings->loggerInfo = function($message) { $this->_logger->info($message); };
+            $settings->loggerError = function($message) { $this->_logger->error($message); };
+            $settings->apiAddress = "https://app.staging.signifyd.com/v2";
             $this->_api = new SignifydAPI($settings);
             $this->_logger->info(json_encode($settings));
         } catch (\Exception $e) {
@@ -55,119 +62,141 @@ class PurchaseHelper
 
     }
 
-    // TODO: right now these are being built adhoc. Need to switch to SDK models
-    // Low relevance, however, until validation is setup
-
     /**
      * @param $order Order
-     * @return array
+     * @return Purchase
      */
     private function makePurchase(Order $order)
     {
-        return array();
+        $this->_logger->info("makePurchase");
+        return new Purchase();
     }
 
     /**
      * @param $mageAddress Address
-     * @return array
+     * @return SignifydAddress
      */
     private function formatSignifydAddress($mageAddress)
     {
-        $this->_logger->info($mageAddress->convertToJson());
-        $address = array();
+        $this->_logger->info("formatSignifydAddress");
+        $address = new SignifydAddress();
 
-        $address['streetAddress'] = $mageAddress->getStreet();
-        $address['unit'] = null;
+        $address->streetAddress = $mageAddress->getStreet();
+        $this->_logger->info("formatSignifydAddress s");
+        $address->unit = null;
 
-        $address['city'] = $mageAddress->getCity();
+        $address->city = $mageAddress->getCity();
 
-        $address['provinceCode'] = $mageAddress->getRegionCode();
-        $address['postalCode'] = $mageAddress->getPostcode();
-        $address['countryCode'] = $mageAddress->getCountryId();
+        $address->provinceCode = $mageAddress->getRegionCode();
+        $address->postalCode = $mageAddress->getPostcode();
+        $address->countryCode = $mageAddress->getCountryId();
 
-        $address['latitude'] = null;
-        $address['longitude'] = null;
+        $address->latitude = null;
+        $address->longitude = null;
 
+        $this->_logger->info("/formatSignifydAddress");
         return $address;
     }
 
     /**
      * @param $order Order
-     * @return array
+     * @return Recipient|null
      */
     private function makeRecipient(Order $order)
     {
+        $this->_logger->info("makeRecipient");
         $address = $order->getShippingAddress();
-        return array(
-            "deliveryAddress" => $this->formatSignifydAddress($address),
-            "fullName" => $address->getFirstname() . " " . $address->getLastname(),
-            "confirmationPhone" => $address->getTelephone(),
-            "confirmationEmail" => $address->getEmail()
-        );
+
+        if($address == null) return null;
+
+        $recipient = new Recipient();
+        $recipient->deliveryAddress = $this->formatSignifydAddress($address);
+        $recipient->fullName = $address->getFirstname() . " " . $address->getLastname();
+        $recipient->confirmationPhone = $address->getTelephone();
+        $recipient->confirmationEmail = $address->getEmail();
+        return $recipient;
     }
 
     /**
      * @param $order Order
-     * @return array
+     * @return Card|null
      */
     private function makeCardInfo(Order $order)
     {
+        $this->_logger->info("makeCardInfo");
         $payment = $order->getPayment();
         $this->_logger->info($payment->convertToJson());
         if(!(is_subclass_of($payment->getMethodInstance(), '\Magento\Payment\Model\Method\Cc')))
         {
-            return array();
+            return null;
         }
-        return array(
-            "cardHolderName" => $payment->getCcOwner(),
-            "last4" => $payment->getCcLast4(),
-            "expiryMonth" => $payment->getCcExpMonth(),
-            "expiryYear" => $payment->getCcExpYear(),
-            "hash" => $payment->getCcNumberEnc(),
-            "bin" => substr((string)$payment->getData('cc_number'), 0, 6),
-            "billingAddress" => $this->formatSignifydAddress($order->getBillingAddress())
-        );
+
+        $card = new Card();
+        $card->cardholderName = $payment->getCcOwner();
+        $card->last4 = $payment->getCcLast4();
+        $card->expiryMonth = $payment->getCcExpMonth();
+        $card->expiryYear = $payment->getCcExpYear();
+        $card->hash = $payment->getCcNumberEnc();
+        $card->bin = substr((string)$payment->getData('cc_number'), 0, 6);
+        $card->billingAddress = $this->formatSignifydAddress($order->getBillingAddress());
+        return $card;
     }
 
     /** Construct a user account blob
      * @param $order Order
-     * @return array An array formatted for Signifyd
+     * @return UserAccount
      */
     private function makeUserAccount(Order $order)
     {
-        return array(
-            "emailAddress" => $order->getCustomerEmail(),
-            "accountNumber" => $order->getCustomerId(),
-            "phone" => $order->getBillingAddress()->getTelephone()
-        );
+        $this->_logger->info("makeUserAccount");
+        $user = new UserAccount();
+        $user->emailAddress = $order->getCustomerEmail();
+        $user->accountNumber = $order->getCustomerId();
+        $user->phone = $order->getBillingAddress()->getTelephone();
+        return $user;
     }
 
+    /** Construct a new case object
+     * @param $order Order
+     * @return CaseModel
+     */
     public function processOrderData($order)
     {
-        return array(
-            "card" => $this->makeCardInfo($order),
-            "purchase" => $this->makePurchase($order),
-            "recipient" => $this->makeRecipient($order),
-            "userAccount" => $this->makeUserAccount($order)
-        );
+        $this->_logger->info("processOrderData");
+        $case = new CaseModel();
+        $case->card = $this->makeCardInfo($order);
+        $case->purchase = $this->makePurchase($order);
+        $case->recipient = $this->makeRecipient($order);
+        $case->userAccount = $this->makeUserAccount($order);
+        return $case;
     }
 
     public function createNewCase($order)
     {
         /** @var $case \Signifyd\Connect\Model\Casedata */
+        $this->_logger->info("createNewCase");
         $case = $this->_objectManager->create('Signifyd\Connect\Model\Casedata');
-        $case->setId(6 /*$order->getOrderIncrement()*/) // FILLER DATA. Webhooks not hooked in, so mostly irrelevant
+        $this->_logger->info("createNewCase 1");
+        $case->setId($order->getIncrementId()) // FILLER DATA. Webhooks not hooked in, so mostly irrelevant
              ->setSignifydStatus("PENDING")
              ->setCode("NA")
              ->setScore(500.0)
              ->setEntriesText("");
+        $this->_logger->info("createNewCase 2");
         $this->_logger->info($case->convertToJson());
+        $this->_logger->info("createNewCase 3");
         $case->save();
+        $this->_logger->info("createNewCase 4");
     }
 
     public function postCaseToSignifyd($caseData)
     {
         $id = $this->_api->createCase($caseData);
-        $this->_logger->info("Case sent. Id is $id");
+        if($id) {
+            $this->_logger->info("Case sent. Id is $id");
+        } else
+        {
+            $this->_logger->info("Case failed to send.");
+        }
     }
 }

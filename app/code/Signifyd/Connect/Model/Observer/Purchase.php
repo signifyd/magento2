@@ -35,31 +35,50 @@ class Purchase
         LoggerInterface $logger,
         ScopeConfigInterface $scopeConfig
     ) {
-        $this->_logger = $logger;
-        $this->_objectManager = $objectManager;
-        $this->_helper = new PurchaseHelper($objectManager, $logger, $scopeConfig);
+        try {
+            $this->_logger = $logger;
+            $this->_objectManager = $objectManager;
+            $this->_helper = new PurchaseHelper($objectManager, $logger, $scopeConfig);
+        }
+        catch(Exception $ex)
+        {
+            $logger->info($ex->getMessage());
+        }
     }
 
     public function sendOrderToSignifyd(Observer $observer)
     {
-        /** @var $order Order */
-        $order = $observer->getEvent()->getOrder();
-        $this->_logger->info("Order received");
-        $orderData = $this->_helper->processOrderData($order);
+        try {
+            /** @var $order Order */
+            $order = $observer->getEvent()->getOrder();
+            $this->_logger->info("Order received");
+            $orderData = $this->_helper->processOrderData($order);
+            $this->_logger->info("Order data made received");
 
-        // Inspect data
-        $items = $order->getAllItems();
-        foreach($items as $item)
-        {
-            $this->_logger->info($item->convertToJson());
+            // Inspect data
+            $items = $order->getAllItems();
+            $this->_logger->info("Items received");
+            foreach($items as $item)
+            {
+                $this->_logger->info($item->convertToJson());
+            }
+            $this->_logger->info("Items done");
+            $this->_logger->info(json_encode($orderData));
+            $this->_logger->info("Order data done");
+            $this->_logger->info($order->convertToJson());
+            $this->_logger->info("Order json done");
+
+            // Add order to database
+            $this->_helper->createNewCase($order);
+            $this->_logger->info("New case done");
+
+            // Post case to signifyd service
+            $this->_helper->postCaseToSignifyd($orderData);
+            $this->_logger->info("Post done");
         }
-        $this->_logger->info(json_encode($orderData));
-        $this->_logger->info($order->convertToJson());
-
-        // Add order to database
-        $this->_helper->createNewCase($order);
-
-        // Post case to signifyd service
-        $this->_helper->postCaseToSignifyd($orderData);
+        catch(Exception $ex)
+        {
+            $this->_logger->info($ex->getMessage());
+        }
     }
 }

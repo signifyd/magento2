@@ -1,11 +1,9 @@
 <?php
 //namespace core;
-namespace Signifyd\Connect\Lib\SDK\core;
+namespace Signifyd\Connect\Lib\SDK\Core;
 
 class SignifydAPI
 {
-    const URI_BASE = "https://api.signifyd.com/v2/";
-
     /**
      * @var SignifydSettings
      */
@@ -13,7 +11,7 @@ class SignifydAPI
 
     private function logError($message)
     {
-        if($this->settings->logErrors)
+        if($this->settings->logErrors && $this->settings->loggerError)
         {
             call_user_func($this->settings->loggerError, $message);
         }
@@ -46,7 +44,7 @@ class SignifydAPI
 
     public function createCase($case)
     {
-        $curl = $this->_setupPostJsonRequest(SignifydAPI::URI_BASE."cases", $case);
+        $curl = $this->_setupPostJsonRequest($this->settings->apiAddress."cases", $case);
         $response = curl_exec($curl);
         $info = curl_getinfo($curl);
         curl_close($curl);
@@ -54,7 +52,7 @@ class SignifydAPI
         if($info['http_code'] != 201)
         {
             // TODO We may want to throw an exception here
-            $this->logError("Returned http error: ".$info['http_code']);
+            $this->logError("Returned http error: ".$info['http_code']. ' ' . curl_error($curl));
             return false;
         }
         return json_decode($response)->investigationId;
@@ -62,7 +60,7 @@ class SignifydAPI
 
     public function getCase($caseId, $entry = null)
     {
-        $url = SignifydAPI::URI_BASE."cases/$caseId";
+        $url = $this->settings->apiAddress."cases/$caseId";
         if($entry != null)
         {
             $url .= "/$entry";
