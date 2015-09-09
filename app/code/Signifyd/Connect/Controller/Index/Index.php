@@ -155,17 +155,48 @@ class Index extends \Magento\Framework\App\Action\Action
 
     private function handleScoreChange($caseData)
     {
-        // TODO
+        /** @var $order \Magento\Sales\Model\Order */
+        $order = $caseData['order'];
+        $threshHold = (int)$this->_coreConfig->getValue('signifyd/advanced/hold_orders_threshold');
+        $holdBelowThreshold = $this->_coreConfig->getValue('signifyd/advanced/hold_orders');
+        if($holdBelowThreshold && $caseData['request']['score'] <= $threshHold) {
+            $order->hold();
+        }
     }
 
     private function handleStatusChange($caseData)
     {
-        // TODO
+        /** @var $order \Magento\Sales\Model\Order */
+        $order = $caseData['order'];
+        $holdBelowThreshold = $this->_coreConfig->getValue('signifyd/advanced/hold_orders');
+        if($holdBelowThreshold && $caseData['request']['reviewDisposition'] == 'FRAUDULENT') {
+            $order->hold();
+        } else if($holdBelowThreshold && $caseData['request']['reviewDisposition'] == 'GOOD') {
+            $order->unhold();
+        }
     }
 
     private function handleGuaranteeChange($caseData)
     {
-        // TODO
+        $negativeAction = $this->_coreConfig->getValue('signifyd/advanced/guarantee_negative_action');
+        $positiveAction = $this->_coreConfig->getValue('signifyd/advanced/guarantee_positive_action');
+
+        /** @var $order \Magento\Sales\Model\Order */
+        $order = $caseData['order'];
+        $request = $caseData['request'];
+        if (isset($request['guaranteeDisposition'])) {
+            if ($request['guaranteeDisposition'] == 'DECLINED' && $negativeAction != 'nothing') {
+                if ($negativeAction == 'hold') {
+                    $order->hold();
+                } else if ($negativeAction == 'cancel') {
+                    $order->cancel();
+                }
+            } else if ($this->_request ['guaranteeDisposition'] == 'APPROVED' && $positiveAction != 'nothing') {
+                if ($positiveAction == 'unhold') {
+                    $order->unhold();
+                }
+            }
+        }
     }
 
     public function execute()

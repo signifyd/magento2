@@ -21,6 +21,7 @@ class Purchase extends SignifydModel
     public $orderChannel;
     public $receivedBy;
     public $totalPrice; //double
+
     public $products; // array
     public $shipments; // array
 

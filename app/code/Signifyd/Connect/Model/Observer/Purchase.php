@@ -40,7 +40,7 @@ class Purchase
             $this->_objectManager = $objectManager;
             $this->_helper = new PurchaseHelper($objectManager, $logger, $scopeConfig);
         }
-        catch(Exception $ex)
+        catch(\Exception $ex)
         {
             $logger->info($ex->getMessage());
         }
@@ -76,7 +76,7 @@ class Purchase
             $this->_helper->postCaseToSignifyd($orderData);
             $this->_logger->info("Post done");
         }
-        catch(Exception $ex)
+        catch(\Exception $ex)
         {
             $this->_logger->info($ex->getMessage());
         }

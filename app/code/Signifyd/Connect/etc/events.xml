@@ -6,4 +6,7 @@
     <event name="sales_order_save_commit_after">
         <observer name="onPurchase" instance="Signifyd\Connect\Model\Observer\Purchase" method="sendOrderToSignifyd" />
     </event>
+    <event name="sales_order_grid_collection_load_before">
+        <observer name="onLoadOrderGrid" instance="Signifyd\Connect\Model\Observer\OrderGrid" method="onSalesOrderGridCollectionLoadBefore" />
+    </event>
 </config>

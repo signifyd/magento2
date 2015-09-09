@@ -6,12 +6,14 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Address;
 use \Magento\Framework\ObjectManagerInterface;
+use Magento\Sales\Model\Order\Item;
 use Psr\Log\LoggerInterface;
 use Signifyd\Connect\Lib\SDK\Core\SignifydAPI;
 use Signifyd\Connect\Lib\SDK\Core\SignifydSettings;
 use Signifyd\Connect\Lib\SDK\Models\Address as SignifydAddress;
 use Signifyd\Connect\Lib\SDK\Models\Card;
 use Signifyd\Connect\Lib\SDK\Models\CaseModel;
+use Signifyd\Connect\Lib\SDK\Models\Product;
 use Signifyd\Connect\Lib\SDK\Models\Purchase;
 use Signifyd\Connect\Lib\SDK\Models\Recipient;
 use Signifyd\Connect\Lib\SDK\Models\UserAccount;
@@ -63,13 +65,52 @@ class PurchaseHelper
     }
 
     /**
+     * @param Item $item
+     * @return Product
+     */
+    private function makeProduct(Item $item)
+    {
+        $product = new Product();
+        $product->itemId = $item->getSku();
+        $product->itemName = $item->getName();
+        $product->itemPrice = $item->getPrice();
+        $product->itemQuality = $item->getQtyOrdered();
+        $product->itemUrl = $item->getProduct()->getProductUrl();
+        return $product;
+    }
+
+    /**
      * @param $order Order
      * @return Purchase
      */
     private function makePurchase(Order $order)
     {
         $this->_logger->info("makePurchase");
-        return new Purchase();
+
+        // Get all of the purchased products
+        $items = $order->getAllItems();
+        $purchase = new Purchase();
+        $purchase->products = array();
+        foreach($items as $item) {
+            $purchase->products[] = $this->makeProduct($item);
+        }
+
+        $purchase->totalPrice = $order->getGrandTotal();
+        $purchase->currency = $order->getOrderCurrencyCode();
+        $purchase->orderId = $order->getIncrementId();
+        $purchase->paymentGateway = $order->getPayment()->getMethod();
+        $purchase->avsResponseCode = $order->getPayment()->getCcAvsStatus();
+        $purchase->cvvResponseCode = $order->getPayment()->getCcSecureVerify();
+        $purchase->createdAt = date('c', strtotime($order->getCreatedAt()));;
+
+        // TODO Need to format. Also, need to check if XForwardedFor
+        $purchase->browserIpAddress = $order->getRemoteIp();
+
+        $purchase->orderChannel;
+        $purchase->shipments;
+        $purchase->receivedBy;
+
+        return $purchase;
     }
 
     /**
@@ -171,16 +212,20 @@ class PurchaseHelper
         return $case;
     }
 
+    /**
+     * @param $order
+     */
     public function createNewCase($order)
     {
         /** @var $case \Signifyd\Connect\Model\Casedata */
         $this->_logger->info("createNewCase");
         $case = $this->_objectManager->create('Signifyd\Connect\Model\Casedata');
         $this->_logger->info("createNewCase 1");
-        $case->setId($order->getIncrementId()) // FILLER DATA. Webhooks not hooked in, so mostly irrelevant
+        $case->setId($order->getIncrementId())
              ->setSignifydStatus("PENDING")
              ->setCode("NA")
-             ->setScore(500.0)
+             ->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()))
+             ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()))
              ->setEntriesText("");
         $this->_logger->info("createNewCase 2");
         $this->_logger->info($case->convertToJson());
@@ -189,13 +234,15 @@ class PurchaseHelper
         $this->_logger->info("createNewCase 4");
     }
 
+    /**
+     * @param $caseData
+     */
     public function postCaseToSignifyd($caseData)
     {
         $id = $this->_api->createCase($caseData);
         if($id) {
             $this->_logger->info("Case sent. Id is $id");
-        } else
-        {
+        } else {
             $this->_logger->info("Case failed to send.");
         }
     }
