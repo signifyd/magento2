@@ -52,7 +52,7 @@ class SignifydAPI
         if($info['http_code'] != 201)
         {
             // TODO We may want to throw an exception here
-            $this->logError("Returned http error: ".$info['http_code']. ' ' . curl_error($curl));
+            $this->logError("Returned http error: ".$info['http_code']);
             return false;
         }
         return json_decode($response)->investigationId;

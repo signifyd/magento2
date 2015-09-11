@@ -55,7 +55,7 @@ class PurchaseHelper
             $settings->logInfo = true;
             $settings->loggerInfo = function($message) { $this->_logger->info($message); };
             $settings->loggerError = function($message) { $this->_logger->error($message); };
-            $settings->apiAddress = "https://app.staging.signifyd.com/v2";
+            $settings->apiAddress = $scopeConfig->getValue('signifyd/general/url');
             $this->_api = new SignifydAPI($settings);
             $this->_logger->info(json_encode($settings));
         } catch (\Exception $e) {
