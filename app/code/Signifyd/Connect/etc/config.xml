@@ -13,9 +13,17 @@
             <advanced>
                 <retrieve_score>1</retrieve_score>
                 <show_scores>0</show_scores>
-                <hold_orders>500</hold_orders>
+                <hold_orders>0</hold_orders>
+                <hold_orders_threshold>500</hold_orders_threshold>
+                <show_guarantee>0</show_guarantee>
+                <guarantee_negative_action>nothing</guarantee_negative_action>
                 <guarantee_positive_action>nothing</guarantee_positive_action>
             </advanced>
+            <logs>
+                <log_errors>1</log_errors>
+                <log_request>0</log_request>
+                <log_responses>0</log_responses>
+            </logs>
         </signifyd>
     </default>
 </config>

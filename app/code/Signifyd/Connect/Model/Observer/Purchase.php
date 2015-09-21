@@ -8,6 +8,7 @@ use Magento\Sales\Model\Order\Address;
 use Psr\Log\LoggerInterface;
 use \Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Helper\PurchaseHelper;
+use Signifyd\Connect\Helper\LogHelper;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -15,7 +16,7 @@ use Signifyd\Connect\Helper\PurchaseHelper;
 class Purchase
 {
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Signifyd\Connect\Helper\LogHelper
      */
     protected $_logger;
 
@@ -36,13 +37,13 @@ class Purchase
         ScopeConfigInterface $scopeConfig
     ) {
         try {
-            $this->_logger = $logger;
+            $this->_logger = new LogHelper($logger, $scopeConfig);
             $this->_objectManager = $objectManager;
             $this->_helper = new PurchaseHelper($objectManager, $logger, $scopeConfig);
         }
         catch(\Exception $ex)
         {
-            $logger->info($ex->getMessage());
+            $this->_logger->error($ex->getMessage());
         }
     }
 
@@ -51,34 +52,34 @@ class Purchase
         try {
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();
-            $this->_logger->info("Order received");
+            $this->_logger->debug("Order received");
             $orderData = $this->_helper->processOrderData($order);
-            $this->_logger->info("Order data made received");
+            $this->_logger->debug("Order data made received");
 
             // Inspect data
             $items = $order->getAllItems();
-            $this->_logger->info("Items received");
+            $this->_logger->debug("Items received");
             foreach($items as $item)
             {
-                $this->_logger->info($item->convertToJson());
+                $this->_logger->debug($item->convertToJson());
             }
-            $this->_logger->info("Items done");
-            $this->_logger->info(json_encode($orderData));
-            $this->_logger->info("Order data done");
-            $this->_logger->info($order->convertToJson());
-            $this->_logger->info("Order json done");
+            $this->_logger->debug("Items done");
+            $this->_logger->debug(json_encode($orderData));
+            $this->_logger->debug("Order data done");
+            $this->_logger->debug($order->convertToJson());
+            $this->_logger->debug("Order json done");
 
             // Add order to database
             $this->_helper->createNewCase($order);
-            $this->_logger->info("New case done");
+            $this->_logger->debug("New case done");
 
             // Post case to signifyd service
             $this->_helper->postCaseToSignifyd($orderData);
-            $this->_logger->info("Post done");
+            $this->_logger->debug("Post done");
         }
         catch(\Exception $ex)
         {
-            $this->_logger->info($ex->getMessage());
+            $this->_logger->error($ex->getMessage());
         }
     }
 }

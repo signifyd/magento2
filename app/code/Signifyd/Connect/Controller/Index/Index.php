@@ -7,6 +7,7 @@ use Magento\Sales\Model\Order;
 use Psr\Log\LoggerInterface;
 use Signifyd\Connect\Lib\SDK\Core\SignifydAPI;
 use Signifyd\Connect\Lib\SDK\Core\SignifydSettings;
+use Signifyd\Connect\Helper\LogHelper;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
@@ -19,7 +20,7 @@ class Index extends \Magento\Framework\App\Action\Action
     protected $_coreConfig;
 
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Signifyd\Connect\Helper\LogHelper
      */
     protected $_logger;
 
@@ -47,15 +48,13 @@ class Index extends \Magento\Framework\App\Action\Action
     ) {
         parent::__construct($context);
         $this->_coreConfig = $scopeConfig;
-        $this->_logger = $logger;
+        $this->_logger = new LogHelper($logger, $scopeConfig);
 
         try {
             $settings = new SignifydSettings();
             $settings->apiKey = $scopeConfig->getValue('signifyd/general/key');
-            $settings->logInfo = true;
 
             $this->_api = new SignifydAPI($settings);
-            $this->_logger->info(json_encode($settings));
         } catch (\Exception $e) {
             $this->_logger->error($e);
         }
@@ -97,7 +96,7 @@ class Index extends \Magento\Framework\App\Action\Action
             return $_SERVER[$extraHttp];
         }
 
-        $this->_logger->info('Valid Header Not Found: ' . $header);
+        $this->_logger->error('Valid Header Not Found: ' . $header);
         return '';
     }
 
@@ -125,6 +124,9 @@ class Index extends \Magento\Framework\App\Action\Action
         );
     }
 
+    /**
+     * @param $caseData
+     */
     private function updateCase($caseData)
     {
         /** @var $case \Signifyd\Connect\Model\Casedata */
@@ -153,6 +155,10 @@ class Index extends \Magento\Framework\App\Action\Action
         $case->save();
     }
 
+    /**
+     * @param $caseData
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     private function handleScoreChange($caseData)
     {
         /** @var $order \Magento\Sales\Model\Order */
@@ -164,6 +170,10 @@ class Index extends \Magento\Framework\App\Action\Action
         }
     }
 
+    /**
+     * @param $caseData
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     private function handleStatusChange($caseData)
     {
         /** @var $order \Magento\Sales\Model\Order */
@@ -176,6 +186,10 @@ class Index extends \Magento\Framework\App\Action\Action
         }
     }
 
+    /**
+     * @param $caseData
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     private function handleGuaranteeChange($caseData)
     {
         $negativeAction = $this->_coreConfig->getValue('signifyd/advanced/guarantee_negative_action');
@@ -204,7 +218,6 @@ class Index extends \Magento\Framework\App\Action\Action
         $rawRequest = $this->getRawPost();
         $hash = $this->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
         $topic = $this->getHeader('X-SIGNIFYD-TOPIC');
-        $this->_logger->info("Test log something $rawRequest $hash $topic");
 
         if ($this->_api->validWebhookRequest($rawRequest, $hash, $topic)) {
             $request = json_decode($rawRequest);

@@ -9,6 +9,7 @@ use Magento\Sales\Model\Order;
 use Psr\Log\LoggerInterface;
 use Signifyd\Connect\Lib\SDK\Core\SignifydAPI;
 use Signifyd\Connect\Lib\SDK\Core\SignifydSettings;
+use Signifyd\Connect\Helper\LogHelper;
 
 /**
  * Controller action for handling mass sending of Magento orders to Signifyd
@@ -21,7 +22,7 @@ class Send extends AbstractMassAction
     protected $_coreConfig;
 
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Signifyd\Connect\Helper\LogHelper
      */
     protected $_logger;
 
@@ -49,15 +50,13 @@ class Send extends AbstractMassAction
     ) {
         parent::__construct($context);
         $this->_coreConfig = $scopeConfig;
-        $this->_logger = $logger;
+        $this->_logger = new LogHelper($logger, $scopeConfig);
 
         try {
             $settings = new SignifydSettings();
             $settings->apiKey = $scopeConfig->getValue('signifyd/general/key');
-            $settings->logInfo = true;
 
             $this->_api = new SignifydAPI($settings);
-            $this->_logger->info(json_encode($settings));
         } catch (\Exception $e) {
             $this->_logger->error($e);
         }
@@ -65,7 +64,7 @@ class Send extends AbstractMassAction
 
     public function massAction(AbstractCollection $collection)
     {
-        $this->_logger->info("Backend hit!");
+        $this->_logger->debug("Backend hit!");
 
         // Redirect back to order grid
         $resultRedirect = $this->resultRedirectFactory->create();

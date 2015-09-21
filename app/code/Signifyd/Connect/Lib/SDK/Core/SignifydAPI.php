@@ -44,9 +44,10 @@ class SignifydAPI
 
     public function createCase($case)
     {
-        $curl = $this->_setupPostJsonRequest($this->settings->apiAddress."cases", $case);
+        $curl = $this->_setupPostJsonRequest($this->settings->apiAddress."/cases", $case);
         $response = curl_exec($curl);
         $info = curl_getinfo($curl);
+        $error = curl_error($curl);
         curl_close($curl);
 
         if($info['http_code'] != 201)
@@ -68,6 +69,7 @@ class SignifydAPI
         $curl = $this->_setupGetRequest($url);
         $response = curl_exec($curl);
         $info = curl_getinfo($curl);
+        $error = curl_error($curl);
         curl_close($curl);
         if($info['http_code'] != 200)
         {
@@ -107,6 +109,7 @@ class SignifydAPI
         }
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_TIMEOUT, $this->settings->timeout);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, $this->settings->timeout);
 
         curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt($curl, CURLOPT_USERPWD, $this->settings->apiKey);

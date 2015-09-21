@@ -50,17 +50,17 @@
                         <field id="hold_orders">1</field>
                     </depends>
                 </field>
-                <field id="show_guarantee" translate="label" type="select" sortOrder="33" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="show_guarantee" translate="label" type="select" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Show Guarantee status in Magento Order Grid</label>
                     <comment>You will be able to view current guarantee status in the Magento Order Grid when enabled</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="guarantee_negative_action" translate="label" type="select" sortOrder="33" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="guarantee_negative_action" translate="label" type="select" sortOrder="36" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Action on Guarantee Decline</label>
                     <comment>Which action to take on orders when the guarantee is declined</comment>
                     <source_model>Signifyd\Connect\Model\System\Config\Source\Options\Negative</source_model>
                 </field>
-                <field id="guarantee_positive_action" translate="label" type="select" sortOrder="33" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="guarantee_positive_action" translate="label" type="select" sortOrder="37" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Action on Guarantee Approve</label>
                     <comment>Which action to take on orders when the guarantee is approved</comment>
                     <source_model>Signifyd\Connect\Model\System\Config\Source\Options\Positive</source_model>

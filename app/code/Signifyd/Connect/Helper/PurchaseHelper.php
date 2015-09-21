@@ -26,7 +26,7 @@ use Signifyd\Connect\Lib\SDK\Models\UserAccount;
 class PurchaseHelper
 {
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Signifyd\Connect\Helper\LogHelper
      */
     protected $_logger;
 
@@ -46,22 +46,54 @@ class PurchaseHelper
         ScopeConfigInterface $scopeConfig
     )
     {
-        $this->_logger = $logger;
+        $this->_logger = new LogHelper($logger, $scopeConfig);
         $this->_objectManager = $objectManager;
         try {
             $settings = new SignifydSettings();
             $settings->apiKey = $scopeConfig->getValue('signifyd/general/key');
-            $this->_logger->info(json_encode($settings));
+
             $settings->logInfo = true;
-            $settings->loggerInfo = function($message) { $this->_logger->info($message); };
+            $settings->loggerInfo = function($message) { $this->_logger->debug($message); };
             $settings->loggerError = function($message) { $this->_logger->error($message); };
             $settings->apiAddress = $scopeConfig->getValue('signifyd/general/url');
             $this->_api = new SignifydAPI($settings);
-            $this->_logger->info(json_encode($settings));
+
         } catch (\Exception $e) {
             $this->_logger->error($e);
         }
 
+    }
+
+    private function getIPAddress(Order $order)
+    {
+        if ($order->getRemoteIp()) {
+            if ($order->getXForwardedFor()) {
+                return $this->filterIp($order->getXForwardedFor());
+            }
+
+            return $this->filterIp($order->getRemoteIp());
+        }
+
+        /** @var $case \Magento\Framework\HTTP\PhpEnvironment\RemoteAddress */
+        $remoteAddressHelper = $this->_objectManager->get('Magento\Framework\HTTP\PhpEnvironment\RemoteAddress');
+        return $this->filterIp($remoteAddressHelper->getRemoteAddress());
+    }
+
+    private function filterIp($ip)
+    {
+        $matches = array();
+
+        // Uses format IPv4
+        if (preg_match('/[0-9]{1,3}(?:\.[0-9]{1,3}){3}/', $ip, $matches)) {
+            return current($matches);
+        }
+
+        // Uses format IPv6
+        if (preg_match('/[a-f0-9]{0,4}(?:\:[a-f0-9]{0,4}){2,7}/', strtolower($ip), $matches)) {
+            return current($matches);
+        }
+
+        return preg_replace('/[^0-9a-zA-Z:\.]/', '', strtok(str_replace($ip, ',', "\n"), "\n"));
     }
 
     /**
@@ -70,6 +102,7 @@ class PurchaseHelper
      */
     private function makeProduct(Item $item)
     {
+        // TODO need to investigate this further
         $product = new Product();
         $product->itemId = $item->getSku();
         $product->itemName = $item->getName();
@@ -85,7 +118,7 @@ class PurchaseHelper
      */
     private function makePurchase(Order $order)
     {
-        $this->_logger->info("makePurchase");
+        $this->_logger->debug("makePurchase");
 
         // Get all of the purchased products
         $items = $order->getAllItems();
@@ -103,8 +136,7 @@ class PurchaseHelper
         $purchase->cvvResponseCode = $order->getPayment()->getCcSecureVerify();
         $purchase->createdAt = date('c', strtotime($order->getCreatedAt()));;
 
-        // TODO Need to format. Also, need to check if XForwardedFor
-        $purchase->browserIpAddress = $order->getRemoteIp();
+        $purchase->browserIpAddress = $this->getIPAddress($order);
 
         $purchase->orderChannel;
         $purchase->shipments;
@@ -119,11 +151,10 @@ class PurchaseHelper
      */
     private function formatSignifydAddress($mageAddress)
     {
-        $this->_logger->info("formatSignifydAddress");
+        $this->_logger->debug("formatSignifydAddress");
         $address = new SignifydAddress();
 
         $address->streetAddress = $mageAddress->getStreet();
-        $this->_logger->info("formatSignifydAddress s");
         $address->unit = null;
 
         $address->city = $mageAddress->getCity();
@@ -135,7 +166,7 @@ class PurchaseHelper
         $address->latitude = null;
         $address->longitude = null;
 
-        $this->_logger->info("/formatSignifydAddress");
+        $this->_logger->debug("/formatSignifydAddress ".json_encode($address));
         return $address;
     }
 
@@ -145,7 +176,7 @@ class PurchaseHelper
      */
     private function makeRecipient(Order $order)
     {
-        $this->_logger->info("makeRecipient");
+        $this->_logger->debug("makeRecipient");
         $address = $order->getShippingAddress();
 
         if($address == null) return null;
@@ -164,9 +195,9 @@ class PurchaseHelper
      */
     private function makeCardInfo(Order $order)
     {
-        $this->_logger->info("makeCardInfo");
+        $this->_logger->debug("makeCardInfo");
         $payment = $order->getPayment();
-        $this->_logger->info($payment->convertToJson());
+        $this->_logger->debug($payment->convertToJson());
         if(!(is_subclass_of($payment->getMethodInstance(), '\Magento\Payment\Model\Method\Cc')))
         {
             return null;
@@ -189,7 +220,7 @@ class PurchaseHelper
      */
     private function makeUserAccount(Order $order)
     {
-        $this->_logger->info("makeUserAccount");
+        $this->_logger->debug("makeUserAccount");
         $user = new UserAccount();
         $user->emailAddress = $order->getCustomerEmail();
         $user->accountNumber = $order->getCustomerId();
@@ -203,7 +234,7 @@ class PurchaseHelper
      */
     public function processOrderData($order)
     {
-        $this->_logger->info("processOrderData");
+        $this->_logger->debug("processOrderData");
         $case = new CaseModel();
         $case->card = $this->makeCardInfo($order);
         $case->purchase = $this->makePurchase($order);
@@ -218,20 +249,15 @@ class PurchaseHelper
     public function createNewCase($order)
     {
         /** @var $case \Signifyd\Connect\Model\Casedata */
-        $this->_logger->info("createNewCase");
         $case = $this->_objectManager->create('Signifyd\Connect\Model\Casedata');
-        $this->_logger->info("createNewCase 1");
         $case->setId($order->getIncrementId())
              ->setSignifydStatus("PENDING")
              ->setCode("NA")
              ->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()))
              ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()))
              ->setEntriesText("");
-        $this->_logger->info("createNewCase 2");
-        $this->_logger->info($case->convertToJson());
-        $this->_logger->info("createNewCase 3");
+        $this->_logger->debug($case->convertToJson());
         $case->save();
-        $this->_logger->info("createNewCase 4");
     }
 
     /**
@@ -239,11 +265,12 @@ class PurchaseHelper
      */
     public function postCaseToSignifyd($caseData)
     {
+        $this->_logger->request("Sending: ".json_encode($caseData));
         $id = $this->_api->createCase($caseData);
         if($id) {
-            $this->_logger->info("Case sent. Id is $id");
+            $this->_logger->debug("Case sent. Id is $id");
         } else {
-            $this->_logger->info("Case failed to send.");
+            $this->_logger->error("Case failed to send.");
         }
     }
 }
