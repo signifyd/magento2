@@ -109,6 +109,7 @@ class PurchaseHelper
         $product->itemPrice = $item->getPrice();
         $product->itemQuality = $item->getQtyOrdered();
         $product->itemUrl = $item->getProduct()->getProductUrl();
+        $product->itemWeight = $item->getProduct()->getWeight();
         return $product;
     }
 
@@ -154,8 +155,8 @@ class PurchaseHelper
         $this->_logger->debug("formatSignifydAddress");
         $address = new SignifydAddress();
 
-        $address->streetAddress = $mageAddress->getStreet();
-        $address->unit = null;
+        $address->streetAddress = $mageAddress->getStreetLine(1);
+        $address->unit = $mageAddress->getStreetLine(2);
 
         $address->city = $mageAddress->getCity();
 
@@ -183,7 +184,7 @@ class PurchaseHelper
 
         $recipient = new Recipient();
         $recipient->deliveryAddress = $this->formatSignifydAddress($address);
-        $recipient->fullName = $address->getFirstname() . " " . $address->getLastname();
+        $recipient->fullName = $address->getName();
         $recipient->confirmationPhone = $address->getTelephone();
         $recipient->confirmationEmail = $address->getEmail();
         return $recipient;

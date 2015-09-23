@@ -16,7 +16,7 @@ class Product extends SignifydModel
     public $itemUrl;
     public $itemQuality;
     public $itemPrice;
-    public $itemHeight;
+    public $itemWeight;
 
     public function __construct()
     {
@@ -26,7 +26,7 @@ class Product extends SignifydModel
         $validator["itemUrl"] = array("type" => "string", "value" => null);
         $validator["itemQuality"] = array ("type" => "string", "value" => null);
         $validator["itemPrice"] = array("type" => "string", "value" => null);
-        $validator["itemHeight"] = array("type" => "string", "value" => null);
+        $validator["itemWeight"] = array("type" => "string", "value" => null);
 
         $this->validationInfo = $validator;
     }
