@@ -42,9 +42,18 @@ class SignifydAPI
         $this->settings = $settings;
     }
 
+    private function makeUrl($endpoint)
+    {
+        if(substr($this->settings->apiAddress, -1) != '/')
+        {
+            return $this->settings->apiAddress . '/' . $endpoint;
+        }
+        return $this->settings->apiAddress . $endpoint;
+    }
+
     public function createCase($case)
     {
-        $curl = $this->_setupPostJsonRequest($this->settings->apiAddress."/cases", $case);
+        $curl = $this->_setupPostJsonRequest($this->makeUrl("cases"), $case);
         $response = curl_exec($curl);
         $info = curl_getinfo($curl);
         $error = curl_error($curl);
@@ -61,7 +70,7 @@ class SignifydAPI
 
     public function getCase($caseId, $entry = null)
     {
-        $url = $this->settings->apiAddress."cases/$caseId";
+        $url = $this->makeUrl("cases/$caseId");
         if($entry != null)
         {
             $url .= "/$entry";
