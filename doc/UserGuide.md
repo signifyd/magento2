@@ -10,11 +10,11 @@ Installing the Signifyd Magento Connect extension is straightforward but it does
 - Only Magento Admins can install the Signifyd Magento Extension, so you will need admin access.
 - Know the version of Magento2 you are using.
 - Log into your Signifyd account and have your "Teams" settings open to quickly get your API key.
-- Have the following pages open in your browser so you can move from one to the other while you work. 
+- Have the following pages open in your browser so you can move from one to the other while you work.
   - Magento Admin account
   - Signifyd user account
   - Magento Store (to create a test order)
- 
+
 
 ## Setup Signifyd Account
 
@@ -40,15 +40,15 @@ You will need shell access to the host running your Magento2 installation along 
 
 1. Obtain the Signifyd Connect plugin either by
 
-   a. Downloading a [release](https://github.com/signifyd/magento2/releases) or    
+   a. Downloading a [release](https://github.com/signifyd/magento2/releases) or
    b. Cloning our [Magento2 git repo](https://github.com/signifyd/magento2/).
 2. Ensure the plugin code is somewhere on the server running Magento2, such as in a user directory. All subsequent commands should be run on the Magento2 host. We assume `MAGENTO_HOME` is the directory where Magento2 is installed, e.g., `/var/www/html/magento2/`.
 3. Turn off the Magento Cache:  `${MAGENTO_HOME}/bin/magento cache:disable --all`
 4. In the plugin code should be a `Signifyd` directory containing a `Connect` directory. If you had cloned the code from GitHub as in step 1b, this would be `magento2/app/code/Signifyd`. Copy this `Signifyd` directory to the existing `${MAGENTO_HOME}/app/code` directory.
 5. Ensure the copied directory has the same ownership as `MAGENTO_HOME` and that the owner has write permissions, e.g.,
-  - `chown -R www-data:www-data ${MAGENTO_HOME}/app/code/Signifyd/` and 
+  - `chown -R www-data:www-data ${MAGENTO_HOME}/app/code/Signifyd/` and
   - `chmod -R u+w ${MAGENTO_HOME}/app/code/Signifyd/`.
-  
+
   Substitute the proper user and group for `www-data` if they are different.
 6. Enable the plugin: `${MAGENTO_HOME}/bin/magento module:enable --clear-static-content Signifyd_Connect`
 7. Run setup:upgrade: `${MAGENTO_HOME}/bin/magento setup:upgrade`. You should see the line `Module 'Signifyd_Connect':` in the output.
@@ -127,7 +127,7 @@ You can set the extension to automatically hold orders that have received risky,
 1. Set **Hold score threshold** to 500 or a score of your choosing. A threshold of zero will hold no orders while 1000 will hold **all** orders.
 ![Hold Orders](advanced_hold_orders.png)
 2. To check that the *On Hold* status is working, an order must be created either by a customer at your store or by placing a test order yourself. The order status from previously submitted orders will not be affected.
-3. To release orders in Magento, click the Signifyd Thumbs Up button in the Signifyd case console. 
+3. To release orders in Magento, click the Signifyd Thumbs Up button in the Signifyd case console.
 ![Thumbs up](thumbs_up_selected.jpg)
 4. To hold orders in Magento, click the Signifyd thumbs-down button in the Signifyd case console.
 ![Thumbs down](thumbs_down_selected.jpg)
@@ -151,7 +151,7 @@ Once you have enrolled in a Complete Plan, you can integrate that feature into M
 ![Guarantees](advanced_guarantees.png)
 
 To check that the Guarantee status is working, an order must be created either by a customer at your store or by placing a test order yourself. Note that for the Actions in 5 and 6, **Nothing** is a valid option. However, if you have set all orders to be held in step 3, none will be unheld upon approval if no action is set to be applied. The Guarantee Status from orders submitted prior to enabling this integration will not display in your Magento order grid.
- 
+
 
 ## Troubleshooting
 - Not seeing orders on the Signifyd dashboard?
@@ -162,6 +162,3 @@ To check that the Guarantee status is working, an order must be created either b
   - Also make sure you have setup the webhooks in your Signifyd `Settings > Notifications` that point back to your Magento store and that the webhooks are attached to the proper team, i.e., the team owning the API key used in your extension configuration.
 
 If you tested our Signifyd Magneto extension but you are still not seeing orders or if you have installation questions, please contact us with [the following information](https://signifyd.zendesk.com/hc/en-us/articles/207015797-How-do-I-get-help-with-Magento-).
-
- 
-
