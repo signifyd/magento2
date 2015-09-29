@@ -21,8 +21,8 @@
             </advanced>
             <logs>
                 <log_errors>1</log_errors>
-                <log_request>0</log_request>
-                <log_responses>0</log_responses>
+                <log_request>1</log_request>
+                <log_responses>1</log_responses>
             </logs>
         </signifyd>
     </default>

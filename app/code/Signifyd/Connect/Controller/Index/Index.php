@@ -107,15 +107,12 @@ class Index extends \Magento\Framework\App\Action\Action
      */
     private function initRequest($request, $topic)
     {
-        // For the webhook test, all of the request data will be invalid
-        if ($topic == "cases/test") return null;
-
         /** @var $order \Magento\Sales\Model\Order */
-        $order = $this->_objectManager->get('Magento\Sales\Model\Order')->loadByIncrementId($request['orderId']);
+        $order = $this->_objectManager->get('Magento\Sales\Model\Order')->loadByIncrementId($request->orderId);
 
         /** @var $case \Signifyd\Connect\Model\Casedata */
         $case = $this->_objectManager->get('Signifyd\Connect\Model\Casedata');
-        $case->load($request['orderId']);
+        $case->load($request->orderId);
 
         return array(
             "case" => $case,
@@ -133,21 +130,21 @@ class Index extends \Magento\Framework\App\Action\Action
         $case = $caseData['case'];
         $request = $caseData['request'];
 
-        if($case->getScore() != $request['score'] && $request['score'] != null)
+        if(isset($request->score) && $case->getScore() != $request->score)
         {
-            $case->setScore($request['score']);
+            $case->setScore($request->score);
             $this->handleScoreChange($caseData);
         }
 
-        if($case->getSignifydStatus() != $request['status'] && $request['status'] != null)
+        if(isset($request->status) && $case->getSignifydStatus() != $request->status)
         {
-            $case->setSignifydStatus($request['status']);
+            $case->setSignifydStatus($request->status);
             $this->handleStatusChange($caseData);
         }
 
-        if($case->getGuarantee() != $request['guaranteeDisposition'] && $request['guaranteeDisposition'] != null)
+        if(isset($request->guaranteeDisposition) && $case->getGuarantee() != $request->guaranteeDisposition)
         {
-            $case->setGuarantee($request['guaranteeDisposition']);
+            $case->setGuarantee($request->guaranteeDisposition);
             $this->handleGuaranteeChange($caseData);
         }
 
@@ -165,7 +162,7 @@ class Index extends \Magento\Framework\App\Action\Action
         $order = $caseData['order'];
         $threshHold = (int)$this->_coreConfig->getValue('signifyd/advanced/hold_orders_threshold');
         $holdBelowThreshold = $this->_coreConfig->getValue('signifyd/advanced/hold_orders');
-        if($holdBelowThreshold && $caseData['request']['score'] <= $threshHold) {
+        if($holdBelowThreshold && $caseData['request']->score <= $threshHold) {
             $order->hold();
         }
     }
@@ -179,9 +176,9 @@ class Index extends \Magento\Framework\App\Action\Action
         /** @var $order \Magento\Sales\Model\Order */
         $order = $caseData['order'];
         $holdBelowThreshold = $this->_coreConfig->getValue('signifyd/advanced/hold_orders');
-        if($holdBelowThreshold && $caseData['request']['reviewDisposition'] == 'FRAUDULENT') {
+        if($holdBelowThreshold && $caseData['request']->reviewDisposition == 'FRAUDULENT') {
             $order->hold();
-        } else if($holdBelowThreshold && $caseData['request']['reviewDisposition'] == 'GOOD') {
+        } else if($holdBelowThreshold && $caseData['request']->reviewDisposition == 'GOOD') {
             $order->unhold();
         }
     }
@@ -198,14 +195,14 @@ class Index extends \Magento\Framework\App\Action\Action
         /** @var $order \Magento\Sales\Model\Order */
         $order = $caseData['order'];
         $request = $caseData['request'];
-        if (isset($request['guaranteeDisposition'])) {
-            if ($request['guaranteeDisposition'] == 'DECLINED' && $negativeAction != 'nothing') {
+        if (isset($request->guaranteeDisposition)) {
+            if ($request->guaranteeDisposition == 'DECLINED' && $negativeAction != 'nothing') {
                 if ($negativeAction == 'hold') {
                     $order->hold();
                 } else if ($negativeAction == 'cancel') {
                     $order->cancel();
                 }
-            } else if ($this->_request ['guaranteeDisposition'] == 'APPROVED' && $positiveAction != 'nothing') {
+            } else if ($request->guaranteeDisposition == 'APPROVED' && $positiveAction != 'nothing') {
                 if ($positiveAction == 'unhold') {
                     $order->unhold();
                 }
@@ -220,6 +217,9 @@ class Index extends \Magento\Framework\App\Action\Action
         $topic = $this->getHeader('X-SIGNIFYD-TOPIC');
 
         if ($this->_api->validWebhookRequest($rawRequest, $hash, $topic)) {
+            // For the webhook test, all of the request data will be invalid
+            if($topic === 'cases/test') return;
+
             $request = json_decode($rawRequest);
             $caseData = $this->initRequest($request, $topic);
             $this->updateCase($caseData);

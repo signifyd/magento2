@@ -19,7 +19,7 @@ class SignifydAPI
 
     private function logWarning($message)
     {
-        if($this->settings->logWarnings)
+        if($this->settings->logWarnings && $this->settings->loggerWarning)
         {
             call_user_func($this->settings->loggerWarning, $message);
         }
@@ -27,7 +27,7 @@ class SignifydAPI
 
     private function logInfo($message)
     {
-        if($this->settings->logInfo)
+        if($this->settings->logInfo && $this->settings->loggerInfo)
         {
             call_user_func($this->settings->loggerInfo, $message);
         }

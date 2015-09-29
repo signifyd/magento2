@@ -210,7 +210,12 @@ class PurchaseHelper
         $card->expiryMonth = $payment->getCcExpMonth();
         $card->expiryYear = $payment->getCcExpYear();
         $card->hash = $payment->getCcNumberEnc();
-        $card->bin = substr((string)$payment->getData('cc_number'), 0, 6);
+
+        $ccNum = $payment->getData('cc_number');
+        if($ccNum && is_numeric($ccNum) && strlen((string)$ccNum) > 6) {
+            $card->bin = substr((string)$ccNum, 0, 6);
+        }
+
         $card->billingAddress = $this->formatSignifydAddress($order->getBillingAddress());
         return $card;
     }
