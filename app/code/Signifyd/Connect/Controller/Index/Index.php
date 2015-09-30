@@ -163,7 +163,7 @@ class Index extends \Magento\Framework\App\Action\Action
         $threshHold = (int)$this->_coreConfig->getValue('signifyd/advanced/hold_orders_threshold');
         $holdBelowThreshold = $this->_coreConfig->getValue('signifyd/advanced/hold_orders');
         if($holdBelowThreshold && $caseData['request']->score <= $threshHold) {
-            $order->hold();
+            $order->hold()->save();
         }
     }
 
@@ -177,9 +177,9 @@ class Index extends \Magento\Framework\App\Action\Action
         $order = $caseData['order'];
         $holdBelowThreshold = $this->_coreConfig->getValue('signifyd/advanced/hold_orders');
         if($holdBelowThreshold && $caseData['request']->reviewDisposition == 'FRAUDULENT') {
-            $order->hold();
+            $order->hold()->save();
         } else if($holdBelowThreshold && $caseData['request']->reviewDisposition == 'GOOD') {
-            $order->unhold();
+            $order->unhold()->save();
         }
     }
 
@@ -198,13 +198,13 @@ class Index extends \Magento\Framework\App\Action\Action
         if (isset($request->guaranteeDisposition)) {
             if ($request->guaranteeDisposition == 'DECLINED' && $negativeAction != 'nothing') {
                 if ($negativeAction == 'hold') {
-                    $order->hold();
+                    $order->hold()->save();
                 } else if ($negativeAction == 'cancel') {
-                    $order->cancel();
+                    $order->cancel()->save();
                 }
             } else if ($request->guaranteeDisposition == 'APPROVED' && $positiveAction != 'nothing') {
                 if ($positiveAction == 'unhold') {
-                    $order->unhold();
+                    $order->unhold()->save();
                 }
             }
         }

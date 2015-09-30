@@ -45,7 +45,6 @@ class LogHelper
         $this->_logRequests     = $scopeConfig->getValue('signifyd/logs/log_request');
         $this->_logResponses    = $scopeConfig->getValue('signifyd/logs/log_responses');
         $this->_logErrors       = $scopeConfig->getValue('signifyd/logs/log_errors');
-        $this->_logDebug        = true;
         $this->_logger          = $logger;
     }
 
