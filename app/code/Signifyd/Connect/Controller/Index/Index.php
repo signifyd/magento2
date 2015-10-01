@@ -149,10 +149,9 @@ class Index extends \Magento\Framework\App\Action\Action
             $case->setGuarantee($request->guaranteeDisposition);
             $orderAction = $this->handleGuaranteeChange($caseData) ?: $orderAction;
         }
-        $this->updateOrder($caseData, $orderAction);
-
         $case->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
         $case->save();
+        $this->updateOrder($caseData, $orderAction);
     }
 
     /**
@@ -224,6 +223,7 @@ class Index extends \Magento\Framework\App\Action\Action
         } else if ($request->guaranteeDisposition == 'APPROVED' && $positiveAction != 'nothing') {
             return $positiveAction;
         }
+        return null;
     }
 
     public function execute()
