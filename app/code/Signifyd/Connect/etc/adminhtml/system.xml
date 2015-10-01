@@ -28,13 +28,6 @@
                     <comment>Scores will be updated via webhooks. Please setup webhooks on your Signifyd account page</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="show_scores" translate="label" type="select" sortOrder="32" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Show Scores in Magento Order Grid</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <depends>
-                        <field id="retrieve_score">1</field>
-                    </depends>
-                </field>
                 <field id="hold_orders" translate="label" type="text" sortOrder="33" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Place hold on orders below score threshold</label>
                     <comment>Orders will be placed on hold below a threshold specified by you. We recommend a threshold of 500. Clicking Thumbs Up will Unhold the Order and Thumbs down will leave the Order on Hold.</comment>
@@ -49,11 +42,6 @@
                     <depends>
                         <field id="hold_orders">1</field>
                     </depends>
-                </field>
-                <field id="show_guarantee" translate="label" type="select" sortOrder="35" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Show Guarantee status in Magento Order Grid</label>
-                    <comment>You will be able to view current guarantee status in the Magento Order Grid when enabled</comment>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="guarantee_negative_action" translate="label" type="select" sortOrder="36" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Action on Guarantee Decline</label>
