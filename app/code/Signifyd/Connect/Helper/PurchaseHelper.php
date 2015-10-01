@@ -119,8 +119,6 @@ class PurchaseHelper
      */
     private function makePurchase(Order $order)
     {
-        $this->_logger->debug("makePurchase");
-
         // Get all of the purchased products
         $items = $order->getAllItems();
         $purchase = new Purchase();
@@ -152,7 +150,6 @@ class PurchaseHelper
      */
     private function formatSignifydAddress($mageAddress)
     {
-        $this->_logger->debug("formatSignifydAddress");
         $address = new SignifydAddress();
 
         $address->streetAddress = $mageAddress->getStreetLine(1);
@@ -167,7 +164,6 @@ class PurchaseHelper
         $address->latitude = null;
         $address->longitude = null;
 
-        $this->_logger->debug("/formatSignifydAddress ".json_encode($address));
         return $address;
     }
 
@@ -177,7 +173,6 @@ class PurchaseHelper
      */
     private function makeRecipient(Order $order)
     {
-        $this->_logger->debug("makeRecipient");
         $address = $order->getShippingAddress();
 
         if($address == null) return null;
@@ -196,7 +191,6 @@ class PurchaseHelper
      */
     private function makeCardInfo(Order $order)
     {
-        $this->_logger->debug("makeCardInfo");
         $payment = $order->getPayment();
         $this->_logger->debug($payment->convertToJson());
         if(!(is_subclass_of($payment->getMethodInstance(), '\Magento\Payment\Model\Method\Cc')))
@@ -226,12 +220,19 @@ class PurchaseHelper
      */
     private function makeUserAccount(Order $order)
     {
-        $this->_logger->debug("makeUserAccount");
         $user = new UserAccount();
         $user->emailAddress = $order->getCustomerEmail();
         $user->accountNumber = $order->getCustomerId();
         $user->phone = $order->getBillingAddress()->getTelephone();
         return $user;
+    }
+
+    public function doesCaseExist(Order $order)
+    {
+        /** @var $case \Signifyd\Connect\Model\Casedata */
+        $case = $this->_objectManager->get('Signifyd\Connect\Model\Casedata');
+        $case->load($order->getIncrementId());
+        return !($case->isEmpty() || $case->isObjectNew());
     }
 
     /** Construct a new case object
@@ -240,7 +241,6 @@ class PurchaseHelper
      */
     public function processOrderData($order)
     {
-        $this->_logger->debug("processOrderData");
         $case = new CaseModel();
         $case->card = $this->makeCardInfo($order);
         $case->purchase = $this->makePurchase($order);
@@ -262,7 +262,6 @@ class PurchaseHelper
              ->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()))
              ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()))
              ->setEntriesText("");
-        $this->_logger->debug($case->convertToJson());
         $case->save();
     }
 

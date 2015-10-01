@@ -52,30 +52,17 @@ class Purchase
         try {
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();
-            $this->_logger->debug("Order received");
-            $orderData = $this->_helper->processOrderData($order);
-            $this->_logger->debug("Order data made received");
 
-            // Inspect data
-            $items = $order->getAllItems();
-            $this->_logger->debug("Items received");
-            foreach($items as $item)
-            {
-                $this->_logger->debug($item->convertToJson());
-            }
-            $this->_logger->debug("Items done");
-            $this->_logger->debug(json_encode($orderData));
-            $this->_logger->debug("Order data done");
-            $this->_logger->debug($order->convertToJson());
-            $this->_logger->debug("Order json done");
+            // Check if case already exists for this order
+            if($this->_helper->doesCaseExist($order)) return;
+
+            $orderData = $this->_helper->processOrderData($order);
 
             // Add order to database
             $this->_helper->createNewCase($order);
-            $this->_logger->debug("New case done");
 
             // Post case to signifyd service
             $this->_helper->postCaseToSignifyd($orderData);
-            $this->_logger->debug("Post done");
         }
         catch(\Exception $ex)
         {

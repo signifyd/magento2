@@ -102,10 +102,9 @@ class Index extends \Magento\Framework\App\Action\Action
 
     /**
      * @param mixed $request
-     * @param string $topic
      * @return array|null
      */
-    private function initRequest($request, $topic)
+    private function initRequest($request)
     {
         /** @var $order \Magento\Sales\Model\Order */
         $order = $this->_objectManager->get('Magento\Sales\Model\Order')->loadByIncrementId($request->orderId);
@@ -130,83 +129,100 @@ class Index extends \Magento\Framework\App\Action\Action
         $case = $caseData['case'];
         $request = $caseData['request'];
 
+        // TODO: Since these actions are fairly overlapped at this point,
+        // might be a good idea to unify them.
+        $orderAction = null;
         if(isset($request->score) && $case->getScore() != $request->score)
         {
             $case->setScore($request->score);
-            $this->handleScoreChange($caseData);
+            $orderAction = $this->handleScoreChange($caseData) ?: $orderAction;
         }
 
         if(isset($request->status) && $case->getSignifydStatus() != $request->status)
         {
             $case->setSignifydStatus($request->status);
-            $this->handleStatusChange($caseData);
+            $orderAction = $this->handleStatusChange($caseData) ?: $orderAction;
         }
 
         if(isset($request->guaranteeDisposition) && $case->getGuarantee() != $request->guaranteeDisposition)
         {
             $case->setGuarantee($request->guaranteeDisposition);
-            $this->handleGuaranteeChange($caseData);
+            $orderAction = $this->handleGuaranteeChange($caseData) ?: $orderAction;
         }
+        $this->updateOrder($caseData, $orderAction);
 
         $case->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
         $case->save();
     }
 
     /**
+     * @param array $caseData
+     * @param string $orderAction
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
+    private function updateOrder($caseData, $orderAction)
+    {
+        /** @var $order \Magento\Sales\Model\Order */
+        $order = $caseData['order'];
+        switch ($orderAction) {
+            case "hold":
+                if ($order->canHold()) $order->hold()->save();
+                break;
+            case "unhold":
+                if ($order->canUnhold()) $order->unhold()->save();
+                break;
+            case "cancel":
+                if ($order->canCancel()) $order->cancel()->save();
+                break;
+        }
+    }
+
+    /**
      * @param $caseData
      * @throws \Magento\Framework\Exception\LocalizedException
+     * @return string
      */
     private function handleScoreChange($caseData)
     {
-        /** @var $order \Magento\Sales\Model\Order */
-        $order = $caseData['order'];
         $threshHold = (int)$this->_coreConfig->getValue('signifyd/advanced/hold_orders_threshold');
         $holdBelowThreshold = $this->_coreConfig->getValue('signifyd/advanced/hold_orders');
         if($holdBelowThreshold && $caseData['request']->score <= $threshHold) {
-            $order->hold()->save();
+            return "hold";
         }
+        return null;
     }
 
     /**
      * @param $caseData
      * @throws \Magento\Framework\Exception\LocalizedException
+     * @return string
      */
     private function handleStatusChange($caseData)
     {
-        /** @var $order \Magento\Sales\Model\Order */
-        $order = $caseData['order'];
         $holdBelowThreshold = $this->_coreConfig->getValue('signifyd/advanced/hold_orders');
         if($holdBelowThreshold && $caseData['request']->reviewDisposition == 'FRAUDULENT') {
-            $order->hold()->save();
+            return "hold";
         } else if($holdBelowThreshold && $caseData['request']->reviewDisposition == 'GOOD') {
-            $order->unhold()->save();
+            return "unhold";
         }
+        return null;
     }
 
     /**
      * @param $caseData
      * @throws \Magento\Framework\Exception\LocalizedException
+     * @return string
      */
     private function handleGuaranteeChange($caseData)
     {
         $negativeAction = $this->_coreConfig->getValue('signifyd/advanced/guarantee_negative_action');
         $positiveAction = $this->_coreConfig->getValue('signifyd/advanced/guarantee_positive_action');
 
-        /** @var $order \Magento\Sales\Model\Order */
-        $order = $caseData['order'];
         $request = $caseData['request'];
-        if (isset($request->guaranteeDisposition)) {
-            if ($request->guaranteeDisposition == 'DECLINED' && $negativeAction != 'nothing') {
-                if ($negativeAction == 'hold') {
-                    $order->hold()->save();
-                } else if ($negativeAction == 'cancel') {
-                    $order->cancel()->save();
-                }
-            } else if ($request->guaranteeDisposition == 'APPROVED' && $positiveAction != 'nothing') {
-                if ($positiveAction == 'unhold') {
-                    $order->unhold()->save();
-                }
-            }
+        if ($request->guaranteeDisposition == 'DECLINED' && $negativeAction != 'nothing') {
+            return $negativeAction;
+        } else if ($request->guaranteeDisposition == 'APPROVED' && $positiveAction != 'nothing') {
+            return $positiveAction;
         }
     }
 
@@ -221,8 +237,9 @@ class Index extends \Magento\Framework\App\Action\Action
             if($topic === 'cases/test') return;
 
             $request = json_decode($rawRequest);
-            $caseData = $this->initRequest($request, $topic);
+            $caseData = $this->initRequest($request);
             $this->updateCase($caseData);
         }
     }
+
 }
