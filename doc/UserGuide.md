@@ -49,7 +49,7 @@ You will need shell access to the host running your Magento2 installation along 
   - `chown -R www-data:www-data ${MAGENTO_HOME}/app/code/Signifyd/` and
   - `chmod -R u+w ${MAGENTO_HOME}/app/code/Signifyd/`.
 
-  Substitute the proper user and group for `www-data` if they are different.
+  Substitute the proper user and group for `www-data` if using different ones.
 6. Enable the plugin: `${MAGENTO_HOME}/bin/magento module:enable --clear-static-content Signifyd_Connect`
 7. Run setup:upgrade: `${MAGENTO_HOME}/bin/magento setup:upgrade`. You should see the line `Module 'Signifyd_Connect':` in the output.
 8. Re-enable the cache: `${MAGENTO_HOME}/bin/magento cache:enable --all`.
@@ -102,15 +102,14 @@ Setup for retrieving and displaying Signifyd scores is actually a two part proce
 
 #### In Magento
 1. Set **Retrieve Signifyd Scores** to **Yes**. This retrieves the score and stores it in the `signifyd_connect_case` table.
-2. Set **Show Scores in Magento Order Grid** to **Yes**. This will actually display the scores for your orders.
-3. Click the URL to confirm callback functionality. Here is what you should see if it is working.
+2. <del>Click the URL to confirm callback functionality.</del>
 
 ![Retrieve Scores](advanced_retrieve_scores.png)
 
 #### In Signifyd - webhook setup
 
 1. Go to Signifyd [`Settings > Notifications`](https://signifyd.com/settings/notifications).
-2. Paste the callback URL from Magento step 3 above.
+2. Enter the Signifyd callback URL for your store. The URL will be `https://<HOSTNAME-FOR-YOUR-STORE>/signifyd_webhooks/index/index`, e.g., `https://mymagento.example.com/signifyd_webhooks/index/index`.
 3. Choose the same team as the one you are using for your Magento store.
 4. Choose the **Case Creation** Event Type.
 5. Add the webhook. **NOTE:** you are only allowed one URL per team per event type so if you already have a webhook in place for a given team/event pair, it will need to be deleted before the new one can be added.
@@ -124,7 +123,7 @@ While you may choose to click "Test" by the new webhooks, this simply confirms t
 
 You can set the extension to automatically hold orders that have received risky, i.e., lower, scores for you own further review.
 
-1. Set **Hold score threshold** to 500 or a score of your choosing. A threshold of zero will hold no orders while 1000 will hold **all** orders.
+1. Set **Hold score threshold** to 500 or a score of your choosing. A threshold of zero will never hold orders while 1000 will hold **all** orders.
 ![Hold Orders](advanced_hold_orders.png)
 2. To check that the *On Hold* status is working, an order must be created either by a customer at your store or by placing a test order yourself. The order status from previously submitted orders will not be affected.
 3. To release orders in Magento, click the Signifyd Thumbs Up button in the Signifyd case console.
@@ -142,15 +141,13 @@ Once you have enrolled in a Complete Plan, you can integrate that feature into M
 
 
 1. Repeat the webhook setup procedure from **Show scores in Magento Order Grid** above for the Event Type **Guarantee Disposition**.
-2. Set **Place hold on orders below score threshold** to **Yes**.
-3. Set **Hold score threshold** mentioned above to 1000 to **hold all orders** until a Guarantee decision is made. **Don't do this if you are *not* on a complete plan!**
-4. Set **Show Guarantee status in Magento Order Grid** to **Yes**.
-5. Choose an **Action on Guarantee Decline** from the drop down menu.
-6. Choose an **Action on Guarantee Approve** from the drop down menu.
+2. Set **Hold score threshold** mentioned above to 1000 to **hold all orders** until a Guarantee decision is made. **Don't do this if you are *not* on a complete plan!**
+3. Choose an **Action on Guarantee Decline** from the drop down menu. **NOTE:** *the Cancel action is currently unavailable*.
+4. Choose an **Action on Guarantee Approve** from the drop down menu.
 
 ![Guarantees](advanced_guarantees.png)
 
-To check that the Guarantee status is working, an order must be created either by a customer at your store or by placing a test order yourself. Note that for the Actions in 5 and 6, **Nothing** is a valid option. However, if you have set all orders to be held in step 3, none will be unheld upon approval if no action is set to be applied. The Guarantee Status from orders submitted prior to enabling this integration will not display in your Magento order grid.
+To check that the Guarantee status is working, an order must be created either by a customer at your store or by placing a test order yourself. Note that for the Actions in 3 and 4, **Nothing** is a valid option. However, if you have set all orders to be held in step 2, none will be unheld upon approval if no action is set to be applied. The Guarantee Status from orders submitted prior to enabling this integration will not display in your Magento order grid.
 
 
 ## Troubleshooting
