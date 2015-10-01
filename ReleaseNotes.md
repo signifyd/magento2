@@ -14,7 +14,7 @@ There are a few differences from the original plugin:
 
 * Display of SIGNIFYD columns in the Order Grid is now controlled with Magento2's own column controls rather than from the SIGNIFYD Connect config. This applies to both scores and guarantee dispositions.
 * Automatically canceling **On Hold** orders when a guarantee is declined is no longer allowed.
-
+* The order resend functionality is temporarily unavailable, but should be online again shortly.
 
 Contact: [Brannon Smith](mailto:brannon@signifyd.com),
 
