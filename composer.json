@@ -13,5 +13,13 @@
     "psr-4": {
       "Signifyd\\Connect\\": ""
     }
-  }
+  },
+  "extra": {
+        "map": [
+            [
+                "*",
+                "Signifyd/Connect"
+            ]
+        ]
+    }
 }
