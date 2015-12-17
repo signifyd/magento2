@@ -1,5 +1,5 @@
 {
-  "name": "signifyd/connect",
+  "name": "signifyd/module-connect",
   "description": "Signifyd integration for Magento",
   "require": {
     "php": "~5.4.11|~5.5.0",
