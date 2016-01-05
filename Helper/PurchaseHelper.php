@@ -199,7 +199,7 @@ class PurchaseHelper
             return null;
         }
 
-        $card = SignifydModel::Make("\\Signifyd\\Models\\Card");;
+        $card = SignifydModel::Make("\\Signifyd\\Models\\Card");
         $card->cardholderName = $payment->getCcOwner();
         $card->last4 = $payment->getCcLast4();
         $card->expiryMonth = $payment->getCcExpMonth();
@@ -221,7 +221,7 @@ class PurchaseHelper
      */
     protected function makeUserAccount(Order $order)
     {
-        $user = SignifydModel::Make("\\Signifyd\\Models\\UserAccount");;
+        $user = SignifydModel::Make("\\Signifyd\\Models\\UserAccount");
         $user->emailAddress = $order->getCustomerEmail();
         $user->accountNumber = $order->getCustomerId();
         $user->phone = $order->getBillingAddress()->getTelephone();
@@ -242,7 +242,7 @@ class PurchaseHelper
      */
     public function processOrderData($order)
     {
-        $case = SignifydModel::Make("\\Signifyd\\Models\\Casedata");;
+        $case = SignifydModel::Make("\\Signifyd\\Models\\Casedata");
         $case->card = $this->makeCardInfo($order);
         $case->purchase = $this->makePurchase($order);
         $case->recipient = $this->makeRecipient($order);

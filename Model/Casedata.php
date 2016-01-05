@@ -17,6 +17,6 @@ class Casedata extends AbstractModel
     protected function _construct()
     {
         parent::_construct();
-        $this->_init('Signifyd\Connect\Model\Resource\Casedata');
+        $this->_init('Signifyd\Connect\Model\ResourceModel\Casedata');
     }
 }
