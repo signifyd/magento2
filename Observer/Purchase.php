@@ -1,9 +1,10 @@
 <?php
 
-namespace Signifyd\Connect\Model\Observer;
+namespace Signifyd\Connect\Observer;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Event\Observer;
+use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Address;
 use Psr\Log\LoggerInterface;
@@ -14,13 +15,12 @@ use Signifyd\Connect\Helper\LogHelper;
 /**
  * Observer for purchase event. Sends order data to Signifyd service
  */
-class Purchase
+class Purchase implements ObserverInterface
 {
     /**
      * @var \Signifyd\Connect\Helper\LogHelper
      */
     protected $_logger;
-
 
     /**
      * @var \Signifyd\Connect\Helper\PurchaseHelper
@@ -28,16 +28,14 @@ class Purchase
     protected $_helper;
 
     public function __construct(
-        ObjectManagerInterface $objectManager,
         LogHelper $logger,
-        ScopeConfigInterface $scopeConfig,
         PurchaseHelper $helper
     ) {
         $this->_logger = $logger;
         $this->_helper = $helper;
     }
 
-    public function sendOrderToSignifyd(Observer $observer)
+    public function execute(Observer $observer)
     {
         try {
             /** @var $order Order */
