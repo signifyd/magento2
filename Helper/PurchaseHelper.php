@@ -242,7 +242,7 @@ class PurchaseHelper
      */
     public function processOrderData($order)
     {
-        $case = SignifydModel::Make("\\Signifyd\\Models\\Casedata");
+        $case = SignifydModel::Make("\\Signifyd\\Models\\CaseModel");
         $case->card = $this->makeCardInfo($order);
         $case->purchase = $this->makePurchase($order);
         $case->recipient = $this->makeRecipient($order);

@@ -85,16 +85,14 @@ class Index extends Action
     protected function getHeader($header)
     {
         // Some frameworks add an extra HTTP_ before the header, so check for both names
-        // Header values stored in the $_SERVER variable have dashes converted to underscores, hence str_replace
-        $direct = strtoupper(str_replace('-', '_', $header));
-        $extraHttp = 'HTTP_' . $direct;
+        $extraHttp = 'HTTP_' . $header;
+        $headers = array_change_key_case(getallheaders(), CASE_UPPER);
 
-        // Check the $_SERVER global
-        if (isset($_SERVER[$direct])) {
-            return $_SERVER[$direct];
+        if (isset($headers[$header])) {
+            return $headers[$header];
         } else {
-            if (isset($_SERVER[$extraHttp])) {
-                return $_SERVER[$extraHttp];
+            if (isset($headers[$extraHttp])) {
+                return $headers[$extraHttp];
             }
         }
 
