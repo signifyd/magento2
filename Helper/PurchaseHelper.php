@@ -111,7 +111,7 @@ class PurchaseHelper
         $product->itemId = $item->getSku();
         $product->itemName = $item->getName();
         $product->itemPrice = $item->getPrice();
-        $product->itemQuality = $item->getQtyOrdered();
+        $product->itemQuantity = $item->getQtyOrdered();
         $product->itemUrl = $item->getProduct()->getProductUrl();
         $product->itemWeight = $item->getProduct()->getWeight();
         return $product;
