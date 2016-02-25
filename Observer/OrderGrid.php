@@ -27,8 +27,8 @@ class OrderGrid implements ObserverInterface
 
     public function execute(Observer $observer)
     {
-        /** @var $collection \Magento\Sales\Model\ResourceModel\Order\Grid\Collection * */
+        /** @var $collection \Magento\Sales\Model\ResourceModel\Order\Grid\Collection *
         $collection = $observer->getData('order_grid_collection');
-        Casedata::JoinWithOrder($collection);
+        Casedata::JoinWithOrder($collection);*/
     }
 }

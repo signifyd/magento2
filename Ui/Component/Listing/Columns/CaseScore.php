@@ -55,6 +55,7 @@ class CaseScore extends Column
      */
     public function prepareDataSource(array $dataSource)
     {
+        /*
         $this->_logger->debug("prepareDataSource");
         if (isset($dataSource['data']['items'])) {
             $name = $this->getData('name');
@@ -64,6 +65,7 @@ class CaseScore extends Column
                 }
             }
         }
+        */
         return $dataSource;
     }
 }
