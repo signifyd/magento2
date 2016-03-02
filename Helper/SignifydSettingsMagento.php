@@ -11,9 +11,15 @@ use Signifyd\Core\SignifydSettings;
 
 class SignifydSettingsMagento extends SignifydSettings
 {
+    /**
+     * @var bool Is the plugin enabled?
+     */
+    public $enabled = true;
+
     public function __construct(
         ScopeConfigInterface $scopeConfig
     ) {
+        $this->enabled = $scopeConfig->isSetFlag('signifyd/general/enabled');
         $this->apiKey = $scopeConfig->getValue('signifyd/general/key');
 
         $this->logInfo = true;

@@ -10,6 +10,11 @@ use Signifyd\Core\SignifydAPI;
 
 class SignifydAPIMagento extends SignifydAPI
 {
+    /**
+     * @var SignifydSettingsMagento Local reference to plugin specific derivative
+     */
+    private $magentoSettings;
+
     public function __construct(
         SignifydSettingsMagento $settings
     ) {
@@ -18,6 +23,12 @@ class SignifydAPIMagento extends SignifydAPI
         {
             $settings->apiKey = "";
         }
+        $this->magentoSettings = $settings;
         parent::__construct($settings);
+    }
+
+    public function enabled()
+    {
+        return $this->magentoSettings->enabled;
     }
 }

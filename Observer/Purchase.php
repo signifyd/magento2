@@ -15,6 +15,7 @@ use Psr\Log\LoggerInterface;
 use \Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Helper\LogHelper;
+use Signifyd\Connect\Helper\SignifydAPIMagento;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -31,9 +32,15 @@ class Purchase implements ObserverInterface
      */
     protected $_helper;
 
+    /**
+     * @var SignifydAPIMagento
+     */
+    protected $_api;
+
     public function __construct(
         LogHelper $logger,
-        PurchaseHelper $helper
+        PurchaseHelper $helper,
+        SignifydAPIMagento $api
     ) {
         $this->_logger = $logger;
         $this->_helper = $helper;
@@ -41,6 +48,8 @@ class Purchase implements ObserverInterface
 
     public function execute(Observer $observer)
     {
+        if(!$this->_api->enabled()) return;
+
         try {
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();

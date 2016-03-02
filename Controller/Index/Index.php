@@ -243,6 +243,8 @@ class Index extends Action
 
     public function execute()
     {
+        if(!$this->_api->enabled()) return;
+
         $rawRequest = $this->getRawPost();
         $hash = $this->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
         $topic = $this->getHeader('X-SIGNIFYD-TOPIC');
