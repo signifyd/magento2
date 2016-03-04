@@ -44,6 +44,7 @@ class Purchase implements ObserverInterface
     ) {
         $this->_logger = $logger;
         $this->_helper = $helper;
+        $this->_api = $api;
     }
 
     public function execute(Observer $observer)
