@@ -83,28 +83,6 @@ class Index extends Action
     }
 
     /**
-     * @param $header
-     * @return string
-     */
-    protected function getHeader($header)
-    {
-        // Some frameworks add an extra HTTP_ before the header, so check for both names
-        $extraHttp = 'HTTP_' . $header;
-        $headers = array_change_key_case(getallheaders(), CASE_UPPER);
-
-        if (isset($headers[$header])) {
-            return $headers[$header];
-        } else {
-            if (isset($headers[$extraHttp])) {
-                return $headers[$extraHttp];
-            }
-        }
-
-        $this->_logger->error('Valid Header Not Found: ' . $header);
-        return '';
-    }
-
-    /**
      * @param mixed $request
      * @return array|null
      */
@@ -244,10 +222,11 @@ class Index extends Action
     public function execute()
     {
         if(!$this->_api->enabled()) return;
-
         $rawRequest = $this->getRawPost();
-        $hash = $this->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
-        $topic = $this->getHeader('X-SIGNIFYD-TOPIC');
+
+        $request = $this->getRequest();
+        $hash = $request->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
+        $topic = $request->getHeader('X-SIGNIFYD-TOPIC');
 
         if ($this->_api->validWebhookRequest($rawRequest, $hash, $topic)) {
             // For the webhook test, all of the request data will be invalid
