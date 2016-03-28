@@ -130,6 +130,7 @@ class PurchaseHelper
         // Get all of the purchased products
         $items = $order->getAllItems();
         $purchase = SignifydModel::Make("\\Signifyd\\Models\\Purchase");
+        $purchase->orderChannel = "WEB";
         $purchase->products = array();
         foreach ($items as $item) {
             $purchase->products[] = $this->makeProduct($item);
@@ -139,6 +140,7 @@ class PurchaseHelper
         $purchase->currency = $order->getOrderCurrencyCode();
         $purchase->orderId = $order->getIncrementId();
         $purchase->paymentGateway = $order->getPayment()->getMethod();
+        $purchase->shippingPrice = floatval($order->getShippingAmount());
         $purchase->avsResponseCode = $order->getPayment()->getCcAvsStatus();
         $purchase->cvvResponseCode = $order->getPayment()->getCcSecureVerify();
         $purchase->createdAt = date('c', strtotime($order->getCreatedAt()));;

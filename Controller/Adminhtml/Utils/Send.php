@@ -3,13 +3,14 @@
  * Copyright © 2015 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
-namespace Signifyd\Connect\Controller\Index;
+namespace Signifyd\Connect\Controller\Adminhtml\Utils;
 
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
 use Magento\Sales\Controller\Adminhtml\Order\AbstractMassAction;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\ResourceModel\Order\CollectionFactory;
 use Magento\Ui\Component\MassAction\Filter;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Helper\SignifydAPIMagento;
@@ -52,6 +53,7 @@ class Send extends AbstractMassAction
      * @param PurchaseHelper $purchaseHelper
      * @param Filter $filter
      * @param SignifydAPIMagento $api
+     * @param CollectionFactory $collectionFactory
      */
     public function __construct(
         Context $context,
@@ -59,13 +61,23 @@ class Send extends AbstractMassAction
         LogHelper $logger,
         PurchaseHelper $purchaseHelper,
         Filter $filter,
-        SignifydAPIMagento $api
+        SignifydAPIMagento $api,
+        CollectionFactory $collectionFactory
     ) {
         parent::__construct($context, $filter);
         $this->_coreConfig = $scopeConfig;
         $this->_logger = $logger;
-        $this->purchaseHelper = $purchaseHelper;
+        $this->_helper = $purchaseHelper;
         $this->_api = $api;
+        $this->collectionFactory = $collectionFactory;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function _isAllowed()
+    {
+        return true;
     }
 
     public function massAction(AbstractCollection $collection)

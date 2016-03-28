@@ -17,12 +17,18 @@ class SignifydSettingsMagento extends SignifydSettings
     public $enabled = true;
 
     public function __construct(
-        ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig,
+        LogHelper $logger
     ) {
         $this->enabled = $scopeConfig->isSetFlag('signifyd/general/enabled');
         $this->apiKey = $scopeConfig->getValue('signifyd/general/key');
 
         $this->logInfo = true;
+        $this->logError = true;
+        $this->loggerError = function($message) use ($logger)
+        {
+            $logger->error("API Error: " . $message);
+        };
         $this->apiAddress = $scopeConfig->getValue('signifyd/general/url');
     }
 }

@@ -23,10 +23,6 @@ class Negative implements ArrayInterface
                 'value' => 'hold',
                 'label' => 'Hold Order',
             ),
-            array(
-                'value' => 'cancel',
-                'label' => 'Cancel Order',
-            ),
         );
     }
 }

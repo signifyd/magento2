@@ -2,7 +2,7 @@
 
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
     <router id="standard">
-        <route id="signifyd_connect" frontName="signifyd_webhooks">
+        <route id="signifyd_connect" frontName="signifyd">
             <module name="Signifyd_Connect" />
         </route>
     </router>
