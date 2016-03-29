@@ -25,7 +25,7 @@
                 <label>Advanced</label>
                 <field id="retrieve_score" translate="label" type="select" sortOrder="31" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Retrieve Signifyd scores</label>
-                    <comment>Scores will be updated via webhooks. Please setup webhooks on your Signifyd account page (Webhook URL for this site is {{base_url}}/signifyd_webhooks/index/index</comment>
+                    <comment>Scores will be updated via webhooks. Please setup webhooks on your Signifyd account page (Webhook URL for this site is {{base_url}}/signifyd/webhooks/index</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="hold_orders" translate="label comment" type="select" sortOrder="33" showInDefault="1" showInWebsite="0" showInStore="0">
