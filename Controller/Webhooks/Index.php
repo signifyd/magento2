@@ -110,12 +110,14 @@ class Index extends Action
         /** @var $case \Signifyd\Connect\Model\Casedata */
         $case = $caseData['case'];
         $request = $caseData['request'];
+        $order = $caseData['order'];
 
         // TODO: Since these actions are fairly overlapped at this point,
         // might be a good idea to unify them.
         $orderAction = null;
         if (isset($request->score) && $case->getScore() != $request->score) {
             $case->setScore($request->score);
+            $order->setSignifydScore($request->score);
             $orderAction = $this->handleScoreChange($caseData) ?: $orderAction;
         }
 
@@ -126,10 +128,15 @@ class Index extends Action
 
         if (isset($request->guaranteeDisposition) && $case->getGuarantee() != $request->guaranteeDisposition) {
             $case->setGuarantee($request->guaranteeDisposition);
+            $order->setSignifydGuarantee($request->guaranteeDisposition);
             $orderAction = $this->handleGuaranteeChange($caseData) ?: $orderAction;
         }
+        $case->setCode($request->caseId);
         $case->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
         $case->save();
+
+        $order->setSignifydCode($request->caseId);
+        $order->save();
         $this->updateOrder($caseData, $orderAction);
     }
 

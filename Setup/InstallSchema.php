@@ -95,5 +95,42 @@ class InstallSchema implements InstallSchemaInterface
                 ->setComment('Signifyd Cases');
             $installer->getConnection()->createTable($table);
         }
+        // Get module table
+        $tableName = $setup->getTable('sales_order');
+        $gridTableName = $setup->getTable('sales_order_grid');
+
+        // Check if the table already exists
+        if ($installer->getConnection()->isTableExists($tableName)) {
+            // Declare data
+            $columns = [
+                'signifyd_score' => [
+                    'type' => Table::TYPE_FLOAT,
+                    'default' => null,
+                    'comment' => 'Score',
+                ],
+                'signifyd_guarantee' => [
+                    'type' => Table::TYPE_TEXT,
+                    'LENGTH' => 64,
+                    'default' => 'N/A',
+                    'nullable' => false,
+                    'comment' => 'Guarantee Status',
+                ],
+                'signifyd_code' => [
+                    'type' => Table::TYPE_TEXT,
+                    'LENGTH' => 255,
+                    'default' => '',
+                    'nullable' => false,
+                    'comment' => 'Code',
+                ],
+            ];
+
+            $connection = $setup->getConnection();
+            foreach ($columns as $name => $definition) {
+                $connection->dropColumn($tableName, $name);
+                $connection->addColumn($tableName, $name, $definition);
+                $connection->dropColumn($gridTableName, $name);
+                $connection->addColumn($gridTableName, $name, $definition);
+            }
+        }
     }
 }

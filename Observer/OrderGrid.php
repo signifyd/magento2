@@ -10,7 +10,7 @@ use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Address;
-use Psr\Log\LoggerInterface;
+use Signifyd\Connect\Helper\LogHelper;
 use Signifyd\Connect\Model\ResourceModel\Casedata;
 
 /**
@@ -19,12 +19,12 @@ use Signifyd\Connect\Model\ResourceModel\Casedata;
 class OrderGrid implements ObserverInterface
 {
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Signifyd\Connect\Helper\LogHelper
      */
     protected $_logger;
 
     public function __construct(
-        LoggerInterface $logger
+        LogHelper $logger
     ) {
         $this->_logger = $logger;
     }

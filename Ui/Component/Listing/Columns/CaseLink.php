@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 SIGNIFYD Inc. All rights reserved.
+ * Copyright ï¿½ 2015 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
 namespace Signifyd\Connect\Ui\Component\Listing\Columns;
@@ -14,9 +14,9 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Signifyd\Connect\Helper\LogHelper;
 
 /**
- * Class CaseScore
+ * Class CaseLink
  */
-class CaseScore extends Column
+class CaseLink extends Column
 {
     /**
      * @var UrlInterface
@@ -59,17 +59,15 @@ class CaseScore extends Column
      */
     public function prepareDataSource(array $dataSource)
     {
-        /*
-        $this->_logger->debug("prepareDataSource");
         if (isset($dataSource['data']['items'])) {
             $name = $this->getData('name');
             foreach ($dataSource['data']['items'] as &$item) {
-                if (isset($item[$name])) {
-                    $this->_logger->debug("set");
+                if(isset($item['signifyd_code'])) {
+                    $url = "https://www.signifyd.com/cases/" . $item['signifyd_code'];
+                    $item[$name] = "<a href=\"$url\" target=\"_blank\">$item[$name]</a>";
                 }
             }
         }
-        */
         return $dataSource;
     }
 }
