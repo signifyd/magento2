@@ -20,7 +20,7 @@
         </massaction-->
     </container>
     <columns name="sales_order_columns">
-        <column name="signifyd_score" class="Signifyd\Connect\Ui\Component\Listing\Columns\CaseLink">
+        <actionsColumn name="signifyd_score" class="Signifyd\Connect\Ui\Component\Listing\Columns\CaseLink">
             <argument name="data" xsi:type="array">
                 <item name="js_config" xsi:type="array">
                     <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/column</item>
@@ -34,8 +34,8 @@
                     <item name="label" xsi:type="string" translate="true">Signifyd Score</item>
                 </item>
             </argument>
-        </column>
-        <column name="signifyd_guarantee"  class="Signifyd\Connect\Ui\Component\Listing\Columns\CaseLink">
+        </actionsColumn>
+        <actionsColumn name="signifyd_guarantee"  class="Signifyd\Connect\Ui\Component\Listing\Columns\CaseLink">
             <argument name="data" xsi:type="array">
                 <item name="js_config" xsi:type="array">
                     <item name="component" xsi:type="string">Magento_Ui/js/grid/columns/column</item>
@@ -49,6 +49,6 @@
                     <item name="label" xsi:type="string" translate="true">Signifyd Guarantee Status</item>
                 </item>
             </argument>
-        </column>
+        </actionsColumn>
     </columns>
 </listing>
