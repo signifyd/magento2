@@ -62,6 +62,10 @@ class CaseLink extends Column
         if (isset($dataSource['data']['items'])) {
             $name = $this->getData('name');
             foreach ($dataSource['data']['items'] as &$item) {
+                if(is_numeric($item[$name]))
+                {
+                    $item[$name] = intval($item[$name]);
+                }
                 if(isset($item['signifyd_code']) && $item['signifyd_code'] != '') {
                     $url = "https://www.signifyd.com/cases/" . $item['signifyd_code'];
                     $item[$name] = "<a href=\"$url\" target=\"_blank\">$item[$name]</a>";
