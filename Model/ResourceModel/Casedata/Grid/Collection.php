@@ -1,6 +1,8 @@
 <?php
 
 use Signifyd\Connect\Helper\LogHelper;
+use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
+
 class Collection extends AbstractCollection
 {
     /**
