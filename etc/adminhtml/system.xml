@@ -16,10 +16,6 @@
                     <label>Signifyd API Key</label>
                     <comment>You will find this in http://signifyd.com/settings/teams after you create a Signifyd account</comment>
                 </field>
-                <field id="url" translate="label comment" type="text" sortOrder="21" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Signifyd API URL</label>
-                    <comment>Set by default. Don’t change unless asked to do so.</comment>
-                </field>
             </group>
             <group id="advanced" translate="label comment" type="text" sortOrder="400" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Advanced</label>

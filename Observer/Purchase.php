@@ -66,7 +66,7 @@ class Purchase implements ObserverInterface
             $this->_helper->createNewCase($order);
 
             // Post case to signifyd service
-            $this->_helper->postCaseToSignifyd($orderData);
+            $this->_helper->postCaseToSignifyd($orderData, $order);
         } catch (\Exception $ex) {
             $this->_logger->error($ex->getMessage());
         }

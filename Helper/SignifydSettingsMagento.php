@@ -29,6 +29,6 @@ class SignifydSettingsMagento extends SignifydSettings
         {
             $logger->error("API Error: " . $message);
         };
-        $this->apiAddress = $scopeConfig->getValue('signifyd/general/url');
+        $this->apiAddress = "https://api.signifyd.com/v2";
     }
 }

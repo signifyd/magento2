@@ -8,7 +8,6 @@
             <general>
                 <enabled>1</enabled>
                 <key> </key>
-                <url>https://api.signifyd.com/v2</url>
             </general>
             <advanced>
                 <retrieve_score>1</retrieve_score>

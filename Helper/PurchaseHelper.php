@@ -7,6 +7,8 @@
 namespace Signifyd\Connect\Helper;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\AppInterface;
+use Magento\Framework\Module\ModuleListInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Address;
 use \Magento\Framework\ObjectManagerInterface;
@@ -49,21 +51,29 @@ class PurchaseHelper
     protected $_dateTime;
 
     /**
+     * @var Magento\Framework\Module\ModuleListInterface
+     */
+    protected $_moduleList;
+
+    /**
      * @param ObjectManagerInterface $objectManager
      * @param LogHelper $logger
      * @param DateTime $dateTime
      * @param ScopeConfigInterface $scopeConfig
      * @param SignifydAPIMagento $api
+     * @param ModuleListInterface $moduleList
      */
     public function __construct(
         ObjectManagerInterface $objectManager,
         LogHelper $logger,
         DateTime $dateTime,
         ScopeConfigInterface $scopeConfig,
-        SignifydAPIMagento $api
+        SignifydAPIMagento $api,
+        ModuleListInterface $moduleList
     ) {
         $this->_logger = $logger;
         $this->_objectManager = $objectManager;
+        $this->_moduleList = $moduleList;
         try {
             $this->_api = $api;
 
@@ -103,6 +113,15 @@ class PurchaseHelper
         }
 
         return preg_replace('/[^0-9a-zA-Z:\.]/', '', strtok(str_replace($ip, ',', "\n"), "\n"));
+    }
+
+    protected function getVersions()
+    {
+        $version = array();
+        $version['platform'] = 'magento2';
+        $version['platformVersion'] = AppInterface::VERSION;
+        $version['pluginVersion'] = (string)($this->_moduleList->getOne('Signifyd_Connect')['setup_version']);
+        return $version;
     }
 
     /**
@@ -227,18 +246,50 @@ class PurchaseHelper
      */
     protected function makeUserAccount(Order $order)
     {
+        /* @var $user \Signifyd\Models\UserAccount */
         $user = SignifydModel::Make("\\Signifyd\\Models\\UserAccount");
         $user->emailAddress = $order->getCustomerEmail();
+        $user->username = $order->getCustomerEmail();
         $user->accountNumber = $order->getCustomerId();
         $user->phone = $order->getBillingAddress()->getTelephone();
+
+        /* @var $customer \Magento\Customer\Model\Customer */
+        $customer = $this->_objectManager->get('Magento\Customer\Model\Customer')->load($order->getCustomerId());
+        $this->_logger->debug("Customer data: " . json_encode($customer));
+        if(!is_null($customer) && !$customer->isEmpty()) {
+            $user->createdDate = date('c', strtotime($customer->getCreatedAt()));
+        }
+        /** @var $orderFactory \Magento\Sales\Model\ResourceModel\Order\Collection */
+        $orders = $this->_objectManager->get('\Magento\Sales\Model\ResourceModel\Order\Collection');
+        $orders->addFieldToFilter('customer_id', $order->getCustomerId());
+        $orders->load();
+
+        $orderCount = 0;
+        $orderTotal = 0.0;
+        /** @var $o \Magento\Sales\Model\Order*/
+        foreach($orders as $o) {
+            $orderCount++;
+            $orderTotal += floatval($o->getGrandTotal());
+        }
+
+        $user->aggregateOrderCount = $orderCount;
+        $user->aggregateOrderDollars = $orderTotal;
+
         return $user;
     }
 
-    public function doesCaseExist(Order $order)
+    public function getCase(Order $order)
     {
         /** @var $case \Signifyd\Connect\Model\Casedata */
         $case = $this->_objectManager->get('Signifyd\Connect\Model\Casedata');
         $case->load($order->getIncrementId());
+        return $case;
+    }
+    
+    public function doesCaseExist(Order $order)
+    {
+        /** @var $case \Signifyd\Connect\Model\Casedata */
+        $case = $this->getCase($order);
         return !($case->isEmpty() || $case->isObjectNew());
     }
 
@@ -253,6 +304,7 @@ class PurchaseHelper
         $case->purchase = $this->makePurchase($order);
         $case->recipient = $this->makeRecipient($order);
         $case->userAccount = $this->makeUserAccount($order);
+        $case->clientVersion = $this->getVersions();
         return $case;
     }
 
@@ -274,7 +326,7 @@ class PurchaseHelper
     /**
      * @param $caseData
      */
-    public function postCaseToSignifyd($caseData)
+    public function postCaseToSignifyd($caseData, $order)
     {
         $this->_logger->request("Sending: " . json_encode($caseData));
         $id = $this->_api->createCase($caseData);

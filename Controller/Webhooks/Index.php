@@ -90,7 +90,6 @@ class Index extends Action
     {
         /** @var $order \Magento\Sales\Model\Order */
         $order = $this->_objectManager->get('Magento\Sales\Model\Order')->loadByIncrementId($request->orderId);
-
         /** @var $case \Signifyd\Connect\Model\Casedata */
         $case = $this->_objectManager->get('Signifyd\Connect\Model\Casedata');
         $case->load($request->orderId);
@@ -114,7 +113,7 @@ class Index extends Action
 
         // TODO: Since these actions are fairly overlapped at this point,
         // might be a good idea to unify them.
-        $orderAction = null;
+        $orderAction = array("action" => null, "reason" => '');
         if (isset($request->score) && $case->getScore() != $request->score) {
             $case->setScore($request->score);
             $order->setSignifydScore($request->score);
@@ -149,7 +148,7 @@ class Index extends Action
     {
         /** @var $order \Magento\Sales\Model\Order */
         $order = $caseData['order'];
-        switch ($orderAction) {
+        switch ($orderAction["action"]) {
             case "hold":
                 if ($order->canHold()) {
                     $order->hold()->save();
@@ -170,6 +169,8 @@ class Index extends Action
                 }
                 break;
         }
+        $order->addStatusHistoryComment("Signifyd set status to {$orderAction["action"]} because {$orderAction["reason"]}");
+        $order->save();
     }
 
     /**
@@ -182,7 +183,7 @@ class Index extends Action
         $threshHold = (int)$this->_coreConfig->getValue('signifyd/advanced/hold_orders_threshold');
         $holdBelowThreshold = $this->_coreConfig->getValue('signifyd/advanced/hold_orders');
         if ($holdBelowThreshold && $caseData['request']->score <= $threshHold) {
-            return "hold";
+            return array("action"=>"hold", "reason"=>"score threshold failure");
         }
         return null;
     }
@@ -196,10 +197,10 @@ class Index extends Action
     {
         $holdBelowThreshold = $this->_coreConfig->getValue('signifyd/advanced/hold_orders');
         if ($holdBelowThreshold && $caseData['request']->reviewDisposition == 'FRAUDULENT') {
-            return "hold";
+            return array("action"=>"hold", "reason"=>"review returned FRAUDULENT");
         } else {
             if ($holdBelowThreshold && $caseData['request']->reviewDisposition == 'GOOD') {
-                return "unhold";
+                return array("action"=>"unhold", "reason"=>"review returned GOOD");
             }
         }
         return null;
@@ -217,10 +218,10 @@ class Index extends Action
 
         $request = $caseData['request'];
         if ($request->guaranteeDisposition == 'DECLINED' && $negativeAction != 'nothing') {
-            return $negativeAction;
+            return array("action" => $negativeAction, "reason"=>"guarantee declined");
         } else {
             if ($request->guaranteeDisposition == 'APPROVED' && $positiveAction != 'nothing') {
-                return $positiveAction;
+                return array("action" => $positiveAction, "reason"=>"guarantee approved");
             }
         }
         return null;
