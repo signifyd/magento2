@@ -1,24 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
-    <container name="listing_top">
-        <!--massaction name="listing_massaction">
-            <argument name="data" xsi:type="array">
-                <item name="config" xsi:type="array">
-                    <item name="selectProvider" xsi:type="string">sales_order_grid.sales_order_grid.sales_order_columns.ids</item>
-                    <item name="indexField" xsi:type="string">entity_id</item>
-                </item>
-            </argument>
-            <action name="signifyd_resend">
-                <argument name="data" xsi:type="array">
-                    <item name="config" xsi:type="array">
-                        <item name="type" xsi:type="string">signifyd_resend</item>
-                        <item name="label" xsi:type="string" translate="true">Resend to Signifyd</item>
-                        <item name="url" xsi:type="url" path="signifyd_admin/utils/send" />
-                    </item>
-                </argument>
-            </action>
-        </massaction-->
-    </container>
     <columns name="sales_order_columns">
         <actionsColumn name="signifyd_score" class="Signifyd\Connect\Ui\Component\Listing\Columns\CaseLink">
             <argument name="data" xsi:type="array">
