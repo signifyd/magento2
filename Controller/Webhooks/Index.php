@@ -229,12 +229,22 @@ class Index extends Action
 
     public function execute()
     {
-        if(!$this->_api->enabled()) return;
+        if(!$this->_api->enabled())
+        {
+            echo "This plugin is not currently enabled";
+            return;
+        }
+
         $rawRequest = $this->getRawPost();
 
         $request = $this->getRequest();
         $hash = $request->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
         $topic = $request->getHeader('X-SIGNIFYD-TOPIC');
+        if($hash == null)
+        {
+            echo "You have successfully reached the webhook endpoint";
+            return;
+        }
 
         if ($this->_api->validWebhookRequest($rawRequest, $hash, $topic)) {
             // For the webhook test, all of the request data will be invalid
