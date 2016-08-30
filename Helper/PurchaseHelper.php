@@ -337,6 +337,31 @@ class PurchaseHelper
             $this->_logger->debug("Case sent. Id is $id");
         } else {
             $this->_logger->error("Case failed to send.");
+            $this->addToRetryQueue($order);
         }
+    }
+
+    public function retryCase($caseData, $order)
+    {
+        $this->_logger->request("Retrying: " . json_encode($caseData));
+        $id = $this->_api->createCase($caseData);
+        if ($id) {
+            $this->_logger->debug("Case sent. Id is $id");
+            return true;
+        } else {
+            $this->_logger->error("Case failed to resend.");
+            return false;
+        }
+    }
+
+    private function addToRetryQueue($order)
+    {
+        $this->_logger->error("Add to retries: " . $order->getIncrementId());
+
+        $order_tag = $this->_objectManager->create('Signifyd\Connect\Model\CaseRetry')
+            ->setId($order->getIncrementId())
+            ->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()))
+            ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
+        $order_tag->save();
     }
 }

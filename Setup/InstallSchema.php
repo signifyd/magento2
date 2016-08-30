@@ -95,6 +95,35 @@ class InstallSchema implements InstallSchemaInterface
                 ->setComment('Signifyd Cases');
             $installer->getConnection()->createTable($table);
         }
+        if (!$installer->tableExists('signifyd_connect_retries')) {
+            $table = $installer->getConnection()->newTable($installer->getTable('signifyd_connect_retries'));
+            $table->addColumn(
+                    'order_increment',
+                    Table::TYPE_TEXT,
+                    255,
+                    [
+                        'nullable' => false,
+                        'primary' => true
+                    ],
+                    'Order ID'
+                )
+                ->addColumn(
+                    'created',
+                    Table::TYPE_TIMESTAMP,
+                    null,
+                    [],
+                    'Creation Time'
+                )
+                ->addColumn(
+                    'updated',
+                    Table::TYPE_TIMESTAMP,
+                    null,
+                    [],
+                    'Last Attempt'
+                )
+                ->setComment('Signifyd Retries');
+            $installer->getConnection()->createTable($table);
+        }
         // Get module table
         $tableName = $setup->getTable('sales_order');
         $gridTableName = $setup->getTable('sales_order_grid');

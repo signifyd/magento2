@@ -65,6 +65,38 @@ class UpgradeSchema implements UpgradeSchemaInterface
 
             }
         }
+        if(version_compare($context->getVersion(), '1.0.2') < 0)
+        {
+            if (!$setup->tableExists('signifyd_connect_retries')) {
+                $table = $setup->getConnection()->newTable($setup->getTable('signifyd_connect_retries'));
+                $table->addColumn(
+                    'order_increment',
+                    Table::TYPE_TEXT,
+                    255,
+                    [
+                        'nullable' => false,
+                        'primary' => true
+                    ],
+                    'Order ID'
+                )
+                    ->addColumn(
+                        'created',
+                        Table::TYPE_TIMESTAMP,
+                        null,
+                        [],
+                        'Creation Time'
+                    )
+                    ->addColumn(
+                        'updated',
+                        Table::TYPE_TIMESTAMP,
+                        null,
+                        [],
+                        'Last Attempt'
+                    )
+                    ->setComment('Signifyd Retries');
+                $setup->getConnection()->createTable($table);
+            }
+        }
 
         $setup->endSetup();
     }
