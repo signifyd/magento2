@@ -5,26 +5,26 @@
             <label>Signifyd</label>
             <tab>service</tab>
             <resource>Magento_Integration::config_signifyd</resource>
-            <group id="general" translate="label" type="text" sortOrder="300" showInDefault="1" showInWebsite="0" showInStore="0">
+            <group id="general" translate="label" type="text" sortOrder="300" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>General Settings</label>
-                <field id="enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable extension</label>
                     <comment>This enables or disables the Signifyd extension</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="key" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="key" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Signifyd API Key</label>
                     <comment>You will find this in http://signifyd.com/settings/teams after you create a Signifyd account</comment>
                 </field>
             </group>
-            <group id="advanced" translate="label comment" type="text" sortOrder="400" showInDefault="1" showInWebsite="0" showInStore="0">
+            <group id="advanced" translate="label comment" type="text" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Advanced</label>
-                <field id="retrieve_score" translate="label" type="select" sortOrder="31" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="retrieve_score" translate="label" type="select" sortOrder="31" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Retrieve Signifyd scores</label>
                     <comment><model>Signifyd\Connect\Model\WebhookLink</model></comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="hold_orders" translate="label comment" type="select" sortOrder="33" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="hold_orders" translate="label comment" type="select" sortOrder="33" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Place hold on orders below score threshold</label>
                     <comment>Orders will be placed on hold below a threshold specified by you. We recommend a threshold of 500. Clicking Thumbs Up will Unhold the Order and Thumbs down will leave the Order on Hold.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -32,35 +32,35 @@
                         <field id="retrieve_score">1</field>
                     </depends>
                 </field>
-                <field id="hold_orders_threshold" translate="label comment" type="text" sortOrder="34" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="hold_orders_threshold" translate="label comment" type="text" sortOrder="34" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Hold score threshold</label>
                     <comment>0-1000. Threshold at which orders get put on HOLD. Default is 500.</comment>
                     <depends>
                         <field id="hold_orders">1</field>
                     </depends>
                 </field>
-                <field id="guarantee_negative_action" translate="label comment" type="select" sortOrder="36" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="guarantee_negative_action" translate="label comment" type="select" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Action on Guarantee Decline</label>
                     <comment>Which action to take on orders when the guarantee is declined</comment>
                     <source_model>Signifyd\Connect\Model\System\Config\Source\Options\Negative</source_model>
                 </field>
-                <field id="guarantee_positive_action" translate="label comment" type="select" sortOrder="37" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="guarantee_positive_action" translate="label comment" type="select" sortOrder="37" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Action on Guarantee Approve</label>
                     <comment>Which action to take on orders when the guarantee is approved</comment>
                     <source_model>Signifyd\Connect\Model\System\Config\Source\Options\Positive</source_model>
                 </field>
             </group>
-            <group id="logs" translate="label" type="text" sortOrder="500" showInDefault="1" showInWebsite="0" showInStore="0">
+            <group id="logs" translate="label" type="text" sortOrder="500" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Logs</label>
-                <field id="log_request" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="log_request" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Log requests</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="log_responses" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="log_responses" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Log responses</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="log_errors" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="log_errors" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Log errors</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
