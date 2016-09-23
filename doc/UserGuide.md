@@ -70,11 +70,9 @@ While logged into Magento2 Admin, go to `Stores > Configuration > Services > Sig
 
 2. Signifyd API Key: You should have this from your Signifyd Team settings as mentioned in **Pre-install** above.
 
-3. Signifyd API URL: https://api.signifyd.com/v2 (this should already be set properly by default). **DO NOT CHANGE THIS UNLESS INSTRUCTED TO DO SO BY SIGNIFYD SUPPORT**.
+3. Go down to the **Logs** section and verify all settings are **Yes**, which should be the default.
 
-4. Go down to the **Logs** section and verify all settings are **Yes**, which should be the default.
-
-5. Click `Save Config` at the top right corner of your screen.
+4. Click `Save Config` at the top right corner of your screen.
  
 ![General Settings](general_and_log_settings.png)
 
@@ -102,7 +100,7 @@ Setup for retrieving and displaying Signifyd scores is actually a two part proce
 
 #### In Magento
 1. Set **Retrieve Signifyd Scores** to **Yes**. This retrieves the score and stores it in the `signifyd_connect_case` table.
-2. <del>Click the URL to confirm callback functionality.</del>
+2. Click the URL to confirm callback functionality.
 
 ![Retrieve Scores](advanced_retrieve_scores.png)
 

@@ -8,6 +8,7 @@ namespace Signifyd\Connect\Controller\Webhooks;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Response\Http;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Sales\Model\Order;
 use Signifyd\Connect\Helper\SignifydAPIMagento;
@@ -64,6 +65,22 @@ class Index extends Action
         $this->_api = $api;
     }
 
+    // NOTE: Magento may deprecate responses in the future in favor of results.
+    protected function Result200()
+    {
+        $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
+    }
+
+    protected function Result400()
+    {
+        $this->getResponse()->setStatusCode(Http::STATUS_CODE_400);
+    }
+
+    protected function Result403()
+    {
+        $this->getResponse()->setStatusCode(Http::STATUS_CODE_403);
+    }
+
     /**
      * @return string
      */
@@ -111,8 +128,6 @@ class Index extends Action
         $request = $caseData['request'];
         $order = $caseData['order'];
 
-        // TODO: Since these actions are fairly overlapped at this point,
-        // might be a good idea to unify them.
         $orderAction = array("action" => null, "reason" => '');
         if (isset($request->score) && $case->getScore() != $request->score) {
             $case->setScore($request->score);
@@ -183,7 +198,7 @@ class Index extends Action
         $threshHold = (int)$this->_coreConfig->getValue('signifyd/advanced/hold_orders_threshold');
         $holdBelowThreshold = $this->_coreConfig->getValue('signifyd/advanced/hold_orders');
         if ($holdBelowThreshold && $caseData['request']->score <= $threshHold) {
-            return array("action"=>"hold", "reason"=>"score threshold failure");
+            return array("action" => "hold", "reason" => "score threshold failure");
         }
         return null;
     }
@@ -197,10 +212,10 @@ class Index extends Action
     {
         $holdBelowThreshold = $this->_coreConfig->getValue('signifyd/advanced/hold_orders');
         if ($holdBelowThreshold && $caseData['request']->reviewDisposition == 'FRAUDULENT') {
-            return array("action"=>"hold", "reason"=>"review returned FRAUDULENT");
+            return array("action" => "hold", "reason" => "review returned FRAUDULENT");
         } else {
             if ($holdBelowThreshold && $caseData['request']->reviewDisposition == 'GOOD') {
-                return array("action"=>"unhold", "reason"=>"review returned GOOD");
+                return array("action" => "unhold", "reason" => "review returned GOOD");
             }
         }
         return null;
@@ -218,10 +233,10 @@ class Index extends Action
 
         $request = $caseData['request'];
         if ($request->guaranteeDisposition == 'DECLINED' && $negativeAction != 'nothing') {
-            return array("action" => $negativeAction, "reason"=>"guarantee declined");
+            return array("action" => $negativeAction, "reason" => "guarantee declined");
         } else {
             if ($request->guaranteeDisposition == 'APPROVED' && $positiveAction != 'nothing') {
-                return array("action" => $positiveAction, "reason"=>"guarantee approved");
+                return array("action" => $positiveAction, "reason" => "guarantee approved");
             }
         }
         return null;
@@ -229,9 +244,9 @@ class Index extends Action
 
     public function execute()
     {
-        if(!$this->_api->enabled())
-        {
-            echo "This plugin is not currently enabled";
+        if (!$this->_api->enabled()) {
+            $this->_api->traceOut("This plugin is not currently enabled");
+            $this->Result400();
             return;
         }
 
@@ -240,21 +255,25 @@ class Index extends Action
         $request = $this->getRequest();
         $hash = $request->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
         $topic = $request->getHeader('X-SIGNIFYD-TOPIC');
-        if($hash == null)
-        {
-            echo "You have successfully reached the webhook endpoint";
+        if ($hash == null) {
+            $this->_api->traceOut("You have successfully reached the webhook endpoint");
+            $this->Result200();
             return;
         }
 
         if ($this->_api->validWebhookRequest($rawRequest, $hash, $topic)) {
             // For the webhook test, all of the request data will be invalid
             if ($topic === 'cases/test') {
+                $this->Result200();
                 return;
             }
 
             $request = json_decode($rawRequest);
             $caseData = $this->initRequest($request);
             $this->updateCase($caseData);
+            $this->Result200();
+        } else {
+            $this->Result403();
         }
     }
 

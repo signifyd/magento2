@@ -62,10 +62,12 @@ class CaseLink extends Column
         if (isset($dataSource['data']['items'])) {
             $name = $this->getData('name');
             foreach ($dataSource['data']['items'] as &$item) {
+                // Scores should be whole numbers
                 if(is_numeric($item[$name]))
                 {
                     $item[$name] = intval($item[$name]);
                 }
+                // The data we display in the grid should link to the case on the Signifyd site
                 if(isset($item['signifyd_code']) && $item['signifyd_code'] != '') {
                     $url = "https://www.signifyd.com/cases/" . $item['signifyd_code'];
                     $item[$name] = "<a href=\"$url\" target=\"_blank\">$item[$name]</a>";

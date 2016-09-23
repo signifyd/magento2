@@ -55,6 +55,11 @@ class Purchase implements ObserverInterface
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();
 
+            // Check if a payment is available for this order yet
+            if($order->getState() == \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT) {
+                return;
+            }
+
             // Check if case already exists for this order
             if ($this->_helper->doesCaseExist($order)) {
                 return;

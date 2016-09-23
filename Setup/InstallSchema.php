@@ -95,6 +95,8 @@ class InstallSchema implements InstallSchemaInterface
                 ->setComment('Signifyd Cases');
             $installer->getConnection()->createTable($table);
         }
+
+		// Retry table, stores orders that fail to pose as cases
         if (!$installer->tableExists('signifyd_connect_retries')) {
             $table = $installer->getConnection()->newTable($installer->getTable('signifyd_connect_retries'));
             $table->addColumn(
@@ -124,13 +126,12 @@ class InstallSchema implements InstallSchemaInterface
                 ->setComment('Signifyd Retries');
             $installer->getConnection()->createTable($table);
         }
-        // Get module table
+
+        // The plan here is to add the signifyd case data directly to the order tables
         $tableName = $setup->getTable('sales_order');
         $gridTableName = $setup->getTable('sales_order_grid');
 
-        // Check if the table already exists
         if ($installer->getConnection()->isTableExists($tableName)) {
-            // Declare data
             $columns = [
                 'signifyd_score' => [
                     'type' => Table::TYPE_FLOAT,

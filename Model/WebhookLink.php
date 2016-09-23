@@ -20,22 +20,19 @@ class WebhookLink implements CommentInterface
     protected $_urlInterface;
 
     public function __construct(
-        UrlInterface $urlInterface)
-    {
+        UrlInterface $urlInterface
+    ) {
         $this->_urlInterface = $urlInterface;
     }
 
     public function getCommentText($elementValue)
     {
         $url = "";
-        if($this->_urlInterface != null)
-        {
+        if ($this->_urlInterface != null) {
             $url = $this->_urlInterface->getRouteUrl("signifyd/webhooks/index");
             $url = str_replace("/admin", "", $url);
             $url = "<a href=\"" . $url . "\">$url</a>";
-        }
-        else
-        {
+        } else {
             $url = "{{store url}}/signifyd/webhooks/index";
         }
         return "Scores will be updated via webhooks. Please setup webhooks on your Signifyd account page (Webhook URL for this site is $url";
