@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright � 2016 SIGNIFYD Inc. All rights reserved.
+ * Copyright 2016 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
 
@@ -10,6 +10,8 @@ namespace Signifyd\Connect\Cron;
 use Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Helper\LogHelper;
 use Signifyd\Connect\Helper\PurchaseHelper;
+use Signifyd\Connect\Helper\Retry;
+use Signifyd\Connect\Model\CaseRetry;
 
 class RetryCaseJob
 {
@@ -28,59 +30,81 @@ class RetryCaseJob
      */
     protected $_helper;
 
+    /**
+     * @var \Signifyd\Connect\Helper\Retry
+     */
+    protected $caseRetryObj;
+
     public function __construct(
         ObjectManagerInterface $objectManager,
         PurchaseHelper $helper,
-        LogHelper $logger
+        LogHelper $logger,
+        Retry $caseRetryObj
     ) {
         $this->_objectManager = $objectManager;
         $this->_helper = $helper;
         $this->_logger = $logger;
+        $this->caseRetryObj = $caseRetryObj;
     }
 
+    /**
+     * Entry point to Cron job
+     * @return $this
+     */
     public function execute() {
         $this->_logger->request("Starting retry job");
-        $this->processRetryQueue();
+        $this->retry();
         return $this;
     }
 
     /**
-     * Run through up to $max items in the retry queue
-     * @param int $max The maximum numbers of items to process
+     * Main Retry Method to start retry cycle
      */
-    public function processRetryQueue($max = 99999)
+    public function retry()
     {
-        /** @var $retryEntity \Signifyd\Connect\Model\CaseRetry */
-        $retryEntity = $this->_objectManager->get('Signifyd\Connect\Model\CaseRetry');
-        $failed_orders = $retryEntity->getCollection();
-        $process_count = 0;
-        try {
-            foreach ($failed_orders as $failed_order) {
-                $this->_logger->request("Order up");
-                /** @var $failed_order \Signifyd\Connect\Model\CaseRetry */
-                if ($process_count++ >= $max) {
-                    return;
-                }
-                $order = $this->_objectManager->get('Magento\Sales\Model\Order')->loadByIncrementId($failed_order->getOrderIncrement());
+        $this->_logger->request("Main retry method called");
 
-                $this->_logger->request("Load");
-                $orderData = $this->_helper->getCase($order);
-                if (!$this->_helper->doesCaseExist($order)) {
-                    $this->_logger->request("No case");
-                    $orderData = $this->_helper->processOrderData($order);
-                    $this->_helper->createNewCase($order);
-                }
-
-                $this->_logger->request("Start retry");
-                if ($this->_helper->retryCase($orderData, $order)) {
-                    $this->_logger->request("Completed retry " . $failed_order->getOrderIncrement());
-                    $failed_order->delete();
-                } else {
-                    $this->_logger->error("Failed retry " . $failed_order->getOrderIncrement());
-                }
+        // Getting all the cases that were not submitted to Signifyd
+        $waitingCases = $this->caseRetryObj->getRetryCasesByStatus(CaseRetry::WAITING_SUBMISSION_STATUS);
+        foreach ($waitingCases as $case) {
+            $this->_logger->request("Signifyd: preparing for send case no: {$case['order_increment']}");
+            $order = $this->_objectManager
+                                ->get('Magento\Sales\Model\Order')
+                                ->loadByIncrementId($case['order_increment']);
+            $caseData = $this->_helper->processOrderData($order);
+            $result = $this->_helper->postCaseToSignifyd($caseData, $order);
+            if($result){
+                $caseObj = $this->_objectManager->create('Signifyd\Connect\Model\Casedata')
+                    ->load($case->getOrderIncrement())
+                    ->setCode($result)
+                    ->setMagentoStatus(CaseRetry::IN_REVIEW_STATUS)
+                    ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
+                $caseObj->save();
             }
-        } catch (\Exception $e) {
-            $this->_logger->error($e->__toString());
         }
+
+        // Getting all the cases that are awaiting review from Signifyd
+        $inReviewCases = $this->caseRetryObj->getRetryCasesByStatus(CaseRetry::IN_REVIEW_STATUS);
+        foreach ($inReviewCases as $case) {
+            $this->_logger->request("Signifyd: preparing for review case no: {$case['order_increment']}");
+            $order = $this->_objectManager
+                ->get('Magento\Sales\Model\Order')
+                ->loadByIncrementId($case['order_increment']);
+            $result = $this->caseRetryObj->processInReviewCase($case, $order);
+            if($result){}
+        }
+
+        // Getting all the cases that need processing after the response was received
+        $inProcessingCases = $this->caseRetryObj->getRetryCasesByStatus(CaseRetry::PROCESSING_RESPONSE_STATUS);
+        foreach ($inProcessingCases as $case) {
+            $this->_logger->request("Signifyd: preparing for review case no: {$case['order_increment']}");
+            $order = $this->_objectManager
+                                        ->get('Magento\Sales\Model\Order')
+                                        ->loadByIncrementId($case['order_increment']);
+            $this->caseRetryObj->processResponseStatus($case, $order);
+        }
+
+        $this->_logger->request("Main retry method ended");
+        return;
     }
 }

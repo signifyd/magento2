@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 SIGNIFYD Inc. All rights reserved.
+ * Copyright 2015 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
 
@@ -16,6 +16,7 @@ use \Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Helper\LogHelper;
 use Signifyd\Connect\Helper\SignifydAPIMagento;
+use Signifyd\Connect\Model\CaseRetry;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -68,10 +69,15 @@ class Purchase implements ObserverInterface
             $orderData = $this->_helper->processOrderData($order);
 
             // Add order to database
-            $this->_helper->createNewCase($order);
+            $case = $this->_helper->createNewCase($order);
 
             // Post case to signifyd service
-            $this->_helper->postCaseToSignifyd($orderData, $order);
+            $result = $this->_helper->postCaseToSignifyd($orderData, $order);
+            if($result){
+                $case->setCode($result);
+                $case->setMagentoStatus(CaseRetry::IN_REVIEW_STATUS)->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
+                $case->save();
+            }
         } catch (\Exception $ex) {
             $this->_logger->error($ex->getMessage());
         }

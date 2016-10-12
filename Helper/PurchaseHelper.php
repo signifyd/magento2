@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 SIGNIFYD Inc. All rights reserved.
+ * Copyright 2015 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
 
@@ -13,6 +13,7 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Address;
 use \Magento\Framework\ObjectManagerInterface;
 use Magento\Sales\Model\Order\Item;
+use Signifyd\Connect\Model\CaseRetry;
 use Signifyd\Core\SignifydModel;
 use Signifyd\Models\Address as SignifydAddress;
 use Signifyd\Models\Card;
@@ -83,6 +84,11 @@ class PurchaseHelper
 
     }
 
+    /**
+     * Getting the ip address of the order
+     * @param Order $order
+     * @return mixed
+     */
     protected function getIPAddress(Order $order)
     {
         if ($order->getRemoteIp()) {
@@ -98,6 +104,11 @@ class PurchaseHelper
         return $this->filterIp($remoteAddressHelper->getRemoteAddress());
     }
 
+    /**
+     * Filter the ip address
+     * @param $ip
+     * @return mixed
+     */
     protected function filterIp($ip)
     {
         $matches = array();
@@ -115,6 +126,10 @@ class PurchaseHelper
         return preg_replace('/[^0-9a-zA-Z:\.]/', '', strtok(str_replace($ip, ',', "\n"), "\n"));
     }
 
+    /**
+     * Getting the version of Magento and the version of the extension
+     * @return array
+     */
     protected function getVersions()
     {
         $version = array();
@@ -281,6 +296,11 @@ class PurchaseHelper
         return $user;
     }
 
+    /**
+     * Loading the case
+     * @param Order $order
+     * @return \Signifyd\Connect\Model\Casedata
+     */
     public function getCase(Order $order)
     {
         /** @var $case \Signifyd\Connect\Model\Casedata */
@@ -288,7 +308,12 @@ class PurchaseHelper
         $case->load($order->getIncrementId());
         return $case;
     }
-    
+
+    /**
+     * Check if the related case exists
+     * @param Order $order
+     * @return bool
+     */
     public function doesCaseExist(Order $order)
     {
         /** @var $case \Signifyd\Connect\Model\Casedata */
@@ -296,7 +321,8 @@ class PurchaseHelper
         return !($case->isEmpty() || $case->isObjectNew());
     }
 
-    /** Construct a new case object
+    /**
+     * Construct a new case object
      * @param $order Order
      * @return CaseModel
      */
@@ -312,7 +338,9 @@ class PurchaseHelper
     }
 
     /**
+     * Saving the case to the database
      * @param $order
+     * @return \Signifyd\Connect\Model\Casedata
      */
     public function createNewCase($order)
     {
@@ -324,44 +352,25 @@ class PurchaseHelper
             ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()))
             ->setEntriesText("");
         $case->save();
+        return $case;
     }
 
     /**
      * @param $caseData
+     * @return bool
      */
     public function postCaseToSignifyd($caseData, $order)
     {
         $this->_logger->request("Sending: " . json_encode($caseData));
         $id = $this->_api->createCase($caseData);
+
         if ($id) {
             $this->_logger->debug("Case sent. Id is $id");
         } else {
             $this->_logger->error("Case failed to send.");
-            $this->addToRetryQueue($order);
-        }
-    }
-
-    public function retryCase($caseData, $order)
-    {
-        $this->_logger->request("Retrying: " . json_encode($caseData));
-        $id = $this->_api->createCase($caseData);
-        if ($id) {
-            $this->_logger->debug("Case sent. Id is $id");
-            return true;
-        } else {
-            $this->_logger->error("Case failed to resend.");
             return false;
         }
-    }
 
-    private function addToRetryQueue($order)
-    {
-        $this->_logger->error("Add to retries: " . $order->getIncrementId());
-
-        $order_tag = $this->_objectManager->create('Signifyd\Connect\Model\CaseRetry')
-            ->setId($order->getIncrementId())
-            ->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()))
-            ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-        $order_tag->save();
+        return $id;
     }
 }

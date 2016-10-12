@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 SIGNIFYD Inc. All rights reserved.
+ * Copyright 2015 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
 namespace Signifyd\Connect\Controller\Adminhtml\Utils;
@@ -95,16 +95,17 @@ class Send extends AbstractMassAction
                 $this->_helper->createNewCase($order);
 
                 // Post case to signifyd service
-                $this->_helper->postCaseToSignifyd($orderData);
+                $this->_helper->postCaseToSignifyd($orderData, $order);
             } catch (\Exception $ex) {
                 $this->_logger->error($ex->getMessage());
             }
         }
 
-        $this->messageManager->addSuccess(__('Success.'));
+        $this->messageManager->addSuccessMessage(__('Success.'));
 
         $resultRedirect = $this->resultRedirectFactory->create();
         $resultRedirect->setPath($this->getComponentRefererUrl());
         return $resultRedirect;
     }
+
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright � 2015 SIGNIFYD Inc. All rights reserved.
+ * Copyright 2015 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
 namespace Signifyd\Connect\Setup;
@@ -95,6 +95,30 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     )
                     ->setComment('Signifyd Retries');
                 $setup->getConnection()->createTable($table);
+            }
+        }
+
+        if(version_compare($context->getVersion(), '1.3.5') < 0) {
+            // Get table Name
+            $tableName = $setup->getTable('signifyd_connect_case');
+            // Check if the table already exists
+            if ($setup->getConnection()->isTableExists($tableName)) {
+                // Declare data
+                $columns = [
+                    'magento_status' => [
+                        'type' => Table::TYPE_TEXT,
+                        'LENGTH' => 255,
+                        'default' => 'waiting_submission',
+                        'nullable' => false,
+                        'comment' => 'Magento Status',
+                    ]
+                ];
+
+                $connection = $setup->getConnection();
+                foreach ($columns as $name => $definition) {
+                    $connection->addColumn($tableName, $name, $definition);
+                }
+
             }
         }
 
