@@ -29,12 +29,12 @@ class WebhookLink implements CommentInterface
     {
         $url = "";
         if ($this->_urlInterface != null) {
-            $url = $this->_urlInterface->getRouteUrl("signifyd/webhooks/index");
-            $url = str_replace("/admin", "", $url);
+            $url = $this->_urlInterface->getBaseUrl();
+            $url = $url . 'signifyd/webhooks/index';
             $url = "<a href=\"" . $url . "\">$url</a>";
         } else {
             $url = "{{store url}}/signifyd/webhooks/index";
         }
-        return "Scores will be updated via webhooks. Please setup webhooks on your Signifyd account page (Webhook URL for this site is $url";
+        return "$url <br />Use this URL to setup your Magento <a href=\"https://app.signifyd.com/settings/notifications\">webhook</a> from the Signifyd console. You MUST setup the webhook to enable order workflows and syncing of guarantees back to Magento.";
     }
 }

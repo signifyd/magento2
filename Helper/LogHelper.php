@@ -24,30 +24,13 @@ class LogHelper
     /**
      * @var bool
      */
-    protected $_logRequests;
-
-    /**
-     * @var bool
-     */
-    protected $_logResponses;
-
-    /**
-     * @var bool
-     */
-    protected $_logErrors;
-
-    /**
-     * @var bool
-     */
-    protected $_logDebug;
+    protected $_log;
 
     public function __construct(
         LoggerInterface $logger,
         ScopeConfigInterface $scopeConfig
     ) {
-        $this->_logRequests = $scopeConfig->getValue('signifyd/logs/log_request');
-        $this->_logResponses = $scopeConfig->getValue('signifyd/logs/log_responses');
-        $this->_logErrors = $scopeConfig->getValue('signifyd/logs/log_errors');
+        $this->_log = $scopeConfig->getValue('signifyd/logs/log');
         $this->_logger = $logger;
     }
 
@@ -57,7 +40,7 @@ class LogHelper
      */
     public function request($message)
     {
-        if (!$this->_logRequests) {
+        if (!$this->_log) {
             return;
         }
         $this->_logger->info($message);
@@ -69,7 +52,7 @@ class LogHelper
      */
     public function response($message)
     {
-        if (!$this->_logResponses) {
+        if (!$this->_log) {
             return;
         }
         $this->_logger->info($message);
@@ -81,7 +64,7 @@ class LogHelper
      */
     public function error($message)
     {
-        if (!$this->_logErrors) {
+        if (!$this->_log) {
             return;
         }
         $this->_logger->error($message);
@@ -93,7 +76,7 @@ class LogHelper
      */
     public function debug($message)
     {
-        if (!$this->_logDebug) {
+        if (!$this->_log) {
             return;
         }
         $this->_logger->info($message);

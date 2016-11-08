@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015 SIGNIFYD Inc. All rights reserved.
+ * Copyright 2015 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
 namespace Signifyd\Connect\Model\System\Config\Source\Options;
@@ -16,8 +16,8 @@ class Positive implements ArrayInterface
     {
         return array(
             array(
-                'value' => 'nothing',
-                'label' => 'Nothing',
+                'value' => 'hold',
+                'label' => 'Leave On Hold',
             ),
             array(
                 'value' => 'unhold',

@@ -55,7 +55,6 @@ class Casedata extends AbstractModel
         if (isset($request->score) && $case->getScore() != $request->score) {
             $case->setScore($request->score);
             $order->setSignifydScore($request->score);
-            $orderAction = $this->handleScoreChange($caseData) ?: $orderAction;
         }
 
         if (isset($request->status) && $case->getSignifydStatus() != $request->status) {
@@ -74,8 +73,8 @@ class Casedata extends AbstractModel
         $order->setSignifydCode($request->caseId);
 
         try{
-            $order->save();
-            $case->save();
+            $order->getResource()->save($order);
+            $this->getResource()->save($case);
             $this->updateOrder($caseData, $orderAction, $case);
         } catch (\Exception $e){
             $this->_logger->critical($e->__toString());
@@ -100,10 +99,10 @@ class Casedata extends AbstractModel
             case "hold":
                 if ($order->canHold()) {
                     try {
-                        $order->hold()->save();
+                        $order->hold()->getResource()->save($order);
                         $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
                             ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                        $case->save();
+                        $case->getResource()->save($case);
                     } catch (\Exception $e){
                         $this->_logger->debug($e->__toString());
                         return false;
@@ -111,24 +110,26 @@ class Casedata extends AbstractModel
                 } else {
                     $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
                         ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                    $case->save();
+                    $case->getResource()->save($case);
                 }
                 break;
             case "unhold":
                 if ($order->canUnhold()) {
+                    $this->_logger->debug('Unhold order action');
                     try{
-                        $order->unhold()->save();
+                        $order->unhold()->getResource()->save($order);
                         $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
                             ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                        $case->save();
+                        $case->getResource()->save($case);
                     } catch (\Exception $e){
                         $this->_logger->debug($e->__toString());
                         return false;
                     }
                 } else {
+                    $this->_logger->debug('Unhold order action can not unhold');
                     $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
                         ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                    $case->save();
+                    $case->getResource()->save($case);
                 }
                 break;
             case "cancel":
@@ -138,10 +139,10 @@ class Casedata extends AbstractModel
                 }
                 if ($order->canCancel()) {
                     try {
-                        $order->cancel()->save();
+                        $order->cancel()->getResource()->save($order);
                         $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
                             ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                        $case->save();
+                        $case->getResource()->save($case);
                     } catch (\Exception $e) {
                         $this->_logger->debug($e->__toString());
                         return false;
@@ -149,14 +150,14 @@ class Casedata extends AbstractModel
                 } else {
                     $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
                         ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                    $case->save();
+                    $case->getResource()->save($case);
                 }
                 break;
             case null:
                 try {
                     $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
                         ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                    $case->save();
+                    $case->getResource()->save($case);
                 } catch (\Exception $e) {
                     $this->_logger->debug($e->__toString());
                     return false;
@@ -165,7 +166,7 @@ class Casedata extends AbstractModel
         }
         if(!is_null($orderAction['action'])){
             $order->addStatusHistoryComment("Signifyd set status to {$orderAction["action"]} because {$orderAction["reason"]}");
-            $order->save();
+            $order->getResource()->save($order);
         }
 
         return true;
@@ -176,28 +177,12 @@ class Casedata extends AbstractModel
      * @throws \Magento\Framework\Exception\LocalizedException
      * @return string
      */
-    protected function handleScoreChange($caseData)
-    {
-        $threshHold = (int)$this->_coreConfig->getValue('signifyd/advanced/hold_orders_threshold');
-        $holdBelowThreshold = $this->_coreConfig->getValue('signifyd/advanced/hold_orders');
-        if ($holdBelowThreshold && $caseData['request']->score <= $threshHold) {
-            return array("action" => "hold", "reason" => "score threshold failure");
-        }
-        return null;
-    }
-
-    /**
-     * @param $caseData
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @return string
-     */
     protected function handleStatusChange($caseData)
     {
-        $holdBelowThreshold = $this->_coreConfig->getValue('signifyd/advanced/hold_orders');
-        if ($holdBelowThreshold && $caseData['request']->reviewDisposition == 'FRAUDULENT') {
+        if ($caseData['request']->reviewDisposition == 'FRAUDULENT') {
             return array("action" => "hold", "reason" => "review returned FRAUDULENT");
         } else {
-            if ($holdBelowThreshold && $caseData['request']->reviewDisposition == 'GOOD') {
+            if ($caseData['request']->reviewDisposition == 'GOOD') {
                 return array("action" => "unhold", "reason" => "review returned GOOD");
             }
         }
@@ -213,15 +198,20 @@ class Casedata extends AbstractModel
     {
         $negativeAction = $this->_coreConfig->getValue('signifyd/advanced/guarantee_negative_action');
         $positiveAction = $this->_coreConfig->getValue('signifyd/advanced/guarantee_positive_action');
-
+        $this->_logger->debug("Signifyd: Positive Action: " . $positiveAction);
         $request = $caseData['request'];
-        if ($request->guaranteeDisposition == 'DECLINED' && $negativeAction != 'nothing') {
-            return array("action" => $negativeAction, "reason" => "guarantee declined");
-        } else {
-            if ($request->guaranteeDisposition == 'APPROVED' && $positiveAction != 'nothing') {
+        switch ($request->guaranteeDisposition){
+            case "DECLINED":
+                return array("action" => $negativeAction, "reason" => "guarantee declined");
+                break;
+            case "APPROVED":
                 return array("action" => $positiveAction, "reason" => "guarantee approved");
-            }
+                break;
+            default:
+                $this->_logger->debug("Signifyd: Unknown guaranty: " . $request->guaranteeDisposition);
+                break;
         }
+
         return null;
     }
 

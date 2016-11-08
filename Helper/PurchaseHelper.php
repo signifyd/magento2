@@ -133,12 +133,11 @@ class PurchaseHelper
     protected function getVersions()
     {
         $version = array();
-        $version['platform'] = 'magento2';
-
         $productMetadata = $this->_objectManager->get('\Magento\Framework\App\ProductMetadata');
-        $version['platformVersion'] = $productMetadata->getVersion();
-
-        $version['pluginVersion'] = (string)($this->_moduleList->getOne('Signifyd_Connect')['setup_version']);
+        $version['storePlatformVersion'] = $productMetadata->getVersion();
+        $version['signifydClientApp'] = 'Magento 2';
+        $version['storePlatform'] = 'Magento 2';
+        $version['signifydClientAppVersion'] = (string)($this->_moduleList->getOne('Signifyd_Connect')['setup_version']);
         return $version;
     }
 

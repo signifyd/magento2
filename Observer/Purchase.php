@@ -73,10 +73,15 @@ class Purchase implements ObserverInterface
 
             // Post case to signifyd service
             $result = $this->_helper->postCaseToSignifyd($orderData, $order);
+
+            if($order->canHold()){
+                $order->hold()->getResource()->save($order);
+            }
+
             if($result){
                 $case->setCode($result);
                 $case->setMagentoStatus(CaseRetry::IN_REVIEW_STATUS)->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                $case->save();
+                $case->getResource()->save($case);
             }
         } catch (\Exception $ex) {
             $this->_logger->error($ex->getMessage());

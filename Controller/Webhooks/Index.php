@@ -108,11 +108,10 @@ class Index extends Action
     protected function initRequest($request)
     {
         /** @var $order \Magento\Sales\Model\Order */
-        $order = $this->_objectManager->get('Magento\Sales\Model\Order')->loadByIncrementId($request->orderId);
+        $order = $this->_objectManager->create('Magento\Sales\Model\Order')->loadByIncrementId($request->orderId);
         /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->_objectManager->get('Signifyd\Connect\Model\Casedata');
+        $case = $this->_objectManager->create('Signifyd\Connect\Model\Casedata');
         $case->load($request->orderId);
-
         return array(
             "case" => $case,
             "order" => $order,
