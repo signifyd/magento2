@@ -81,7 +81,7 @@
                 <label>Webhook Url</label>
                 <field id="guarantee_positive_action" translate="label comment" type="label" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Webhook Url</label>
-                    <comment><model>Signifyd\Connect\Model\WebhookLink</model></comment>
+                    <comment><![CDATA[http://your.domain/signifyd/webhooks/index <br /> Use this URL to setup your Magento webhook from the Signifyd console. You MUST setup the webhook to enable order workflows and syncing of guarantees back to Magento.]]></comment>
                 </field>
             </group>
             <group id="logs" translate="label" type="text" sortOrder="500" showInDefault="1" showInWebsite="1" showInStore="1">
