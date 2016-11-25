@@ -242,7 +242,7 @@ class PurchaseHelper
         }
 
         $card = SignifydModel::Make("\\Signifyd\\Models\\Card");
-        $card->cardholderName = $payment->getCcOwner();
+        $card->cardHolderName = $payment->getCcOwner();
         $card->last4 = $payment->getCcLast4();
         $card->expiryMonth = $payment->getCcExpMonth();
         $card->expiryYear = $payment->getCcExpYear();
