@@ -196,8 +196,8 @@ class Casedata extends AbstractModel
      */
     protected function handleGuaranteeChange($caseData)
     {
-        $negativeAction = $this->_coreConfig->getValue('signifyd/advanced/guarantee_negative_action');
-        $positiveAction = $this->_coreConfig->getValue('signifyd/advanced/guarantee_positive_action');
+        $negativeAction = $this->_coreConfig->getValue('signifyd/advanced/guarantee_negative_action', 'store');
+        $positiveAction = $this->_coreConfig->getValue('signifyd/advanced/guarantee_positive_action', 'store');
         $this->_logger->debug("Signifyd: Positive Action: " . $positiveAction);
         $request = $caseData['request'];
         switch ($request->guaranteeDisposition){

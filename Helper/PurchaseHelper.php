@@ -179,7 +179,7 @@ class PurchaseHelper
         $purchase->shippingPrice = floatval($order->getShippingAmount());
         $purchase->avsResponseCode = $order->getPayment()->getCcAvsStatus();
         $purchase->cvvResponseCode = $order->getPayment()->getCcSecureVerify();
-        $purchase->createdAt = date('c', strtotime($order->getCreatedAt()));;
+        $purchase->createdAt = date('c', strtotime($order->getCreatedAt()));
 
         $purchase->browserIpAddress = $this->getIPAddress($order);
 
@@ -236,7 +236,7 @@ class PurchaseHelper
     protected function makeCardInfo(Order $order)
     {
         $payment = $order->getPayment();
-        $this->_logger->debug($payment->convertToJson());
+        $this->_logger->debug('Signifyd: Payment: ' . $payment->convertToJson());
         if (!(is_subclass_of($payment->getMethodInstance(), '\Magento\Payment\Model\Method\Cc'))) {
             return null;
         }

@@ -20,9 +20,8 @@ class SignifydSettingsMagento extends SignifydSettings
         ScopeConfigInterface $scopeConfig,
         LogHelper $logger
     ) {
-        $this->enabled = $scopeConfig->isSetFlag('signifyd/general/enabled');
-        $this->apiKey = $scopeConfig->getValue('signifyd/general/key');
-
+        $this->enabled = $scopeConfig->isSetFlag('signifyd/general/enabled', 'store');
+        $this->apiKey = $scopeConfig->getValue('signifyd/general/key', 'store');
         $this->logInfo = true;
         $this->logError = true;
         $this->loggerError = function($message) use ($logger)

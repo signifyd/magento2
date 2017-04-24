@@ -30,7 +30,7 @@ class LogHelper
         LoggerInterface $logger,
         ScopeConfigInterface $scopeConfig
     ) {
-        $this->_log = $scopeConfig->getValue('signifyd/logs/log');
+        $this->_log = $scopeConfig->getValue('signifyd/logs/log', 'store');
         $this->_logger = $logger;
     }
 
