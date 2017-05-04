@@ -67,6 +67,7 @@ class Purchase implements ObserverInterface
             if ($this->_helper->doesCaseExist($order)) {
                 // backup hold order
                 $this->holdOrder($order);
+                return;
             }
 
             $orderData = $this->_helper->processOrderData($order);
