@@ -27,7 +27,7 @@ class LogHelper
     protected $_log;
 
     public function __construct(
-        LoggerInterface $logger,
+        \Signifyd\Connect\Logger\Logger $logger,
         ScopeConfigInterface $scopeConfig
     ) {
         $this->_log = $scopeConfig->getValue('signifyd/logs/log', 'store');

@@ -38,6 +38,8 @@ class Purchase implements ObserverInterface
      */
     protected $_api;
 
+    protected $specialMethods = ['payflow_express'];
+
     public function __construct(
         LogHelper $logger,
         PurchaseHelper $helper,
@@ -63,7 +65,8 @@ class Purchase implements ObserverInterface
 
             // Check if case already exists for this order
             if ($this->_helper->doesCaseExist($order)) {
-                return;
+                // backup hold order
+                $this->holdOrder($order);
             }
 
             $orderData = $this->_helper->processOrderData($order);
@@ -74,17 +77,39 @@ class Purchase implements ObserverInterface
             // Post case to signifyd service
             $result = $this->_helper->postCaseToSignifyd($orderData, $order);
 
-            if($order->canHold()){
-                $order->hold()->getResource()->save($order);
-            }
+            // Initial hold order
+            $this->holdOrder($order);
 
             if($result){
                 $case->setCode($result);
                 $case->setMagentoStatus(CaseRetry::IN_REVIEW_STATUS)->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                $case->getResource()->save($case);
+                try {
+                    $case->getResource()->save($case);
+                    $this->_logger->debug('Case saved. Order No:' . $order->getIncrementId());
+                } catch (\Exception $e) {
+                    $this->_logger->error('Exception in: ' . __FILE__ . ', on line: ' . __LINE__);
+                    $this->_logger->error('Exception:' . $e->__toString());
+                }
             }
         } catch (\Exception $ex) {
             $this->_logger->error($ex->getMessage());
         }
+    }
+
+    public function holdOrder($order)
+    {
+        if($order->canHold()){
+            if(in_array($order->getPayment()->getMethod(), $this->specialMethods)){
+                if(!$order->getEmailSent()){ return false; }
+                if($this->_helper->hasGuaranty($order)) { return false; }
+            }
+
+            if(!$this->_helper->hasGuaranty($order)) {
+                $this->_logger->debug('Purchase Observer Order Hold: No: ' . $order->getIncrementId());
+                $order->hold()->getResource()->save($order);
+            }
+        }
+
+        return true;
     }
 }

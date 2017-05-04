@@ -109,9 +109,11 @@ class PurchaseHelper
      * @param $ip
      * @return mixed
      */
-    protected function filterIp($ip)
+    protected function filterIp($ipString)
     {
         $matches = array();
+        $ipArray = explode(',', $ipString);
+        $ip = $ipArray[0];
 
         // Uses format IPv4
         if (preg_match('/[0-9]{1,3}(?:\.[0-9]{1,3}){3}/', $ip, $matches)) {
@@ -372,4 +374,16 @@ class PurchaseHelper
 
         return $id;
     }
+
+    /**
+     * Check if case has guaranty
+     * @param $order
+     * @return bool
+     */
+    public function hasGuaranty($order)
+    {
+        $case = $this->getCase($order);
+        return ($case->getGuarantee() == 'N/A')? false : true;
+    }
+
 }
