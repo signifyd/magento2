@@ -138,6 +138,8 @@ class Index extends Action
             return;
         }
 
+        $this->_logger->debug("Api request: " . $rawRequest);
+
         if ($this->_api->validWebhookRequest($rawRequest, $hash, $topic)) {
             // For the webhook test, all of the request data will be invalid
             if ($topic === 'cases/test') {

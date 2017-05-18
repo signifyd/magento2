@@ -40,6 +40,8 @@ class Purchase implements ObserverInterface
 
     protected $specialMethods = ['payflow_express'];
 
+    protected $restrictedMethods = ['checkmo', 'banktransfer', 'purchaseorder', 'cashondelivery'];
+
     public function __construct(
         LogHelper $logger,
         PurchaseHelper $helper,
@@ -59,9 +61,10 @@ class Purchase implements ObserverInterface
             $order = $observer->getEvent()->getOrder();
 
             // Check if a payment is available for this order yet
-            if($order->getState() == \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT) {
-                return;
-            }
+            if($order->getState() == \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT) { return; }
+            $this->_logger->debug($order->getPayment()->getMethod());
+
+            if(in_array($order->getPayment()->getMethod(), $this->restrictedMethods)){ return; }
 
             // Check if case already exists for this order
             if ($this->_helper->doesCaseExist($order)) {

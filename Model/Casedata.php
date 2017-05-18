@@ -76,6 +76,7 @@ class Casedata extends AbstractModel
             $order->getResource()->save($order);
             $this->getResource()->save($case);
             $this->updateOrder($caseData, $orderAction, $case);
+            $this->_logger->info('Case was saved, id:' . $case->getIncrementId());
         } catch (\Exception $e){
             $this->_logger->critical($e->__toString());
             return false;
@@ -87,7 +88,8 @@ class Casedata extends AbstractModel
 
     /**
      * @param array $caseData
-     * @param string $orderAction
+     * @param array $orderAction
+     * @param $case
      * @return bool
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -175,7 +177,7 @@ class Casedata extends AbstractModel
     /**
      * @param $caseData
      * @throws \Magento\Framework\Exception\LocalizedException
-     * @return string
+     * @return array
      */
     protected function handleStatusChange($caseData)
     {
@@ -192,7 +194,7 @@ class Casedata extends AbstractModel
     /**
      * @param $caseData
      * @throws \Magento\Framework\Exception\LocalizedException
-     * @return string
+     * @return array
      */
     protected function handleGuaranteeChange($caseData)
     {

@@ -7,6 +7,7 @@
 namespace Signifyd\Connect\Helper;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Signifyd\Core\SignifydSettings;
 
 class SignifydSettingsMagento extends SignifydSettings
@@ -18,7 +19,8 @@ class SignifydSettingsMagento extends SignifydSettings
 
     public function __construct(
         ScopeConfigInterface $scopeConfig,
-        LogHelper $logger
+        LogHelper $logger,
+        DirectoryList $directoryList
     ) {
         $this->enabled = $scopeConfig->isSetFlag('signifyd/general/enabled', 'store');
         $this->apiKey = $scopeConfig->getValue('signifyd/general/key', 'store');
@@ -29,5 +31,6 @@ class SignifydSettingsMagento extends SignifydSettings
             $logger->error("API Error: " . $message);
         };
         $this->apiAddress = "https://api.signifyd.com/v2";
+        //$this->logFileLocation = $directoryList->getPath('log');
     }
 }
