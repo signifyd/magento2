@@ -239,23 +239,28 @@ class PurchaseHelper
     {
         $payment = $order->getPayment();
         $this->_logger->debug('Signifyd: Payment: ' . $payment->convertToJson());
-        if (!(is_subclass_of($payment->getMethodInstance(), '\Magento\Payment\Model\Method\Cc'))) {
-            return null;
-        }
 
+        $billingAddress = $order->getBillingAddress();
         $card = SignifydModel::Make("\\Signifyd\\Models\\Card");
-        $card->cardHolderName = $payment->getCcOwner();
-        $card->last4 = $payment->getCcLast4();
-        $card->expiryMonth = $payment->getCcExpMonth();
-        $card->expiryYear = $payment->getCcExpYear();
-        $card->hash = $payment->getCcNumberEnc();
+        if(!is_null($payment->getCcLast4())){
+            if(!is_null($payment->getCcOwner())){
+                $card->cardHolderName = $payment->getCcOwner();
+            } else {
+                $card->cardHolderName = $billingAddress->getFirstname() . '  ' . $billingAddress->getLastname();
+            }
 
-        $ccNum = $payment->getData('cc_number');
-        if ($ccNum && is_numeric($ccNum) && strlen((string)$ccNum) > 6) {
-            $card->bin = substr((string)$ccNum, 0, 6);
+            $card->last4 = $payment->getCcLast4();
+            $card->expiryMonth = $payment->getCcExpMonth();
+            $card->expiryYear = $payment->getCcExpYear();
+            $card->hash = $payment->getCcNumberEnc();
+
+            $ccNum = $payment->getData('cc_number');
+            if ($ccNum && is_numeric($ccNum) && strlen((string)$ccNum) > 6) {
+                $card->bin = substr((string)$ccNum, 0, 6);
+            }
         }
 
-        $card->billingAddress = $this->formatSignifydAddress($order->getBillingAddress());
+        $card->billingAddress = $this->formatSignifydAddress($billingAddress);
         return $card;
     }
 
