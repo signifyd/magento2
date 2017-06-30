@@ -242,11 +242,10 @@ class PurchaseHelper
 
         $billingAddress = $order->getBillingAddress();
         $card = SignifydModel::Make("\\Signifyd\\Models\\Card");
+        $card->cardHolderName = $billingAddress->getFirstname() . '  ' . $billingAddress->getLastname();
         if(!is_null($payment->getCcLast4())){
             if(!is_null($payment->getCcOwner())){
                 $card->cardHolderName = $payment->getCcOwner();
-            } else {
-                $card->cardHolderName = $billingAddress->getFirstname() . '  ' . $billingAddress->getLastname();
             }
 
             $card->last4 = $payment->getCcLast4();
@@ -263,6 +262,7 @@ class PurchaseHelper
         $card->billingAddress = $this->formatSignifydAddress($billingAddress);
         return $card;
     }
+
 
     /** Construct a user account blob
      * @param $order Order
