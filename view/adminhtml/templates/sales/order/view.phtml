@@ -1,0 +1,35 @@
+<?php /** @var $block Signifyd\Connect\Block\Sales\Order\View */ ?>
+<?php
+    $signifydScore = $block->getSignifydScore();
+?>
+<p>&nbsp;</p>
+<section class="admin__page-section order-view-fields">
+    <div class="admin__page-section-title">
+        <span class="title">Signifyd</span>
+        <div class="actions"></div>
+    </div>
+    <div class="admin__page-section-content">
+        <div class="admin__page-section-item signifyd-information">
+            <div class="admin__page-section-item-content">
+              <?php
+                if (!isset($signifydScore)) {
+              ?>
+                    <p><strong>Data not yet available.</strong></p>
+                    <p><small>Hint: Typically a score is returned in a matter of seconds.  If this data has not populated
+                            within a few minutes, ensure that you have properly setup the
+                            <a href="https://app.signifyd.com/settings/notifications" target="_blank">webhooks</a>
+                        in Signifyd admin.</small></p>
+              <?php
+                } else {
+              ?>
+                    <p><strong>Score:</strong> <?php echo $block->getSignifydScore(); ?></p>
+                    <p><strong>Guarantee:</strong> <?php echo $block->getSignifydGuarantee(); ?></p>
+                    <p><strong>Case:</strong> <a href="<?php echo $block->getSignifydLink(); ?>"
+                                                 target="_blank"><?php echo $block->getSignifydCode(); ?></a></p>
+              <?php
+                }
+              ?>
+            </div>
+        </div>
+    </div>
+</section>
