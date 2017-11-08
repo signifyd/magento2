@@ -58,6 +58,7 @@
                     <label>Enable extension</label>
                     <comment>Enables the syncing of Magento orders to Signifyd. Enable this setting ONLY AFTER you've completed the configuration of the plugin.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <backend_model>Signifyd\Connect\Model\System\Config\Backend\Enabled</backend_model>
                 </field>
                 <field id="key" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Signifyd API Key</label>
