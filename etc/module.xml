@@ -11,6 +11,7 @@
             <module name="Magento_Payment" />
             <module name="Magento_Directory" />
             <module name="Magento_Config" />
+            <module name="Magento_AdminNotification" />
         </sequence>
     </module>
 </config>

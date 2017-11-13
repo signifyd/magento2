@@ -6,8 +6,7 @@
     <default>
         <signifyd>
             <general>
-                <enabled>1</enabled>
-                <key> </key>
+                <enabled>0</enabled>
             </general>
             <advanced>
                 <guarantee_negative_action>nothing</guarantee_negative_action>
