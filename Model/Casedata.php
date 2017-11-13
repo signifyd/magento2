@@ -72,8 +72,8 @@ class Casedata extends AbstractModel
         $case->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
         $order->setSignifydCode($request->caseId);
 
-        if (isset($request['testInvestigation'])) {
-            $case->setEntriesText(serialize(array('testInvestigation' => $request['testInvestigation'])));
+        if (isset($request->testInvestigation)) {
+            $case->setEntriesText(serialize(array('testInvestigation' => $request->testInvestigation)));
         }
 
         try{
@@ -159,6 +159,9 @@ class Casedata extends AbstractModel
                     $case->getResource()->save($case);
                 }
                 break;
+            // Do nothing - don't put a break on this case, must get on "null" to complete Signifyd case
+            case 'nothing':
+                unset($orderAction['action']);
             case null:
                 try {
                     $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
