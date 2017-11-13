@@ -26,17 +26,22 @@ class Purchase implements ObserverInterface
     /**
      * @var \Signifyd\Connect\Helper\LogHelper
      */
-    protected $_logger;
+    protected $logger;
 
     /**
      * @var \Signifyd\Connect\Helper\PurchaseHelper
      */
-    protected $_helper;
+    protected $helper;
 
     /**
      * @var SignifydAPIMagento
      */
-    protected $_api;
+    protected $api;
+
+    /**
+     * @var ScopeConfigInterface
+     */
+    protected $coreConfig;
 
     protected $specialMethods = ['payflow_express'];
 
@@ -45,16 +50,18 @@ class Purchase implements ObserverInterface
     public function __construct(
         LogHelper $logger,
         PurchaseHelper $helper,
-        SignifydAPIMagento $api
+        SignifydAPIMagento $api,
+        ScopeConfigInterface $coreConfig
     ) {
-        $this->_logger = $logger;
-        $this->_helper = $helper;
-        $this->_api = $api;
+        $this->logger = $logger;
+        $this->helper = $helper;
+        $this->api = $api;
+        $this->coreConfig = $coreConfig;
     }
 
     public function execute(Observer $observer)
     {
-        if(!$this->_api->enabled()) return;
+        if(!$this->api->enabled()) return;
 
         try {
             /** @var $order Order */
@@ -62,24 +69,24 @@ class Purchase implements ObserverInterface
 
             // Check if a payment is available for this order yet
             if($order->getState() == \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT) { return; }
-            $this->_logger->debug($order->getPayment()->getMethod());
+            $this->logger->debug($order->getPayment()->getMethod());
 
             if(in_array($order->getPayment()->getMethod(), $this->restrictedMethods)){ return; }
 
             // Check if case already exists for this order
-            if ($this->_helper->doesCaseExist($order)) {
+            if ($this->helper->doesCaseExist($order)) {
                 // backup hold order
                 $this->holdOrder($order);
                 return;
             }
 
-            $orderData = $this->_helper->processOrderData($order);
+            $orderData = $this->helper->processOrderData($order);
 
             // Add order to database
-            $case = $this->_helper->createNewCase($order);
+            $case = $this->helper->createNewCase($order);
 
             // Post case to signifyd service
-            $result = $this->_helper->postCaseToSignifyd($orderData, $order);
+            $result = $this->helper->postCaseToSignifyd($orderData, $order);
 
             // Initial hold order
             $this->holdOrder($order);
@@ -89,27 +96,35 @@ class Purchase implements ObserverInterface
                 $case->setMagentoStatus(CaseRetry::IN_REVIEW_STATUS)->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
                 try {
                     $case->getResource()->save($case);
-                    $this->_logger->debug('Case saved. Order No:' . $order->getIncrementId());
+                    $this->logger->debug('Case saved. Order No:' . $order->getIncrementId());
                 } catch (\Exception $e) {
-                    $this->_logger->error('Exception in: ' . __FILE__ . ', on line: ' . __LINE__);
-                    $this->_logger->error('Exception:' . $e->__toString());
+                    $this->logger->error('Exception in: ' . __FILE__ . ', on line: ' . __LINE__);
+                    $this->logger->error('Exception:' . $e->__toString());
                 }
             }
         } catch (\Exception $ex) {
-            $this->_logger->error($ex->getMessage());
+            $this->logger->error($ex->getMessage());
         }
     }
 
     public function holdOrder($order)
     {
-        if($order->canHold()){
-            if(in_array($order->getPayment()->getMethod(), $this->specialMethods)){
-                if(!$order->getEmailSent()){ return false; }
-                if($this->_helper->hasGuaranty($order)) { return false; }
+        $positiveAction = $this->coreConfig->getValue('signifyd/advanced/guarantee_positive_action', 'store');
+        $negativeAction = $this->coreConfig->getValue('signifyd/advanced/guarantee_negative_action', 'store');
+
+        if (($positiveAction != 'nothing' || $negativeAction != 'nothing') && $order->canHold()) {
+            if (in_array($order->getPayment()->getMethod(), $this->specialMethods)) {
+                if (!$order->getEmailSent()){
+                    return false;
+                }
+
+                if ($this->helper->hasGuaranty($order)) {
+                    return false;
+                }
             }
 
-            if(!$this->_helper->hasGuaranty($order)) {
-                $this->_logger->debug('Purchase Observer Order Hold: No: ' . $order->getIncrementId());
+            if (!$this->helper->hasGuaranty($order)) {
+                $this->logger->debug('Purchase Observer Order Hold: No: ' . $order->getIncrementId());
                 $order->hold()->getResource()->save($order);
             }
         }

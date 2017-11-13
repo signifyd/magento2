@@ -5,6 +5,7 @@
  */
 namespace Signifyd\Connect\Model\System\Config\Source\Options;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Option\ArrayInterface;
 
 /**
@@ -12,17 +13,40 @@ use Magento\Framework\Option\ArrayInterface;
  */
 class Positive implements ArrayInterface
 {
+    /**
+     * @var ScopeConfigInterface
+     */
+    protected $coreConfig;
+
+    /**
+     * Positive constructor.
+     * @param ScopeConfigInterface $coreConfig
+     */
+    public function __construct(ScopeConfigInterface $coreConfig)
+    {
+        $this->coreConfig = $coreConfig;
+    }
+
     public function toOptionArray()
     {
-        return array(
+        $options = array(
             array(
-                'value' => 'hold',
-                'label' => 'Leave On Hold',
+                'value' => 'nothing',
+                'label' => 'Do nothing',
             ),
             array(
                 'value' => 'unhold',
-                'label' => 'Unhold Order',
+                'label' => 'Update status to processing',
             ),
         );
+
+        if ($this->coreConfig->getValue('signifyd/advanced/guarantee_positive_action', 'store') == 'hold') {
+            $options[] = array(
+                'value' => 'hold',
+                'label' => 'Leave on hold',
+            );
+        }
+
+        return $options;
     }
 }

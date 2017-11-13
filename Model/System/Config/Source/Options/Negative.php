@@ -5,6 +5,7 @@
  */
 namespace Signifyd\Connect\Model\System\Config\Source\Options;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Option\ArrayInterface;
 
 /**
@@ -12,17 +13,29 @@ use Magento\Framework\Option\ArrayInterface;
  */
 class Negative implements ArrayInterface
 {
+    protected $coreConfig;
+
+    public function __construct(ScopeConfigInterface $coreConfig)
+    {
+        $this->coreConfig = $coreConfig;
+    }
+
     public function toOptionArray()
     {
-        return array(
+        $options = array(
             array(
-                'value' => 'hold',
-                'label' => 'Leave On Hold',
-            ),
-//            array(
-//                'value' => 'unhold',
-//                'label' => 'Unhold Order',
-//            ),
+                'value' => 'nothing',
+                'label' => 'Do nothing',
+            )
         );
+
+        if ($this->coreConfig->getValue('signifyd/advanced/guarantee_negative_action', 'store') == 'hold') {
+            $options[] = array(
+                'value' => 'hold',
+                'label' => 'Leave on hold',
+            );
+        }
+
+        return $options;
     }
 }

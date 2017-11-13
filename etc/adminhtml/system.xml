@@ -55,25 +55,26 @@
             <group id="general" translate="label" type="text" sortOrder="300" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>General Settings</label>
                 <field id="enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Enable extension</label>
+                    <label>Enable Extension</label>
                     <comment>Enables the syncing of Magento orders to Signifyd. Enable this setting ONLY AFTER you've completed the configuration of the plugin.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="key" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Signifyd API Key</label>
-                    <comment><![CDATA[Your API key can be found on the <a href="https://app.signifyd.com/settings" target="_blank" title="This external link will open in a new window">settings</a> page in the Signifyd console. Don't have an account? Contact us to <a href="https://www.signifyd.com?trialRequest=true" target="_blank" title="This external link will open in a new window">request a free a trial account</a>.]]></comment>
+                    <comment><![CDATA[Your API key can be found on the <a href="https://app.signifyd.com/settings" target="_blank" title="This external link will open in a new window">settings page</a> in the Signifyd console. Don't have an account? <a href="https://www.signifyd.com/contact/" target="_blank" title="This external link will open in a new window">Contact us</a>]]></comment>
                 </field>
             </group>
             <group id="advanced" translate="label comment" type="text" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>Advanced</label>
+                <label><![CDATA[Order Workflow
+                    <p>Enabling any of the order workflows below will place all newly created orders "on-hold" until Signifyd has reviewed the order.</p>]]></label>
                 <field id="guarantee_positive_action" translate="label comment" type="select" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Action on Guarantee Approve</label>
-                    <comment>Select what status the Magento order should be updated to when approved for guarantee.</comment>
+                    <label>Approved Guarantees</label>
+                    <comment>Select what action should be taken in Magento when an order is approved for guarantee.</comment>
                     <source_model>Signifyd\Connect\Model\System\Config\Source\Options\Positive</source_model>
                 </field>
                 <field id="guarantee_negative_action" translate="label comment" type="select" sortOrder="37" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Action on Guarantee Decline</label>
-                    <comment>Select what status the Magento order should be updated to when declined for guarantee.</comment>
+                    <label>Declined Guarantees</label>
+                    <comment>Select what action should be taken in Magento when an order is declined for guarantee.</comment>
                     <source_model>Signifyd\Connect\Model\System\Config\Source\Options\Negative</source_model>
                 </field>
             </group>

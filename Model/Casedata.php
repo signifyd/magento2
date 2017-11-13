@@ -72,6 +72,10 @@ class Casedata extends AbstractModel
         $case->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
         $order->setSignifydCode($request->caseId);
 
+        if (isset($request['testInvestigation'])) {
+            $case->setEntriesText(serialize(array('testInvestigation' => $request['testInvestigation'])));
+        }
+
         try{
             $order->getResource()->save($order);
             $this->getResource()->save($case);
