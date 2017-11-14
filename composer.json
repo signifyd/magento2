@@ -6,7 +6,7 @@
 	"signifyd/signifyd-php":"0.1.*"
   },
   "type": "magento2-module",
-  "version": "2.0.9",
+  "version": "2.0.10",
   "autoload": {
     "files": [ "registration.php" ],
     "psr-4": {
