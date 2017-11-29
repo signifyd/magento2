@@ -232,7 +232,6 @@ class PurchaseHelper
     protected function makeCardInfo(Order $order)
     {
         $payment = $order->getPayment();
-        $this->_logger->debug('Signifyd: Payment: ' . $payment->convertToJson());
 
         $billingAddress = $order->getBillingAddress();
         $card = SignifydModel::Make("\\Signifyd\\Models\\Card");
