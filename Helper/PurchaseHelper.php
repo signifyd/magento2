@@ -374,6 +374,41 @@ class PurchaseHelper
     }
 
     /**
+     * @param Order $order
+     * @return bool
+     */
+    public function cancelCaseOnSignifyd(Order $order)
+    {
+        $case = $this->getCase($order);
+        if ($case->isEmpty()) {
+            $this->_logger->debug("Guarantee cancel skipped: case not found for order " . $order->getIncrementId());
+            return false;
+        }
+
+        $this->_logger->debug('Cancelling case ' . $case->getId());
+
+        $guarantee = $case->getData('guarantee');
+        if (empty($guarantee) || in_array($guarantee, array('DECLINED', 'N/A'))) {
+            $this->_logger->debug("Guarantee cancel skipped: current guarantee is {$guarantee}");
+            return false;
+        }
+
+        $disposition = $this->_api->cancelGuarantee($case->getCode());
+        $this->_logger->debug("Cancel disposition result {$disposition}");
+
+        if ($disposition == 'CANCELED') {
+            $case->setData('guarantee', $disposition);
+            $case->save();
+
+            $order->setSignifydGuarantee($disposition);
+            $order->save();
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Check if case has guaranty
      * @param $order
      * @return bool
