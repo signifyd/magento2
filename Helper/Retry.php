@@ -71,15 +71,15 @@ class Retry extends AbstractHelper
     }
 
     /**
-     * @param $case
+     * @param \Signifyd\Connect\Model\Casedata $case
      * @param $order
      * @return mixed
      */
     public function processResponseStatus($case, $order)
     {
         $orderAction = array('action' => null, 'reason' => null);
-        $negativeAction = $this->scopeConfig->getValue('signifyd/advanced/guarantee_negative_action', 'store');
-        $positiveAction = $this->scopeConfig->getValue('signifyd/advanced/guarantee_positive_action', 'store');
+        $negativeAction = $case->getNegativeAction();
+        $positiveAction = $case->getPositiveAction();
 
         if ($case->getGuarantee() == 'DECLINED' && $negativeAction != 'nothing') {
             $orderAction = array("action" => $negativeAction, "reason" => "guarantee declined");

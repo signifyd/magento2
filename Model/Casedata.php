@@ -93,7 +93,7 @@ class Casedata extends AbstractModel
     /**
      * @param array $caseData
      * @param array $orderAction
-     * @param $case
+     * @param \Signifyd\Connect\Model\Casedata $case
      * @return bool
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -205,8 +205,13 @@ class Casedata extends AbstractModel
      */
     protected function handleGuaranteeChange($caseData)
     {
-        $negativeAction = $this->_coreConfig->getValue('signifyd/advanced/guarantee_negative_action', 'store');
-        $positiveAction = $this->_coreConfig->getValue('signifyd/advanced/guarantee_positive_action', 'store');
+        if (!isset($caseData['case']) || !$caseData['case'] instanceof \Signifyd\Connect\Model\Casedata) {
+            return null;
+        }
+
+        $negativeAction = $caseData['case']->getNegativeAction();
+        $positiveAction = $caseData['case']->getPositiveAction();
+        
         $this->_logger->debug("Signifyd: Positive Action: " . $positiveAction);
         $request = $caseData['request'];
         switch ($request->guaranteeDisposition){
@@ -224,4 +229,65 @@ class Casedata extends AbstractModel
         return null;
     }
 
+    /**
+     * @param null $index
+     * @return array|mixed|null
+     */
+    public function getEntries($index = null)
+    {
+        $entries = $this->getData('entries_text');
+
+        if (!empty($entries)) {
+            @$entries = unserialize($entries);
+        }
+
+        if (!is_array($entries)) {
+            $entries = array();
+        }
+
+        if (!empty($index)) {
+            return isset($entries[$index]) ? $entries[$index] : null;
+        }
+
+        return $entries;
+    }
+
+    public function setEntries($index, $value = null)
+    {
+        if (is_array($index)) {
+            $entries = $index;
+        } elseif (is_string($index)) {
+            $entries = $this->getEntries();
+            $entries[$index] = $value;
+        }
+
+        @$entries = serialize($entries);
+        $this->setData('entries_text', $entries);
+
+        return $this;
+    }
+
+    public function isHoldReleased()
+    {
+        $holdReleased = $this->getEntries('hold_released');
+        return ($holdReleased == 1) ? true : false;
+    }
+    
+    public function getPositiveAction()
+    {
+        if ($this->isHoldReleased()) {
+            return 'nothing';
+        } else {
+            return $this->_coreConfig->getValue('signifyd/advanced/guarantee_positive_action', 'store');
+        }
+    }
+
+    public function getNegativeAction()
+    {
+        if ($this->isHoldReleased()) {
+            return 'nothing';
+        } else {
+            return $this->_coreConfig->getValue('signifyd/advanced/guarantee_negative_action', 'store');
+        }
+    }
 }

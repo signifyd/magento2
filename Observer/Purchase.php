@@ -45,7 +45,8 @@ class Purchase implements ObserverInterface
 
     protected $specialMethods = ['payflow_express'];
 
-    protected $restrictedMethods = ['checkmo', 'banktransfer', 'purchaseorder', 'cashondelivery'];
+//    protected $restrictedMethods = ['checkmo', 'banktransfer', 'purchaseorder', 'cashondelivery'];
+    protected $restrictedMethods = ['banktransfer', 'purchaseorder', 'cashondelivery'];
 
     public function __construct(
         LogHelper $logger,
@@ -109,8 +110,9 @@ class Purchase implements ObserverInterface
 
     public function holdOrder($order)
     {
-        $positiveAction = $this->coreConfig->getValue('signifyd/advanced/guarantee_positive_action', 'store');
-        $negativeAction = $this->coreConfig->getValue('signifyd/advanced/guarantee_negative_action', 'store');
+        $case = $this->helper->getCase($order);
+        $positiveAction = $case->getPositiveAction();
+        $negativeAction = $case->getNegativeAction();
 
         if (($positiveAction != 'nothing' || $negativeAction != 'nothing') && $order->canHold()) {
             if (in_array($order->getPayment()->getMethod(), $this->specialMethods)) {
