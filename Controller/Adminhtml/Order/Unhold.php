@@ -20,32 +20,26 @@ class Unhold extends \Magento\Sales\Controller\Adminhtml\Order\Unhold
      */
     public function execute()
     {
-        $resultRedirect = parent::execute();
-
-        /** @var \Magento\Sales\Model\Order $order */
-        $order = $this->_coreRegistry->registry('current_order');
-        $order->canUnhold();
-
-        if ($order->getStatus() != Order::STATE_HOLDED) {
-            $case = $this->getCase($order);
-
-            if (!$case->isHoldReleased()) {
-                $case->setEntries('hold_released', 1);
-                $case->save();
-
-                $order->addStatusHistoryComment('Order released from hold by merchant');
-                $order->save();
-            }
+        try {
+            $order = $this->orderRepository->get($this->getRequest()->getParam('order_id'));
+        } catch (NoSuchEntityException $e) {
+            return parent::execute();
         }
 
-        return $resultRedirect;
-    }
-
-    public function getCase(Order $order)
-    {
         /** @var $case \Signifyd\Connect\Model\Casedata */
         $case = $this->_objectManager->get('Signifyd\Connect\Model\Casedata');
         $case->load($order->getIncrementId());
-        return $case;
+
+        if (!$case->isHoldReleased()) {
+            $case->setEntries('hold_released', 1);
+            $case->save();
+        }
+
+        $resultRedirect = parent::execute();
+
+        $order->addStatusHistoryComment('Order released from hold by merchant');
+        $order->save();
+
+        return $resultRedirect;
     }
 }

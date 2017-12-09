@@ -45,8 +45,7 @@ class Purchase implements ObserverInterface
 
     protected $specialMethods = ['payflow_express'];
 
-//    protected $restrictedMethods = ['checkmo', 'banktransfer', 'purchaseorder', 'cashondelivery'];
-    protected $restrictedMethods = ['banktransfer', 'purchaseorder', 'cashondelivery'];
+    protected $restrictedMethods = ['checkmo', 'banktransfer', 'purchaseorder', 'cashondelivery'];
 
     public function __construct(
         LogHelper $logger,

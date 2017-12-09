@@ -32,8 +32,6 @@ define([
         var msg = $.mage.__('Signifyd has not reviewed this order, are you sure you want to unhold?'),
             url = $('#order-view-unhold-button').data('url');
 
-        console.log(url);
-
         confirm({
             'content': msg,
             'actions': {
