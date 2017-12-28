@@ -84,6 +84,6 @@ class CaseInfo extends Template
      */
     public function getCaseScore()
     {
-        return $this->getCaseEntity()->getData('score');
+        return floor($this->getCaseEntity()->getData('score'));
     }
 }
