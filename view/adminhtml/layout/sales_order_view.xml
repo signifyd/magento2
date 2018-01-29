@@ -11,5 +11,9 @@
             <block name="signifyd.sales.order.view.js" class="Magento\Framework\View\Element\Template"
                    template="Signifyd_Connect::sales_order_view.phtml"/>
         </referenceContainer>
+
+        <referenceBlock name="order_additional_info">
+            <block class="Signifyd\Connect\Block\Adminhtml\CaseInfo"  name="order_case_info" template="Signifyd_Connect::case_info.phtml"/>
+        </referenceBlock>
     </body>
 </page>
