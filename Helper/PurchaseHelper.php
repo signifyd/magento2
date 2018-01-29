@@ -23,6 +23,7 @@ use Signifyd\Models\Purchase;
 use Signifyd\Models\Recipient;
 use Signifyd\Models\UserAccount;
 use Magento\Framework\Stdlib\DateTime\DateTime;
+use \Signifyd\Connect\Helper\DeviceHelper;
 
 /**
  * Class PurchaseHelper
@@ -56,6 +57,8 @@ class PurchaseHelper
      */
     protected $_moduleList;
 
+    protected $_deviceHelper;
+
     /**
      * @param ObjectManagerInterface $objectManager
      * @param LogHelper $logger
@@ -70,18 +73,20 @@ class PurchaseHelper
         DateTime $dateTime,
         ScopeConfigInterface $scopeConfig,
         SignifydAPIMagento $api,
-        ModuleListInterface $moduleList
+        ModuleListInterface $moduleList,
+        DeviceHelper $deviceHelper
     ) {
         $this->_logger = $logger;
         $this->_objectManager = $objectManager;
         $this->_moduleList = $moduleList;
+        $this->_deviceHelper = $deviceHelper;
+
         try {
             $this->_api = $api;
 
         } catch (\Exception $e) {
             $this->_logger->error($e);
         }
-
     }
 
     /**
@@ -179,7 +184,20 @@ class PurchaseHelper
 
         $purchase->browserIpAddress = $this->getIPAddress($order);
 
+        if (!$this->isAdmin() && $this->_deviceHelper->isDeviceFingerprintEnabled()) {
+            $purchase->orderSessionId = $this->_deviceHelper->generateFingerprint($order->getQuoteId());
+        }
+
         return $purchase;
+    }
+
+    public function isAdmin()
+    {
+        /** @var \Magento\Framework\ObjectManagerInterface $om */
+        $om = \Magento\Framework\App\ObjectManager::getInstance();
+        /** @var \Magento\Framework\App\State $state */
+        $state =  $om->get('Magento\Framework\App\State');
+        return 'adminhtml' === $state->getAreaCode();
     }
 
     /**
@@ -338,7 +356,7 @@ class PurchaseHelper
 
     /**
      * Saving the case to the database
-     * @param $order
+     * @param \Magento\Sales\Model\Order $order
      * @return \Signifyd\Connect\Model\Casedata
      */
     public function createNewCase($order)
