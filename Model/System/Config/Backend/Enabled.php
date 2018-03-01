@@ -5,6 +5,7 @@
  */
 namespace Signifyd\Connect\Model\System\Config\Backend;
 
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\LocalizedException;
 
 class Enabled extends \Magento\Framework\App\Config\Value
