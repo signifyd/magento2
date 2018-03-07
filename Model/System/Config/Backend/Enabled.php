@@ -60,8 +60,7 @@ class Enabled extends \Magento\Framework\App\Config\Value
         $isAnotherEnabled = $this->_config->getValue($path == $signifydPath ? $builtinPath : $signifydPath, 'store');
 
         if ($isAnotherEnabled) {
-            $currentConfig = $this->_config->getValue($builtinPath);
-            if ($currentConfig == 0) {
+            if ($this->getOldValue() == 0) {
                 $this->setValue(0);
             }
 
