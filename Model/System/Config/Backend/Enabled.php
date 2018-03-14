@@ -64,7 +64,7 @@ class Enabled extends \Magento\Framework\App\Config\Value
                 $this->setValue(0);
             }
 
-            $this->messageManager->addError(__('WARNING: Another instance of Signifyd is currently enabled. Please disable the other running instance to avoid conflicts.'));
+            $this->messageManager->addError(__('ERROR: Another Signifyd integration is already enabled. You must disable the active integration before enabling a new one.'));
         }
         return $this;
     }

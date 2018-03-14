@@ -63,7 +63,7 @@ class BuiltinConflict implements \Magento\Framework\Notification\MessageInterfac
      */
     public function getText()
     {
-        return __('WARNING: More than one instance of Signifyd is currently enabled. Please disable one to avoid conflicts.');
+        return __('WARNING: You have multiple Signifyd integrations enabled. To avoid conflicts, please disable one of the enabled integrations.');
     }
     /**
      * Retrieve message severity
