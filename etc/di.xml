@@ -22,4 +22,25 @@
             </argument>
         </arguments>
     </type>
+
+    <type name="Signifyd\Connect\Model\PaymentVerificationFactory">
+        <arguments>
+            <argument name="config" xsi:type="object">Magento\Payment\Gateway\Config\Config</argument>
+            <argument name="avsDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\AvsEmsCodeMapper</argument>
+            <argument name="cvvDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\CvvEmsCodeMapper</argument>
+            <argument name="cardholderDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\CardholderMapper</argument>
+            <argument name="last4DefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\Last4Mapper</argument>
+            <argument name="expMonthDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\ExpMonthMapper</argument>
+            <argument name="expYearDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\ExpYearMapper</argument>
+            <argument name="binDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\BinMapper</argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Paypal\Model\Payflowlink">
+        <plugin name="Signifyd_Connect_Magento_Paypal_Model_Payflowlink" type="\Signifyd\Connect\Plugin\Magento\Paypal\Model\Payflowlink" />
+    </type>
+
+    <type name="Magento\Authorizenet\Model\TransactionService">
+        <plugin name="Signifyd_Connect_Magento_Authorizenet_Model_TransactionService" type="\Signifyd\Connect\Plugin\Magento\Authorizenet\Model\TransactionService" />
+    </type>
 </config>

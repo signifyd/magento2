@@ -6,6 +6,7 @@
 
 namespace Signifyd\Connect\Helper;
 
+use Braintree\Exception;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\AppInterface;
 use Magento\Framework\Module\ModuleListInterface;
@@ -24,6 +25,10 @@ use Signifyd\Models\Recipient;
 use Signifyd\Models\UserAccount;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use \Signifyd\Connect\Helper\DeviceHelper;
+use Signifyd\Connect\Model\PaymentVerificationFactory;
+//use Magento\Signifyd\Model\PaymentVerificationFactory;
+use Magento\Sales\Api\Data\OrderPaymentInterface;
+use Magento\Framework\Registry;
 
 /**
  * Class PurchaseHelper
@@ -57,7 +62,17 @@ class PurchaseHelper
      */
     protected $_moduleList;
 
+    /**
+     * @var \Signifyd\Connect\Helper\DeviceHelper
+     */
     protected $_deviceHelper;
+
+    /**
+     * @var PaymentVerificationFactory
+     */
+    protected $paymentVerificationFactory;
+
+    protected $registry;
 
     /**
      * @param ObjectManagerInterface $objectManager
@@ -66,6 +81,8 @@ class PurchaseHelper
      * @param ScopeConfigInterface $scopeConfig
      * @param SignifydAPIMagento $api
      * @param ModuleListInterface $moduleList
+     * @param DeviceHelper $deviceHelper
+     * @param PaymentVerificationFactory $paymentVerificationFactory
      */
     public function __construct(
         ObjectManagerInterface $objectManager,
@@ -74,12 +91,16 @@ class PurchaseHelper
         ScopeConfigInterface $scopeConfig,
         SignifydAPIMagento $api,
         ModuleListInterface $moduleList,
-        DeviceHelper $deviceHelper
+        DeviceHelper $deviceHelper,
+        PaymentVerificationFactory $paymentVerificationFactory,
+        Registry $registry
     ) {
         $this->_logger = $logger;
         $this->_objectManager = $objectManager;
         $this->_moduleList = $moduleList;
         $this->_deviceHelper = $deviceHelper;
+        $this->paymentVerificationFactory = $paymentVerificationFactory;
+        $this->registry = $registry;
 
         try {
             $this->_api = $api;
@@ -167,6 +188,9 @@ class PurchaseHelper
         // Get all of the purchased products
         $items = $order->getAllItems();
         $purchase = SignifydModel::Make("\\Signifyd\\Models\\Purchase");
+        $purchase->avsResponseCode = $this->getAvsCode($order->getPayment());
+        $purchase->cvvResponseCode = $this->getCvvCode($order->getPayment());
+
         $purchase->orderChannel = "WEB";
         $purchase->products = array();
         foreach ($items as $item) {
@@ -178,10 +202,7 @@ class PurchaseHelper
         $purchase->orderId = $order->getIncrementId();
         $purchase->paymentGateway = $order->getPayment()->getMethod();
         $purchase->shippingPrice = floatval($order->getShippingAmount());
-        $purchase->avsResponseCode = $order->getPayment()->getCcAvsStatus();
-        $purchase->cvvResponseCode = $order->getPayment()->getCcSecureVerify();
         $purchase->createdAt = date('c', strtotime($order->getCreatedAt()));
-
         $purchase->browserIpAddress = $this->getIPAddress($order);
 
         if (!$this->isAdmin() && $this->_deviceHelper->isDeviceFingerprintEnabled()) {
@@ -253,22 +274,11 @@ class PurchaseHelper
 
         $billingAddress = $order->getBillingAddress();
         $card = SignifydModel::Make("\\Signifyd\\Models\\Card");
-        $card->cardHolderName = $billingAddress->getFirstname() . '  ' . $billingAddress->getLastname();
-        if(!is_null($payment->getCcLast4())){
-            if(!is_null($payment->getCcOwner())){
-                $card->cardHolderName = $payment->getCcOwner();
-            }
-
-            $card->last4 = $payment->getCcLast4();
-            $card->expiryMonth = $payment->getCcExpMonth();
-            $card->expiryYear = $payment->getCcExpYear();
-            $card->hash = $payment->getCcNumberEnc();
-
-            $ccNum = $payment->getData('cc_number');
-            if ($ccNum && is_numeric($ccNum) && strlen((string)$ccNum) > 6) {
-                $card->bin = substr((string)$ccNum, 0, 6);
-            }
-        }
+        $card->cardHolderName = $this->getCardholder($order);
+        $card->bin = $this->getBin($order->getPayment());
+        $card->last4 = $this->getLast4($order->getPayment());
+        $card->expiryMonth = $this->getExpMonth($order->getPayment());
+        $card->expiryYear = $this->getExpYear($order->getPayment());
 
         $card->billingAddress = $this->formatSignifydAddress($billingAddress);
         return $card;
@@ -294,7 +304,7 @@ class PurchaseHelper
         if(!is_null($customer) && !$customer->isEmpty()) {
             $user->createdDate = date('c', strtotime($customer->getCreatedAt()));
         }
-        /** @var $orderFactory \Magento\Sales\Model\ResourceModel\Order\Collection */
+        /** @var $orders \Magento\Sales\Model\ResourceModel\Order\Collection */
         $orders = $this->_objectManager->get('\Magento\Sales\Model\ResourceModel\Order\Collection');
         $orders->addFieldToFilter('customer_id', $order->getCustomerId());
         $orders->load();
@@ -351,6 +361,14 @@ class PurchaseHelper
         $case->recipient = $this->makeRecipient($order);
         $case->userAccount = $this->makeUserAccount($order);
         $case->clientVersion = $this->getVersions();
+
+        /**
+         * This registry entry it's used to collect data from some payment methods like Payflow Link
+         * It must be unregistered after use
+         * @see \Signifyd\Connect\Plugin\Magento\Paypal\Model\Payflowlink
+         */
+        $this->registry->unregister('signifyd_payment_data');
+
         return $case;
     }
 
@@ -437,4 +455,203 @@ class PurchaseHelper
         return ($case->getGuarantee() == 'N/A')? false : true;
     }
 
+    /**
+     * Gets AVS code for order payment method.
+     *
+     * @param OrderPaymentInterface $orderPayment
+     * @return string
+     */
+    protected function getAvsCode(OrderPaymentInterface $orderPayment)
+    {
+        try {
+            $avsAdapter = $this->paymentVerificationFactory->createPaymentAvs($orderPayment->getMethod());
+            $avsCode = $avsAdapter->getData($orderPayment);
+            $avsCode = trim(strtoupper($avsCode));
+            
+            if (empty($avsCode) || strlen($avsCode) > 1) {
+                return null;
+            }
+
+            // http://www.emsecommerce.net/avs_cvv2_response_codes.htm from Signifyd Api Documentation
+            $validAvsResponseCodes = array('X', 'Y', 'A', 'W', 'Z', 'N', 'U', 'R', 'E', 'S', 'D', 'M', 'B', 'P', 'C', 'I', 'G');
+
+            if (in_array($avsCode, $validAvsResponseCodes)) {
+                return $avsCode;
+            } else {
+                return null;
+            }
+        } catch (Exception $e) {
+            $this->_logger->error('Error fetching AVS code: ' . $e->getMessage());
+            return '';
+        }
+    }
+
+    /**
+     * Gets CVV code for order payment method.
+     *
+     * @param OrderPaymentInterface $orderPayment
+     * @return string
+     */
+    protected function getCvvCode(OrderPaymentInterface $orderPayment)
+    {
+        try {
+            $cvvAdapter = $this->paymentVerificationFactory->createPaymentCvv($orderPayment->getMethod());
+            $cvvCode = $cvvAdapter->getData($orderPayment);
+            $cvvCode = trim(strtoupper($cvvCode));
+
+            if (empty($cvvCode) || strlen($cvvCode) > 1) {
+                return null;
+            }
+
+            // http://www.emsecommerce.net/cvv_cvv2_response_codes.htm from Signifyd Api Documentation
+            $validCvvResponseCodes = array('M', 'N', 'P', 'S', 'U');
+
+            if (in_array($cvvCode, $validCvvResponseCodes)) {
+                return $cvvCode;
+            } else {
+                return null;
+            }
+        } catch (Exception $e) {
+            $this->_logger->error('Error fetching CVV code: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Gets cardholder for order
+     *
+     * @param Order $order
+     * @return string
+     */
+    protected function getCardholder(Order $order)
+    {
+        try {
+            $cardholderAdapter = $this->paymentVerificationFactory->createPaymentCardholder($order->getPayment()->getMethod());
+            $cardholder = $cardholderAdapter->getData($order->getPayment());
+
+            if (empty($cardholder)) {
+                $firstname = $order->getBillingAddress()->getFirstname();
+                $lastname = $order->getBillingAddress()->getLastname();
+                $cardholder = trim($firstname) . ' ' . trim($lastname);
+            }
+
+            $cardholder = strtoupper($cardholder);
+            $cardholder = preg_replace('/[^A-Z ]/', '', $cardholder);
+            $cardholder = preg_replace( '/  +/', ' ', $cardholder);
+
+            return $cardholder;
+        } catch (Exception $e) {
+            $this->_logger->error('Error fetching cardholder: ' . $e->getMessage());
+            return '';
+        }
+    }
+
+    /**
+     * Gets last4 for order payment method.
+     *
+     * @param OrderPaymentInterface $orderPayment
+     * @return string|null
+     */
+    protected function getLast4(OrderPaymentInterface $orderPayment)
+    {
+        try {
+            $last4Adapter = $this->paymentVerificationFactory->createPaymentLast4($orderPayment->getMethod());
+            $last4 = $last4Adapter->getData($orderPayment);
+            $last4 = preg_replace('/\D/', '', $last4);
+
+            if (!empty($last4) && strlen($last4) == 4 && is_numeric($last4)) {
+                return strval($last4);
+            }
+
+            return null;
+        } catch (Exception $e) {
+            $this->_logger->error('Error fetching last4: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Gets expiration month for order payment method.
+     *
+     * @param OrderPaymentInterface $orderPayment
+     * @return int|null
+     */
+    protected function getExpMonth(OrderPaymentInterface $orderPayment)
+    {
+        try {
+            $monthAdapter = $this->paymentVerificationFactory->createPaymentExpMonth($orderPayment->getMethod());
+            $expMonth = $monthAdapter->getData($orderPayment);
+            $expMonth = preg_replace('/\D/', '', $expMonth);
+
+            $expMonth = intval($expMonth);
+            if ($expMonth < 1 || $expMonth > 12) {
+                return null;
+            }
+
+            return $expMonth;
+        } catch (Exception $e) {
+            $this->_logger->error('Error fetching expiration month: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Gets expiration year for order payment method.
+     *
+     * @param OrderPaymentInterface $orderPayment
+     * @return int|null
+     */
+    protected function getExpYear(OrderPaymentInterface $orderPayment)
+    {
+        try {
+            $yearAdapter = $this->paymentVerificationFactory->createPaymentExpYear($orderPayment->getMethod());
+            $expYear = $yearAdapter->getData($orderPayment);
+            $expYear = preg_replace('/\D/', '', $expYear);
+
+            $expYear = intval($expYear);
+            if ($expYear <= 0) {
+                return null;
+            }
+
+            //If returned expiry year has less then 4 digits
+            if ($expYear < 1000) {
+                $expYear += 2000;
+            }
+
+            return $expYear;
+        } catch (Exception $e) {
+            $this->_logger->error('Error fetching expiration year: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Gets credit card bin for order payment method.
+     *
+     * @param OrderPaymentInterface $orderPayment
+     * @return int|null
+     */
+    protected function getBin(OrderPaymentInterface $orderPayment)
+    {
+        try {
+            $binAdapter = $this->paymentVerificationFactory->createPaymentBin($orderPayment->getMethod());
+            $bin = $binAdapter->getData($orderPayment);
+            $bin = preg_replace('/\D/', '', $bin);
+
+            if (empty($bin)) {
+                return null;
+            }
+
+            $bin = intval($bin);
+            // A credit card does not starts with zero, so the bin intaval has to be at least 100.000
+            if ($bin < 100000) {
+                return null;
+            }
+
+            return $bin;
+        } catch (Exception $e) {
+            $this->_logger->error('Error fetching expiration bin: ' . $e->getMessage());
+            return null;
+        }
+    }
 }

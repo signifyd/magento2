@@ -19,5 +19,39 @@
                 <log>1</log>
             </logs>
         </signifyd>
+        <payment>
+            <authorizenet_directpost>
+                <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Authorizenet\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
+                <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\Authorizenet\Last4Mapper</signifyd_last4_adapter>
+                <signifyd_exp_month_adapter>Signifyd\Connect\Model\Payment\Authorizenet\ExpMonthMapper</signifyd_exp_month_adapter>
+                <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\Authorizenet\ExpYearMapper</signifyd_exp_year_adapter>
+            </authorizenet_directpost>
+
+            <braintree>
+                <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Braintree\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
+                <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Braintree\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
+            </braintree>
+
+            <payflowpro>
+                <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Payflow\Pro\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
+                <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Payflow\Pro\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
+            </payflowpro>
+
+            <payflow_link>
+                <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Payflow\Link\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
+                <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Payflow\Link\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
+                <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\Payflow\Link\Last4Mapper</signifyd_last4_adapter>
+                <signifyd_exp_month_adapter>Signifyd\Connect\Model\Payment\Payflow\Link\ExpMonthMapper</signifyd_exp_month_adapter>
+                <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\Payflow\Link\ExpYearMapper</signifyd_exp_year_adapter>
+            </payflow_link>
+
+            <payflow_advanced>
+                <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Payflow\Link\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
+                <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Payflow\Link\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
+                <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\Payflow\Link\Last4Mapper</signifyd_last4_adapter>
+                <signifyd_exp_month_adapter>Signifyd\Connect\Model\Payment\Payflow\Link\ExpMonthMapper</signifyd_exp_month_adapter>
+                <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\Payflow\Link\ExpYearMapper</signifyd_exp_year_adapter>
+            </payflow_advanced>
+        </payment>
     </default>
 </config>

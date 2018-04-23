@@ -43,10 +43,33 @@ class Purchase implements ObserverInterface
      */
     protected $coreConfig;
 
+    /**
+     * Methods that should wait e-mail sent to hold order
+     * @var array
+     */
     protected $specialMethods = ['payflow_express'];
 
+    /**
+     * List of methods that uses a different event for triggering case creation
+     * This is useful when it's needed case creation to be delayed to wait for other processes like data return from
+     * payment method
+     *
+     * @var array
+     */
+    protected $ownEventsMethods = ['authorizenet_directpost'];
+
+    /**
+     * @var array
+     */
     protected $restrictedMethods = ['checkmo', 'banktransfer', 'purchaseorder', 'cashondelivery'];
 
+    /**
+     * Purchase constructor.
+     * @param LogHelper $logger
+     * @param PurchaseHelper $helper
+     * @param SignifydAPIMagento $api
+     * @param ScopeConfigInterface $coreConfig
+     */
     public function __construct(
         LogHelper $logger,
         PurchaseHelper $helper,
@@ -59,19 +82,35 @@ class Purchase implements ObserverInterface
         $this->coreConfig = $coreConfig;
     }
 
-    public function execute(Observer $observer)
+    /**
+     * @param Observer $observer
+     * @param bool $checkOwnEventsMethods
+     */
+    public function execute(Observer $observer, $checkOwnEventsMethods = true)
     {
-        if(!$this->api->enabled()) return;
+        if (!$this->api->enabled()) {
+            return;
+        }
 
         try {
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();
 
             // Check if a payment is available for this order yet
-            if($order->getState() == \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT) { return; }
-            $this->logger->debug($order->getPayment()->getMethod());
+            if ($order->getState() == \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT) {
+                return;
+            }
 
-            if(in_array($order->getPayment()->getMethod(), $this->restrictedMethods)){ return; }
+            $paymentMethod = $order->getPayment()->getMethod();
+            $this->logger->debug($paymentMethod);
+
+            if ($checkOwnEventsMethods && in_array($paymentMethod, $this->ownEventsMethods)) {
+                return;
+            }
+
+            if (in_array($paymentMethod, $this->restrictedMethods)){
+                return;
+            }
 
             // Check if case already exists for this order
             if ($this->helper->doesCaseExist($order)) {
@@ -91,7 +130,7 @@ class Purchase implements ObserverInterface
             // Initial hold order
             $this->holdOrder($order);
 
-            if($result){
+            if ($result){
                 $case->setCode($result);
                 $case->setMagentoStatus(CaseRetry::IN_REVIEW_STATUS)->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
                 try {
@@ -107,6 +146,10 @@ class Purchase implements ObserverInterface
         }
     }
 
+    /**
+     * @param $order
+     * @return bool
+     */
     public function holdOrder($order)
     {
         $case = $this->helper->getCase($order);
@@ -115,7 +158,7 @@ class Purchase implements ObserverInterface
 
         if (($positiveAction != 'nothing' || $negativeAction != 'nothing') && $order->canHold()) {
             if (in_array($order->getPayment()->getMethod(), $this->specialMethods)) {
-                if (!$order->getEmailSent()){
+                if (!$order->getEmailSent()) {
                     return false;
                 }
 
