@@ -60,6 +60,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 foreach ($columns as $name => $definition) {
                     $connection->dropColumn($tableName, $name);
                     $connection->addColumn($tableName, $name, $definition);
+                    $connection->dropColumn($gridTableName, $name);
                     $connection->addColumn($gridTableName, $name, $definition);
                 }
 
