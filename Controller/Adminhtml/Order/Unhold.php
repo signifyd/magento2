@@ -2,8 +2,6 @@
 
 namespace Signifyd\Connect\Controller\Adminhtml\Order;
 
-use Magento\Sales\Model\Order;
-
 class Unhold extends \Magento\Sales\Controller\Adminhtml\Order\Unhold
 {
     /**
@@ -21,8 +19,9 @@ class Unhold extends \Magento\Sales\Controller\Adminhtml\Order\Unhold
     public function execute()
     {
         try {
+            /** @var \Magento\Sales\Model\Order $order */
             $order = $this->orderRepository->get($this->getRequest()->getParam('order_id'));
-        } catch (NoSuchEntityException $e) {
+        } catch (\Magento\Framework\Exception\LocalizedException $e) {
             return parent::execute();
         }
 
