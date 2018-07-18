@@ -172,6 +172,7 @@ class PurchaseHelper
         $product = SignifydModel::Make("\\Signifyd\\Models\\Product");
         $product->itemId = $item->getSku();
         $product->itemName = $item->getName();
+        $product->itemIsDigital = $item->getIsVirtual();
         $product->itemPrice = $item->getPrice();
         $product->itemQuantity = (int)$item->getQtyOrdered();
         $product->itemUrl = $item->getProduct()->getProductUrl();
@@ -205,11 +206,39 @@ class PurchaseHelper
         $purchase->createdAt = date('c', strtotime($order->getCreatedAt()));
         $purchase->browserIpAddress = $this->getIPAddress($order);
 
+        $couponCode = $order->getCouponCode();
+        if (!empty($couponCode)) {
+            $purchase->discountCodes = array(
+                'amount' => abs($order->getDiscountAmount()),
+                'code' => $couponCode
+            );
+        }
+
+        $purchase->shipments = $this->makeShipments();
+
         if (!$this->isAdmin() && $this->_deviceHelper->isDeviceFingerprintEnabled()) {
             $purchase->orderSessionId = $this->_deviceHelper->generateFingerprint($order->getQuoteId());
         }
 
         return $purchase;
+    }
+
+    protected function makeShipments(Order $order)
+    {
+        $shipments = array();
+        $shippingMethod = $order->getShippingMethod();
+
+        if (!empty($shippingMethod)) {
+            $shippingMethod = $order->getShippingMethod(true);
+            $shipment = SignifydModel::Make("\\Signifyd\\Models\\Shipment");
+            $shipment->shipper = $shippingMethod->getCarrierCode();
+            $shipment->shippingPrice = floatval($order->getShippingAmount());
+            $shipment->shippingMethod = $shippingMethod->getMethod();
+
+            $shipments[] = $shipment;
+        }
+
+        return $shipments;
     }
 
     public function isAdmin()
