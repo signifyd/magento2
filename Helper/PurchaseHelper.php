@@ -172,7 +172,7 @@ class PurchaseHelper
         $product = SignifydModel::Make("\\Signifyd\\Models\\Product");
         $product->itemId = $item->getSku();
         $product->itemName = $item->getName();
-        $product->itemIsDigital = $item->getIsVirtual();
+        $product->itemIsDigital = (bool) $item->getIsVirtual();
         $product->itemPrice = $item->getPrice();
         $product->itemQuantity = (int)$item->getQtyOrdered();
         $product->itemUrl = $item->getProduct()->getProductUrl();
@@ -202,7 +202,6 @@ class PurchaseHelper
         $purchase->currency = $order->getOrderCurrencyCode();
         $purchase->orderId = $order->getIncrementId();
         $purchase->paymentGateway = $order->getPayment()->getMethod();
-        $purchase->shippingPrice = floatval($order->getShippingAmount());
         $purchase->createdAt = date('c', strtotime($order->getCreatedAt()));
         $purchase->browserIpAddress = $this->getIPAddress($order);
 
@@ -214,7 +213,7 @@ class PurchaseHelper
             );
         }
 
-        $purchase->shipments = $this->makeShipments();
+        $purchase->shipments = $this->makeShipments($order);
 
         if (!$this->isAdmin() && $this->_deviceHelper->isDeviceFingerprintEnabled()) {
             $purchase->orderSessionId = $this->_deviceHelper->generateFingerprint($order->getQuoteId());
