@@ -17,6 +17,7 @@ use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Helper\LogHelper;
 use Signifyd\Connect\Helper\SignifydAPIMagento;
 use Signifyd\Connect\Model\CaseRetry;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -42,6 +43,11 @@ class Purchase implements ObserverInterface
      * @var ScopeConfigInterface
      */
     protected $coreConfig;
+
+    /**
+     * @var StoreManagerInterface
+     */
+    protected $storeManager;
 
     /**
      * Methods that should wait e-mail sent to hold order
@@ -74,12 +80,14 @@ class Purchase implements ObserverInterface
         LogHelper $logger,
         PurchaseHelper $helper,
         SignifydAPIMagento $api,
-        ScopeConfigInterface $coreConfig
+        ScopeConfigInterface $coreConfig,
+        StoreManagerInterface $storeManager
     ) {
         $this->logger = $logger;
         $this->helper = $helper;
         $this->api = $api;
         $this->coreConfig = $coreConfig;
+        $this->storeManager = $storeManager;
     }
 
     /**
@@ -95,6 +103,16 @@ class Purchase implements ObserverInterface
         try {
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();
+
+            // Saving store code to order, to know where the order is been created
+            if (empty($order->getData('origin_store_code'))) {
+                $storeCode = $this->storeManager->getStore($this->helper->isAdmin() ? 'admin' : true)->getCode();
+
+                if (!empty($storeCode)) {
+                    $order->setData('origin_store_code', $storeCode);
+                    $order->save();
+                }
+            }
 
             // Check if a payment is available for this order yet
             if ($order->getState() == \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT) {
