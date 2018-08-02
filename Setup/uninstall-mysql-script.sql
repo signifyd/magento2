@@ -11,3 +11,5 @@ ALTER TABLE sales_order DROP COLUMN signifyd_code;
 ALTER TABLE sales_order_grid DROP COLUMN signifyd_score;
 ALTER TABLE sales_order_grid DROP COLUMN signifyd_guarantee;
 ALTER TABLE sales_order_grid DROP COLUMN signifyd_code;
+
+DELETE FROM setup_module WHERE module='Signifyd_Connect';
