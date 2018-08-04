@@ -81,7 +81,7 @@ class Purchase implements ObserverInterface
         PurchaseHelper $helper,
         SignifydAPIMagento $api,
         ScopeConfigInterface $coreConfig,
-        StoreManagerInterface $storeManager
+        StoreManagerInterface $storeManager = null
     ) {
         $this->logger = $logger;
         $this->helper = $helper;
@@ -105,7 +105,7 @@ class Purchase implements ObserverInterface
             $order = $observer->getEvent()->getOrder();
 
             // Saving store code to order, to know where the order is been created
-            if (empty($order->getData('origin_store_code'))) {
+            if (empty($order->getData('origin_store_code')) && is_object($this->storeManager)) {
                 $storeCode = $this->storeManager->getStore($this->helper->isAdmin() ? 'admin' : true)->getCode();
 
                 if (!empty($storeCode)) {
