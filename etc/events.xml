@@ -15,6 +15,10 @@
         <observer name="onPurchaseAuthorizenetDirectpost" instance="Signifyd\Connect\Observer\Purchase\AuthorizenetDirectpost" />
     </event>
 
+    <event name="controller_action_postdispatch_authorizenet_directpost_payment_backendresponse">
+        <observer name="onPurchaseAuthorizenetDirectpost" instance="Signifyd\Connect\Observer\Purchase\AuthorizenetDirectpost" />
+    </event>
+
     <event name="order_cancel_after">
         <observer name="onCancel" instance="Signifyd\Connect\Observer\Cancel" />
     </event>
