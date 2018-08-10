@@ -3,7 +3,10 @@ Signifyd's extension for Magento 2.0
 
 Signifyd’s plugin enables merchant on Magento 2 to integrate with Signifyd in minutes, automating fraud prevention and protecting them in case of chargebacks.
 
-## Installation Errors
+## Installing via Composer
+
+
+### Install Errors
 
 Version 2.4.1+  will check for all database structures needed for the extension to work correctly. This check is performed on the extension configuration section in the Magento admin.
 
