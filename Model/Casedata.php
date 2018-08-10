@@ -13,6 +13,7 @@ use Magento\Framework\Registry;
 use Magento\Sales\Model\Service\InvoiceService;
 use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
 use Magento\Framework\ObjectManagerInterface;
+use Magento\Sales\Model\Order;
 
 /**
  * ORM model declaration for case data
@@ -150,6 +151,24 @@ class Casedata extends AbstractModel
                         return false;
                     }
                 } else {
+                    $notHoldableStates = [
+                        Order::STATE_CANCELED,
+                        Order::STATE_PAYMENT_REVIEW,
+                        Order::STATE_COMPLETE,
+                        Order::STATE_CLOSED,
+                        Order::STATE_HOLDED
+                    ];
+
+                    if (in_array($order->getState(), $notHoldableStates)) {
+                        $reason = "order is on {$order->getState()} state";
+                    } elseif ($order->getActionFlag(Order::ACTION_FLAG_HOLD) === false) {
+                        $reason = "order action flag is set to do not hold";
+                    } else {
+                        $reason = "unknown reason";
+                    }
+
+                    $this->_logger->debug("Order {$order->getIncrementId()} can not be held because {$reason}");
+
                     $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
                         ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
                     $case->getResource()->save($case);
@@ -169,7 +188,22 @@ class Casedata extends AbstractModel
                         return false;
                     }
                 } else {
-                    $this->_logger->debug('Unhold order action can not unhold');
+                    if ($order->getState() != Order::STATE_HOLDED) {
+                        $reason = "order is not holded";
+                    } elseif ($order->isPaymentReview()) {
+                        $reason = 'order is in payment review';
+                    } elseif ($order->getActionFlag(Order::ACTION_FLAG_UNHOLD) === false) {
+                        $reason = "order action flag is set to do not unhold";
+                    } else {
+                        $reason = "unknown reason";
+                    }
+
+                    $this->_logger->debug(
+                        "Order {$order->getIncrementId()} ({$order->getState()} > {$order->getStatus()}) " .
+                        "can not be unheld because {$reason}. " .
+                        "Case status: {$case->getSignifydStatus()}"
+                    );
+
                     $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
                         ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
                     $case->getResource()->save($case);
@@ -196,6 +230,37 @@ class Casedata extends AbstractModel
                         return false;
                     }
                 } else {
+                    $notCancelableStates = [
+                        Order::STATE_CANCELED,
+                        Order::STATE_PAYMENT_REVIEW,
+                        Order::STATE_COMPLETE,
+                        Order::STATE_CLOSED,
+                        Order::STATE_HOLDED
+                    ];
+
+                    if (in_array($order->getState(), $notCancelableStates)) {
+                        $reason = "order is on {$order->getState()} state";
+                    } elseif (!$order->canReviewPayment() && $order->canFetchPaymentReviewUpdate()) {
+                        $reason = "payment review issues";
+                    } elseif ($order->getActionFlag(Order::ACTION_FLAG_CANCEL) === false) {
+                        $reason = "order action flag is set to do not cancel";
+                    } else {
+                        $allInvoiced = true;
+                        foreach ($order->getAllItems() as $item) {
+                            if ($item->getQtyToInvoice()) {
+                                $allInvoiced = false;
+                                break;
+                            }
+                        }
+                        if ($allInvoiced) {
+                            $reason = "all items are invoiced";
+                        } else {
+                            $reason = "unknown reason";
+                        }
+                    }
+
+                    $this->_logger->debug("Order {$order->getIncrementId()} can not be canceled because {$reason}");
+
                     $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
                         ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
                     $case->getResource()->save($case);
@@ -210,7 +275,7 @@ class Casedata extends AbstractModel
                     if (!$order->canInvoice()) {
                         throw new \Exception('The order does not allow an invoice to be created.');
                     }
-                    
+
                     $invoice = $this->invoiceService->prepareInvoice($order);
 
                     if (!$invoice) {
@@ -220,7 +285,7 @@ class Casedata extends AbstractModel
                     if (!$invoice->getTotalQty()) {
                         throw new \Exception('You can\'t create an invoice without products.');
                     }
-                    
+
                     $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
                     $invoice->addComment('Signifyd: Automatic Invoice');
                     $invoice->register();
@@ -271,7 +336,7 @@ class Casedata extends AbstractModel
                 break;
         }
 
-        if(!is_null($orderAction['action'])){
+        if (!is_null($orderAction['action'])) {
             $order->addStatusHistoryComment("Signifyd set status to {$orderAction["action"]} because {$orderAction["reason"]}");
             $order->getResource()->save($order);
         }

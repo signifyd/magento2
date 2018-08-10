@@ -15,6 +15,14 @@ use Magento\Framework\DB\Ddl\Table;
  */
 class InstallSchema implements InstallSchemaInterface
 {
+    protected $logger;
+
+    public function __construct(
+        \Signifyd\Connect\Helper\LogHelper $logger
+    ) {
+        $this->logger = $logger;
+    }
+
     /**
      * {@inheritdoc}
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -92,6 +100,16 @@ class InstallSchema implements InstallSchemaInterface
                     [],
                     'Update Time'
                 )
+                ->addColumn(
+                    'magento_status',
+                    Table::TYPE_TEXT,
+                    255,
+                    [
+                        'nullable' => false,
+                        'default' => 'waiting_submission'
+                    ],
+                    'Magento Status'
+                )
                 ->setComment('Signifyd Cases');
             $installer->getConnection()->createTable($table);
         }
@@ -154,12 +172,16 @@ class InstallSchema implements InstallSchemaInterface
                 ],
             ];
 
-            $connection = $setup->getConnection();
-            foreach ($columns as $name => $definition) {
-                $connection->dropColumn($tableName, $name);
-                $connection->addColumn($tableName, $name, $definition);
-                $connection->dropColumn($gridTableName, $name);
-                $connection->addColumn($gridTableName, $name, $definition);
+            try {
+                /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
+                $connection = $setup->getConnection();
+
+                foreach ($columns as $name => $definition) {
+                    $connection->addColumn($tableName, $name, $definition);
+                    $connection->addColumn($gridTableName, $name, $definition);
+                }
+            } catch (\Exception $e) {
+                $this->logger->error('Error modifying sales_order table: ' . $e->getMessage());
             }
         }
     }

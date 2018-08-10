@@ -17,8 +17,12 @@ class Last4Mapper extends Base_Last4Mapper
     public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
     {
         $responseXmlDocument = $this->getSignifydPaymentData();
-        $last4 = $responseXmlDocument->transaction->payment->creditCard->cardNumber;
-        $last4 = substr($last4, -4);
+
+        if (is_object($responseXmlDocument)) {
+            $last4 = $responseXmlDocument->transaction->payment->creditCard->cardNumber;
+            $last4 = substr($last4, -4);
+        }
+
         return (empty($last4) ? parent::getPaymentData($orderPayment) : $last4);
     }
 }

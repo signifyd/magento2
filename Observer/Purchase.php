@@ -174,7 +174,29 @@ class Purchase implements ObserverInterface
         $positiveAction = $case->getPositiveAction();
         $negativeAction = $case->getNegativeAction();
 
-        if (($positiveAction != 'nothing' || $negativeAction != 'nothing') && $order->canHold()) {
+        if (($positiveAction != 'nothing' || $negativeAction != 'nothing')) {
+            if (!$order->canHold()) {
+                $notHoldableStates = [
+                    Order::STATE_CANCELED,
+                    Order::STATE_PAYMENT_REVIEW,
+                    Order::STATE_COMPLETE,
+                    Order::STATE_CLOSED,
+                    Order::STATE_HOLDED
+                ];
+
+                if (in_array($order->getState(), $notHoldableStates)) {
+                    $reason = "order is on {$order->getState()} state";
+                } elseif ($order->getActionFlag(Order::ACTION_FLAG_HOLD) === false) {
+                    $reason = "order action flag is set to do not hold";
+                } else {
+                    $reason = "unknown reason";
+                }
+
+                $this->logger->debug("Order {$order->getIncrementId()} can not be held because {$reason}");
+
+                return false;
+            }
+
             if (in_array($order->getPayment()->getMethod(), $this->specialMethods)) {
                 if (!$order->getEmailSent()) {
                     return false;
