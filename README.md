@@ -3,15 +3,15 @@ Signifyd's extension for Magento 2.0
 
 Signifyd’s plugin enables merchant on Magento 2 to integrate with Signifyd in minutes, automating fraud prevention and protecting them in case of chargebacks.
 
-## Database Errors
+## Installation Errors
 
-From version 2.4.1 extension will check for all database structures needed for all functionalities work properly. This check is performed on extension configuration section on store admin.
+Version 2.4.1+  will check for all database structures needed for the extension to work correctly. This check is performed on the extension configuration section in the Magento admin.
 
-If any database structures are missing, all functionality will be disabled.
+If any database structures are missing, the extension will be disabled.
 
-If there are warnings about missing database modifications after installation, to follow bellow instructions can fix the issue.
+If there are warnings about missing database modifications after installation, follow the instructions below to fix the issue.
 
-Bellow script will create all necessary structures, so run it directly on your MySQL database. If there are any 'duplicate column' errors during this script execution, they can be ignored.
+This script will create all of the necessary structures. You will need to run it directly on your MySQL database. If there are any 'duplicate column' errors during this script execution, they can be ignored.
 
 ```sql
 CREATE TABLE IF NOT EXISTS `signifyd_connect_case` (
@@ -43,7 +43,7 @@ ALTER TABLE sales_order_grid ADD COLUMN signifyd_guarantee VARCHAR(64) NOT NULL 
 ALTER TABLE sales_order_grid ADD COLUMN signifyd_code VARCHAR(255) NOT NULL DEFAULT '';
 ```
 
-After running the script may be necessary run bellow command on terminal in order to update caches.
+After running the script may be necessary run the command below in terminal in order to update caches.
 
 ```bash
 bin/magento setup:upgrade
@@ -53,7 +53,7 @@ If there still warnings about missing database modifications, please, contact ou
 
 ## Purge all Signifyd data
 
-This instructions should only be used for complete removal of all Signifyd data on Magento database. After this will be necessary to reinstall the extension to use it again.
+If you are having issues with the install you can remove all Signifyd data on the Magento database for a clean re-install.
 
 **All Signifyd data on Magento database will be lost.**
 
