@@ -47,7 +47,7 @@ class Config implements ObserverInterface
     protected $desiredDatabaseStructure = array(
         'signifyd_connect_case' => array(),
         'signifyd_connect_retries' => array(),
-        'sales_order' => array('signifyd_score', 'signifyd_guarantee', 'signifyd_code'),
+        'sales_order' => array('signifyd_score', 'signifyd_guarantee', 'signifyd_code', 'origin_store_code'),
         'sales_order_grid' => array('signifyd_score', 'signifyd_guarantee', 'signifyd_code')
     );
 
