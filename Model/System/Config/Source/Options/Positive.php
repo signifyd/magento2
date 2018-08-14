@@ -32,12 +32,16 @@ class Positive implements ArrayInterface
         $options = array(
             array(
                 'value' => 'nothing',
-                'label' => 'Do nothing',
+                'label' => 'Do nothing'
             ),
             array(
                 'value' => 'unhold',
-                'label' => 'Update status to processing',
+                'label' => 'Update status to processing'
             ),
+            array(
+                'value' => 'capture',
+                'label' => 'Capture payment and update order status'
+            )
         );
 
         if ($this->coreConfig->getValue('signifyd/advanced/guarantee_positive_action', 'store') == 'hold') {

@@ -10,6 +10,9 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Model\AbstractModel;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Registry;
+use Magento\Sales\Model\Service\InvoiceService;
+use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
+use Magento\Framework\ObjectManagerInterface;
 use Magento\Sales\Model\Order;
 
 /**
@@ -17,15 +20,47 @@ use Magento\Sales\Model\Order;
  */
 class Casedata extends AbstractModel
 {
-    protected $_coreConfig;
+    /**
+     * @var ScopeConfigInterface
+     */
+    protected $coreConfig;
 
+    /**
+     * @var InvoiceService
+     */
+    private $invoiceService;
+
+    /**
+     * @var InvoiceSender
+     */
+    protected $invoiceSender;
+
+    /**
+     * @var \Magento\Framework\ObjectManagerInterface
+     */
+    protected $objectManager;
+
+    /**
+     * Casedata constructor.
+     * @param Context $context
+     * @param Registry $registry
+     * @param ScopeConfigInterface $coreConfig
+     * @param InvoiceService $invoiceService
+     */
     public function __construct(
         Context $context,
         Registry $registry,
-        ScopeConfigInterface $coreConfig
+        ScopeConfigInterface $coreConfig,
+        InvoiceService $invoiceService,
+        InvoiceSender $invoiceSender,
+        ObjectManagerInterface $objectManager
     )
     {
-        $this->_coreConfig = $coreConfig;
+        $this->coreConfig = $coreConfig;
+        $this->invoiceService = $invoiceService;
+        $this->invoiceSender = $invoiceSender;
+        $this->objectManager = $objectManager;
+
         parent::__construct($context, $registry);
     }
 
@@ -133,7 +168,7 @@ class Casedata extends AbstractModel
                     }
 
                     $this->_logger->debug("Order {$order->getIncrementId()} can not be held because {$reason}");
-                    
+
                     $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
                         ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
                     $case->getResource()->save($case);
@@ -176,19 +211,22 @@ class Casedata extends AbstractModel
                 break;
 
             case "cancel":
-                // Can't cancel if order is on hold
                 if ($order->canUnhold()) {
                     $order = $order->unhold();
                 }
 
                 if ($order->canCancel()) {
                     try {
-                        $order->cancel()->getResource()->save($order);
+                        $order->cancel();
+                        $order->addStatusHistoryComment('Signifyd: order canceled');
+                        $order->save();
+
                         $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
                             ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
                         $case->getResource()->save($case);
                     } catch (\Exception $e) {
                         $this->_logger->debug($e->__toString());
+                        $order->addStatusHistoryComment('Signifyd: unable to cancel order');
                         return false;
                     }
                 } else {
@@ -226,6 +264,58 @@ class Casedata extends AbstractModel
                     $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
                         ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
                     $case->getResource()->save($case);
+                    return false;
+                }
+                break;
+
+            case "capture":
+                try {
+                    $order->unhold();
+
+                    if (!$order->canInvoice()) {
+                        throw new \Exception('The order does not allow an invoice to be created.');
+                    }
+
+                    $invoice = $this->invoiceService->prepareInvoice($order);
+
+                    if (!$invoice) {
+                        throw new \Exception('We can\'t save the invoice right now.');
+                    }
+
+                    if (!$invoice->getTotalQty()) {
+                        throw new \Exception('You can\'t create an invoice without products.');
+                    }
+
+                    $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
+                    $invoice->addComment('Signifyd: Automatic Invoice');
+                    $invoice->register();
+
+                    $order->setCustomerNoteNotify(true);
+                    $order->setIsInProcess(true);
+                    $order->addStatusHistoryComment('Signifyd: Automatic Invoice');
+
+                    $transactionSave = $this->objectManager->create(
+                        \Magento\Framework\DB\Transaction::class
+                    )->addObject(
+                        $invoice
+                    )->addObject(
+                        $order
+                    );
+                    $transactionSave->save();
+
+                    $this->_logger->debug('Invoice was created for order: ' . $order->getIncrementId());
+
+                    // send invoice/shipment emails
+                    try {
+                        $this->invoiceSender->send($invoice);
+                    } catch (\Exception $e) {
+                        $this->_logger->debug('We can\'t send the invoice email right now.');
+                    }
+                } catch (\Exception $e) {
+                    $this->_logger->debug('Exception while creating invoice: ' . $e->__toString());
+                    $order->addStatusHistoryComment('Signifyd: unable to create invoice: ' . $e->__toString());
+                    $order->save();
+                    return false;
                 }
                 break;
 
@@ -284,8 +374,8 @@ class Casedata extends AbstractModel
 
         $negativeAction = $caseData['case']->getNegativeAction();
         $positiveAction = $caseData['case']->getPositiveAction();
-        
-        $this->_logger->debug("Signifyd: Positive Action: " . $positiveAction);
+
+        $this->_logger->debug("Signifyd: Positive action for {$caseData['case']->getOrderIncrement()}: " . $positiveAction);
         $request = $caseData['request'];
         switch ($request->guaranteeDisposition){
             case "DECLINED":
@@ -351,7 +441,7 @@ class Casedata extends AbstractModel
         if ($this->isHoldReleased()) {
             return 'nothing';
         } else {
-            return $this->_coreConfig->getValue('signifyd/advanced/guarantee_positive_action', 'store');
+            return $this->coreConfig->getValue('signifyd/advanced/guarantee_positive_action', 'store');
         }
     }
 
@@ -360,7 +450,7 @@ class Casedata extends AbstractModel
         if ($this->isHoldReleased()) {
             return 'nothing';
         } else {
-            return $this->_coreConfig->getValue('signifyd/advanced/guarantee_negative_action', 'store');
+            return $this->coreConfig->getValue('signifyd/advanced/guarantee_negative_action', 'store');
         }
     }
 }

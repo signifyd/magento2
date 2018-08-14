@@ -186,13 +186,20 @@ class PurchaseHelper
      */
     protected function makePurchase(Order $order)
     {
+        $originStoreCode = $order->getData('origin_store_code');
+
         // Get all of the purchased products
         $items = $order->getAllItems();
         $purchase = SignifydModel::Make("\\Signifyd\\Models\\Purchase");
         $purchase->avsResponseCode = $this->getAvsCode($order->getPayment());
         $purchase->cvvResponseCode = $this->getCvvCode($order->getPayment());
 
-        $purchase->orderChannel = "WEB";
+        if ($originStoreCode == 'admin') {
+            $purchase->orderChannel = "PHONE";
+        } elseif (!empty($originStoreCode)) {
+            $purchase->orderChannel = "WEB";
+        }
+
         $purchase->products = array();
         foreach ($items as $item) {
             $purchase->products[] = $this->makeProduct($item);
@@ -215,7 +222,7 @@ class PurchaseHelper
 
         $purchase->shipments = $this->makeShipments($order);
 
-        if (!$this->isAdmin() && $this->_deviceHelper->isDeviceFingerprintEnabled()) {
+        if (!empty($originStoreCode) && $originStoreCode != 'admin' && $this->_deviceHelper->isDeviceFingerprintEnabled()) {
             $purchase->orderSessionId = $this->_deviceHelper->generateFingerprint($order->getQuoteId());
         }
 

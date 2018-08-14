@@ -26,6 +26,15 @@ class UpgradeSchema implements UpgradeSchemaInterface
     {
         $setup->startSetup();
 
+        if (version_compare($context->getVersion(), '3.0.0') < 0) {
+            $setup->getConnection()->addColumn($setup->getTable('sales_order'), 'origin_store_code', [
+                'type' => Table::TYPE_TEXT,
+                'LENGTH' => 32,
+                'nullable' => true,
+                'comment' => 'Store code used to place order',
+            ]);
+        }
+
         $setup->endSetup();
     }
 }

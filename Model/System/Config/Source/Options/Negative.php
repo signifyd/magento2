@@ -25,7 +25,11 @@ class Negative implements ArrayInterface
         $options = array(
             array(
                 'value' => 'nothing',
-                'label' => 'Do nothing',
+                'label' => 'Do nothing'
+            ),
+            array(
+                'value' => 'cancel',
+                'label' => 'Void payment and cancel order'
             )
         );
 
