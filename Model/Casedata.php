@@ -374,8 +374,8 @@ class Casedata extends AbstractModel
 
         $negativeAction = $caseData['case']->getNegativeAction();
         $positiveAction = $caseData['case']->getPositiveAction();
-        
-        $this->_logger->debug("Signifyd: Positive Action: " . $positiveAction);
+
+        $this->_logger->debug("Signifyd: Positive action for {$caseData['case']->getOrderIncrement()}: " . $positiveAction);
         $request = $caseData['request'];
         switch ($request->guaranteeDisposition){
             case "DECLINED":

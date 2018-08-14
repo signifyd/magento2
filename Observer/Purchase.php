@@ -12,7 +12,7 @@ use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Address;
 use Psr\Log\LoggerInterface;
-use \Magento\Framework\ObjectManagerInterface;
+use Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Helper\LogHelper;
 use Signifyd\Connect\Helper\SignifydAPIMagento;
@@ -49,6 +49,9 @@ class Purchase implements ObserverInterface
      */
     protected $storeManager;
 
+
+    protected $objectManagerInterface;
+
     /**
      * Methods that should wait e-mail sent to hold order
      * @var array
@@ -81,13 +84,17 @@ class Purchase implements ObserverInterface
         PurchaseHelper $helper,
         SignifydAPIMagento $api,
         ScopeConfigInterface $coreConfig,
+        ObjectManagerInterface $objectManagerInterface,
         StoreManagerInterface $storeManager = null
     ) {
         $this->logger = $logger;
         $this->helper = $helper;
         $this->api = $api;
         $this->coreConfig = $coreConfig;
-        $this->storeManager = $storeManager;
+        $this->objectManagerInterface = $objectManagerInterface;
+        $this->storeManager = empty($storeManager) ?
+            $objectManagerInterface->get('Magento\Store\Model\StoreManagerInterface') :
+            $storeManager;
     }
 
     /**
