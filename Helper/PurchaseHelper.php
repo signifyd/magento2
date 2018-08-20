@@ -143,7 +143,9 @@ class PurchaseHelper
 
         preg_match_all($pattern, $ipString, $matches);
 
-        if (is_array($matches)) return $matches[0][0];
+        if (isset($matches[0]) && isset($matches[0][0])) {
+            return $matches[0][0];
+        }
 
         return null;
     }
