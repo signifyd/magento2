@@ -17,8 +17,12 @@ class ExpYearMapper extends Base_ExpYearMapper
     public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
     {
         $responseXmlDocument = $this->getSignifydPaymentData();
-        $expYear = $responseXmlDocument->transaction->payment->creditCard->expirationDate;
-        $expYear = substr($expYear, -2);
+
+        if (is_object($responseXmlDocument)) {
+            $expYear = $responseXmlDocument->transaction->payment->creditCard->expirationDate;
+            $expYear = substr($expYear, -2);
+        }
+
         return (empty($expYear) ? parent::getPaymentData($orderPayment) : $expYear);
     }
 }

@@ -17,8 +17,12 @@ class ExpMonthMapper extends Base_ExpMonthMapper
     public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
     {
         $responseXmlDocument = $this->getSignifydPaymentData();
-        $expMonth = $responseXmlDocument->transaction->payment->creditCard->expirationDate;
-        $expMonth = substr($expMonth, 0, 2);
+
+        if (is_object($responseXmlDocument)) {
+            $expMonth = $responseXmlDocument->transaction->payment->creditCard->expirationDate;
+            $expMonth = substr($expMonth, 0, 2);
+        }
+
         return (empty($expMonth) ? parent::getPaymentData($orderPayment) : $expMonth);
     }
 }

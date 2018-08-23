@@ -30,11 +30,13 @@ class AuthorizenetDirectpost extends Purchase
         PurchaseHelper $helper,
         SignifydAPIMagento $api,
         ScopeConfigInterface $coreConfig,
+        ObjectManagerInterface $objectManagerInterface,
+        StoreManagerInterface $storeManager = null,
         Order $order
     ) {
         $this->order = $order;
 
-        parent::__construct($logger, $helper, $api, $coreConfig);
+        parent::__construct($logger, $helper, $api, $coreConfig, $objectManagerInterface, $storeManager);
     }
 
     /**
