@@ -49,7 +49,9 @@ class Purchase implements ObserverInterface
      */
     protected $storeManager;
 
-
+    /**
+     * @var ObjectManagerInterface
+     */
     protected $objectManagerInterface;
 
     /**
@@ -110,6 +112,10 @@ class Purchase implements ObserverInterface
         try {
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();
+
+            if (!is_object($order)) {
+                return;
+            }
 
             // Saving store code to order, to know where the order is been created
             if (empty($order->getData('origin_store_code')) && is_object($this->storeManager)) {

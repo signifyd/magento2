@@ -13,33 +13,6 @@ use Magento\Sales\Model\Order;
 class AuthorizenetDirectpost extends Purchase
 {
     /**
-     * @var Order
-     */
-    protected $order;
-
-    /**
-     * OwnEvent constructor.
-     * @param LogHelper $logger
-     * @param PurchaseHelper $helper
-     * @param SignifydAPIMagento $api
-     * @param ScopeConfigInterface $coreConfig
-     * @param Order $order
-     */
-    public function __construct(
-        LogHelper $logger,
-        PurchaseHelper $helper,
-        SignifydAPIMagento $api,
-        ScopeConfigInterface $coreConfig,
-        ObjectManagerInterface $objectManagerInterface,
-        StoreManagerInterface $storeManager = null,
-        Order $order
-    ) {
-        $this->order = $order;
-
-        parent::__construct($logger, $helper, $api, $coreConfig, $objectManagerInterface, $storeManager);
-    }
-
-    /**
      * @param \Magento\Framework\Event\Observer $observer
      */
     public function execute(\Magento\Framework\Event\Observer $observer)
@@ -47,8 +20,16 @@ class AuthorizenetDirectpost extends Purchase
         /** @var \Magento\Framework\App\Request\Http $request */
         $request = $observer->getEvent()->getRequest();
         $orderIncrementId = $request->getParam('x_invoice_num');
-        $this->order->loadByIncrementId($orderIncrementId);
-        $observer->getEvent()->setOrder($this->order);
+
+        if (!empty($orderIncrementId)) {
+            /** @var \Magento\Sales\Model\Order $order */
+            $order = $this->objectManagerInterface->create('\Magento\Sales\Model\Order');
+            $order->loadByIncrementId($orderIncrementId);
+
+            if ($order instanceof \Magento\Sales\Model\Order) {
+                $observer->getEvent()->setOrder($order);
+            }
+        }
 
         return parent::execute($observer, false);
     }
