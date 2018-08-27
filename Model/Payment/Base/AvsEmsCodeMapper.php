@@ -7,13 +7,6 @@ use Signifyd\Connect\Model\Payment\DataMapper;
 class AvsEmsCodeMapper extends DataMapper
 {
     /**
-     * Default code
-     *
-     * @var string
-     */
-    protected $unavailableCode = 'U';
-
-    /**
      * Valid expected response codes
      *
      * @var array
@@ -29,7 +22,7 @@ class AvsEmsCodeMapper extends DataMapper
     public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
     {
         $avsStatus = $orderPayment->getCcAvsStatus();
-        return (empty($avsStatus) ? $this->unavailableCode : $avsStatus);
+        return (empty($avsStatus) ? NULL : $avsStatus);
     }
 
     /**

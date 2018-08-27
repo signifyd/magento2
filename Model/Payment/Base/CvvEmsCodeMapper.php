@@ -7,13 +7,6 @@ use Signifyd\Connect\Model\Payment\DataMapper;
 class CvvEmsCodeMapper extends DataMapper
 {
     /**
-     * Default code
-     *
-     * @var string
-     */
-    protected $notProvidedCode = 'P';
-
-    /**
      * Valid expected CVV codes
      *
      * @var array
@@ -29,7 +22,7 @@ class CvvEmsCodeMapper extends DataMapper
     public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
     {
         $cidStatus = $orderPayment->getCcCidStatus();
-        return (empty($cidStatus) ? $this->notProvidedCode : $cidStatus);
+        return (empty($cidStatus) ? NULL : $cidStatus);
     }
 
     public function validate($response)
