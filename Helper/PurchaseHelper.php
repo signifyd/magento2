@@ -287,17 +287,26 @@ class PurchaseHelper
      */
     protected function makeRecipient(Order $order)
     {
+        $recipient = SignifydModel::Make("\\Signifyd\\Models\\Recipient");
+
         $address = $order->getShippingAddress();
 
-        if ($address == null) {
-            return null;
+        if (is_null($address) == false) {
+            $recipient->fullName = $address->getName();
+            $recipient->confirmationEmail = $address->getEmail();
+            $recipient->confirmationPhone = $address->getTelephone();
+            $recipient->organization = $address->getCompany();
+            $recipient->deliveryAddress = $this->formatSignifydAddress($address);
         }
 
-        $recipient = SignifydModel::Make("\\Signifyd\\Models\\Recipient");
-        $recipient->deliveryAddress = $this->formatSignifydAddress($address);
-        $recipient->fullName = $address->getName();
-        $recipient->confirmationPhone = $address->getTelephone();
-        $recipient->confirmationEmail = $address->getEmail();
+        if (empty($recipient->fullName)) {
+            $recipient->fullName = $order->getCustomerName();
+        }
+
+        if (empty($recipient->confirmationEmail)) {
+            $recipient->confirmationEmail = $order->getCustomerEmail();
+        }
+
         return $recipient;
     }
 
