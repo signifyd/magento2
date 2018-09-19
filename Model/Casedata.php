@@ -133,7 +133,7 @@ class Casedata extends AbstractModel
      * @return bool
      * @throws \Magento\Framework\Exception\LocalizedException
      */
-    protected function updateOrder($caseData, $orderAction, $case)
+    public function updateOrder($caseData, $orderAction, $case)
     {
         /** @var $order \Magento\Sales\Model\Order */
         $order = $caseData['order'];
