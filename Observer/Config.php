@@ -74,6 +74,8 @@ class Config implements ObserverInterface
             $databaseFailure = false;
 
             foreach ($this->desiredDatabaseStructure as $table => $columns) {
+                $table = $this->resource->getTableName($table);
+
                 if (!$connection->isTableExists($table)) {
                     $databaseFailure = true;
                     break;
