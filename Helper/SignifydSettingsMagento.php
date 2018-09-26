@@ -12,25 +12,17 @@ use Signifyd\Core\SignifydSettings;
 
 class SignifydSettingsMagento extends SignifydSettings
 {
-    /**
-     * @var bool Is the plugin enabled?
-     */
-    public $enabled = true;
+    public $logInfo = true;
 
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         LogHelper $logger,
         DirectoryList $directoryList
     ) {
-        $this->enabled = $scopeConfig->isSetFlag('signifyd/general/enabled', 'store');
-        $this->apiKey = $scopeConfig->getValue('signifyd/general/key', 'store');
-        $this->logInfo = true;
-        $this->logError = true;
         $this->loggerError = function($message) use ($logger)
         {
             $logger->error("API Error: " . $message);
         };
-        $this->apiAddress = "https://api.signifyd.com/v2";
         $this->logFileLocation = $directoryList->getPath('log');
     }
 }

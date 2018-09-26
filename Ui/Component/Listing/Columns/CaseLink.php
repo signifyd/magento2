@@ -9,7 +9,6 @@ use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\View\Element\UiComponent\ContextInterface;
 use Magento\Framework\View\Element\UiComponentFactory;
 use Magento\Ui\Component\Listing\Columns\Column;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 
 /**
  * Class CaseLink
@@ -25,7 +24,6 @@ class CaseLink extends Column
      * CaseLink constructor.
      * @param ContextInterface $context
      * @param UiComponentFactory $uiComponentFactory
-     * @param ScopeConfigInterface $scopeConfig
      * @param ObjectManagerInterface $objectManager
      * @param array $components
      * @param array $data
@@ -33,7 +31,6 @@ class CaseLink extends Column
     public function __construct(
         ContextInterface $context,
         UiComponentFactory $uiComponentFactory,
-        ScopeConfigInterface $scopeConfig,
         ObjectManagerInterface $objectManager,
         array $components = [],
         array $data = []
@@ -57,7 +54,7 @@ class CaseLink extends Column
                 if (is_numeric($item[$name])) {
                     $item[$name] = intval($item[$name]);
                 } else {
-                    /** @var Signifyd\Connect\Model\Casedata $case */
+                    /** @var \Signifyd\Connect\Model\Casedata $case */
                     $case = $this->objectManager->create('Signifyd\Connect\Model\Casedata')->load($item['increment_id']);
                     $entries = $case->getEntriesText();
 

@@ -6,16 +6,13 @@
 
 namespace Signifyd\Connect\Observer;
 
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order;
-use Magento\Sales\Model\Order\Address;
-use Psr\Log\LoggerInterface;
 use Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Helper\LogHelper;
-use Signifyd\Connect\Helper\SignifydAPIMagento;
+use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Model\CaseRetry;
 use Magento\Store\Model\StoreManagerInterface;
 
@@ -35,14 +32,9 @@ class Purchase implements ObserverInterface
     protected $helper;
 
     /**
-     * @var SignifydAPIMagento
+     * @var ConfigHelper
      */
-    protected $api;
-
-    /**
-     * @var ScopeConfigInterface
-     */
-    protected $coreConfig;
+    protected $configHelper;
 
     /**
      * @var StoreManagerInterface
@@ -78,21 +70,20 @@ class Purchase implements ObserverInterface
      * Purchase constructor.
      * @param LogHelper $logger
      * @param PurchaseHelper $helper
-     * @param SignifydAPIMagento $api
-     * @param ScopeConfigInterface $coreConfig
+     * @param ConfigHelper $configHelper
+     * @param ObjectManagerInterface $objectManagerInterface
+     * @param StoreManagerInterface|null $storeManager
      */
     public function __construct(
         LogHelper $logger,
         PurchaseHelper $helper,
-        SignifydAPIMagento $api,
-        ScopeConfigInterface $coreConfig,
+        ConfigHelper $configHelper,
         ObjectManagerInterface $objectManagerInterface,
         StoreManagerInterface $storeManager = null
     ) {
         $this->logger = $logger;
         $this->helper = $helper;
-        $this->api = $api;
-        $this->coreConfig = $coreConfig;
+        $this->configHelper = $configHelper;
         $this->objectManagerInterface = $objectManagerInterface;
         $this->storeManager = empty($storeManager) ?
             $objectManagerInterface->get('Magento\Store\Model\StoreManagerInterface') :
@@ -105,15 +96,15 @@ class Purchase implements ObserverInterface
      */
     public function execute(Observer $observer, $checkOwnEventsMethods = true)
     {
-        if (!$this->api->enabled()) {
-            return;
-        }
-
         try {
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();
 
             if (!is_object($order)) {
+                return;
+            }
+
+            if ($this->configHelper->isEnabled($order) == false) {
                 return;
             }
 

@@ -39,6 +39,16 @@ class Config implements ObserverInterface
     protected $scopeConfigInterface;
 
     /**
+     * @var \Magento\Config\Model\ResourceModel\Config
+     */
+    protected $config;
+
+    /**
+     * @var \Magento\Store\Model\StoreRepository
+     */
+    protected $storeRepository;
+
+    /**
      * List of tables and columns desired for checking on database
      * If is needed to only check table existence, leave columns array empty
      *
@@ -55,12 +65,16 @@ class Config implements ObserverInterface
         ResourceConnection $resource,
         ManagerInterface $messageManager,
         ConfigFactory $configFactory,
-        ScopeConfigInterface $scopeConfigInterface
+        ScopeConfigInterface $scopeConfigInterface,
+        \Magento\Config\Model\ResourceModel\Config $config,
+        \Magento\Store\Model\StoreRepository $storeRepository
     ) {
         $this->resource = $resource;
         $this->messageManager = $messageManager;
         $this->configFactory = $configFactory;
         $this->scopeConfigInterface = $scopeConfigInterface;
+        $this->config = $config;
+        $this->storeRepository = $storeRepository;
     }
 
     public function execute(Observer $observer)
@@ -95,27 +109,29 @@ class Config implements ObserverInterface
                     "<a href='https://github.com/signifyd/magento2/blob/master/README.md' target='_blank'>README</a> on GitHub");
 
                 $enablePath = 'signifyd/general/enabled';
-                $enableValue = $this->scopeConfigInterface->getValue($enablePath);
 
-                if (true || $enableValue) {
-                    $configData = [
-                        'section' => 'signifyd',
-                        'website' => null,
-                        'store'   => null,
-                        'groups'  => [
-                            'general' => [
-                                'fields' => [
-                                    'enabled' => [
-                                        'value' => 0,
-                                    ],
+                foreach ($this->storeRepository->getList() as $store) {
+                    $this->config->deleteConfig($enablePath, 'stores', $store->getId());
+                    $this->config->deleteConfig($enablePath, 'websites', $store->getWebsiteId());
+                }
+
+                $configData = [
+                    'section' => 'signifyd',
+                    'website' => null,
+                    'store'   => null,
+                    'groups'  => [
+                        'general' => [
+                            'fields' => [
+                                'enabled' => [
+                                    'value' => 0,
                                 ],
                             ],
                         ],
-                    ];
+                    ],
+                ];
 
-                    $configModel = $this->configFactory->create(['data' => $configData]);
-                    $configModel->save();
-                }
+                $configModel = $this->configFactory->create(['data' => $configData]);
+                $configModel->save();
             }
         }
     }

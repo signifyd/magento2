@@ -6,8 +6,6 @@
 namespace Signifyd\Connect\Model;
 
 use Magento\Config\Model\Config\CommentInterface;
-use Magento\Framework\UrlInterface;
-
 
 /**
  * Defines link data for the comment field in the config page
@@ -15,22 +13,48 @@ use Magento\Framework\UrlInterface;
 class WebhookLink implements CommentInterface
 {
     /**
-     * @var \Magento\Framework\UrlInterface
+     * @var \Magento\Framework\Url
      */
-    protected $_urlInterface;
+    protected $urlBuilder;
 
+    /**
+     * @var \Magento\Store\Model\StoreManagerInterface
+     */
+    protected $storeManager;
+
+    /**
+     * @var \Magento\Framework\App\RequestInterface
+     */
+    protected $request;
+
+    /**
+     * WebhookLink constructor.
+     * @param \Magento\Framework\Url $urlInterface
+     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
+     */
     public function __construct(
-        UrlInterface $urlInterface
+        \Magento\Framework\Url $urlInterface,
+        \Magento\Store\Model\StoreManagerInterface $storeManager,
+        \Magento\Framework\App\RequestInterface $request
     ) {
-        $this->_urlInterface = $urlInterface;
+        $this->urlBuilder = $urlInterface;
+        $this->storeManager = $storeManager;
+        $this->request = $request;
     }
 
+    /**
+     * @param string $elementValue
+     * @return string
+     */
     public function getCommentText($elementValue)
     {
         $url = "";
-        if ($this->_urlInterface != null) {
-            $url = $this->_urlInterface->getBaseUrl();
-            $url = $url . 'signifyd_connect/webhooks/index';
+        if ($this->urlBuilder != null) {
+            $storeId = $this->request->getParam('store');
+            $storeId = empty($storeId) ? $this->storeManager->getDefaultStoreView()->getId() : $storeId;
+            $this->urlBuilder->setScope($storeId);
+
+            $url = $this->urlBuilder->getUrl('signifyd_connect/webhooks/index', array('_nosid' => true));
             $url = "<a href=\"" . $url . "\">$url</a>";
         } else {
             $url = "{{store url}}/signifyd_connect/webhooks/index";

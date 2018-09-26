@@ -6,7 +6,6 @@
 
 namespace Signifyd\Connect\Model;
 
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Model\AbstractModel;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Registry;
@@ -21,9 +20,9 @@ use Magento\Sales\Model\Order;
 class Casedata extends AbstractModel
 {
     /**
-     * @var ScopeConfigInterface
+     * @var \Signifyd\Connect\Helper\ConfigHelper
      */
-    protected $coreConfig;
+    protected $configHelper;
 
     /**
      * @var InvoiceService
@@ -41,25 +40,37 @@ class Casedata extends AbstractModel
     protected $objectManager;
 
     /**
+     * @var \Magento\Sales\Model\OrderFactory
+     */
+    protected $orderFactory;
+
+    /**
+     * @var \Magento\Sales\Model\Order
+     */
+    protected $order;
+
+    /**
      * Casedata constructor.
      * @param Context $context
      * @param Registry $registry
-     * @param ScopeConfigInterface $coreConfig
+     * @param \Signifyd\Connect\Helper\ConfigHelper $configHelper
      * @param InvoiceService $invoiceService
      */
     public function __construct(
         Context $context,
         Registry $registry,
-        ScopeConfigInterface $coreConfig,
+        \Signifyd\Connect\Helper\ConfigHelper $configHelper,
         InvoiceService $invoiceService,
         InvoiceSender $invoiceSender,
-        ObjectManagerInterface $objectManager
+        ObjectManagerInterface $objectManager,
+        \Magento\Sales\Model\OrderFactory $orderFactory
     )
     {
-        $this->coreConfig = $coreConfig;
+        $this->configHelper = $configHelper;
         $this->invoiceService = $invoiceService;
         $this->invoiceSender = $invoiceSender;
         $this->objectManager = $objectManager;
+        $this->orderFactory = $orderFactory;
 
         parent::__construct($context, $registry);
     }
@@ -73,6 +84,19 @@ class Casedata extends AbstractModel
     {
         parent::_construct();
         $this->_init('Signifyd\Connect\Model\ResourceModel\Casedata');
+    }
+
+    public function getOrder()
+    {
+        if (isset($this->order) == false) {
+            $incrementId = $this->getOrderIncrement();
+
+            if (empty($incrementId) == false) {
+                $this->order = $this->orderFactory->create()->loadByIncrementId($incrementId);
+            }
+        }
+
+        return $this->order;
     }
 
     /**
@@ -441,7 +465,7 @@ class Casedata extends AbstractModel
         if ($this->isHoldReleased()) {
             return 'nothing';
         } else {
-            return $this->coreConfig->getValue('signifyd/advanced/guarantee_positive_action', 'store');
+            return $this->configHelper->getConfigData('signifyd/advanced/guarantee_positive_action', $this);
         }
     }
 
@@ -450,7 +474,7 @@ class Casedata extends AbstractModel
         if ($this->isHoldReleased()) {
             return 'nothing';
         } else {
-            return $this->coreConfig->getValue('signifyd/advanced/guarantee_negative_action', 'store');
+            return $this->configHelper->getConfigData('signifyd/advanced/guarantee_negative_action', $this);
         }
     }
 }

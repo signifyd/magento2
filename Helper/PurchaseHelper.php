@@ -7,14 +7,11 @@
 namespace Signifyd\Connect\Helper;
 
 use Braintree\Exception;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\AppInterface;
 use Magento\Framework\Module\ModuleListInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Address;
 use \Magento\Framework\ObjectManagerInterface;
 use Magento\Sales\Model\Order\Item;
-use Signifyd\Connect\Model\CaseRetry;
 use Signifyd\Core\SignifydModel;
 use Signifyd\Models\Address as SignifydAddress;
 use Signifyd\Models\Card;
@@ -23,10 +20,7 @@ use Signifyd\Models\Product;
 use Signifyd\Models\Purchase;
 use Signifyd\Models\Recipient;
 use Signifyd\Models\UserAccount;
-use Magento\Framework\Stdlib\DateTime\DateTime;
-use \Signifyd\Connect\Helper\DeviceHelper;
 use Signifyd\Connect\Model\PaymentVerificationFactory;
-//use Magento\Signifyd\Model\PaymentVerificationFactory;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Framework\Registry;
 
@@ -40,32 +34,27 @@ class PurchaseHelper
     /**
      * @var \Signifyd\Connect\Helper\LogHelper
      */
-    protected $_logger;
+    protected $logger;
 
     /**
-     * @var \Signifyd\Core\SignifydAPI
+     * @var \Signifyd\Connect\Helper\ConfigHelper
      */
-    protected $_api;
+    protected $configHelper;
 
     /**
      * @var \Magento\Framework\ObjectManagerInterface
      */
-    protected $_objectManager;
+    protected $objectManager;
 
     /**
-     * @var DateTime
+     * @var \Magento\Framework\Module\ModuleListInterface
      */
-    protected $_dateTime;
-
-    /**
-     * @var Magento\Framework\Module\ModuleListInterface
-     */
-    protected $_moduleList;
+    protected $moduleList;
 
     /**
      * @var \Signifyd\Connect\Helper\DeviceHelper
      */
-    protected $_deviceHelper;
+    protected $deviceHelper;
 
     /**
      * @var PaymentVerificationFactory
@@ -77,9 +66,7 @@ class PurchaseHelper
     /**
      * @param ObjectManagerInterface $objectManager
      * @param LogHelper $logger
-     * @param DateTime $dateTime
-     * @param ScopeConfigInterface $scopeConfig
-     * @param SignifydAPIMagento $api
+     * @param ConfigHelper $configHelper
      * @param ModuleListInterface $moduleList
      * @param DeviceHelper $deviceHelper
      * @param PaymentVerificationFactory $paymentVerificationFactory
@@ -87,27 +74,19 @@ class PurchaseHelper
     public function __construct(
         ObjectManagerInterface $objectManager,
         LogHelper $logger,
-        DateTime $dateTime,
-        ScopeConfigInterface $scopeConfig,
-        SignifydAPIMagento $api,
+        ConfigHelper $configHelper,
         ModuleListInterface $moduleList,
         DeviceHelper $deviceHelper,
         PaymentVerificationFactory $paymentVerificationFactory,
         Registry $registry
     ) {
-        $this->_logger = $logger;
-        $this->_objectManager = $objectManager;
-        $this->_moduleList = $moduleList;
-        $this->_deviceHelper = $deviceHelper;
+        $this->logger = $logger;
+        $this->objectManager = $objectManager;
+        $this->moduleList = $moduleList;
+        $this->deviceHelper = $deviceHelper;
         $this->paymentVerificationFactory = $paymentVerificationFactory;
         $this->registry = $registry;
-
-        try {
-            $this->_api = $api;
-
-        } catch (\Exception $e) {
-            $this->_logger->error($e);
-        }
+        $this->configHelper = $configHelper;
     }
 
     /**
@@ -126,7 +105,7 @@ class PurchaseHelper
         }
 
         /** @var $case \Magento\Framework\HTTP\PhpEnvironment\RemoteAddress */
-        $remoteAddressHelper = $this->_objectManager->get('Magento\Framework\HTTP\PhpEnvironment\RemoteAddress');
+        $remoteAddressHelper = $this->objectManager->get('Magento\Framework\HTTP\PhpEnvironment\RemoteAddress');
         return $this->filterIp($remoteAddressHelper->getRemoteAddress());
     }
 
@@ -157,11 +136,11 @@ class PurchaseHelper
     protected function getVersions()
     {
         $version = array();
-        $productMetadata = $this->_objectManager->get('\Magento\Framework\App\ProductMetadata');
+        $productMetadata = $this->objectManager->get('\Magento\Framework\App\ProductMetadata');
         $version['storePlatformVersion'] = $productMetadata->getVersion();
         $version['signifydClientApp'] = 'Magento 2';
         $version['storePlatform'] = 'Magento 2';
-        $version['signifydClientAppVersion'] = (string)($this->_moduleList->getOne('Signifyd_Connect')['setup_version']);
+        $version['signifydClientAppVersion'] = (string)($this->moduleList->getOne('Signifyd_Connect')['setup_version']);
         return $version;
     }
 
@@ -224,8 +203,8 @@ class PurchaseHelper
 
         $purchase->shipments = $this->makeShipments($order);
 
-        if (!empty($originStoreCode) && $originStoreCode != 'admin' && $this->_deviceHelper->isDeviceFingerprintEnabled()) {
-            $purchase->orderSessionId = $this->_deviceHelper->generateFingerprint($order->getQuoteId());
+        if (!empty($originStoreCode) && $originStoreCode != 'admin' && $this->deviceHelper->isDeviceFingerprintEnabled()) {
+            $purchase->orderSessionId = $this->deviceHelper->generateFingerprint($order->getQuoteId());
         }
 
         return $purchase;
@@ -345,13 +324,13 @@ class PurchaseHelper
         $user->phone = $order->getBillingAddress()->getTelephone();
 
         /* @var $customer \Magento\Customer\Model\Customer */
-        $customer = $this->_objectManager->get('Magento\Customer\Model\Customer')->load($order->getCustomerId());
-        $this->_logger->debug("Customer data: " . json_encode($customer));
+        $customer = $this->objectManager->get('Magento\Customer\Model\Customer')->load($order->getCustomerId());
+        $this->logger->debug("Customer data: " . json_encode($customer));
         if(!is_null($customer) && !$customer->isEmpty()) {
             $user->createdDate = date('c', strtotime($customer->getCreatedAt()));
         }
         /** @var $orders \Magento\Sales\Model\ResourceModel\Order\Collection */
-        $orders = $this->_objectManager->get('\Magento\Sales\Model\ResourceModel\Order\Collection');
+        $orders = $this->objectManager->get('\Magento\Sales\Model\ResourceModel\Order\Collection');
         $orders->addFieldToFilter('customer_id', $order->getCustomerId());
         $orders->load();
 
@@ -377,7 +356,7 @@ class PurchaseHelper
     public function getCase(Order $order)
     {
         /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->_objectManager->get('Signifyd\Connect\Model\Casedata');
+        $case = $this->objectManager->get('Signifyd\Connect\Model\Casedata');
         $case->load($order->getIncrementId());
         return $case;
     }
@@ -391,7 +370,7 @@ class PurchaseHelper
     {
         /** @var $case \Signifyd\Connect\Model\Casedata */
         $case = $this->getCase($order);
-        return !($case->isEmpty() || $case->isObjectNew());
+        return $case->isEmpty() == false && $case->isObjectNew() == false;
     }
 
     /**
@@ -426,7 +405,7 @@ class PurchaseHelper
     public function createNewCase($order)
     {
         /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->_objectManager->create('Signifyd\Connect\Model\Casedata');
+        $case = $this->objectManager->create('Signifyd\Connect\Model\Casedata');
         $case->setId($order->getIncrementId())
             ->setSignifydStatus("PENDING")
             ->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()))
@@ -442,17 +421,17 @@ class PurchaseHelper
      */
     public function postCaseToSignifyd($caseData, $order)
     {
-        $this->_logger->request("Sending: " . json_encode($caseData));
-        $id = $this->_api->createCase($caseData);
-
+        $this->logger->request("Sending: " . json_encode($caseData));
+        
+        $id = $this->configHelper->getSignifydApi($order)->createCase($caseData);
+        
         if ($id) {
-            $this->_logger->debug("Case sent. Id is $id");
+            $this->logger->debug("Case sent. Id is $id");
+            return $id;
         } else {
-            $this->_logger->error("Case failed to send.");
+            $this->logger->error("Case failed to send.");
             return false;
         }
-
-        return $id;
     }
 
     /**
@@ -463,20 +442,21 @@ class PurchaseHelper
     {
         $case = $this->getCase($order);
         if ($case->isEmpty()) {
-            $this->_logger->debug("Guarantee cancel skipped: case not found for order " . $order->getIncrementId());
+            $this->logger->debug("Guarantee cancel skipped: case not found for order " . $order->getIncrementId());
             return false;
         }
 
-        $this->_logger->debug('Cancelling case ' . $case->getId());
+        $this->logger->debug('Cancelling case ' . $case->getId());
 
         $guarantee = $case->getData('guarantee');
         if (empty($guarantee) || in_array($guarantee, array('DECLINED', 'N/A'))) {
-            $this->_logger->debug("Guarantee cancel skipped: current guarantee is {$guarantee}");
+            $this->logger->debug("Guarantee cancel skipped: current guarantee is {$guarantee}");
             return false;
         }
 
-        $disposition = $this->_api->cancelGuarantee($case->getCode());
-        $this->_logger->debug("Cancel disposition result {$disposition}");
+        $disposition = $this->configHelper->getSignifydApi($order)->cancelGuarantee($case->getCode());
+        
+        $this->logger->debug("Cancel disposition result {$disposition}");
 
         if ($disposition == 'CANCELED') {
             $case->setData('guarantee', $disposition);
@@ -527,7 +507,7 @@ class PurchaseHelper
                 return null;
             }
         } catch (Exception $e) {
-            $this->_logger->error('Error fetching AVS code: ' . $e->getMessage());
+            $this->logger->error('Error fetching AVS code: ' . $e->getMessage());
             return '';
         }
     }
@@ -558,7 +538,7 @@ class PurchaseHelper
                 return null;
             }
         } catch (Exception $e) {
-            $this->_logger->error('Error fetching CVV code: ' . $e->getMessage());
+            $this->logger->error('Error fetching CVV code: ' . $e->getMessage());
             return null;
         }
     }
@@ -587,7 +567,7 @@ class PurchaseHelper
 
             return $cardholder;
         } catch (Exception $e) {
-            $this->_logger->error('Error fetching cardholder: ' . $e->getMessage());
+            $this->logger->error('Error fetching cardholder: ' . $e->getMessage());
             return '';
         }
     }
@@ -611,7 +591,7 @@ class PurchaseHelper
 
             return null;
         } catch (Exception $e) {
-            $this->_logger->error('Error fetching last4: ' . $e->getMessage());
+            $this->logger->error('Error fetching last4: ' . $e->getMessage());
             return null;
         }
     }
@@ -636,7 +616,7 @@ class PurchaseHelper
 
             return $expMonth;
         } catch (Exception $e) {
-            $this->_logger->error('Error fetching expiration month: ' . $e->getMessage());
+            $this->logger->error('Error fetching expiration month: ' . $e->getMessage());
             return null;
         }
     }
@@ -666,7 +646,7 @@ class PurchaseHelper
 
             return $expYear;
         } catch (Exception $e) {
-            $this->_logger->error('Error fetching expiration year: ' . $e->getMessage());
+            $this->logger->error('Error fetching expiration year: ' . $e->getMessage());
             return null;
         }
     }
@@ -696,7 +676,7 @@ class PurchaseHelper
 
             return $bin;
         } catch (Exception $e) {
-            $this->_logger->error('Error fetching expiration bin: ' . $e->getMessage());
+            $this->logger->error('Error fetching expiration bin: ' . $e->getMessage());
             return null;
         }
     }

@@ -4,12 +4,6 @@ namespace Signifyd\Connect\Observer\Purchase;
 
 use Signifyd\Connect\Observer\Purchase;
 
-use Signifyd\Connect\Helper\LogHelper;
-use Signifyd\Connect\Helper\PurchaseHelper;
-use Signifyd\Connect\Helper\SignifydAPIMagento;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Sales\Model\Order;
-
 class AuthorizenetDirectpost extends Purchase
 {
     /**

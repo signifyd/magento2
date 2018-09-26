@@ -6,7 +6,6 @@
 namespace Signifyd\Connect\Model\Message;
 
 use Magento\Framework\App\ObjectManager;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 
 class BuiltinConflict implements \Magento\Framework\Notification\MessageInterface
 {
@@ -16,11 +15,20 @@ class BuiltinConflict implements \Magento\Framework\Notification\MessageInterfac
     protected $config;
 
     /**
+     * @var \Magento\Store\Model\StoreRepository
+     */
+    protected $storeRepository;
+
+    /**
      * @param ScopeConfigInterface $config
      */
-    public function __construct(\Magento\Framework\App\Config\ScopeConfigInterface $config)
+    public function __construct(
+        \Magento\Framework\App\Config\ScopeConfigInterface $config,
+        \Magento\Store\Model\StoreRepository $storeRepository
+    )
     {
         $this->config = $config;
+        $this->storeRepository = $storeRepository;
     }
 
     /**
@@ -38,8 +46,24 @@ class BuiltinConflict implements \Magento\Framework\Notification\MessageInterfac
             return false;
         }
 
-        $isSignifydEnabled = $this->config->getValue('signifyd/general/enabled', 'store');
-        $isBuiltinEnabled = $this->config->getValue('fraud_protection/signifyd/active', 'store');
+        $isSignifydEnabled = 0;
+        $isBuiltinEnabled = 0;
+
+        // Checking all store configurations, if any it is enable on both, show warning
+
+        /** @var \Magento\Store\Model\Store $store */
+        foreach ($this->storeRepository->getList() as $store) {
+            $signifydEnabled = $this->config->getValue('signifyd/general/enabled', 'stores', $store->getCode());
+            $builtinEnabled = $this->config->getValue('fraud_protection/signifyd/active', 'stores', $store->getCode());
+
+            if ($signifydEnabled) {
+                $isSignifydEnabled = 1;
+            }
+
+            if ($builtinEnabled) {
+                $isBuiltinEnabled = 1;
+            }
+        }
 
         if ($isSignifydEnabled && $isBuiltinEnabled) {
             return true;

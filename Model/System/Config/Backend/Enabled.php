@@ -7,10 +7,19 @@ namespace Signifyd\Connect\Model\System\Config\Backend;
 
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Message\ManagerInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 
 class Enabled extends \Magento\Framework\App\Config\Value
 {
+    /**
+     * @var ManagerInterface
+     */
     protected $messageManager;
+
+    /**
+     * @var \Magento\Store\Model\StoreRepository
+     */
+    protected $storeRepository;
 
     /**
      * @param \Magento\Framework\Model\Context $context
@@ -19,19 +28,22 @@ class Enabled extends \Magento\Framework\App\Config\Value
      * @param \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
+     * @param \Magento\Store\Model\StoreRepository $storeRepository
      * @param array $data
      */
     public function __construct(
         \Magento\Framework\Model\Context $context,
         \Magento\Framework\Registry $registry,
-        \Magento\Framework\App\Config\ScopeConfigInterface $config,
+        ScopeConfigInterface $config,
         \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList,
         ManagerInterface $messageManager,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
+        \Magento\Store\Model\StoreRepository $storeRepository,
         array $data = []
     ) {
         $this->messageManager = $messageManager;
+        $this->storeRepository = $storeRepository;
 
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
     }
@@ -53,19 +65,28 @@ class Enabled extends \Magento\Framework\App\Config\Value
             return $this;
         }
 
-        $path = $this->getPath();
+        $currentPath = $this->getPath();
         $signifydPath = 'signifyd/general/enabled';
         $builtinPath = 'fraud_protection/signifyd/active';
+        $path = $currentPath == $signifydPath ? $builtinPath : $signifydPath;
 
-        $isAnotherEnabled = $this->_config->getValue($path == $signifydPath ? $builtinPath : $signifydPath, 'store');
+        $isAnotherEnabled = 0;
 
-        if ($isAnotherEnabled) {
-            if ($this->getOldValue() == 0) {
-                $this->setValue(0);
+        /** @var \Magento\Store\Model\Store $store */
+        foreach ($this->storeRepository->getList() as $store) {
+            $isAnotherEnabled = $this->_config->getValue($path, 'stores', $store->getCode());
+
+            if ($isAnotherEnabled) {
+                if ($this->getOldValue() == 0) {
+                    $this->setValue(0);
+                }
+
+                $this->messageManager->addError(__('ERROR: Another Signifyd integration is already enabled. You must disable the active integration before enabling a new one.'));
+
+                break;
             }
-
-            $this->messageManager->addError(__('ERROR: Another Signifyd integration is already enabled. You must disable the active integration before enabling a new one.'));
         }
+
         return $this;
     }
 }

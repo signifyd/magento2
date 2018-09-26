@@ -7,7 +7,6 @@
 namespace Signifyd\Connect\Helper;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class LogHelper
@@ -17,21 +16,26 @@ use Psr\Log\LoggerInterface;
 class LogHelper
 {
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var \Signifyd\Connect\Logger\Logger
      */
-    protected $_logger;
+    protected $logger;
 
     /**
      * @var bool
      */
-    protected $_log;
+    protected $log;
 
+    /**
+     * LogHelper constructor.
+     * @param \Signifyd\Connect\Logger\Logger $logger
+     * @param ScopeConfigInterface $scopeConfig
+     */
     public function __construct(
         \Signifyd\Connect\Logger\Logger $logger,
         ScopeConfigInterface $scopeConfig
     ) {
-        $this->_log = $scopeConfig->getValue('signifyd/logs/log', 'store');
-        $this->_logger = $logger;
+        $this->log = $scopeConfig->getValue('signifyd/logs/log', 'stores');
+        $this->logger = $logger;
     }
 
     /**
@@ -40,10 +44,10 @@ class LogHelper
      */
     public function request($message)
     {
-        if (!$this->_log) {
+        if (!$this->log) {
             return;
         }
-        $this->_logger->info($message);
+        $this->logger->info($message);
     }
 
     /**
@@ -52,10 +56,10 @@ class LogHelper
      */
     public function response($message)
     {
-        if (!$this->_log) {
+        if (!$this->log) {
             return;
         }
-        $this->_logger->info($message);
+        $this->logger->info($message);
     }
 
     /**
@@ -64,10 +68,10 @@ class LogHelper
      */
     public function error($message)
     {
-        if (!$this->_log) {
+        if (!$this->log) {
             return;
         }
-        $this->_logger->error($message);
+        $this->logger->error($message);
     }
 
     /**
@@ -76,9 +80,9 @@ class LogHelper
      */
     public function debug($message)
     {
-        if (!$this->_log) {
+        if (!$this->log) {
             return;
         }
-        $this->_logger->info($message);
+        $this->logger->info($message);
     }
 }

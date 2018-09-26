@@ -13,20 +13,32 @@ use Signifyd\Connect\Model\Casedata;
 
 class Retry extends AbstractHelper
 {
+    /**
+     * @var Casedata
+     */
     protected $caseData;
-    protected $api;
+
+    /**
+     * @var ConfigHelper
+     */
+    protected $configHelper;
+
+    /**
+     * @var ObjectManagerInterface
+     */
     protected $objectManager;
 
     public function __construct(
         Context $context,
         Casedata $caseData,
-        SignifydAPIMagento $api,
+        ConfigHelper $configHelper,
         ObjectManagerInterface $objectManager
     )
     {
         parent::__construct($context);
+
         $this->caseData = $caseData;
-        $this->api = $api;
+        $this->configHelper = $configHelper;
         $this->objectManager = $objectManager;
     }
 
@@ -51,14 +63,19 @@ class Retry extends AbstractHelper
 
     /**
      * Process the cases that are in review
+     *
      * @param $case
+     * @param $order
      * @return bool
      */
     public function processInReviewCase($case, $order)
     {
-        if(empty($case->getCode())) return false;
+        if (empty($case->getCode())) {
+            return false;
+        }
+
         try {
-            $caseData['request'] = $this->api->getCase($case->getCode());
+            $caseData['request'] = $this->configHelper->getSignifydApi($case)->getCase($case->getCode());
             $caseData['case'] = $case;
             $caseData['order'] = $order;
             $caseObj = $this->objectManager->create('Signifyd\Connect\Model\Casedata');

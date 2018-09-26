@@ -1,20 +1,15 @@
 <?php
 /**
- * Copyright 2015 SIGNIFYD Inc. All rights reserved.
+ * Copyright 2018 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
 namespace Signifyd\Connect\Controller\Webhooks;
 
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Response\Http;
 use Magento\Framework\Stdlib\DateTime\DateTime;
-use Magento\Sales\Model\Order;
-use Signifyd\Connect\Helper\SignifydAPIMagento;
 use Signifyd\Connect\Helper\LogHelper;
-use Signifyd\Connect\Model\Casedata;
-use Signifyd\Connect\Model\CaseRetry;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
@@ -22,65 +17,44 @@ use Signifyd\Connect\Model\CaseRetry;
 class Index extends Action
 {
     /**
-     * @var \Magento\Framework\App\Config\ScopeConfigInterface
-     */
-    protected $_coreConfig;
-
-    /**
      * @var \Signifyd\Connect\Helper\LogHelper
      */
-    protected $_logger;
+    protected $logger;
 
     /**
      * @var \Magento\Framework\ObjectManagerInterface
      */
-    protected $_objectManager;
+    protected $objectManager;
 
     /**
-     * @var SignifydAPIMagento
+     * @var \Signifyd\Connect\Helper\ConfigHelper
      */
-    protected $_api;
+    protected $configHelper;
 
     /**
-     * @var DateTime
+     * @var \Magento\Sales\Model\OrderFactory
      */
-    protected $_dateTime;
+    protected $orderFactory;
 
     /**
      * @param Context $context
-     * @param ScopeConfigInterface $scopeConfig
      * @param DateTime $dateTime
      * @param LogHelper $logger
-     * @param SignifydAPIMagento $api
+     * @param \Signifyd\Connect\Helper\ConfigHelper $configHelper
+     * @param \Magento\Sales\Model\OrderFactory $orderFactory
      */
     public function __construct(
         Context $context,
-        ScopeConfigInterface $scopeConfig,
         DateTime $dateTime,
         LogHelper $logger,
-        SignifydAPIMagento $api
+        \Signifyd\Connect\Helper\ConfigHelper $configHelper,
+        \Magento\Sales\Model\OrderFactory $orderFactory
     ) {
         parent::__construct($context);
-        $this->_coreConfig = $scopeConfig;
-        $this->_logger = $logger;
-        $this->_objectManager = $context->getObjectManager();
-        $this->_api = $api;
-    }
-
-    // NOTE: Magento may deprecate responses in the future in favor of results.
-    protected function Result200()
-    {
-        $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
-    }
-
-    protected function Result400()
-    {
-        $this->getResponse()->setStatusCode(Http::STATUS_CODE_400);
-    }
-
-    protected function Result403()
-    {
-        $this->getResponse()->setStatusCode(Http::STATUS_CODE_403);
+        $this->logger = $logger;
+        $this->objectManager = $context->getObjectManager();
+        $this->configHelper = $configHelper;
+        $this->orderFactory = $orderFactory;
     }
 
     /**
@@ -101,60 +75,77 @@ class Index extends Action
         return '';
     }
 
-    /**
-     * @param mixed $request
-     * @return array|null
-     */
-    protected function initRequest($request)
-    {
-        /** @var $order \Magento\Sales\Model\Order */
-        $order = $this->_objectManager->create('Magento\Sales\Model\Order')->loadByIncrementId($request->orderId);
-        /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->_objectManager->create('Signifyd\Connect\Model\Casedata');
-        $case->load($request->orderId);
-        return array(
-            "case" => $case,
-            "order" => $order,
-            "request" => $request
-        );
-    }
-
     public function execute()
     {
-        if (!$this->_api->enabled()) {
-            $this->getResponse()->appendBody("This plugin is not currently enabled");
-            $this->Result400();
-            return;
-        }
+        $request = $this->getRawPost();
+        $hash = $this->getRequest()->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
+        $topic = $this->getRequest()->getHeader('X-SIGNIFYD-TOPIC');
 
-        $rawRequest = $this->getRawPost();
+        $this->logger->debug('API: request: ' . $request);
+        $this->logger->debug('API: request hash: ' . $hash);
+        $this->logger->debug('API: request topic: ' . $topic);
 
-        $request = $this->getRequest();
-        $hash = $request->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
-        $topic = $request->getHeader('X-SIGNIFYD-TOPIC');
-        if ($hash == null) {
+        if ($hash == null || empty($request)) {
             $this->getResponse()->appendBody("You have successfully reached the webhook endpoint");
-            $this->Result200();
+            $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
             return;
         }
 
-        $this->_logger->debug("Api request: " . $rawRequest);
+        $requestJson = json_decode($request);
 
-        if ($this->_api->validWebhookRequest($rawRequest, $hash, $topic)) {
-            // For the webhook test, all of the request data will be invalid
+        if (json_last_error() == JSON_ERROR_NONE) {
+            // Test is only verifying that the endpoint is reachable. So we just complete here
             if ($topic === 'cases/test') {
-                $this->Result200();
+                $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
                 return;
             }
 
-            $request = json_decode($rawRequest);
-            $caseData = $this->initRequest($request);
-            $caseObj = $this->_objectManager->create('Signifyd\Connect\Model\Casedata');
+            /** @var $order \Magento\Sales\Model\Order */
+            $order = $this->orderFactory->create()->loadByIncrementId($requestJson->orderId);
+            /** @var $case \Signifyd\Connect\Model\Casedata */
+            $case = $this->objectManager->create('Signifyd\Connect\Model\Casedata')->load($requestJson->orderId);
+
+            $caseData = array(
+                "case" => $case,
+                "order" => $order,
+                "request" => $requestJson
+            );
+
+            if ($case->isEmpty()) {
+                $message = "Case {$requestJson->orderId} on request not found on Magento";
+                $this->getResponse()->appendBody($message);
+                $this->logger->debug("API: {$message}");
+                $this->getResponse()->setStatusCode(Http::STATUS_CODE_400);
+                return;
+            }
+        } else {
+            $message = 'Invalid JSON provided on request body';
+            $this->getResponse()->appendBody($message);
+            $this->logger->debug("API: {$message}");
+            $this->getResponse()->setStatusCode(Http::STATUS_CODE_400);
+            return;
+        }
+
+        if ($this->configHelper->isEnabled($case) == false) {
+            $message = 'This plugin is not currently enabled';
+            $this->getResponse()->appendBody($message);
+            $this->logger->debug("API: {$message}");
+            $this->getResponse()->setStatusCode(Http::STATUS_CODE_400);
+            return;
+        }
+
+        $this->logger->debug("Api request: " . $request);
+
+        $signifydApi = $this->configHelper->getSignifydApi($case);
+
+        if ($signifydApi->validWebhookRequest($request, $hash, $topic)) {
+            /** @var \Signifyd\Connect\Model\Casedata $caseObj */
+            $caseObj = $this->objectManager->create('Signifyd\Connect\Model\Casedata');
             $caseObj->updateCase($caseData);
-            $this->Result200();
+            $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
             return;
         } else {
-            $this->Result403();
+            $this->getResponse()->setStatusCode(Http::STATUS_CODE_403);
             return;
         }
     }
