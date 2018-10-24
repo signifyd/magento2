@@ -30,8 +30,8 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
         'U' => 'P',
         'I' => 'P',
         'S' => 'S',
-        'A' => ''
-
+        'A' => null,
+        'B' => 'P'
     ];
 
     /**
@@ -44,6 +44,7 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
     {
         $additionalInfo = $orderPayment->getAdditionalInformation();
+
         if (empty($additionalInfo['cvvResponseCode'])) {
             return parent::getPaymentData($orderPayment);
         }

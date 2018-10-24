@@ -20,6 +20,10 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
 
         if (is_object($responseXmlDocument)) {
             $cvvStatus = $responseXmlDocument->transaction->cardCodeResponse;
+
+            if ($cvvStatus == 'B') {
+                $cvvStatus = 'U';
+            }
         }
 
         return (empty($cvvStatus) ? parent::getPaymentData($orderPayment) : $cvvStatus);

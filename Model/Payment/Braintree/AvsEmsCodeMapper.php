@@ -22,16 +22,22 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
     /**
      * List of mapping AVS codes
      *
+     * Keys are concatenation of ZIP (avsPostalCodeResponseCode) and Street (avsStreetAddressResponseCode) codes
+     *
      * @var array
      */
     private static $avsMap = [
         'MM' => 'Y',
-        'NM' => 'A',
         'MN' => 'Z',
+        'MU' => 'Z',
+        'MI' => 'Z',
+        'NM' => 'A',
         'NN' => 'N',
+        'NU' => 'N',
+        'NI' => 'N',
         'UU' => 'U',
         'II' => 'U',
-        'AA' => 'E'
+        'AA' => 'U'
     ];
 
     /**
@@ -44,14 +50,15 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
     public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
     {
         $additionalInfo = $orderPayment->getAdditionalInformation();
+
         if (empty($additionalInfo['avsPostalCodeResponseCode']) ||
             empty($additionalInfo['avsStreetAddressResponseCode'])
         ) {
             return parent::getPaymentData($orderPayment);
         }
 
-        $streetCode = $additionalInfo['avsStreetAddressResponseCode'];
         $zipCode = $additionalInfo['avsPostalCodeResponseCode'];
+        $streetCode = $additionalInfo['avsStreetAddressResponseCode'];
         $key = $zipCode . $streetCode;
 
         if (isset(self::$avsMap[$key]) && $this->validate(self::$avsMap[$key])) {

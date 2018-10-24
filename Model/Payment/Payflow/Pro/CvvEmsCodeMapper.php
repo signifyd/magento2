@@ -9,6 +9,17 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     protected $allowedMethods = array('payflowpro');
 
     /**
+     * List of mapping CVV codes
+     *
+     * @var array
+     */
+    private static $cvvMap = [
+        'Y' => 'M',
+        'N' => 'N',
+        'X' => 'U'
+    ];
+
+    /**
      * Gets payment CVV verification code.
      *
      * @param \Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment
@@ -19,8 +30,14 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     {
         $additionalInfo = $orderPayment->getAdditionalInformation();
 
-        if (isset($additionalInfo['cvv2match']) && $this->validate($additionalInfo['cvv2match'])) {
-            return $additionalInfo['cvv2match'];
+        if (empty($additionalInfo['cvv2match'])) {
+            return parent::getPaymentData($orderPayment);
+        }
+
+        $cvv = $additionalInfo['cvv2match'];
+
+        if (isset(self::$cvvMap[$cvv]) && $this->validate(self::$cvvMap[$cvv])) {
+            return self::$cvvMap[$cvv];
         } else {
             return parent::getPaymentData($orderPayment);
         }
