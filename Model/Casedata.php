@@ -294,7 +294,9 @@ class Casedata extends AbstractModel
 
             case "capture":
                 try {
-                    $order->unhold();
+                    if ($order->canUnhold()) {
+                        $order->unhold();
+                    }
 
                     if (!$order->canInvoice()) {
                         throw new \Exception('The order does not allow an invoice to be created.');
@@ -337,7 +339,7 @@ class Casedata extends AbstractModel
                     }
                 } catch (\Exception $e) {
                     $this->_logger->debug('Exception while creating invoice: ' . $e->__toString());
-                    $order->addStatusHistoryComment('Signifyd: unable to create invoice: ' . $e->__toString());
+                    $order->addStatusHistoryComment('Signifyd: unable to create invoice: ' . $e->getMessage());
                     $order->save();
                     return false;
                 }
