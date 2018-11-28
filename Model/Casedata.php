@@ -159,6 +159,8 @@ class Casedata extends AbstractModel
      */
     public function updateOrder($caseData, $orderAction, $case)
     {
+        $this->_logger->debug("Update order with action: " . print_r($orderAction, true));
+
         /** @var $order \Magento\Sales\Model\Order */
         $order = $caseData['order'];
 
@@ -337,10 +339,19 @@ class Casedata extends AbstractModel
                     } catch (\Exception $e) {
                         $this->_logger->debug('We can\'t send the invoice email right now.');
                     }
+
+                    $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
+                        ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
+                    $case->getResource()->save($case);
                 } catch (\Exception $e) {
                     $this->_logger->debug('Exception while creating invoice: ' . $e->__toString());
                     $order->addStatusHistoryComment('Signifyd: unable to create invoice: ' . $e->getMessage());
                     $order->save();
+
+                    $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
+                        ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
+                    $case->getResource()->save($case);
+
                     return false;
                 }
                 break;
