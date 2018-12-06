@@ -35,6 +35,15 @@ class UpgradeSchema implements UpgradeSchemaInterface
             ]);
         }
 
+        if (version_compare($context->getVersion(), '3.0.4') == -1) {
+            $setup->getConnection()->addColumn($setup->getTable('signifyd_connect_case'), 'retries', [
+                'type' => Table::TYPE_INTEGER,
+                'nullable' => false,
+                'default' => 0,
+                'comment' => 'Number of retries for current case magento_status',
+            ]);
+        }
+
         $setup->endSetup();
     }
 }

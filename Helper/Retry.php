@@ -48,17 +48,55 @@ class Retry extends AbstractHelper
      */
     public function getRetryCasesByStatus($status)
     {
+        $retryTimes = $this->calculateRetryTimes();
+
         $time = time();
-        $lastTime = $time -  60*60*24*7; // not longer than 7 days
-        $firstTime = $time -  60*30; // longer than last 30 minuted
+        $lastTime = $time - (end($retryTimes) + 60*60*24);
+        $current = date('Y-m-d H:i:s', $time);
         $from = date('Y-m-d H:i:s', $lastTime);
-        $to = date('Y-m-d H:i:s', $firstTime);
 
         $casesCollection = $this->caseData->getCollection();
-        $casesCollection->addFieldToFilter('updated', array('from' => $from, 'to' => $to));
+        $casesCollection->addFieldToFilter('updated', array('gteq' => $from));
         $casesCollection->addFieldToFilter('magento_status', array('eq' => $status));
+        $casesCollection->addFieldToFilter('retries', array('lt' => count($retryTimes)));
+        $casesCollection->addExpressionFieldToSelect('seconds_after_update',
+            "TIME_TO_SEC(TIMEDIFF('{$current}', updated))", array('updated'));
 
-        return $casesCollection;
+        $casesToRetry = array();
+
+        foreach ($casesCollection->getItems() as $case) {
+            $retries = $case->getData('retries');
+            $secondsAfterUpdate = $case->getData('seconds_after_update');
+
+            if ($secondsAfterUpdate > $retryTimes[$retries]) {
+                $casesToRetry[$case->getId()] = $case;
+                $case->setData('retries', $retries+1);
+                $case->save();
+            }
+        }
+
+        return $casesToRetry;
+    }
+
+    /**
+     * Retry times calculated from last update
+     *
+     * @return array
+     */
+    public function calculateRetryTimes()
+    {
+        $retryTimes = array();
+
+        for ($retry = 0; $retry < 15; $retry++) {
+            // Increment retry times exponentially
+            $retryTimes[$retry] = 20 * pow(2, $retry);
+            // Increment should not be greater than one day
+            $retryTimes[$retry] = $retryTimes[$retry] > 86400 ? 86400 : $retryTimes[$retry];
+            // Sum retry time to previous, calculating total time to wait from last update
+            $retryTimes[$retry] += isset($retryTimes[$retry-1]) ? $retryTimes[$retry-1] : 0;
+        }
+
+        return $retryTimes;
     }
 
     /**
@@ -78,6 +116,7 @@ class Retry extends AbstractHelper
             $caseData['request'] = $this->configHelper->getSignifydApi($case)->getCase($case->getCode());
             $caseData['case'] = $case;
             $caseData['order'] = $order;
+            /** @var \Signifyd\Connect\Model\Casedata $caseObj */
             $caseObj = $this->objectManager->create('Signifyd\Connect\Model\Casedata');
             $caseObj->updateCase($caseData);
             return true;
@@ -106,8 +145,8 @@ class Retry extends AbstractHelper
             }
         }
         $caseData = array('order' => $order);
+        /** @var \Signifyd\Connect\Model\Casedata $caseObj */
         $caseObj = $this->objectManager->create('Signifyd\Connect\Model\Casedata');
-        $result = $caseObj->updateOrder($caseData, $orderAction, $case);
-        return $result;
+        $caseObj->updateOrder($caseData, $orderAction, $case);
     }
 }
