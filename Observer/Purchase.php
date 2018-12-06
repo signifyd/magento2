@@ -15,6 +15,7 @@ use Signifyd\Connect\Helper\LogHelper;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Model\CaseRetry;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\App\RequestInterface;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -67,6 +68,11 @@ class Purchase implements ObserverInterface
     protected $restrictedMethods = ['checkmo', 'banktransfer', 'purchaseorder', 'cashondelivery'];
 
     /**
+     * @var RequestInterface
+     */
+    protected $request;
+
+    /**
      * Purchase constructor.
      * @param LogHelper $logger
      * @param PurchaseHelper $helper
@@ -79,7 +85,8 @@ class Purchase implements ObserverInterface
         PurchaseHelper $helper,
         ConfigHelper $configHelper,
         ObjectManagerInterface $objectManagerInterface,
-        StoreManagerInterface $storeManager = null
+        StoreManagerInterface $storeManager = null,
+        RequestInterface $request
     ) {
         $this->logger = $logger;
         $this->helper = $helper;
@@ -88,6 +95,7 @@ class Purchase implements ObserverInterface
         $this->storeManager = empty($storeManager) ?
             $objectManagerInterface->get('Magento\Store\Model\StoreManagerInterface') :
             $storeManager;
+        $this->request = $request;
     }
 
     /**
@@ -108,14 +116,31 @@ class Purchase implements ObserverInterface
                 return;
             }
 
+            $saveOrder = false;
+
             // Saving store code to order, to know where the order is been created
             if (empty($order->getData('origin_store_code')) && is_object($this->storeManager)) {
                 $storeCode = $this->storeManager->getStore($this->helper->isAdmin() ? 'admin' : true)->getCode();
 
                 if (!empty($storeCode)) {
                     $order->setData('origin_store_code', $storeCode);
-                    $order->save();
+                    $saveOrder = true;
                 }
+            }
+
+            // Fix for Magento bug https://github.com/magento/magento2/issues/7227
+            // x_forwarded_for should be copied from quote, but quote does not have the field on database
+            if (empty($order->getData('x_forwarded_for')) && is_object($this->request)) {
+                $xForwardIp = $this->request->getServer('HTTP_X_FORWARDED_FOR');
+
+                if (empty($xForwardIp) == false) {
+                    $order->setData('x_forwarded_for', $xForwardIp);
+                    $saveOrder = true;
+                }
+            }
+
+            if ($saveOrder) {
+                $order->save();
             }
 
             // Check if a payment is available for this order yet
