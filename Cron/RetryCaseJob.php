@@ -64,16 +64,21 @@ class RetryCaseJob
     {
         $this->_logger->request("Main retry method called");
 
-        // Getting all the cases that were not submitted to Signifyd
+        /**
+         * Getting all the cases that were not submitted to Signifyd
+         */
         $waitingCases = $this->caseRetryObj->getRetryCasesByStatus(CaseRetry::WAITING_SUBMISSION_STATUS);
+
         foreach ($waitingCases as $case) {
             $this->_logger->request("Signifyd: preparing for send case no: {$case['order_increment']}");
-            $order = $this->_objectManager
-                                ->get('Magento\Sales\Model\Order')
-                                ->loadByIncrementId($case['order_increment']);
+
+            $order = $this->getOrder($case['order_increment']);
+
             $caseData = $this->_helper->processOrderData($order);
             $result = $this->_helper->postCaseToSignifyd($caseData, $order);
-            if($result){
+
+            if ($result) {
+                /** @var \Signifyd\Connect\Model\Casedata $caseObj */
                 $caseObj = $this->_objectManager->create('Signifyd\Connect\Model\Casedata')
                     ->load($case->getOrderIncrement())
                     ->setCode($result)
@@ -83,28 +88,35 @@ class RetryCaseJob
             }
         }
 
-        // Getting all the cases that are awaiting review from Signifyd
+        /**
+         * Getting all the cases that are awaiting review from Signifyd
+         */
         $inReviewCases = $this->caseRetryObj->getRetryCasesByStatus(CaseRetry::IN_REVIEW_STATUS);
+
         foreach ($inReviewCases as $case) {
             $this->_logger->request("Signifyd: preparing for review case no: {$case['order_increment']}");
-            $order = $this->_objectManager
-                ->get('Magento\Sales\Model\Order')
-                ->loadByIncrementId($case['order_increment']);
-            $result = $this->caseRetryObj->processInReviewCase($case, $order);
-            if($result){}
+
+            $this->caseRetryObj->processInReviewCase($case, $this->getOrder($case['order_increment']));
         }
 
-        // Getting all the cases that need processing after the response was received
+        /**
+         * Getting all the cases that need processing after the response was received
+         */
         $inProcessingCases = $this->caseRetryObj->getRetryCasesByStatus(CaseRetry::PROCESSING_RESPONSE_STATUS);
+
         foreach ($inProcessingCases as $case) {
             $this->_logger->request("Signifyd: preparing for review case no: {$case['order_increment']}");
-            $order = $this->_objectManager
-                                        ->get('Magento\Sales\Model\Order')
-                                        ->loadByIncrementId($case['order_increment']);
-            $this->caseRetryObj->processResponseStatus($case, $order);
+
+            $this->caseRetryObj->processResponseStatus($case, $this->getOrder($case['order_increment']));
         }
 
         $this->_logger->request("Main retry method ended");
+
         return;
+    }
+
+    public function getOrder($incrementId)
+    {
+        return $this->_objectManager->get('Magento\Sales\Model\Order')->loadByIncrementId($incrementId);
     }
 }

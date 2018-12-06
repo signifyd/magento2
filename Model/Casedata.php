@@ -109,7 +109,6 @@ class Casedata extends AbstractModel
         $case = $caseData['case'];
         $request = $caseData['request'];
         $order = $caseData['order'];
-        $case->setMagentoStatus(CaseRetry::PROCESSING_RESPONSE_STATUS);
 
         $orderAction = array("action" => null, "reason" => '');
         if (isset($request->score) && $case->getScore() != $request->score) {
@@ -129,11 +128,17 @@ class Casedata extends AbstractModel
         }
 
         $case->setCode($request->caseId);
-        $case->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
         $order->setSignifydCode($request->caseId);
 
+        $guarantee = $case->getGuarantee();
+        $score = $case->getScore();
+        if (empty($guarantee) == false && $guarantee != 'N/A' && empty($score) == false) {
+            $case->setMagentoStatus(CaseRetry::PROCESSING_RESPONSE_STATUS);
+            $case->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
+        }
+
         if (isset($request->testInvestigation)) {
-            $case->setEntriesText(serialize(array('testInvestigation' => $request->testInvestigation)));
+            $case->setEntries('testInvestigation', $request->testInvestigation);
         }
 
         try{
@@ -159,17 +164,24 @@ class Casedata extends AbstractModel
      */
     public function updateOrder($caseData, $orderAction, $case)
     {
+        $this->_logger->debug("Update order with action: " . print_r($orderAction, true));
+
         /** @var $order \Magento\Sales\Model\Order */
         $order = $caseData['order'];
+        $completeCase = false;
+
+        $completeOrderStates = array(Order::STATE_CANCELED, Order::STATE_COMPLETE, Order::STATE_CLOSED);
+
+        if (in_array($order->getState(), $completeOrderStates)) {
+            $completeCase = true;
+        }
 
         switch ($orderAction["action"]) {
             case "hold":
                 if ($order->canHold()) {
                     try {
-                        $order->hold()->getResource()->save($order);
-                        $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
-                            ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                        $case->getResource()->save($case);
+                        $order->hold();
+                        $completeCase = true;
                     } catch (\Exception $e){
                         $this->_logger->debug($e->__toString());
                         return false;
@@ -183,6 +195,10 @@ class Casedata extends AbstractModel
                         Order::STATE_HOLDED
                     ];
 
+                    if ($order->getState() == Order::STATE_HOLDED) {
+                        $completeCase = true;
+                    }
+
                     if (in_array($order->getState(), $notHoldableStates)) {
                         $reason = "order is on {$order->getState()} state";
                     } elseif ($order->getActionFlag(Order::ACTION_FLAG_HOLD) === false) {
@@ -193,9 +209,7 @@ class Casedata extends AbstractModel
 
                     $this->_logger->debug("Order {$order->getIncrementId()} can not be held because {$reason}");
 
-                    $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
-                        ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                    $case->getResource()->save($case);
+                    $orderAction['action'] = false;
                 }
                 break;
 
@@ -203,17 +217,17 @@ class Casedata extends AbstractModel
                 if ($order->canUnhold()) {
                     $this->_logger->debug('Unhold order action');
                     try{
-                        $order->unhold()->getResource()->save($order);
-                        $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
-                            ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                        $case->getResource()->save($case);
+                        $order->unhold();
+
+                        $completeCase = true;
                     } catch (\Exception $e){
                         $this->_logger->debug($e->__toString());
-                        return false;
+                        $orderAction['action'] = false;
                     }
                 } else {
-                    if ($order->getState() != Order::STATE_HOLDED) {
+                    if ($order->getState() != Order::STATE_HOLDED && $order->isPaymentReview() == false) {
                         $reason = "order is not holded";
+                        $completeCase = true;
                     } elseif ($order->isPaymentReview()) {
                         $reason = 'order is in payment review';
                     } elseif ($order->getActionFlag(Order::ACTION_FLAG_UNHOLD) === false) {
@@ -224,13 +238,11 @@ class Casedata extends AbstractModel
 
                     $this->_logger->debug(
                         "Order {$order->getIncrementId()} ({$order->getState()} > {$order->getStatus()}) " .
-                        "can not be unheld because {$reason}. " .
+                        "can not be removed from hold because {$reason}. " .
                         "Case status: {$case->getSignifydStatus()}"
                     );
 
-                    $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
-                        ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                    $case->getResource()->save($case);
+                    $orderAction['action'] = false;
                 }
                 break;
 
@@ -243,15 +255,11 @@ class Casedata extends AbstractModel
                     try {
                         $order->cancel();
                         $order->addStatusHistoryComment('Signifyd: order canceled');
-                        $order->save();
-
-                        $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
-                            ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                        $case->getResource()->save($case);
+                        $completeCase = true;
                     } catch (\Exception $e) {
                         $this->_logger->debug($e->__toString());
-                        $order->addStatusHistoryComment('Signifyd: unable to cancel order');
-                        return false;
+                        $order->addStatusHistoryComment('Signifyd: unable to cancel order: ' . $e->getMessage());
+                        $orderAction['action'] = false;
                     }
                 } else {
                     $notCancelableStates = [
@@ -278,6 +286,7 @@ class Casedata extends AbstractModel
                         }
                         if ($allInvoiced) {
                             $reason = "all items are invoiced";
+                            $completeCase = true;
                         } else {
                             $reason = "unknown reason";
                         }
@@ -285,74 +294,128 @@ class Casedata extends AbstractModel
 
                     $this->_logger->debug("Order {$order->getIncrementId()} can not be canceled because {$reason}");
 
-                    $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
-                        ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                    $case->getResource()->save($case);
-                    return false;
+                    $orderAction['action'] = false;
+                }
+
+                if ($orderAction['action'] == false && $order->canHold()) {
+                    $order = $order->hold();
                 }
                 break;
 
             case "capture":
                 try {
-                    $order->unhold();
-
-                    if (!$order->canInvoice()) {
-                        throw new \Exception('The order does not allow an invoice to be created.');
+                    if ($order->canUnhold()) {
+                        $order->unhold();
                     }
 
-                    $invoice = $this->invoiceService->prepareInvoice($order);
+                    if ($order->canInvoice()) {
+                        /** @var \Magento\Sales\Model\Order\Invoice $invoice */
+                        $invoice = $this->invoiceService->prepareInvoice($order);
 
-                    if (!$invoice) {
-                        throw new \Exception('We can\'t save the invoice right now.');
-                    }
+                        if ($invoice->isEmpty()) {
+                            throw new \Exception('Failed to prepare invoice for order');
+                        }
 
-                    if (!$invoice->getTotalQty()) {
-                        throw new \Exception('You can\'t create an invoice without products.');
-                    }
+                        if ($invoice->getTotalQty() == 0) {
+                            throw new \Exception('No items founded to be invoiced');
+                        }
 
-                    $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
-                    $invoice->addComment('Signifyd: Automatic Invoice');
-                    $invoice->register();
+                        $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
+                        $invoice->addComment('Signifyd: Automatic invoice');
+                        $invoice->register();
 
-                    $order->setCustomerNoteNotify(true);
-                    $order->setIsInProcess(true);
-                    $order->addStatusHistoryComment('Signifyd: Automatic Invoice');
+                        $order->setCustomerNoteNotify(true);
+                        $order->setIsInProcess(true);
+                        $order->addStatusHistoryComment('Signifyd: Automatic invoice');
 
-                    $transactionSave = $this->objectManager->create(
-                        \Magento\Framework\DB\Transaction::class
-                    )->addObject(
-                        $invoice
-                    )->addObject(
-                        $order
-                    );
-                    $transactionSave->save();
+                        $transactionSave = $this->objectManager->create(
+                            \Magento\Framework\DB\Transaction::class
+                        )->addObject(
+                            $invoice
+                        )->addObject(
+                            $order
+                        );
+                        $transactionSave->save();
 
-                    $this->_logger->debug('Invoice was created for order: ' . $order->getIncrementId());
+                        // Avoid to save order agains, which trigger Magento's exception
+                        $order->setDataChanges(false);
 
-                    // send invoice/shipment emails
-                    try {
-                        $this->invoiceSender->send($invoice);
-                    } catch (\Exception $e) {
-                        $this->_logger->debug('We can\'t send the invoice email right now.');
+                        $this->_logger->debug('Invoice was created for order: ' . $order->getIncrementId());
+
+                        // Send invoice email
+                        try {
+                            $this->invoiceSender->send($invoice);
+                        } catch (\Exception $e) {
+                            $this->_logger->debug('Failed to send the invoice email: ' . $e->getMessage());
+                        }
+
+                        $completeCase = true;
+                    } else {
+                        $notInvoiceableStates = [
+                            Order::STATE_CANCELED,
+                            Order::STATE_PAYMENT_REVIEW,
+                            Order::STATE_COMPLETE,
+                            Order::STATE_CLOSED,
+                            Order::STATE_HOLDED
+                        ];
+
+                        if (in_array($order->getState(), $notInvoiceableStates)) {
+                            $reason = "order is on {$order->getState()} state";
+                        } elseif ($order->getActionFlag(self::ACTION_FLAG_INVOICE) === false) {
+                            $reason = "order action flag is set to do not invoice";
+                        } else {
+                            foreach ($this->getAllItems() as $item) {
+                                if ($item->getQtyToInvoice() > 0 && !$item->getLockedDoInvoice()) {
+                                    return true;
+                                }
+                            }
+
+                            $canInvoiceAny = false;
+
+                            foreach ($order->getAllItems() as $item) {
+                                if ($item->getQtyToInvoice() > 0 && !$item->getLockedDoInvoice()) {
+                                    $canInvoiceAny = true;
+                                    break;
+                                }
+                            }
+
+                            if ($canInvoiceAny) {
+                                $reason = "unknown reason";
+                            } else {
+                                $reason = "no items can be invoiced";
+                                $completeCase = true;
+                            }
+                        }
+
+                        $this->_logger->debug("Order {$order->getIncrementId()} can not be invoiced because {$reason}");
+
+                        $orderAction['action'] = false;
+
+                        if ($order->canHold()) {
+                            $order->hold();
+                        }
                     }
                 } catch (\Exception $e) {
                     $this->_logger->debug('Exception while creating invoice: ' . $e->__toString());
-                    $order->addStatusHistoryComment('Signifyd: unable to create invoice: ' . $e->__toString());
-                    $order->save();
-                    return false;
+
+                    if ($order->canHold()) {
+                        $order->hold();
+                    }
+
+                    $order->addStatusHistoryComment('Signifyd: unable to create invoice: ' . $e->getMessage());
+
+                    $orderAction['action'] = false;
                 }
+
                 break;
 
-            // Do nothing - don't put a break on this case, must get on "null" to complete Signifyd case
+            // Nothing is an action from Signifyd workflow, different from when no action is given (null or empty)
+            // If workflow is set to do nothing, so complete the case
             case 'nothing':
-                unset($orderAction['action']);
-                break;
+                $orderAction['action'] = false;
 
-            case null:
                 try {
-                    $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
-                        ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                    $case->getResource()->save($case);
+                    $completeCase = true;
                 } catch (\Exception $e) {
                     $this->_logger->debug($e->__toString());
                     return false;
@@ -360,9 +423,18 @@ class Casedata extends AbstractModel
                 break;
         }
 
-        if (!is_null($orderAction['action'])) {
+        if ($orderAction['action'] != false) {
             $order->addStatusHistoryComment("Signifyd set status to {$orderAction["action"]} because {$orderAction["reason"]}");
+        }
+
+        if ($order->hasDataChanges()) {
             $order->getResource()->save($order);
+        }
+
+        if ($completeCase) {
+            $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
+                ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
+            $case->getResource()->save($case);
         }
 
         return true;
@@ -476,5 +548,18 @@ class Casedata extends AbstractModel
         } else {
             return $this->configHelper->getConfigData('signifyd/advanced/guarantee_negative_action', $this);
         }
+    }
+
+    /**
+     * Everytime a update is triggered reset retries
+     *
+     * @param $updated
+     * @return mixed
+     */
+    public function setUpdated($updated)
+    {
+        $this->setRetries(0);
+
+        return parent::setUpdated($updated);
     }
 }
