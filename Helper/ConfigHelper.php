@@ -56,7 +56,7 @@ class ConfigHelper
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfigInterface,
         \Signifyd\Connect\Helper\SignifydSettingsMagentoFactory $signifydSettingsMagentoFactory,
-        \Signifyd\Core\SignifydAPIFactory $signifydAPIFactory,
+        \Signifyd\Connect\Api\Core\SignifydAPIFactory $signifydAPIFactory,
         \Magento\Store\Model\StoreManagerInterface $storeManager
     )
     {
