@@ -17,7 +17,7 @@ If there are warnings about missing database modifications after installation, f
 This script will create all of the necessary structures. You will need to run it directly on your MySQL database. If there are any 'duplicate column' errors during this script execution, they can be ignored.
 
 ```sql
-CREATE TABLE IF NOT EXISTS `signifyd_connect_case` (
+CREATE TABLE IF NOT EXISTS `signifyd_connect_case1` (
   `order_increment` varchar(255) NOT NULL COMMENT 'Order ID',
   `signifyd_status` varchar(255) NOT NULL DEFAULT 'PENDING' COMMENT 'Signifyd Status',
   `code` varchar(255) NOT NULL COMMENT 'Code',
@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS `signifyd_connect_case` (
   `created` timestamp NULL DEFAULT NULL COMMENT 'Creation Time',
   `updated` timestamp NULL DEFAULT NULL COMMENT 'Update Time',
   `magento_status` varchar(255) NOT NULL DEFAULT 'waiting_submission' COMMENT 'Magento Status',
+  `retries` int(11) NOT NULL DEFAULT '0' COMMENT 'Number of retries for current case magento_status',
   PRIMARY KEY (`order_increment`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Signifyd Cases';
 
