@@ -48,6 +48,28 @@ class Cancel implements ObserverInterface
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();
 
+            if ($order instanceof Order == false) {
+                /** @var \Magento\Sales\Model\Order\Payment $payment */
+                $payment = $observer->getEvent()->getPayment();
+
+                if ($payment instanceof \Magento\Sales\Model\Order\Payment) {
+                    $order = $payment->getOrder();
+                }
+
+                if ($order instanceof Order == false) {
+                    /** @var \Magento\Sales\Model\Creditmemo $creditmemo */
+                    $creditmemo = $observer->getEvent()->getCreditmemo();
+
+                    if ($creditmemo instanceof \Magento\Sales\Model\Order\Creditmemo) {
+                        $order = $creditmemo->getOrder();
+                    }
+                }
+            }
+
+            if ($order instanceof Order == false) {
+                return;
+            }
+
             if ($this->configHelper->isEnabled($order) == false) {
                 return;
             }

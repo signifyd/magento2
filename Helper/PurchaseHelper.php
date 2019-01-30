@@ -440,20 +440,31 @@ class PurchaseHelper
      */
     public function cancelCaseOnSignifyd(Order $order)
     {
+        $this->logger->debug("Trying to cancel case for order " . $order->getIncrementId());
+
         $case = $this->getCase($order);
+
         if ($case->isEmpty()) {
             $this->logger->debug("Guarantee cancel skipped: case not found for order " . $order->getIncrementId());
             return false;
         }
 
-        $this->logger->debug('Cancelling case ' . $case->getId());
-
         $guarantee = $case->getData('guarantee');
+
         if (empty($guarantee) || in_array($guarantee, array('DECLINED', 'N/A'))) {
             $this->logger->debug("Guarantee cancel skipped: current guarantee is {$guarantee}");
             return false;
         }
 
+        /** @var \Magento\Sales\Model\Order\Item $item */
+        foreach ($order->getAllItems() as $item) {
+            if ($item->getQtyToCancel() > 0 || $item->getQtyToRefund() > 0) {
+                $this->logger->debug("Guarantee cancel skipped: order still have items not canceled or refunded");
+                return false;
+            }
+        }
+
+        $this->logger->debug('Cancelling case ' . $case->getId());
         $disposition = $this->configHelper->getSignifydApi($order)->cancelGuarantee($case->getCode());
         
         $this->logger->debug("Cancel disposition result {$disposition}");

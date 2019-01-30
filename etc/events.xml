@@ -22,4 +22,12 @@
     <event name="order_cancel_after">
         <observer name="onCancel" instance="Signifyd\Connect\Observer\Cancel" />
     </event>
+
+    <event name="sales_order_payment_cancel">
+        <observer name="onCancel" instance="Signifyd\Connect\Observer\Cancel" />
+    </event>
+
+    <event name="sales_order_creditmemo_refund">
+        <observer name="onCancel" instance="Signifyd\Connect\Observer\Cancel" />
+    </event>
 </config>
