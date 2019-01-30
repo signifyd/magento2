@@ -10,11 +10,24 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Response\Http;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Signifyd\Connect\Helper\LogHelper;
+use Magento\Framework\App\RequestInterface;
+
+// Compatibility for versions begore Magento 2.3.0, wich requires to implement CsrfAwareActionInterface
+// to accept POST requests
+if (version_compare(\Magento\Backend\Block\Page\Footer::getMagentoVersion(), '2.3.0') >= 0) {
+    class IndexPure extends IndexCsrfAwareActionInterface {}
+} else {
+    class IndexPure extends Action {
+        public function execute()
+        {
+        }
+    }
+}
 
 /**
  * Controller action for handling webhook posts from Signifyd service
  */
-class Index extends Action
+class Index extends IndexPure
 {
     /**
      * @var \Signifyd\Connect\Helper\LogHelper
@@ -150,4 +163,19 @@ class Index extends Action
         }
     }
 
+    /**
+     * @inheritDoc
+     */
+    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
+    {
+        return null;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function validateForCsrf(RequestInterface $request): ?bool
+    {
+        return true;
+    }
 }
