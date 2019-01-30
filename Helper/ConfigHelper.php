@@ -106,8 +106,8 @@ class ConfigHelper
             } else {
                 $order = $entity instanceof \Signifyd\Connect\Model\Casedata ? $entity->getOrder() : $entity;
 
-                if ($order instanceof \Magento\Sales\Model\Order && $entity->isEmpty() == false) {
-                    $store = $this->storeManager->getStore($entity->getStoreId());
+                if ($order instanceof \Magento\Sales\Model\Order && $order->isEmpty() == false) {
+                    $store = $this->storeManager->getStore($order->getStoreId());
                     $this->storeCodes[$incrementId] = $store->getCode();
                     return $this->storeCodes[$incrementId];
                 }
