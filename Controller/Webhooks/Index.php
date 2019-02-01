@@ -1,28 +1,14 @@
 <?php
 /**
- * Copyright 2018 SIGNIFYD Inc. All rights reserved.
+ * Copyright 2019 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
 namespace Signifyd\Connect\Controller\Webhooks;
 
-use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Response\Http;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Signifyd\Connect\Helper\LogHelper;
-use Magento\Framework\App\RequestInterface;
-
-// Compatibility for versions begore Magento 2.3.0, wich requires to implement CsrfAwareActionInterface
-// to accept POST requests
-if (version_compare(\Magento\Backend\Block\Page\Footer::getMagentoVersion(), '2.3.0') >= 0) {
-    class IndexPure extends IndexCsrfAwareActionInterface {}
-} else {
-    class IndexPure extends Action {
-        public function execute()
-        {
-        }
-    }
-}
 
 /**
  * Controller action for handling webhook posts from Signifyd service
@@ -161,21 +147,5 @@ class Index extends IndexPure
             $this->getResponse()->setStatusCode(Http::STATUS_CODE_403);
             return;
         }
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
-    {
-        return null;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function validateForCsrf(RequestInterface $request): ?bool
-    {
-        return true;
     }
 }
