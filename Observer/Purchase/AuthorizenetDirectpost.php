@@ -3,13 +3,14 @@
 namespace Signifyd\Connect\Observer\Purchase;
 
 use Signifyd\Connect\Observer\Purchase;
+use Magento\Framework\Event\Observer;
 
 class AuthorizenetDirectpost extends Purchase
 {
     /**
      * @param \Magento\Framework\Event\Observer $observer
      */
-    public function execute(\Magento\Framework\Event\Observer $observer)
+    public function execute(Observer $observer, $checkOwnEventsMethods = true)
     {
         /** @var \Magento\Framework\App\Request\Http $request */
         $request = $observer->getEvent()->getRequest();
