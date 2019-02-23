@@ -21,7 +21,7 @@ if (version_compare($productMetadataInterface->getVersion(), '2.3.0') >= 0) {
         /**
          * @inheritDoc
          */
-        public function createCsrfValidationException(\Magento\Framework\App\RequestInterface $request): ?\Magento\Framework\App\Request\InvalidRequestException
+        public function createCsrfValidationException(\Magento\Framework\App\RequestInterface $request): \Magento\Framework\App\Request\InvalidRequestException
         {
             return null;
         }
@@ -29,7 +29,7 @@ if (version_compare($productMetadataInterface->getVersion(), '2.3.0') >= 0) {
         /**
          * @inheritDoc
          */
-        public function validateForCsrf(\Magento\Framework\App\RequestInterface $request): ?bool
+        public function validateForCsrf(\Magento\Framework\App\RequestInterface $request): bool
         {
             return true;
         }
