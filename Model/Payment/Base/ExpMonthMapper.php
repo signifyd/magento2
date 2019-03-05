@@ -16,6 +16,9 @@ class ExpMonthMapper extends DataMapper
     {
         $expMonth = $orderPayment->getCcExpMonth();
         $expMonth = is_null($expMonth) ? '' : $expMonth;
+
+        $this->logHelper->debug('Expiry month found on base mapper: ' . (empty($expMonth) ? 'false' : $expMonth));
+
         return $expMonth;
     }
 }
