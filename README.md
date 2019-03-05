@@ -1,77 +1,64 @@
-# Signifyd Magento 2
-Signifyd's extension for Magento 2.0
+# Signifyd Extension for Magento 2
 
-Signifyd’s plugin enables merchant on Magento 2 to integrate with Signifyd in minutes, automating fraud prevention and protecting them in case of chargebacks.
+Signifyd’s Magento extension enables merchants on Magento 2 to integrate with Signifyd, automating fraud prevention and protecting them in case of chargebacks.
 
-### Install Errors
+## Install/update using composer
 
-Version 2.4.1+  will check for all database structures needed for the extension to work correctly. This check is performed on the extension configuration section in the Magento admin.
+Composer is a tool for dependency management in PHP. It allows you to declare the libraries your project depends on and it will manage (install/update) them for you.
 
-If any database structures are missing, the extension will be disabled.
+It is possible to learn more about it, download and install it on [https://getcomposer.org](https://getcomposer.org).
 
-If there are warnings about missing database modifications after installation, follow the instructions below to fix the issue.
+Before getting started make sure to have composer properly installed on environment.
 
-This script will create all of the necessary structures. You will need to run it directly on your MySQL database. If there are any 'duplicate column' errors during this script execution, they can be ignored.
+*Note: depending on operational system and how composer is installed, may be needed to add '.phar' after 'composer' on command lines, changing from 'composer' => 'composer.phar'*
 
-```sql
-CREATE TABLE IF NOT EXISTS `signifyd_connect_case1` (
-  `order_increment` varchar(255) NOT NULL COMMENT 'Order ID',
-  `signifyd_status` varchar(255) NOT NULL DEFAULT 'PENDING' COMMENT 'Signifyd Status',
-  `code` varchar(255) NOT NULL COMMENT 'Code',
-  `score` float DEFAULT NULL COMMENT 'Score',
-  `guarantee` varchar(64) NOT NULL DEFAULT 'N/A' COMMENT 'Guarantee Status',
-  `entries_text` text NOT NULL COMMENT 'Entries',
-  `created` timestamp NULL DEFAULT NULL COMMENT 'Creation Time',
-  `updated` timestamp NULL DEFAULT NULL COMMENT 'Update Time',
-  `magento_status` varchar(255) NOT NULL DEFAULT 'waiting_submission' COMMENT 'Magento Status',
-  `retries` int(11) NOT NULL DEFAULT '0' COMMENT 'Number of retries for current case magento_status',
-  PRIMARY KEY (`order_increment`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Signifyd Cases';
+### Install/update
 
-CREATE TABLE IF NOT EXISTS `signifyd_connect_retries` (
-  `order_increment` varchar(255) NOT NULL COMMENT 'Order ID',
-  `created` timestamp NULL DEFAULT NULL COMMENT 'Creation Time',
-  `updated` timestamp NULL DEFAULT NULL COMMENT 'Last Attempt',
-  PRIMARY KEY (`order_increment`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Signifyd Retries';
-
-ALTER TABLE sales_order ADD COLUMN signifyd_score FLOAT DEFAULT NULL;
-ALTER TABLE sales_order ADD COLUMN signifyd_guarantee VARCHAR(64) NOT NULL DEFAULT 'N/A';
-ALTER TABLE sales_order ADD COLUMN signifyd_code VARCHAR(255) NOT NULL DEFAULT '';
-ALTER TABLE sales_order ADD COLUMN origin_store_code VARCHAR(32) DEFAULT NULL;
-
-ALTER TABLE sales_order_grid ADD COLUMN signifyd_score FLOAT DEFAULT NULL;
-ALTER TABLE sales_order_grid ADD COLUMN signifyd_guarantee VARCHAR(64) NOT NULL DEFAULT 'N/A';
-ALTER TABLE sales_order_grid ADD COLUMN signifyd_code VARCHAR(255) NOT NULL DEFAULT '';
-```
-
-After running the script may be necessary run the command below in terminal in order to update caches.
+With composer installed on environment, run below command on terminal to install/update Signifyd extension to latest release.
 
 ```bash
+cd MAGENTO_ROOT
+composer require signifyd/module-connect
 bin/magento setup:upgrade
+bin/magento setup:di:compile
+``` 
+
+### Uninstall extension
+
+**Only use these commands if extension has been installed using composer** 
+
+To remove extension completely, run below commands on terminal.
+
+```bash
+cd MAGENTO_ROOT
+composer remove signifyd/module-connect
+bin/magento setup:upgrade
+bin/magento setup:di:compile
 ```
 
-If there still warnings about missing database modifications, please, contact our support. 
+And run below command on MySQL.
 
-## Purge all Signifyd data
-
-If you are having issues with the install you can remove all Signifyd data on the Magento database for a clean re-install.
-
-**All Signifyd data on Magento database will be lost.**
-
-```sql
-DROP TABLE signifyd_connect_case;
-
-DROP TABLE signifyd_connect_retries;
-
-ALTER TABLE sales_order DROP COLUMN signifyd_score;
-ALTER TABLE sales_order DROP COLUMN signifyd_guarantee;
-ALTER TABLE sales_order DROP COLUMN signifyd_code;
-ALTER TABLE sales_order DROP COLUMN origin_store_code;
-
-ALTER TABLE sales_order_grid DROP COLUMN signifyd_score;
-ALTER TABLE sales_order_grid DROP COLUMN signifyd_guarantee;
-ALTER TABLE sales_order_grid DROP COLUMN signifyd_code;
-
+```mysql
 DELETE FROM setup_module WHERE module='Signifyd_Connect';
 ```
+
+If it is desirable to purge all extension data view the [install troubleshooting doc](docs/INSTALL-TROUBLESHOOT.md#purge-all-signifyd-data).
+
+## Configure
+View our Magento 2 product manual to learn how to [configure the extension](https://www.signifyd.com/resources/manual/magento-v2-1/)
+
+## Logs
+
+Logs can be found on MAGENTO_ROOT/var/log/signifyd_connect.log file.
+
+## Advanced Settings
+
+These settings enable fine grain control over advanced capabilities of the extension.
+
+_Updating these settings should only be performed by an experienced developer under the supervision of the Signifyd support team. If these steps are not completed correctly they may cause issues._
+
+### Pass custom payment data using payment helpers
+
+The Signifyd extension will try to collect payment data (avsResponseCode, cvvResponseCode, cardBin, cardLast4, cardExpiryMonth and cardExpiryYear) from Magento when submitting an order for guarantee. If these fields are missing from submitted orders you can pass these fields by using the extension's mappers. 
+
+[Payment mappers](docs/PAYMENT-DETAILS.md)
