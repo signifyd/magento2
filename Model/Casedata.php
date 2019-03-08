@@ -118,7 +118,6 @@ class Casedata extends AbstractModel
 
         if (isset($request->status) && $case->getSignifydStatus() != $request->status) {
             $case->setSignifydStatus($request->status);
-            $orderAction = $this->handleStatusChange($caseData) ?: $orderAction;
         }
 
         if (isset($request->guaranteeDisposition) && $case->getGuarantee() != $request->guaranteeDisposition) {
@@ -184,7 +183,7 @@ class Casedata extends AbstractModel
 
                         $completeCase = true;
 
-                        $order->addStatusHistoryComment("Signifyd: order status updated, {$orderAction["reason"]}");
+                        $order->addStatusHistoryComment("Signifyd: {$orderAction["reason"]}");
                     } catch (\Exception $e){
                         $this->_logger->debug($e->__toString());
 
@@ -292,7 +291,7 @@ class Casedata extends AbstractModel
                     if (in_array($order->getState(), $notCancelableStates)) {
                         $reason = "order is on {$order->getState()} state";
                     } elseif (!$order->canReviewPayment() && $order->canFetchPaymentReviewUpdate()) {
-                        $reason = "payment review issues";
+                        $reason = "conflict with payment review";
                     } elseif ($order->getActionFlag(Order::ACTION_FLAG_CANCEL) === false) {
                         $reason = "order action flag is set to do not cancel";
                     } else {
@@ -304,7 +303,7 @@ class Casedata extends AbstractModel
                             }
                         }
                         if ($allInvoiced) {
-                            $reason = "all items are invoiced";
+                            $reason = "all order items are invoiced";
                             $completeCase = true;
                         } else {
                             $reason = "unknown reason";
@@ -334,11 +333,11 @@ class Casedata extends AbstractModel
                         $invoice = $this->invoiceService->prepareInvoice($order);
 
                         if ($invoice->isEmpty()) {
-                            throw new \Exception('failed to prepare invoice for order');
+                            throw new \Exception('failed to generate invoice');
                         }
 
                         if ($invoice->getTotalQty() == 0) {
-                            throw new \Exception('no items founded to be invoiced');
+                            throw new \Exception('no items found to invoice');
                         }
 
                         $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
@@ -459,23 +458,6 @@ class Casedata extends AbstractModel
         }
 
         return true;
-    }
-
-    /**
-     * @param $caseData
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @return array
-     */
-    protected function handleStatusChange($caseData)
-    {
-        if ($caseData['request']->reviewDisposition == 'FRAUDULENT') {
-            return array("action" => "hold", "reason" => "review returned FRAUDULENT");
-        } else {
-            if ($caseData['request']->reviewDisposition == 'GOOD') {
-                return array("action" => "unhold", "reason" => "review returned GOOD");
-            }
-        }
-        return null;
     }
 
     /**
