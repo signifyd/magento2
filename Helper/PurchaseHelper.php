@@ -417,6 +417,7 @@ class PurchaseHelper
 
     /**
      * @param $caseData
+     * @param Order $order
      * @return bool
      */
     public function postCaseToSignifyd($caseData, $order)
@@ -427,6 +428,8 @@ class PurchaseHelper
         
         if ($id) {
             $this->logger->debug("Case sent. Id is $id");
+            $order->addStatusHistoryComment("Signifyd: case created {$id}");
+            $order->save();
             return $id;
         } else {
             $this->logger->error("Case failed to send.");
@@ -474,8 +477,12 @@ class PurchaseHelper
             $case->save();
 
             $order->setSignifydGuarantee($disposition);
+            $order->addStatusHistoryComment("Signifyd: guarantee canceled");
             $order->save();
             return true;
+        } else {
+            $order->addStatusHistoryComment("Signifyd: failed to cancel guarantee");
+            $order->save();
         }
 
         return false;

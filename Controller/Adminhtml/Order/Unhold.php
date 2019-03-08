@@ -12,6 +12,42 @@ class Unhold extends \Magento\Sales\Controller\Adminhtml\Order\Unhold
     const ADMIN_RESOURCE = 'Magento_Sales::unhold';
 
     /**
+     * @var \Magento\Backend\Model\Auth\Session
+     */
+    protected $authSession;
+
+    public function __construct(
+        \Magento\Backend\App\Action\Context $context,
+        \Magento\Framework\Registry $coreRegistry,
+        \Magento\Framework\App\Response\Http\FileFactory $fileFactory,
+        \Magento\Framework\Translate\InlineInterface $translateInline,
+        \Magento\Framework\View\Result\PageFactory $resultPageFactory,
+        \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory,
+        \Magento\Framework\View\Result\LayoutFactory $resultLayoutFactory,
+        \Magento\Framework\Controller\Result\RawFactory $resultRawFactory,
+        \Magento\Sales\Api\OrderManagementInterface $orderManagement,
+        \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
+        \Psr\Log\LoggerInterface $logger,
+        \Magento\Backend\Model\Auth\Session $authSession
+    ) {
+        $this->authSession = $authSession;
+
+        parent::__construct(
+            $context,
+            $coreRegistry,
+            $fileFactory,
+            $translateInline,
+            $resultPageFactory,
+            $resultJsonFactory,
+            $resultLayoutFactory,
+            $resultRawFactory,
+            $orderManagement,
+            $orderRepository,
+            $logger
+        );
+    }
+
+    /**
      * Unhold order
      *
      * @return \Magento\Backend\Model\View\Result\Redirect
@@ -36,7 +72,7 @@ class Unhold extends \Magento\Sales\Controller\Adminhtml\Order\Unhold
 
         $resultRedirect = parent::execute();
 
-        $order->addStatusHistoryComment('Order released from hold by merchant');
+        $order->addStatusHistoryComment("Signifyd: order status updated by {$this->authSession->getUser()->getUserName()}");
         $order->save();
 
         return $resultRedirect;

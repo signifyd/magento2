@@ -181,10 +181,16 @@ class Casedata extends AbstractModel
                 if ($order->canHold()) {
                     try {
                         $order->hold();
+
                         $completeCase = true;
+
+                        $order->addStatusHistoryComment("Signifyd: order status updated, {$orderAction["reason"]}");
                     } catch (\Exception $e){
                         $this->_logger->debug($e->__toString());
-                        return false;
+
+                        $orderAction['action'] = false;
+
+                        $order->addStatusHistoryComment("Signifyd: order cannot be updated to on hold,{$e->getMessage()}");
                     }
                 } else {
                     $notHoldableStates = [
@@ -210,6 +216,8 @@ class Casedata extends AbstractModel
                     $this->_logger->debug("Order {$order->getIncrementId()} can not be held because {$reason}");
 
                     $orderAction['action'] = false;
+
+                    $order->addStatusHistoryComment("Signifyd: order cannot be updated to on hold, {$reason}");
                 }
                 break;
 
@@ -220,9 +228,14 @@ class Casedata extends AbstractModel
                         $order->unhold();
 
                         $completeCase = true;
+
+                        $order->addStatusHistoryComment("Signifyd: order status updated, {$orderAction["reason"]}");
                     } catch (\Exception $e){
                         $this->_logger->debug($e->__toString());
+
                         $orderAction['action'] = false;
+
+                        $order->addStatusHistoryComment("Signifyd: order status cannot be updated, {$e->getMessage()}");
                     }
                 } else {
                     if ($order->getState() != Order::STATE_HOLDED && $order->isPaymentReview() == false) {
@@ -243,6 +256,8 @@ class Casedata extends AbstractModel
                     );
 
                     $orderAction['action'] = false;
+
+                    $order->addStatusHistoryComment("Signifyd: order status cannot be updated, {$reason}");
                 }
                 break;
 
@@ -254,12 +269,16 @@ class Casedata extends AbstractModel
                 if ($order->canCancel()) {
                     try {
                         $order->cancel();
-                        $order->addStatusHistoryComment('Signifyd: order canceled');
+
                         $completeCase = true;
+
+                        $order->addStatusHistoryComment("Signifyd: order canceled, {$orderAction["reason"]}");
                     } catch (\Exception $e) {
                         $this->_logger->debug($e->__toString());
-                        $order->addStatusHistoryComment('Signifyd: unable to cancel order: ' . $e->getMessage());
+
                         $orderAction['action'] = false;
+
+                        $order->addStatusHistoryComment("Signifyd: order cannot be canceled, {$e->getMessage()}");
                     }
                 } else {
                     $notCancelableStates = [
@@ -292,9 +311,11 @@ class Casedata extends AbstractModel
                         }
                     }
 
-                    $this->_logger->debug("Order {$order->getIncrementId()} can not be canceled because {$reason}");
+                    $this->_logger->debug("Order {$order->getIncrementId()} cannot be canceled because {$reason}");
 
                     $orderAction['action'] = false;
+
+                    $order->addStatusHistoryComment("Signifyd: order cannot be canceled, {$reason}");
                 }
 
                 if ($orderAction['action'] == false && $order->canHold()) {
@@ -313,11 +334,11 @@ class Casedata extends AbstractModel
                         $invoice = $this->invoiceService->prepareInvoice($order);
 
                         if ($invoice->isEmpty()) {
-                            throw new \Exception('Failed to prepare invoice for order');
+                            throw new \Exception('failed to prepare invoice for order');
                         }
 
                         if ($invoice->getTotalQty() == 0) {
-                            throw new \Exception('No items founded to be invoiced');
+                            throw new \Exception('no items founded to be invoiced');
                         }
 
                         $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
@@ -326,7 +347,6 @@ class Casedata extends AbstractModel
 
                         $order->setCustomerNoteNotify(true);
                         $order->setIsInProcess(true);
-                        $order->addStatusHistoryComment('Signifyd: Automatic invoice');
 
                         $transactionSave = $this->objectManager->create(
                             \Magento\Framework\DB\Transaction::class
@@ -336,6 +356,9 @@ class Casedata extends AbstractModel
                             $order
                         );
                         $transactionSave->save();
+
+                        $order->addStatusHistoryComment("Signifyd: create order invoice: {$invoice->getIncrementId()}");
+                        $order->save();
 
                         // Avoid to save order agains, which trigger Magento's exception
                         $order->setDataChanges(false);
@@ -391,6 +414,8 @@ class Casedata extends AbstractModel
 
                         $orderAction['action'] = false;
 
+                        $order->addStatusHistoryComment("Signifyd: unable to create invoice: {$reason}");
+
                         if ($order->canHold()) {
                             $order->hold();
                         }
@@ -402,7 +427,7 @@ class Casedata extends AbstractModel
                         $order->hold();
                     }
 
-                    $order->addStatusHistoryComment('Signifyd: unable to create invoice: ' . $e->getMessage());
+                    $order->addStatusHistoryComment("Signifyd: unable to create invoice: {$e->getMessage()}");
 
                     $orderAction['action'] = false;
                 }
@@ -421,10 +446,6 @@ class Casedata extends AbstractModel
                     return false;
                 }
                 break;
-        }
-
-        if ($orderAction['action'] != false) {
-            $order->addStatusHistoryComment("Signifyd set status to {$orderAction["action"]} because {$orderAction["reason"]}");
         }
 
         if ($order->hasDataChanges()) {
