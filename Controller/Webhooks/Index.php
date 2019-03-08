@@ -8,7 +8,7 @@ namespace Signifyd\Connect\Controller\Webhooks;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Response\Http;
 use Magento\Framework\Stdlib\DateTime\DateTime;
-use Signifyd\Connect\Helper\LogHelper;
+use Signifyd\Connect\Logger\Logger;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
@@ -16,7 +16,7 @@ use Signifyd\Connect\Helper\LogHelper;
 class Index extends IndexPure
 {
     /**
-     * @var \Signifyd\Connect\Helper\LogHelper
+     * @var Logger
      */
     protected $logger;
 
@@ -38,14 +38,14 @@ class Index extends IndexPure
     /**
      * @param Context $context
      * @param DateTime $dateTime
-     * @param LogHelper $logger
+     * @param Logger $logger
      * @param \Signifyd\Connect\Helper\ConfigHelper $configHelper
      * @param \Magento\Sales\Model\OrderFactory $orderFactory
      */
     public function __construct(
         Context $context,
         DateTime $dateTime,
-        LogHelper $logger,
+        Logger $logger,
         \Signifyd\Connect\Helper\ConfigHelper $configHelper,
         \Magento\Sales\Model\OrderFactory $orderFactory
     ) {

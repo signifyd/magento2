@@ -11,7 +11,7 @@ use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order;
 use Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Helper\PurchaseHelper;
-use Signifyd\Connect\Helper\LogHelper;
+use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Model\CaseRetry;
 use Magento\Store\Model\StoreManagerInterface;
@@ -23,7 +23,7 @@ use Magento\Framework\App\RequestInterface;
 class Purchase implements ObserverInterface
 {
     /**
-     * @var \Signifyd\Connect\Helper\LogHelper
+     * @var \Signifyd\Connect\Logger\Logger;
      */
     protected $logger;
 
@@ -74,14 +74,14 @@ class Purchase implements ObserverInterface
 
     /**
      * Purchase constructor.
-     * @param LogHelper $logger
+     * @param Logger $logger
      * @param PurchaseHelper $helper
      * @param ConfigHelper $configHelper
      * @param ObjectManagerInterface $objectManagerInterface
      * @param StoreManagerInterface|null $storeManager
      */
     public function __construct(
-        LogHelper $logger,
+        Logger $logger,
         PurchaseHelper $helper,
         ConfigHelper $configHelper,
         ObjectManagerInterface $objectManagerInterface,

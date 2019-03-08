@@ -13,6 +13,7 @@ use Magento\Sales\Model\Service\InvoiceService;
 use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Sales\Model\Order;
+use Signifyd\Connect\Logger\Logger;
 
 /**
  * ORM model declaration for case data
@@ -50,11 +51,17 @@ class Casedata extends AbstractModel
     protected $order;
 
     /**
+     * @var Logger
+     */
+    protected $_logger;
+
+    /**
      * Casedata constructor.
      * @param Context $context
      * @param Registry $registry
      * @param \Signifyd\Connect\Helper\ConfigHelper $configHelper
      * @param InvoiceService $invoiceService
+     * @param Logger
      */
     public function __construct(
         Context $context,
@@ -63,7 +70,8 @@ class Casedata extends AbstractModel
         InvoiceService $invoiceService,
         InvoiceSender $invoiceSender,
         ObjectManagerInterface $objectManager,
-        \Magento\Sales\Model\OrderFactory $orderFactory
+        \Magento\Sales\Model\OrderFactory $orderFactory,
+        Logger $logger
     )
     {
         $this->configHelper = $configHelper;
@@ -71,6 +79,7 @@ class Casedata extends AbstractModel
         $this->invoiceSender = $invoiceSender;
         $this->objectManager = $objectManager;
         $this->orderFactory = $orderFactory;
+        $this->_logger = $logger;
 
         parent::__construct($context, $registry);
     }

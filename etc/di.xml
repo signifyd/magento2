@@ -20,6 +20,7 @@
             <argument name="handlers"  xsi:type="array">
                 <item name="system" xsi:type="object">Signifyd\Connect\Logger\Handler</item>
             </argument>
+            <argument name="processors" xsi:type="array"></argument>
         </arguments>
     </type>
 

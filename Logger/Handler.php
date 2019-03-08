@@ -13,7 +13,7 @@ class Handler extends \Magento\Framework\Logger\Handler\Base
      * Logging Level
      * @var int
      */
-    protected $loggerType = Logger::INFO;
+    protected $loggerType = Logger::API;
 
     /**
      * The Signifyd file log name
