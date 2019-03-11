@@ -425,8 +425,6 @@ class PurchaseHelper
      */
     public function postCaseToSignifyd($caseData, $order)
     {
-        $this->logger->debug("Sending: " . json_encode($caseData));
-        
         $id = $this->configHelper->getSignifydApi($order)->createCase($caseData);
         
         if ($id) {
