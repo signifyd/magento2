@@ -23,6 +23,12 @@ class ExpYearMapper extends Base_ExpYearMapper
             $expYear = substr($expYear, -2);
         }
 
-        return (empty($expYear) ? parent::getPaymentData($orderPayment) : $expYear);
+        $this->logHelper->debug('Expiry year found on payment mapper: ' . (empty($expYear) ? 'false' : $expYear));
+
+        if (empty($expYear)) {
+            $expYear = parent::getPaymentData($orderPayment);
+        }
+
+        return $expYear;
     }
 }

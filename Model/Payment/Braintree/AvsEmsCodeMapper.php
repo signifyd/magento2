@@ -51,20 +51,24 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
     {
         $additionalInfo = $orderPayment->getAdditionalInformation();
 
-        if (empty($additionalInfo['avsPostalCodeResponseCode']) ||
-            empty($additionalInfo['avsStreetAddressResponseCode'])
+        if (empty($additionalInfo['avsPostalCodeResponseCode']) == false &&
+            empty($additionalInfo['avsStreetAddressResponseCode']) == false
         ) {
-            return parent::getPaymentData($orderPayment);
+            $zipCode = $additionalInfo['avsPostalCodeResponseCode'];
+            $streetCode = $additionalInfo['avsStreetAddressResponseCode'];
+            $key = $zipCode . $streetCode;
+
+            if (isset(self::$avsMap[$key]) && $this->validate(self::$avsMap[$key])) {
+                $avsStatus = self::$avsMap[$key];
+            }
         }
 
-        $zipCode = $additionalInfo['avsPostalCodeResponseCode'];
-        $streetCode = $additionalInfo['avsStreetAddressResponseCode'];
-        $key = $zipCode . $streetCode;
+        $this->logHelper->debug('AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus));
 
-        if (isset(self::$avsMap[$key]) && $this->validate(self::$avsMap[$key])) {
-            return self::$avsMap[$key];
-        } else {
-            return parent::getPaymentData($orderPayment);
+        if (empty($avsStatus)) {
+            $avsStatus = parent::getPaymentData($orderPayment);
         }
+        
+        return $avsStatus;
     }
 }

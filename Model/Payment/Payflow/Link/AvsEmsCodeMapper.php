@@ -17,7 +17,18 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
      */
     public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
     {
-        $code = $this->getSignifydPaymentData('PROCAVS');
-        return $this->validate($code) ? $code : parent::getPaymentData($orderPayment);
+        $avsStatus = $this->getSignifydPaymentData('PROCAVS');
+
+        if ($this->validate($avsStatus) == false) {
+            $avsStatus = NULL;
+        }
+
+        $this->logHelper->debug('AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus));
+
+        if (empty($avsStatus)) {
+            $avsStatus = parent::getPaymentData($orderPayment);
+        }
+
+        return $avsStatus;
     }
 }

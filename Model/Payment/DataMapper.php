@@ -4,6 +4,7 @@ namespace Signifyd\Connect\Model\Payment;
 
 use Magento\Framework\Registry;
 use Signifyd\Connect\Api\PaymentVerificationInterface;
+use Signifyd\Connect\Helper\LogHelper;
 
 abstract class DataMapper implements PaymentVerificationInterface
 {
@@ -25,14 +26,21 @@ abstract class DataMapper implements PaymentVerificationInterface
     protected $getDataCalled = false;
 
     /**
+     * @var LogHelper
+     */
+    protected $logHelper;
+
+    /**
      * Payflowlink constructor.
      * @param Registry $registry
      */
     public function __construct(
-        Registry $registry
+        Registry $registry,
+        LogHelper $logHelper
     )
     {
         $this->registry = $registry;
+        $this->logHelper = $logHelper;
     }
 
     /**
