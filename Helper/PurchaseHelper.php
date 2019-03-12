@@ -23,6 +23,7 @@ use Signifyd\Models\UserAccount;
 use Signifyd\Connect\Model\PaymentVerificationFactory;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Framework\Registry;
+use Signifyd\Connect\Logger\Logger;
 
 /**
  * Class PurchaseHelper
@@ -32,7 +33,7 @@ use Magento\Framework\Registry;
 class PurchaseHelper
 {
     /**
-     * @var \Signifyd\Connect\Helper\LogHelper
+     * @var Logger
      */
     protected $logger;
 
@@ -61,11 +62,14 @@ class PurchaseHelper
      */
     protected $paymentVerificationFactory;
 
+    /**
+     * @var Registry
+     */
     protected $registry;
 
     /**
      * @param ObjectManagerInterface $objectManager
-     * @param LogHelper $logger
+     * @param Logger $logger
      * @param ConfigHelper $configHelper
      * @param ModuleListInterface $moduleList
      * @param DeviceHelper $deviceHelper
@@ -73,7 +77,7 @@ class PurchaseHelper
      */
     public function __construct(
         ObjectManagerInterface $objectManager,
-        LogHelper $logger,
+        Logger $logger,
         ConfigHelper $configHelper,
         ModuleListInterface $moduleList,
         DeviceHelper $deviceHelper,
@@ -421,14 +425,6 @@ class PurchaseHelper
      */
     public function postCaseToSignifyd($caseData, $order)
     {
-        $caseDataLog = $caseData;
-
-        if (isset($caseDataLog->card) && isset($caseDataLog->card->last4)) {
-            $caseDataLog->card->last4 = empty($caseDataLog->card->last4) ? 'not found' : 'found';
-        }
-        
-        $this->logger->request("Sending: " . json_encode($caseDataLog));
-        
         $id = $this->configHelper->getSignifydApi($order)->createCase($caseData);
         
         if ($id) {

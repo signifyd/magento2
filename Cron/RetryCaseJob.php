@@ -8,7 +8,7 @@
 namespace Signifyd\Connect\Cron;
 
 use Magento\Framework\ObjectManagerInterface;
-use Signifyd\Connect\Helper\LogHelper;
+use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Helper\Retry;
 use Signifyd\Connect\Model\CaseRetry;
@@ -16,7 +16,7 @@ use Signifyd\Connect\Model\CaseRetry;
 class RetryCaseJob
 {
     /**
-     * @var \Signifyd\Connect\Helper\LogHelper
+     * @var Logger
      */
     protected $_logger;
 
@@ -38,7 +38,7 @@ class RetryCaseJob
     public function __construct(
         ObjectManagerInterface $objectManager,
         PurchaseHelper $helper,
-        LogHelper $logger,
+        Logger $logger,
         Retry $caseRetryObj
     ) {
         $this->_objectManager = $objectManager;

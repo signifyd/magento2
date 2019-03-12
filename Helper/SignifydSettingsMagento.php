@@ -9,6 +9,7 @@ namespace Signifyd\Connect\Helper;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Signifyd\Core\SignifydSettings;
+use Signifyd\Connect\Logger\Logger;
 
 class SignifydSettingsMagento extends SignifydSettings
 {
@@ -16,7 +17,7 @@ class SignifydSettingsMagento extends SignifydSettings
 
     public function __construct(
         ScopeConfigInterface $scopeConfig,
-        LogHelper $logger,
+        Logger $logger,
         DirectoryList $directoryList
     ) {
         $this->loggerError = function($message) use ($logger)
