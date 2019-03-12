@@ -57,6 +57,18 @@ These settings enable fine grain control over advanced capabilities of the exten
 
 _Updating these settings should only be performed by an experienced developer under the supervision of the Signifyd support team. If these steps are not completed correctly they may cause issues._
 
+### Restrict orders by states
+
+Restrict orders with specific order states (not status) from being sent to Signifyd.
+
+[Restrict orders by states](docs/RESTRICT-STATES.md) 
+
+### Restrict orders by payment methods
+
+Restrict orders with specific payment methods from being sent to Signifyd.
+
+[Restrict orders by payment methods](docs/RESTRICT-PAYMENTS.md) 
+
 ### Pass custom payment data using payment helpers
 
 The Signifyd extension will try to collect payment data (avsResponseCode, cvvResponseCode, cardBin, cardLast4, cardExpiryMonth and cardExpiryYear) from Magento when submitting an order for guarantee. If these fields are missing from submitted orders you can pass these fields by using the extension's mappers. 
