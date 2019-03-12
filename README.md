@@ -6,15 +6,15 @@ Signifyd’s Magento extension enables merchants on Magento 2 to integrate with 
 
 Composer is a tool for dependency management in PHP. It allows you to declare the libraries your project depends on and it will manage (install/update) them for you.
 
-It is possible to learn more about it, download and install it on [https://getcomposer.org](https://getcomposer.org).
+You can learn more about it at [https://getcomposer.org](https://getcomposer.org).
 
-Before getting started make sure to have composer properly installed on environment.
+Before getting started make sure you have composer properly installed on your environment.
 
-*Note: depending on operational system and how composer is installed, may be needed to add '.phar' after 'composer' on command lines, changing from 'composer' => 'composer.phar'*
+*Note: depending on the operating system and how composer is installed, you may need to add '.phar' after 'composer' using the command lines, i.e. change from 'composer' => 'composer.phar'*
 
 ### Install/update
 
-With composer installed on environment, run below command on terminal to install/update Signifyd extension to latest release.
+With composer installed, run the command below on terminal. This will install/update Signifyd extension to [latest release](https://github.com/signifyd/magento2/releases).
 
 ```bash
 cd MAGENTO_ROOT
@@ -25,9 +25,9 @@ bin/magento setup:di:compile
 
 ### Uninstall extension
 
-**Only use these commands if extension has been installed using composer** 
+**This only applies if extension has been installed using composer** 
 
-To remove extension completely, run below commands on terminal.
+To remove extension completely, run this command in terminal.
 
 ```bash
 cd MAGENTO_ROOT
@@ -36,13 +36,13 @@ bin/magento setup:upgrade
 bin/magento setup:di:compile
 ```
 
-And run below command on MySQL.
+And run this command on MySQL.
 
 ```mysql
 DELETE FROM setup_module WHERE module='Signifyd_Connect';
 ```
 
-If it is desirable to purge all extension data view the [install troubleshooting doc](docs/INSTALL-TROUBLESHOOT.md#purge-all-signifyd-data).
+You can also delete all Signifyd extension data using this guide, [install troubleshooting doc](docs/INSTALL-TROUBLESHOOT.md#purge-all-signifyd-data).
 
 ## Configure
 View our Magento 2 product manual to learn how to [configure the extension](https://www.signifyd.com/resources/manual/magento-v2-1/)
@@ -55,7 +55,7 @@ Logs can be found on MAGENTO_ROOT/var/log/signifyd_connect.log file.
 
 These settings enable fine grain control over advanced capabilities of the extension.
 
-_Updating these settings should only be performed by an experienced developer under the supervision of the Signifyd support team. If these steps are not completed correctly they may cause issues._
+_Updating these settings should only be performed by an experienced developer under the supervision of the Signifyd support team. If these steps are not completed correctly an issue may occur._
 
 ### Restrict orders by states
 
