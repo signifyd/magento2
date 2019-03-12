@@ -14,7 +14,7 @@ Before getting started make sure you have composer properly installed on your en
 
 ### Install/update
 
-With composer installed, run the command below on terminal. This will install/update Signifyd extension to [latest release](https://github.com/signifyd/magento2/releases).
+With composer installed, run the command below on terminal. This will install/update Signifyd extension to the [latest release](https://github.com/signifyd/magento2/releases).
 
 ```bash
 cd MAGENTO_ROOT
