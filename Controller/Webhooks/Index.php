@@ -133,8 +133,6 @@ class Index extends IndexPure
             return;
         }
 
-        $this->logger->debug("Api request: " . $request);
-
         $signifydApi = $this->configHelper->getSignifydApi($case);
 
         if ($signifydApi->validWebhookRequest($request, $hash, $topic)) {
