@@ -12,7 +12,7 @@ Check if extension it is enabled, by running below command line on terminal:
 
 ```bash
 cd MAGENTO_ROOT
-bin/magento module:status Signifyd_Connect
+bin/magento module:status
 ```
 
 If module is disabled, enabled it using below command line:
@@ -58,7 +58,7 @@ First locate etc/module.xml file on one of these locations:
 On file etc/module.xml check for `setup_version` property on `<module>` tag. 
 
 ```
-<module name="Signifyd_Connect" setup_version="3.1.1">
+<module name="Signifyd_Connect" setup_version="3.2.0">
     <sequence>
         <module name="Magento_Sales" />
         <module name="Magento_Payment" />
