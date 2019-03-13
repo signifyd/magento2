@@ -147,8 +147,6 @@ class Index extends Action
             return;
         }
 
-        $this->logger->debug("Api request: " . $request);
-
         $signifydApi = $this->configHelper->getSignifydApi($case);
 
         if ($signifydApi->validWebhookRequest($request, $hash, $topic)) {
