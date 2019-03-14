@@ -24,7 +24,7 @@ class CvvEmsCodeMapper extends DataMapper
         $cidStatus = $orderPayment->getCcCidStatus();
         $cidStatus = $this->validate($cidStatus) ? $cidStatus : NULL;
 
-        $this->logHelper->debug('CVV found on base mapper: ' . (empty($cidStatus) ? 'false' : $cidStatus));
+        $this->logger->debug('CVV found on base mapper: ' . (empty($cidStatus) ? 'false' : $cidStatus));
 
         return $cidStatus;
     }

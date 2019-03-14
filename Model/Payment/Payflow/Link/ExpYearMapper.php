@@ -19,7 +19,7 @@ class ExpYearMapper extends Base_ExpYearMapper
         $expYear = $this->getSignifydPaymentData('EXPDATE');
         $expYear = substr($expYear, -2);
 
-        $this->logHelper->debug('Expiry year found on payment mapper: ' . (empty($expYear) ? 'false' : $expYear));
+        $this->logger->debug('Expiry year found on payment mapper: ' . (empty($expYear) ? 'false' : $expYear));
 
         if (empty($expYear)) {
             $expYear = parent::getPaymentData($orderPayment);

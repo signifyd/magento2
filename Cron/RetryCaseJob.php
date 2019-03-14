@@ -18,7 +18,7 @@ class RetryCaseJob
     /**
      * @var Logger
      */
-    protected $_logger;
+    protected $logger;
 
     /**
      * @var \Magento\Framework\ObjectManagerInterface
@@ -43,7 +43,7 @@ class RetryCaseJob
     ) {
         $this->_objectManager = $objectManager;
         $this->_helper = $helper;
-        $this->_logger = $logger;
+        $this->logger = $logger;
         $this->caseRetryObj = $caseRetryObj;
     }
 
@@ -52,7 +52,7 @@ class RetryCaseJob
      * @return $this
      */
     public function execute() {
-        $this->_logger->debug("Starting retry job");
+        $this->logger->debug("Starting retry job");
         $this->retry();
         return $this;
     }
@@ -62,7 +62,7 @@ class RetryCaseJob
      */
     public function retry()
     {
-        $this->_logger->debug("Main retry method called");
+        $this->logger->debug("Main retry method called");
 
         /**
          * Getting all the cases that were not submitted to Signifyd
@@ -70,7 +70,7 @@ class RetryCaseJob
         $waitingCases = $this->caseRetryObj->getRetryCasesByStatus(CaseRetry::WAITING_SUBMISSION_STATUS);
 
         foreach ($waitingCases as $case) {
-            $this->_logger->debug("Signifyd: preparing for send case no: {$case['order_increment']}");
+            $this->logger->debug("Signifyd: preparing for send case no: {$case['order_increment']}");
 
             $order = $this->getOrder($case['order_increment']);
 
@@ -94,7 +94,7 @@ class RetryCaseJob
         $inReviewCases = $this->caseRetryObj->getRetryCasesByStatus(CaseRetry::IN_REVIEW_STATUS);
 
         foreach ($inReviewCases as $case) {
-            $this->_logger->debug("Signifyd: preparing for review case no: {$case['order_increment']}");
+            $this->logger->debug("Signifyd: preparing for review case no: {$case['order_increment']}");
 
             $this->caseRetryObj->processInReviewCase($case, $this->getOrder($case['order_increment']));
         }
@@ -105,12 +105,12 @@ class RetryCaseJob
         $inProcessingCases = $this->caseRetryObj->getRetryCasesByStatus(CaseRetry::PROCESSING_RESPONSE_STATUS);
 
         foreach ($inProcessingCases as $case) {
-            $this->_logger->debug("Signifyd: preparing for review case no: {$case['order_increment']}");
+            $this->logger->debug("Signifyd: preparing for review case no: {$case['order_increment']}");
 
             $this->caseRetryObj->processResponseStatus($case, $this->getOrder($case['order_increment']));
         }
 
-        $this->_logger->debug("Main retry method ended");
+        $this->logger->debug("Main retry method ended");
 
         return;
     }

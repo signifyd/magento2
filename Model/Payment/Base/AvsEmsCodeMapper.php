@@ -24,7 +24,7 @@ class AvsEmsCodeMapper extends DataMapper
         $avsStatus = $orderPayment->getCcAvsStatus();
         $avsStatus = $this->validate($avsStatus) ? $avsStatus : NULL;
 
-        $this->logHelper->debug('AVS found on base mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus));
+        $this->logger->debug('AVS found on base mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus));
 
         return $avsStatus;
     }

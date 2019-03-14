@@ -19,7 +19,7 @@ class Last4Mapper extends Base_Last4Mapper
         $last4 = $this->getSignifydPaymentData('ACCT');
         $last4 = substr($last4, -4);
 
-        $this->logHelper->debug('Last4 found on payment mapper: ' . (empty($last4) ? 'false' : 'true'));
+        $this->logger->debug('Last4 found on payment mapper: ' . (empty($last4) ? 'false' : 'true'));
 
         if (empty($last4)) {
             $last4 = parent::getPaymentData($orderPayment);

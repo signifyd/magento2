@@ -30,7 +30,7 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
             }
         }
 
-        $this->logHelper->debug('CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus));
+        $this->logger->debug('CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus));
 
         if (empty($cvvStatus)) {
             $cvvStatus = parent::getPaymentData($orderPayment);

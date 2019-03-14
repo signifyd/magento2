@@ -19,7 +19,7 @@ class ExpMonthMapper extends Base_ExpMonthMapper
         $expMonth = $this->getSignifydPaymentData('EXPDATE');
         $expMonth = substr($expMonth, 0, 2);
 
-        $this->logHelper->debug('Expiry month found on payment mapper: ' . (empty($expMonth) ? 'false' : $expMonth));
+        $this->logger->debug('Expiry month found on payment mapper: ' . (empty($expMonth) ? 'false' : $expMonth));
 
         if (empty($expMonth)) {
             $expMonth = parent::getPaymentData($orderPayment);

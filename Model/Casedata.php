@@ -53,7 +53,7 @@ class Casedata extends AbstractModel
     /**
      * @var Logger
      */
-    protected $_logger;
+    protected $logger;
 
     /**
      * Casedata constructor.
@@ -79,7 +79,7 @@ class Casedata extends AbstractModel
         $this->invoiceSender = $invoiceSender;
         $this->objectManager = $objectManager;
         $this->orderFactory = $orderFactory;
-        $this->_logger = $logger;
+        $this->logger = $logger;
 
         parent::__construct($context, $registry);
     }
@@ -153,9 +153,9 @@ class Casedata extends AbstractModel
             $order->getResource()->save($order);
             $this->getResource()->save($case);
             $this->updateOrder($caseData, $orderAction, $case);
-            $this->_logger->info('Case was saved, id:' . $case->getIncrementId());
+            $this->logger->info('Case was saved, id:' . $case->getIncrementId());
         } catch (\Exception $e){
-            $this->_logger->critical($e->__toString());
+            $this->logger->critical($e->__toString());
             return false;
         }
 
@@ -172,7 +172,7 @@ class Casedata extends AbstractModel
      */
     public function updateOrder($caseData, $orderAction, $case)
     {
-        $this->_logger->debug("Update order with action: " . print_r($orderAction, true));
+        $this->logger->debug("Update order with action: " . print_r($orderAction, true));
 
         /** @var $order \Magento\Sales\Model\Order */
         $order = $caseData['order'];
@@ -194,7 +194,7 @@ class Casedata extends AbstractModel
 
                         $order->addStatusHistoryComment("Signifyd: {$orderAction["reason"]}");
                     } catch (\Exception $e){
-                        $this->_logger->debug($e->__toString());
+                        $this->logger->debug($e->__toString());
 
                         $orderAction['action'] = false;
 
@@ -221,7 +221,7 @@ class Casedata extends AbstractModel
                         $reason = "unknown reason";
                     }
 
-                    $this->_logger->debug("Order {$order->getIncrementId()} can not be held because {$reason}");
+                    $this->logger->debug("Order {$order->getIncrementId()} can not be held because {$reason}");
 
                     $orderAction['action'] = false;
 
@@ -231,7 +231,7 @@ class Casedata extends AbstractModel
 
             case "unhold":
                 if ($order->canUnhold()) {
-                    $this->_logger->debug('Unhold order action');
+                    $this->logger->debug('Unhold order action');
                     try{
                         $order->unhold();
 
@@ -239,7 +239,7 @@ class Casedata extends AbstractModel
 
                         $order->addStatusHistoryComment("Signifyd: order status updated, {$orderAction["reason"]}");
                     } catch (\Exception $e){
-                        $this->_logger->debug($e->__toString());
+                        $this->logger->debug($e->__toString());
 
                         $orderAction['action'] = false;
 
@@ -257,7 +257,7 @@ class Casedata extends AbstractModel
                         $reason = "unknown reason";
                     }
 
-                    $this->_logger->debug(
+                    $this->logger->debug(
                         "Order {$order->getIncrementId()} ({$order->getState()} > {$order->getStatus()}) " .
                         "can not be removed from hold because {$reason}. " .
                         "Case status: {$case->getSignifydStatus()}"
@@ -282,7 +282,7 @@ class Casedata extends AbstractModel
 
                         $order->addStatusHistoryComment("Signifyd: order canceled, {$orderAction["reason"]}");
                     } catch (\Exception $e) {
-                        $this->_logger->debug($e->__toString());
+                        $this->logger->debug($e->__toString());
 
                         $orderAction['action'] = false;
 
@@ -319,7 +319,7 @@ class Casedata extends AbstractModel
                         }
                     }
 
-                    $this->_logger->debug("Order {$order->getIncrementId()} cannot be canceled because {$reason}");
+                    $this->logger->debug("Order {$order->getIncrementId()} cannot be canceled because {$reason}");
 
                     $orderAction['action'] = false;
 
@@ -371,13 +371,13 @@ class Casedata extends AbstractModel
                         // Avoid to save order agains, which trigger Magento's exception
                         $order->setDataChanges(false);
 
-                        $this->_logger->debug('Invoice was created for order: ' . $order->getIncrementId());
+                        $this->logger->debug('Invoice was created for order: ' . $order->getIncrementId());
 
                         // Send invoice email
                         try {
                             $this->invoiceSender->send($invoice);
                         } catch (\Exception $e) {
-                            $this->_logger->debug('Failed to send the invoice email: ' . $e->getMessage());
+                            $this->logger->debug('Failed to send the invoice email: ' . $e->getMessage());
                         }
 
                         $completeCase = true;
@@ -418,7 +418,7 @@ class Casedata extends AbstractModel
                             }
                         }
 
-                        $this->_logger->debug("Order {$order->getIncrementId()} can not be invoiced because {$reason}");
+                        $this->logger->debug("Order {$order->getIncrementId()} can not be invoiced because {$reason}");
 
                         $orderAction['action'] = false;
 
@@ -429,7 +429,7 @@ class Casedata extends AbstractModel
                         }
                     }
                 } catch (\Exception $e) {
-                    $this->_logger->debug('Exception while creating invoice: ' . $e->__toString());
+                    $this->logger->debug('Exception while creating invoice: ' . $e->__toString());
 
                     if ($order->canHold()) {
                         $order->hold();
@@ -450,7 +450,7 @@ class Casedata extends AbstractModel
                 try {
                     $completeCase = true;
                 } catch (\Exception $e) {
-                    $this->_logger->debug($e->__toString());
+                    $this->logger->debug($e->__toString());
                     return false;
                 }
                 break;
@@ -483,7 +483,7 @@ class Casedata extends AbstractModel
         $negativeAction = $caseData['case']->getNegativeAction();
         $positiveAction = $caseData['case']->getPositiveAction();
 
-        $this->_logger->debug("Signifyd: Positive action for {$caseData['case']->getOrderIncrement()}: " . $positiveAction);
+        $this->logger->debug("Signifyd: Positive action for {$caseData['case']->getOrderIncrement()}: " . $positiveAction);
         $request = $caseData['request'];
         switch ($request->guaranteeDisposition){
             case "DECLINED":
@@ -493,7 +493,7 @@ class Casedata extends AbstractModel
                 return array("action" => $positiveAction, "reason" => "guarantee approved");
                 break;
             default:
-                $this->_logger->debug("Signifyd: Unknown guaranty: " . $request->guaranteeDisposition);
+                $this->logger->debug("Signifyd: Unknown guaranty: " . $request->guaranteeDisposition);
                 break;
         }
 
