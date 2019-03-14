@@ -298,7 +298,7 @@ class Casedata extends AbstractModel
                 }
 
                 if ($orderAction['action'] == false && $order->canHold()) {
-                    $order = $order->hold();
+                    $order->hold();
                 }
                 break;
 

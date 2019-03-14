@@ -161,8 +161,6 @@ class Purchase implements ObserverInterface
 
             // Check if case already exists for this order
             if ($this->helper->doesCaseExist($order)) {
-                // backup hold order
-                $this->holdOrder($order);
                 return;
             }
 
