@@ -13,17 +13,17 @@ The extension will try to fetch the following payment data:
 - Expiry Month
 - Expiry Year
 
-As each payment gateway has it own workflow, there is no guarantee that the extension will find the payment data. To support a variety of payment gateways and extensibliity mappers can be used to pass payment data from any payment gateway.  
+As each payment gateway has it own workflow, there is no guarantee that the extension will find the payment data. To support a variety of payment gateways and extensibility mappers can be used to pass payment data from any payment gateway.  
 
 ## Basic Structure
 
-The solution fetch the desired information using mappers on a similar way Magento team has done on Magento Signifyd [built in functionality](http://devdocs.magento.com/guides/v2.2/payments-integrations/signifyd/signifyd.html). Mappers developed by Magento team are not compatible with this solution, because of backwards compatibility with all Magento 2 versions.
+The solution fetches the desired information using mappers on a similar way Magento team has done on Magento Signifyd [built in functionality](http://devdocs.magento.com/guides/v2.2/payments-integrations/signifyd/signifyd.html). Mappers developed by Magento team are not compatible with this solution, because of backwards compatibility with all Magento 2 versions.
 
-Each payment method and information needs a mapper to fetch the desired information. If it is desired to collect AVS and CVV codes for a specific payment method, then it is needed to build two different mappers, one for AVS and another one for CVV. Mappers can be reused between payment methods if data to be collected it is stored on the same database location or API response.
+Each payment method and information needs a mapper to fetch the desired information. If it is desired to collect AVS and CVV codes for a specific payment method, then it is needed to build two different mappers, one for AVS and another one for CVV. Mappers can be reused between payment methods if data to be collected is stored on the same database location or API response.
 
-This solution has built in mappers that works for any payment method that stores the informations on standards locations (sales_order_payment table on database). Those mappers can be found on extension folder Model/Payment/Base. These mappers also work as default mappers, so if no mapper is specified for a payment method and information combination, Base mappers will be used.
+This solution has built in mappers that work for any payment method that stores the informations on standards locations (sales_order_payment table on database). Those mappers can be found on extension folder Model/Payment/Base. These mappers also work as default mappers, so if no mapper is specified for a payment method and information combination, Base mappers will be used.
 
-All mappers should implement Signifyd\Connect\Api\PaymentVerificationInterface. It is recommended to do that by extending Signifyd\Connect\Model\Payment\DataMapper or even better if extends one of the Base mappers.
+All mappers should implement Signifyd\Connect\Api\PaymentVerificationInterface. It is recommended to do that by extending Signifyd\Connect\Model\Payment\DataMapper or even better - to extend one of the Base mappers.
 
 ## Including custom payment method
 
@@ -53,7 +53,7 @@ SELECT method FROM sales_order_payment WHERE parent_id IN (SELECT entity_id FROM
 
 ### Configure the mapper
 
-It will be needed a custom extension to configure and implement mappers, so if it does not exists yet, create one.
+A custom extension will be needed to configure and implement mappers, so if it does not exists yet, create one.
 
 On config.xml set the mapper to be used for the payment method and information as bellow:
 
@@ -83,19 +83,19 @@ List of valid information codes:
 - Expiry month: exp_month
 - Expiry year: exp_year
 
-It is possible to check some examples of these configurations on etc/config.xml of Signifyd extension, that usually can be found at MAGENTO_ROOT/vendor/signifyd/module-connect folder or inside MAGENTO_ROOT/app if you’ve installed it manually. _**Do not modify Signifyd files.**_
+It is possible to check some examples of these configurations on etc/config.xml of Signifyd extension, that can usually be found at MAGENTO_ROOT/vendor/signifyd/module-connect folder or inside MAGENTO_ROOT/app if you installed it manually. _**Do not modify Signifyd files.**_
 
 ### Implement the mapper
 
-The mapper should implement Signifyd\Connect\Api\PaymentVerificationInterface. It is recommended to do that by extending Signifyd\Connect\Model\Payment\DataMapper or even better if extends one of the Base mappers, from namespace Signifyd\Connect\Model\Payment\Base.
+The mapper should implement Signifyd\Connect\Api\PaymentVerificationInterface. It is recommended to do that by extending Signifyd\Connect\Model\Payment\DataMapper or even better, to extend one of the Base mappers, from namespace Signifyd\Connect\Model\Payment\Base.
 
-It’s also required to implement public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment).
+It is also required to implement public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment).
 
-If it’s wanted to restrict the use of the mapper to some specific payment methods, that could be done by adding a property protected $allowedMethods = array('method01', 'method02', …). This is optional, but recommended to avoid configuration mistakes.
+If restricting the use of the mapper to some specific payment methods is needed, that can be done by adding a property protected $allowedMethods = array('method01', 'method02', �). This is optional, but recommended to avoid configuration mistakes.
 
-Here it is a template for mapper class implementation:
+Here is a template for mapper class implementation:
 
-_**Replace bold parts with specific informations for custom extension, payment method and informations**_
+_**Replace bold parts with specific information for custom extension, payment method and information**_
 
 ```php
 namespace Path\Your\Namespace;
