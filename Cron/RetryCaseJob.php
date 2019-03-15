@@ -51,16 +51,7 @@ class RetryCaseJob
      * Entry point to Cron job
      * @return $this
      */
-    public function execute() {
-        $this->logger->debug("Starting retry job");
-        $this->retry();
-        return $this;
-    }
-
-    /**
-     * Main Retry Method to start retry cycle
-     */
-    public function retry()
+    public function execute()
     {
         $this->logger->debug("Main retry method called");
 
@@ -70,7 +61,7 @@ class RetryCaseJob
         $waitingCases = $this->caseRetryObj->getRetryCasesByStatus(CaseRetry::WAITING_SUBMISSION_STATUS);
 
         foreach ($waitingCases as $case) {
-            $this->logger->debug("Signifyd: preparing for send case no: {$case['order_increment']}");
+            $this->logger->debug("Signifyd: preparing for send case no: {$case['order_increment']}", array('entity' => $case));
 
             $order = $this->getOrder($case['order_increment']);
 
@@ -94,7 +85,7 @@ class RetryCaseJob
         $inReviewCases = $this->caseRetryObj->getRetryCasesByStatus(CaseRetry::IN_REVIEW_STATUS);
 
         foreach ($inReviewCases as $case) {
-            $this->logger->debug("Signifyd: preparing for review case no: {$case['order_increment']}");
+            $this->logger->debug("Signifyd: preparing for review case no: {$case['order_increment']}", array('entity' => $case));
 
             $this->caseRetryObj->processInReviewCase($case, $this->getOrder($case['order_increment']));
         }
@@ -105,14 +96,14 @@ class RetryCaseJob
         $inProcessingCases = $this->caseRetryObj->getRetryCasesByStatus(CaseRetry::PROCESSING_RESPONSE_STATUS);
 
         foreach ($inProcessingCases as $case) {
-            $this->logger->debug("Signifyd: preparing for review case no: {$case['order_increment']}");
+            $this->logger->debug("Signifyd: preparing for review case no: {$case['order_increment']}", array('entity' => $case));
 
             $this->caseRetryObj->processResponseStatus($case, $this->getOrder($case['order_increment']));
         }
 
         $this->logger->debug("Main retry method ended");
 
-        return;
+        return $this;
     }
 
     public function getOrder($incrementId)

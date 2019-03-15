@@ -22,13 +22,13 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     /**
      * Gets payment CVV verification code.
      *
-     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return string
      * @throws \InvalidArgumentException If specified order payment has different payment method code.
      */
-    public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
+    public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
-        $additionalInfo = $orderPayment->getAdditionalInformation();
+        $additionalInfo = $order->getPayment()->getAdditionalInformation();
 
         if (empty($additionalInfo['cvv2match']) == false && isset(self::$cvvMap[$additionalInfo['cvv2match']])) {
             $cvvStatus = self::$cvvMap[$additionalInfo['cvv2match']];
@@ -38,10 +38,10 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
             }
         }
 
-        $this->logger->debug('CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus));
+        $this->logger->debug('CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus), array('entity' => $order));
 
         if (empty($cvvStatus)) {
-            $cvvStatus = parent::getPaymentData($orderPayment);
+            $cvvStatus = parent::getPaymentData($order);
         }
 
         return $cvvStatus;
