@@ -8,21 +8,21 @@ If something does not go as expected, try to clear any additional caches on the 
 
 ## There is no "SIGNIFYD" session on System > Configuration
 
-Check if extension it is enabled, by running below command line on terminal:
+Check if the extension is enabled, by running the command line below on terminal:
 
 ```bash
 cd MAGENTO_ROOT
 bin/magento module:status
 ```
 
-If module is disabled, enabled it using below command line:
+If module is disabled, enable it by using the command line below:
 
 ```bash
 cd MAGENTO_ROOT
 bin/magento module:enable Signifyd_Connect
 ```
 
-If module does not exists, check if below directories exists:
+If module does not exist, check if below directories exist:
 - MAGENTO_ROOT/vendor/signifyd/module-connect
 - MAGENTO_ROOT/vendor/signifyd/signifyd-php
 
@@ -30,13 +30,13 @@ If the above files are not present, please repeat the installation steps.
 
 ## Logs show database related errors
 
-On the MySQL database check for the existence of 'signifyd_connect_case' table using below command:
+On the MySQL database check for the existence of 'signifyd_connect_case' table using the command below:
 
 ```
 DESC signifyd_connect_case
 ```
 
-Verify you see the following columns on the table:
+Verify if you see the following columns on the table:
 - order_increment
 - signifyd_status
 - code
@@ -48,7 +48,7 @@ Verify you see the following columns on the table:
 - magento_status
 - retries
 
-If you find any missing columns or issues with the table, check if the Magento installation scripts has been ran for the latest version.  
+If you find any missing columns or issues with the table, check if the Magento installation scripts had been ran for the latest version.  
 
 First locate etc/module.xml file on one of these locations:
 
@@ -68,13 +68,13 @@ On file etc/module.xml check for `setup_version` property on `<module>` tag.
 </module>
 ```
 
-Run below SQL command on MySQL:
+Run the SQL command below on MySQL:
 
 ```
 SELECT * FROM setup_module WHERE module='Signifyd_Connect';
 ```
 
-The results of the above command should match with `setup_version` property from module.xml file. If does not match, run installation steps again and make sure to clean every possible cache on Magento administration and environment.
+The results of the above command should match with `setup_version` property from module.xml file. If they do not match, run the installation steps again and make sure to clean every possible cache on Magento administration and environment.
 
 ## Database integrity check
 
