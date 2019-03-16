@@ -16,6 +16,9 @@ class ExpYearMapper extends DataMapper
     {
         $expYear = $orderPayment->getCcExpYear();
         $expYear = is_null($expYear) ? '' : $expYear;
+
+        $this->logger->debug('Expiry year found on base mapper: ' . (empty($expYear) ? 'false' : $expYear));
+
         return $expYear;
     }
 }

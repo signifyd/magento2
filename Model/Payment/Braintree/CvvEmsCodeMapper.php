@@ -45,16 +45,20 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     {
         $additionalInfo = $orderPayment->getAdditionalInformation();
 
-        if (empty($additionalInfo['cvvResponseCode'])) {
-            return parent::getPaymentData($orderPayment);
+        if (empty($additionalInfo['cvvResponseCode']) == false && isset(self::$cvvMap[$additionalInfo['cvvResponseCode']])) {
+            $cvvStatus = self::$cvvMap[$additionalInfo['cvvResponseCode']];
+
+            if ($this->validate($cvvStatus) == false) {
+                $cvvStatus = NULL;
+            }
         }
 
-        $cvv = $additionalInfo['cvvResponseCode'];
+        $this->logger->debug('CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus));
 
-        if (isset(self::$cvvMap[$cvv]) && $this->validate(self::$cvvMap[$cvv])) {
-            return self::$cvvMap[$cvv];
-        } else {
-            return parent::getPaymentData($orderPayment);
+        if (empty($cvvStatus)) {
+            $cvvStatus = parent::getPaymentData($orderPayment);
         }
+
+        return $cvvStatus;
     }
 }

@@ -23,6 +23,7 @@ use Signifyd\Models\UserAccount;
 use Signifyd\Connect\Model\PaymentVerificationFactory;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Framework\Registry;
+use Signifyd\Connect\Logger\Logger;
 
 /**
  * Class PurchaseHelper
@@ -32,7 +33,7 @@ use Magento\Framework\Registry;
 class PurchaseHelper
 {
     /**
-     * @var \Signifyd\Connect\Helper\LogHelper
+     * @var Logger
      */
     protected $logger;
 
@@ -61,11 +62,14 @@ class PurchaseHelper
      */
     protected $paymentVerificationFactory;
 
+    /**
+     * @var Registry
+     */
     protected $registry;
 
     /**
      * @param ObjectManagerInterface $objectManager
-     * @param LogHelper $logger
+     * @param Logger $logger
      * @param ConfigHelper $configHelper
      * @param ModuleListInterface $moduleList
      * @param DeviceHelper $deviceHelper
@@ -73,7 +77,7 @@ class PurchaseHelper
      */
     public function __construct(
         ObjectManagerInterface $objectManager,
-        LogHelper $logger,
+        Logger $logger,
         ConfigHelper $configHelper,
         ModuleListInterface $moduleList,
         DeviceHelper $deviceHelper,
@@ -417,16 +421,17 @@ class PurchaseHelper
 
     /**
      * @param $caseData
+     * @param Order $order
      * @return bool
      */
     public function postCaseToSignifyd($caseData, $order)
     {
-        $this->logger->request("Sending: " . json_encode($caseData));
-        
         $id = $this->configHelper->getSignifydApi($order)->createCase($caseData);
         
         if ($id) {
             $this->logger->debug("Case sent. Id is $id");
+            $order->addStatusHistoryComment("Signifyd: case created {$id}");
+            $order->save();
             return $id;
         } else {
             $this->logger->error("Case failed to send.");
@@ -474,8 +479,12 @@ class PurchaseHelper
             $case->save();
 
             $order->setSignifydGuarantee($disposition);
+            $order->addStatusHistoryComment("Signifyd: guarantee canceled");
             $order->save();
             return true;
+        } else {
+            $order->addStatusHistoryComment("Signifyd: failed to cancel guarantee");
+            $order->save();
         }
 
         return false;
@@ -502,17 +511,13 @@ class PurchaseHelper
     {
         try {
             $avsAdapter = $this->paymentVerificationFactory->createPaymentAvs($orderPayment->getMethod());
+
+            $this->logger->debug('Getting AVS code using ' . get_class($avsAdapter));
+
             $avsCode = $avsAdapter->getData($orderPayment);
             $avsCode = trim(strtoupper($avsCode));
             
-            if (empty($avsCode) || strlen($avsCode) > 1) {
-                return null;
-            }
-
-            // http://www.emsecommerce.net/avs_cvv2_response_codes.htm from Signifyd Api Documentation
-            $validAvsResponseCodes = array('X', 'Y', 'A', 'W', 'Z', 'N', 'U', 'R', 'E', 'S', 'D', 'M', 'B', 'P', 'C', 'I', 'G');
-
-            if (in_array($avsCode, $validAvsResponseCodes)) {
+            if ($avsAdapter->validate($avsCode)) {
                 return $avsCode;
             } else {
                 return null;
@@ -533,17 +538,13 @@ class PurchaseHelper
     {
         try {
             $cvvAdapter = $this->paymentVerificationFactory->createPaymentCvv($orderPayment->getMethod());
+
+            $this->logger->debug('Getting CVV code using ' . get_class($cvvAdapter));
+
             $cvvCode = $cvvAdapter->getData($orderPayment);
             $cvvCode = trim(strtoupper($cvvCode));
 
-            if (empty($cvvCode) || strlen($cvvCode) > 1) {
-                return null;
-            }
-
-            // http://www.emsecommerce.net/cvv_cvv2_response_codes.htm from Signifyd Api Documentation
-            $validCvvResponseCodes = array('M', 'N', 'P', 'S', 'U');
-
-            if (in_array($cvvCode, $validCvvResponseCodes)) {
+            if ($cvvAdapter->validate($cvvCode)) {
                 return $cvvCode;
             } else {
                 return null;
@@ -593,6 +594,9 @@ class PurchaseHelper
     {
         try {
             $last4Adapter = $this->paymentVerificationFactory->createPaymentLast4($orderPayment->getMethod());
+
+            $this->logger->debug('Getting last4 using ' . get_class($last4Adapter));
+
             $last4 = $last4Adapter->getData($orderPayment);
             $last4 = preg_replace('/\D/', '', $last4);
 
@@ -617,6 +621,9 @@ class PurchaseHelper
     {
         try {
             $monthAdapter = $this->paymentVerificationFactory->createPaymentExpMonth($orderPayment->getMethod());
+
+            $this->logger->debug('Getting expiry month using ' . get_class($monthAdapter));
+
             $expMonth = $monthAdapter->getData($orderPayment);
             $expMonth = preg_replace('/\D/', '', $expMonth);
 
@@ -642,6 +649,9 @@ class PurchaseHelper
     {
         try {
             $yearAdapter = $this->paymentVerificationFactory->createPaymentExpYear($orderPayment->getMethod());
+
+            $this->logger->debug('Getting expiry year using ' . get_class($yearAdapter));
+
             $expYear = $yearAdapter->getData($orderPayment);
             $expYear = preg_replace('/\D/', '', $expYear);
 
@@ -672,6 +682,9 @@ class PurchaseHelper
     {
         try {
             $binAdapter = $this->paymentVerificationFactory->createPaymentBin($orderPayment->getMethod());
+
+            $this->logger->debug('Getting bin using ' . get_class($binAdapter));
+
             $bin = $binAdapter->getData($orderPayment);
             $bin = preg_replace('/\D/', '', $bin);
 

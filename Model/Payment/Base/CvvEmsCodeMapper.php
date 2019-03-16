@@ -22,7 +22,11 @@ class CvvEmsCodeMapper extends DataMapper
     public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
     {
         $cidStatus = $orderPayment->getCcCidStatus();
-        return (empty($cidStatus) ? NULL : $cidStatus);
+        $cidStatus = $this->validate($cidStatus) ? $cidStatus : NULL;
+
+        $this->logger->debug('CVV found on base mapper: ' . (empty($cidStatus) ? 'false' : $cidStatus));
+
+        return $cidStatus;
     }
 
     public function validate($response)

@@ -18,7 +18,7 @@ class InstallSchema implements InstallSchemaInterface
     protected $logger;
 
     public function __construct(
-        \Signifyd\Connect\Helper\LogHelper $logger
+        \Signifyd\Connect\Logger\Logger $logger
     ) {
         $this->logger = $logger;
     }

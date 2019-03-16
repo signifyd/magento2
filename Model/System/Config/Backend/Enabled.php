@@ -70,8 +70,6 @@ class Enabled extends \Magento\Framework\App\Config\Value
         $builtinPath = 'fraud_protection/signifyd/active';
         $path = $currentPath == $signifydPath ? $builtinPath : $signifydPath;
 
-        $isAnotherEnabled = 0;
-
         /** @var \Magento\Store\Model\Store $store */
         foreach ($this->storeRepository->getList() as $store) {
             $isAnotherEnabled = $this->_config->getValue($path, 'stores', $store->getCode());
