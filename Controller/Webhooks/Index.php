@@ -8,15 +8,17 @@ namespace Signifyd\Connect\Controller\Webhooks;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Response\Http;
 use Magento\Framework\Stdlib\DateTime\DateTime;
-use Signifyd\Connect\Helper\LogHelper;
+use Signifyd\Connect\Logger\Logger;
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\RequestInterface;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
  */
-class Index extends IndexPure
+class Index extends Action
 {
     /**
-     * @var \Signifyd\Connect\Helper\LogHelper
+     * @var Logger
      */
     protected $logger;
 
@@ -38,22 +40,34 @@ class Index extends IndexPure
     /**
      * @param Context $context
      * @param DateTime $dateTime
-     * @param LogHelper $logger
+     * @param Logger $logger
      * @param \Signifyd\Connect\Helper\ConfigHelper $configHelper
      * @param \Magento\Sales\Model\OrderFactory $orderFactory
      */
     public function __construct(
         Context $context,
         DateTime $dateTime,
-        LogHelper $logger,
+        Logger $logger,
         \Signifyd\Connect\Helper\ConfigHelper $configHelper,
-        \Magento\Sales\Model\OrderFactory $orderFactory
+        \Magento\Sales\Model\OrderFactory $orderFactory,
+        \Magento\Framework\Data\Form\FormKey $formKey
     ) {
         parent::__construct($context);
+
         $this->logger = $logger;
         $this->objectManager = $context->getObjectManager();
         $this->configHelper = $configHelper;
         $this->orderFactory = $orderFactory;
+
+        // Compatibility with Magento 2.3+ which required form_key on every request
+        // Magento expects class to implement \Magento\Framework\App\CsrfAwareActionInterface but this causes
+        // a backward incompatibility to Magento versions below 2.3
+        if (interface_exists("\Magento\Framework\App\CsrfAwareActionInterface")) {
+            $request = $this->getRequest();
+            if ($request instanceof RequestInterface && $request->isPost() && empty($request->getParam('form_key'))) {
+                $request->setParam('form_key', $formKey->getFormKey());
+            }
+        }
     }
 
     /**
@@ -132,8 +146,6 @@ class Index extends IndexPure
             $this->getResponse()->setStatusCode(Http::STATUS_CODE_400);
             return;
         }
-
-        $this->logger->debug("Api request: " . $request);
 
         $signifydApi = $this->configHelper->getSignifydApi($case);
 

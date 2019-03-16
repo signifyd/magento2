@@ -11,7 +11,7 @@ use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order;
 use Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Helper\PurchaseHelper;
-use Signifyd\Connect\Helper\LogHelper;
+use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Model\CaseRetry;
 use Magento\Store\Model\StoreManagerInterface;
@@ -23,7 +23,7 @@ use Magento\Framework\App\RequestInterface;
 class Purchase implements ObserverInterface
 {
     /**
-     * @var \Signifyd\Connect\Helper\LogHelper
+     * @var \Signifyd\Connect\Logger\Logger;
      */
     protected $logger;
 
@@ -63,9 +63,19 @@ class Purchase implements ObserverInterface
     protected $ownEventsMethods = ['authorizenet_directpost'];
 
     /**
+     * Restricted payment methods
      * @var array
+     * @deprecated
+     *
+     * Restricted payment methods are no longer managed in this method.
+     * Please add customized restricted payment methods to core_config_data table as below.
+     *
+     * INSERT INTO core_config_data(path, value) VALUES (
+     * 'signifyd/general/restrict_payment_methods',
+     * 'checkmo,cashondelivery,banktransfer,purchaseorder'
+     * );
      */
-    protected $restrictedMethods = ['checkmo', 'banktransfer', 'purchaseorder', 'cashondelivery'];
+    protected $restrictedMethods;
 
     /**
      * @var RequestInterface
@@ -74,14 +84,14 @@ class Purchase implements ObserverInterface
 
     /**
      * Purchase constructor.
-     * @param LogHelper $logger
+     * @param Logger $logger
      * @param PurchaseHelper $helper
      * @param ConfigHelper $configHelper
      * @param ObjectManagerInterface $objectManagerInterface
      * @param StoreManagerInterface|null $storeManager
      */
     public function __construct(
-        LogHelper $logger,
+        Logger $logger,
         PurchaseHelper $helper,
         ConfigHelper $configHelper,
         ObjectManagerInterface $objectManagerInterface,
@@ -155,7 +165,8 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            if (in_array($paymentMethod, $this->restrictedMethods)){
+            if ($this->isRestricted($paymentMethod, $order->getState())) {
+                $this->logger->debug('Case creation for order ' . $order->getIncrementId() . ' with state ' . $order->getState() . ' is restricted');
                 return;
             }
 
@@ -189,6 +200,86 @@ class Purchase implements ObserverInterface
         } catch (\Exception $ex) {
             $this->logger->error($ex->getMessage());
         }
+    }
+
+    /**
+     * Used on UpgradeScheme starting on version 3.2.0 for backward compatibility
+     *
+     * Do not remove this method
+     *
+     * Tries to get restricted payment methods from class property
+     *
+     * @return array
+     * @deprecated
+     */
+    public function getOldRestrictMethods()
+    {
+        if (isset($this->restrictedMethods) && empty($this->restrictedMethods) == false) {
+            return $this->restrictedMethods;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Get restricted payment methods from store configs
+     *
+     * @return array|mixed
+     */
+    public function getRestrictedPaymentMethodsConfig()
+    {
+        $restrictedPaymentMethods = $this->configHelper->getConfigData('signifyd/general/restrict_payment_methods');
+        $restrictedPaymentMethods = explode(',', $restrictedPaymentMethods);
+        $restrictedPaymentMethods = array_map('trim', $restrictedPaymentMethods);
+
+        return $restrictedPaymentMethods;
+    }
+
+    /**
+     * Check if there is any restrictions by payment method or state
+     *
+     * @param $method
+     * @param null $state
+     * @return bool
+     */
+    public function isRestricted($paymentMethodCode, $state, $action='default')
+    {
+        if (empty($state)) {
+            return true;
+        }
+
+        $restrictedPaymentMethods = $this->getRestrictedPaymentMethodsConfig();
+
+        if (in_array($paymentMethodCode, $restrictedPaymentMethods)) {
+            return true;
+        }
+
+        return $this->isStateRestricted($state, $action);
+    }
+
+    /**
+     * Check if state is restricted
+     *
+     * @param $state
+     * @param string $action
+     * @return bool
+     */
+    public function isStateRestricted($state, $action='default')
+    {
+        $restrictedStates = $this->configHelper->getConfigData("signifyd/general/restrict_states_{$action}");
+        $restrictedStates = explode(',', $restrictedStates);
+        $restrictedStates = array_map('trim', $restrictedStates);
+        $restrictedStates = array_filter($restrictedStates);
+
+        if (empty($restrictedStates) && $action != 'default') {
+            return $this->isStateRestricted($state, 'default');
+        }
+
+        if (in_array($state, $restrictedStates)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

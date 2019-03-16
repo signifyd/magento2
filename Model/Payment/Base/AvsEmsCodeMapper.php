@@ -22,7 +22,11 @@ class AvsEmsCodeMapper extends DataMapper
     public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
     {
         $avsStatus = $orderPayment->getCcAvsStatus();
-        return (empty($avsStatus) ? NULL : $avsStatus);
+        $avsStatus = $this->validate($avsStatus) ? $avsStatus : NULL;
+
+        $this->logger->debug('AVS found on base mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus));
+
+        return $avsStatus;
     }
 
     /**

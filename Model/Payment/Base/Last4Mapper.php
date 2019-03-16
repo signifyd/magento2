@@ -16,6 +16,9 @@ class Last4Mapper extends DataMapper
     {
         $last4 = $orderPayment->getCcLast4();
         $last4 = is_null($last4) ? '' : $last4;
+
+        $this->logger->debug('Last4 found on base mapper: ' . (empty($last4) ? 'false' : 'true'));
+
         return $last4;
     }
 }

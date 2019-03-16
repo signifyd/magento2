@@ -24,8 +24,18 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
             if ($cvvStatus == 'B') {
                 $cvvStatus = 'U';
             }
+
+            if ($this->validate($cvvStatus) == false) {
+                $cvvStatus = NULL;
+            }
         }
 
-        return (empty($cvvStatus) ? parent::getPaymentData($orderPayment) : $cvvStatus);
+        $this->logger->debug('CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus));
+
+        if (empty($cvvStatus)) {
+            $cvvStatus = parent::getPaymentData($orderPayment);
+        }
+
+        return $cvvStatus;
     }
 }

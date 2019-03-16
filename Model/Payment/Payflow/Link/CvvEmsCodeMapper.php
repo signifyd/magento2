@@ -16,7 +16,18 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
      */
     public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
     {
-        $code = $this->getSignifydPaymentData('PROCCVV2');
-        return $this->validate($code) ? $code : parent::getPaymentData($orderPayment);
+        $cvvStatus = $this->getSignifydPaymentData('PROCCVV2');
+
+        if ($this->validate($cvvStatus) == false) {
+            $cvvStatus = NULL;
+        }
+
+        $this->logger->debug('CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus));
+
+        if (empty($cvvStatus)) {
+            $cvvStatus = parent::getPaymentData($orderPayment);
+        }
+
+        return $cvvStatus;
     }
 }

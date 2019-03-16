@@ -10,7 +10,7 @@ use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order;
 use Signifyd\Connect\Helper\PurchaseHelper;
-use Signifyd\Connect\Helper\LogHelper;
+use Signifyd\Connect\Logger\Logger;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -18,7 +18,7 @@ use Signifyd\Connect\Helper\LogHelper;
 class Cancel implements ObserverInterface
 {
     /**
-     * @var \Signifyd\Connect\Helper\LogHelper
+     * @var \Signifyd\Connect\Logger\Logger
      */
     protected $logger;
 
@@ -33,7 +33,7 @@ class Cancel implements ObserverInterface
     protected $configHelper;
 
     public function __construct(
-        LogHelper $logger,
+        Logger $logger,
         PurchaseHelper $helper,
         \Signifyd\Connect\Helper\ConfigHelper $configHelper
     ) {

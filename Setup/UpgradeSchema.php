@@ -9,12 +9,38 @@ use Magento\Framework\Setup\UpgradeSchemaInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\SchemaSetupInterface;
 use Magento\Framework\DB\Ddl\Table;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Config\Storage\WriterInterface;
+use Signifyd\Connect\Observer\Purchase;
 
 /**
  * @codeCoverageIgnore
  */
 class UpgradeSchema implements UpgradeSchemaInterface
 {
+    /**
+     * @var \Signifyd\Connect\Helper\ConfigHelper
+     */
+    protected $configWriter;
+
+    /**
+     * @var Purchase
+     */
+    protected $purchaseObserver;
+
+    /**
+     * TODO: Make changes  to be able to save current restricted payment gateways from code to database
+     *
+     * InstallSchema constructor.
+     * @param \Signifyd\Connect\Helper\ConfigHelper $configHelper
+     */
+    public function __construct(
+        WriterInterface $configWriter,
+        Purchase $purchaseObserver
+    ) {
+        $this->configWriter = $configWriter;
+        $this->purchaseObserver = $purchaseObserver;
+    }
 
     /**
      * Upgrades DB schema for a module
@@ -42,6 +68,25 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 'default' => 0,
                 'comment' => 'Number of retries for current case magento_status',
             ]);
+        }
+
+        if (version_compare($context->getVersion(), '3.2.0') < 0) {
+            $oldRestrictedPaymentMethods = $this->purchaseObserver->getOldRestrictMethods();
+
+            if (is_array($oldRestrictedPaymentMethods) &&
+                empty($oldRestrictedPaymentMethods) == false) {
+
+                $restrictedPaymentMethods = $this->purchaseObserver->getRestrictedPaymentMethodsConfig();
+
+                $diff1 = array_diff($oldRestrictedPaymentMethods, $restrictedPaymentMethods);
+                $diff2 = array_diff($restrictedPaymentMethods, $oldRestrictedPaymentMethods);
+
+                // If anything is different, so use $oldRestrictedPaymentMethods on database settings
+                if (empty($diff1) == false || empty($diff2) == false) {
+                    $oldRestrictedPaymentMethods = implode(',', $oldRestrictedPaymentMethods);
+                    $this->configWriter->save('signifyd/general/restrict_payment_methods', $oldRestrictedPaymentMethods);
+                }
+            }
         }
 
         $setup->endSetup();

@@ -121,7 +121,7 @@ class Retry extends AbstractHelper
             $caseObj->updateCase($caseData);
             return true;
         } catch (\Exception $e) {
-            $this->_logger->critical($e->__toString());
+            $this->logger->critical($e->__toString());
             return false;
         }
     }
