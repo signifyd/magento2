@@ -57,7 +57,6 @@ class Config implements ObserverInterface
     protected $desiredDatabaseStructure = array(
         'signifyd_connect_case' => array('order_increment', 'signifyd_status', 'code', 'score', 'guarantee', 'entries_text',
             'created', 'updated', 'magento_status', 'retries'),
-        'signifyd_connect_retries' => array(),
         'sales_order' => array('signifyd_score', 'signifyd_guarantee', 'signifyd_code', 'origin_store_code'),
         'sales_order_grid' => array('signifyd_score', 'signifyd_guarantee', 'signifyd_code')
     );

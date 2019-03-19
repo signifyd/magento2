@@ -13,7 +13,7 @@ use Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
-use Signifyd\Connect\Model\CaseRetry;
+use Signifyd\Connect\Model\Casedata;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\App\RequestInterface;
 
@@ -190,7 +190,7 @@ class Purchase implements ObserverInterface
 
             if ($result){
                 $case->setCode($result);
-                $case->setMagentoStatus(CaseRetry::IN_REVIEW_STATUS)->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
+                $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS)->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
                 try {
                     $case->getResource()->save($case);
                     $this->logger->debug('Case saved. Order No:' . $order->getIncrementId());
