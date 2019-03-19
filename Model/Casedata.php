@@ -395,12 +395,6 @@ class Casedata extends AbstractModel
                         } elseif ($order->getActionFlag(self::ACTION_FLAG_INVOICE) === false) {
                             $reason = "order action flag is set to do not invoice";
                         } else {
-                            foreach ($this->getAllItems() as $item) {
-                                if ($item->getQtyToInvoice() > 0 && !$item->getLockedDoInvoice()) {
-                                    return true;
-                                }
-                            }
-
                             $canInvoiceAny = false;
 
                             foreach ($order->getAllItems() as $item) {
