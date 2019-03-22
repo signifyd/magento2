@@ -12,9 +12,9 @@ class Loglevel implements \Magento\Framework\Option\ArrayInterface
     public function toOptionArray()
     {
         return [
-            ['value' => 1, 'label' => __('Yes > Info')],
-            ['value' => 0, 'label' => __('No > None')],
-            ['value' => 2, 'label' => __('Debug > Debug')]
+            ['value' => 1, 'label' => __('Info')],
+            ['value' => 0, 'label' => __('None')],
+            ['value' => 2, 'label' => __('Debug')]
         ];
     }
 
@@ -25,6 +25,6 @@ class Loglevel implements \Magento\Framework\Option\ArrayInterface
      */
     public function toArray()
     {
-        return [1 => __('Yes > Info'), 0 => __('No > None'), 2 => __('Debug > Debug')];
+        return [1 => __('Info'), 0 => __('None'), 2 => __('Debug')];
     }
 }
