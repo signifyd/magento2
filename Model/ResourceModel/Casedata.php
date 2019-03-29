@@ -21,9 +21,4 @@ class Casedata extends AbstractDb
         $this->_init('signifyd_connect_case', 'order_increment');
         $this->_isPkAutoIncrement = false;
     }
-
-    public static function JoinWithOrder($collection)
-    {
-
-    }
 }
