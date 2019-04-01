@@ -20,6 +20,18 @@ use Signifyd\Connect\Logger\Logger;
  */
 class Casedata extends AbstractModel
 {
+    /* The status when a case is created */
+    const WAITING_SUBMISSION_STATUS     = "waiting_submission";
+
+    /* The status for a case when the first response from Signifyd is received */
+    const IN_REVIEW_STATUS              = "in_review";
+
+    /* The status for a case when the case is processing the response */
+    const PROCESSING_RESPONSE_STATUS    = "processing_response";
+
+    /* The status for a case that is completed */
+    const COMPLETED_STATUS              = "completed";
+
     /**
      * @var \Signifyd\Connect\Helper\ConfigHelper
      */
@@ -141,7 +153,7 @@ class Casedata extends AbstractModel
         $guarantee = $case->getGuarantee();
         $score = $case->getScore();
         if (empty($guarantee) == false && $guarantee != 'N/A' && empty($score) == false) {
-            $case->setMagentoStatus(CaseRetry::PROCESSING_RESPONSE_STATUS);
+            $case->setMagentoStatus(Casedata::PROCESSING_RESPONSE_STATUS);
             $case->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
         }
 
@@ -455,7 +467,7 @@ class Casedata extends AbstractModel
         }
 
         if ($completeCase) {
-            $case->setMagentoStatus(CaseRetry::COMPLETED_STATUS)
+            $case->setMagentoStatus(Casedata::COMPLETED_STATUS)
                 ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
             $case->getResource()->save($case);
         }

@@ -101,13 +101,6 @@ CREATE TABLE IF NOT EXISTS `signifyd_connect_case1` (
   PRIMARY KEY (`order_increment`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Signifyd Cases';
 
-CREATE TABLE IF NOT EXISTS `signifyd_connect_retries` (
-  `order_increment` varchar(255) NOT NULL COMMENT 'Order ID',
-  `created` timestamp NULL DEFAULT NULL COMMENT 'Creation Time',
-  `updated` timestamp NULL DEFAULT NULL COMMENT 'Last Attempt',
-  PRIMARY KEY (`order_increment`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Signifyd Retries';
-
 ALTER TABLE sales_order ADD COLUMN signifyd_score FLOAT DEFAULT NULL;
 ALTER TABLE sales_order ADD COLUMN signifyd_guarantee VARCHAR(64) NOT NULL DEFAULT 'N/A';
 ALTER TABLE sales_order ADD COLUMN signifyd_code VARCHAR(255) NOT NULL DEFAULT '';
@@ -134,8 +127,6 @@ If you are having issues with the install you can remove all Signifyd data on th
 
 ```mysql
 DROP TABLE signifyd_connect_case;
-
-DROP TABLE signifyd_connect_retries;
 
 ALTER TABLE sales_order DROP COLUMN signifyd_score;
 ALTER TABLE sales_order DROP COLUMN signifyd_guarantee;
