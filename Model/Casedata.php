@@ -403,7 +403,7 @@ class Casedata extends AbstractModel
 
                         if (in_array($order->getState(), $notInvoiceableStates)) {
                             $reason = "order is on {$order->getState()} state";
-                        } elseif ($order->getActionFlag(self::ACTION_FLAG_INVOICE) === false) {
+                        } elseif ($order->getActionFlag(Order::ACTION_FLAG_INVOICE) === false) {
                             $reason = "order action flag is set to do not invoice";
                         } else {
                             $canInvoiceAny = false;
