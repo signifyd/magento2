@@ -11,10 +11,10 @@ class Last4Mapper extends Base_Last4Mapper
     /**
      * Gets last 4 credit card digits from XML response from Authorize.net
      *
-     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return null|string
      */
-    public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
+    public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $responseXmlDocument = $this->getSignifydPaymentData();
 
@@ -23,10 +23,10 @@ class Last4Mapper extends Base_Last4Mapper
             $last4 = substr($last4, -4);
         }
 
-        $this->logger->debug('Last4 found on payment mapper: ' . (empty($last4) ? 'false' : 'true'));
+        $this->logger->debug('Last4 found on payment mapper: ' . (empty($last4) ? 'false' : 'true'), array('entity' => $order));
 
         if (empty($last4)) {
-            $last4 = parent::getPaymentData($orderPayment);
+            $last4 = parent::getPaymentData($order);
         }
 
         return $last4;

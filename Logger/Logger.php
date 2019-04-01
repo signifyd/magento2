@@ -7,7 +7,7 @@
 
 namespace Signifyd\Connect\Logger;
 
-use Magento\Framework\App\Config\ScopeConfigInterface;
+use Signifyd\Connect\Helper\ConfigHelper;
 
 class Logger extends \Monolog\Logger
 {
@@ -17,19 +17,25 @@ class Logger extends \Monolog\Logger
     protected $log;
 
     /**
+     * @var ConfigHelper
+     */
+    protected $configHelper;
+
+    /**
      * Logger constructor.
      * @param string $name
      * @param array $handlers
      * @param array $processors
-     * @param ScopeConfigInterface $scopeConfig
+     * @param ConfigHelper $configHelper
      */
     public function __construct(
         $name,
         array $handlers = array(),
         array $processors = array(),
-        ScopeConfigInterface $scopeConfig
+        ConfigHelper $configHelper
     ) {
-        $this->log = $scopeConfig->getValue('signifyd/logs/log', 'stores');
+        $this->configHelper = $configHelper;
+        $this->log = $this->configHelper->getConfigData('signifyd/logs/log');
 
         return parent::__construct($name, $handlers, $processors);
     }
@@ -42,7 +48,14 @@ class Logger extends \Monolog\Logger
      */
     public function addRecord($level, $message, array $context = array())
     {
-        if ($this->log == false) {
+        if (isset($context['entity'])) {
+            $log = $this->configHelper->getConfigData('signifyd/logs/log', $context['entity']);
+            unset($context['entity']);
+        } else {
+            $log = $this->log;
+        }
+
+        if ($log == false) {
             return false;
         }
 

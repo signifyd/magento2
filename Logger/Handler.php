@@ -14,10 +14,4 @@ class Handler extends \Magento\Framework\Logger\Handler\Base
      * @var int
      */
     protected $loggerType = Logger::API;
-
-    /**
-     * The Signifyd file log name
-     * @var string
-     */
-    protected $fileName = '/var/log/signifyd_connect.log';
 }

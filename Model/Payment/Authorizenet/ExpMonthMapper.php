@@ -11,10 +11,10 @@ class ExpMonthMapper extends Base_ExpMonthMapper
     /**
      * Gets expiry month from XML response from Authorize.net
      *
-     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return null|string
      */
-    public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
+    public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $responseXmlDocument = $this->getSignifydPaymentData();
 
@@ -23,10 +23,10 @@ class ExpMonthMapper extends Base_ExpMonthMapper
             $expMonth = substr($expMonth, 0, 2);
         }
 
-        $this->logger->debug('Expiry month found on payment mapper: ' . (empty($expMonth) ? 'false' : $expMonth));
+        $this->logger->debug('Expiry month found on payment mapper: ' . (empty($expMonth) ? 'false' : $expMonth), array('entity' => $order));
 
         if (empty($expMonth)) {
-            $expMonth = parent::getPaymentData($orderPayment);
+            $expMonth = parent::getPaymentData($order);
         }
 
         return $expMonth;
