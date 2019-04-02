@@ -43,13 +43,13 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
     /**
      * Gets payment AVS verification code.
      *
-     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return string
      * @throws \InvalidArgumentException If specified order payment has different payment method code.
      */
-    public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
+    public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
-        $additionalInfo = $orderPayment->getAdditionalInformation();
+        $additionalInfo = $order->getPayment()->getAdditionalInformation();
 
         if (empty($additionalInfo['avsPostalCodeResponseCode']) == false &&
             empty($additionalInfo['avsStreetAddressResponseCode']) == false
@@ -63,10 +63,10 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
             }
         }
 
-        $this->logger->debug('AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus));
+        $this->logger->debug('AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus), array('entity' => $order));
 
         if (empty($avsStatus)) {
-            $avsStatus = parent::getPaymentData($orderPayment);
+            $avsStatus = parent::getPaymentData($order);
         }
         
         return $avsStatus;

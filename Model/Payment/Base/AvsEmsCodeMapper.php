@@ -16,15 +16,15 @@ class AvsEmsCodeMapper extends DataMapper
     /**
      * Gets payment AVS verification code.
      *
-     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return null|string
      */
-    public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
+    public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
-        $avsStatus = $orderPayment->getCcAvsStatus();
+        $avsStatus = $order->getPayment()->getCcAvsStatus();
         $avsStatus = $this->validate($avsStatus) ? $avsStatus : NULL;
 
-        $this->logger->debug('AVS found on base mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus));
+        $this->logger->debug('AVS found on base mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus), array('entity' => $order));
 
         return $avsStatus;
     }

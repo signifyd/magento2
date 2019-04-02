@@ -84,15 +84,15 @@ abstract class DataMapper implements PaymentVerificationInterface
     }
 
     /**
-     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return string
      */
-    public final function getCode(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
+    public final function getCode(\Magento\Sales\Model\Order $order)
     {
         if ($this->getDataCalled) {
             return null;
         } else {
-            return $this->getData($orderPayment);
+            return $this->getData($order);
         }
     }
 
@@ -100,12 +100,12 @@ abstract class DataMapper implements PaymentVerificationInterface
      * This method must be called to retrieve data. Use getPaymentMethod to actual retrieve data from payment method\
      * on extending classes
      *
-     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return string
      */
-    public final function getData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
+    public final function getData(\Magento\Sales\Model\Order $order)
     {
-        $this->checkMethod($orderPayment);
-        return $this->getPaymentData($orderPayment);
+        $this->checkMethod($order->getPayment());
+        return $this->getPaymentData($order);
     }
 }

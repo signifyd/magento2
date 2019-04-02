@@ -176,8 +176,8 @@ class PurchaseHelper
         // Get all of the purchased products
         $items = $order->getAllItems();
         $purchase = SignifydModel::Make("\\Signifyd\\Models\\Purchase");
-        $purchase->avsResponseCode = $this->getAvsCode($order->getPayment());
-        $purchase->cvvResponseCode = $this->getCvvCode($order->getPayment());
+        $purchase->avsResponseCode = $this->getAvsCode($order);
+        $purchase->cvvResponseCode = $this->getCvvCode($order);
 
         if ($originStoreCode == 'admin') {
             $purchase->orderChannel = "PHONE";
@@ -304,10 +304,10 @@ class PurchaseHelper
         $billingAddress = $order->getBillingAddress();
         $card = SignifydModel::Make("\\Signifyd\\Models\\Card");
         $card->cardHolderName = $this->getCardholder($order);
-        $card->bin = $this->getBin($order->getPayment());
-        $card->last4 = $this->getLast4($order->getPayment());
-        $card->expiryMonth = $this->getExpMonth($order->getPayment());
-        $card->expiryYear = $this->getExpYear($order->getPayment());
+        $card->bin = $this->getBin($order);
+        $card->last4 = $this->getLast4($order);
+        $card->expiryMonth = $this->getExpMonth($order);
+        $card->expiryYear = $this->getExpYear($order);
 
         $card->billingAddress = $this->formatSignifydAddress($billingAddress);
         return $card;
@@ -329,7 +329,7 @@ class PurchaseHelper
 
         /* @var $customer \Magento\Customer\Model\Customer */
         $customer = $this->objectManager->get('Magento\Customer\Model\Customer')->load($order->getCustomerId());
-        $this->logger->debug("Customer data: " . json_encode($customer));
+        $this->logger->debug("Customer data: " . json_encode($customer), array('entity' => $order));
         if(!is_null($customer) && !$customer->isEmpty()) {
             $user->createdDate = date('c', strtotime($customer->getCreatedAt()));
         }
@@ -429,12 +429,12 @@ class PurchaseHelper
         $id = $this->configHelper->getSignifydApi($order)->createCase($caseData);
         
         if ($id) {
-            $this->logger->debug("Case sent. Id is $id");
+            $this->logger->debug("Case sent. Id is $id", array('entity' => $order));
             $order->addStatusHistoryComment("Signifyd: case created {$id}");
             $order->save();
             return $id;
         } else {
-            $this->logger->error("Case failed to send.");
+            $this->logger->error("Case failed to send.", array('entity' => $order));
             return false;
         }
     }
@@ -445,34 +445,34 @@ class PurchaseHelper
      */
     public function cancelCaseOnSignifyd(Order $order)
     {
-        $this->logger->debug("Trying to cancel case for order " . $order->getIncrementId());
+        $this->logger->debug("Trying to cancel case for order " . $order->getIncrementId(), array('entity' => $order));
 
         $case = $this->getCase($order);
 
         if ($case->isEmpty()) {
-            $this->logger->debug("Guarantee cancel skipped: case not found for order " . $order->getIncrementId());
+            $this->logger->debug("Guarantee cancel skipped: case not found for order " . $order->getIncrementId(), array('entity' => $order));
             return false;
         }
 
         $guarantee = $case->getData('guarantee');
 
         if (empty($guarantee) || in_array($guarantee, array('DECLINED', 'N/A'))) {
-            $this->logger->debug("Guarantee cancel skipped: current guarantee is {$guarantee}");
+            $this->logger->debug("Guarantee cancel skipped: current guarantee is {$guarantee}", array('entity' => $order));
             return false;
         }
 
         /** @var \Magento\Sales\Model\Order\Item $item */
         foreach ($order->getAllItems() as $item) {
             if ($item->getQtyToCancel() > 0 || $item->getQtyToRefund() > 0) {
-                $this->logger->debug("Guarantee cancel skipped: order still have items not canceled or refunded");
+                $this->logger->debug("Guarantee cancel skipped: order still have items not canceled or refunded", array('entity' => $order));
                 return false;
             }
         }
 
-        $this->logger->debug('Cancelling case ' . $case->getId());
+        $this->logger->debug('Cancelling case ' . $case->getId(), array('entity' => $order));
         $disposition = $this->configHelper->getSignifydApi($order)->cancelGuarantee($case->getCode());
         
-        $this->logger->debug("Cancel disposition result {$disposition}");
+        $this->logger->debug("Cancel disposition result {$disposition}", array('entity' => $order));
 
         if ($disposition == 'CANCELED') {
             $case->setData('guarantee', $disposition);
@@ -504,17 +504,17 @@ class PurchaseHelper
     /**
      * Gets AVS code for order payment method.
      *
-     * @param OrderPaymentInterface $orderPayment
+     * @param Order $order
      * @return string
      */
-    protected function getAvsCode(OrderPaymentInterface $orderPayment)
+    protected function getAvsCode(Order $order)
     {
         try {
-            $avsAdapter = $this->paymentVerificationFactory->createPaymentAvs($orderPayment->getMethod());
+            $avsAdapter = $this->paymentVerificationFactory->createPaymentAvs($order->getPayment()->getMethod());
 
-            $this->logger->debug('Getting AVS code using ' . get_class($avsAdapter));
+            $this->logger->debug('Getting AVS code using ' . get_class($avsAdapter), array('entity' => $order));
 
-            $avsCode = $avsAdapter->getData($orderPayment);
+            $avsCode = $avsAdapter->getData($order);
             $avsCode = trim(strtoupper($avsCode));
             
             if ($avsAdapter->validate($avsCode)) {
@@ -523,7 +523,7 @@ class PurchaseHelper
                 return null;
             }
         } catch (Exception $e) {
-            $this->logger->error('Error fetching AVS code: ' . $e->getMessage());
+            $this->logger->error('Error fetching AVS code: ' . $e->getMessage(), array('entity' => $order));
             return '';
         }
     }
@@ -531,17 +531,17 @@ class PurchaseHelper
     /**
      * Gets CVV code for order payment method.
      *
-     * @param OrderPaymentInterface $orderPayment
+     * @param Order $order
      * @return string
      */
-    protected function getCvvCode(OrderPaymentInterface $orderPayment)
+    protected function getCvvCode(Order $order)
     {
         try {
-            $cvvAdapter = $this->paymentVerificationFactory->createPaymentCvv($orderPayment->getMethod());
+            $cvvAdapter = $this->paymentVerificationFactory->createPaymentCvv($order->getPayment()->getMethod());
 
-            $this->logger->debug('Getting CVV code using ' . get_class($cvvAdapter));
+            $this->logger->debug('Getting CVV code using ' . get_class($cvvAdapter), array('entity' => $order));
 
-            $cvvCode = $cvvAdapter->getData($orderPayment);
+            $cvvCode = $cvvAdapter->getData($order);
             $cvvCode = trim(strtoupper($cvvCode));
 
             if ($cvvAdapter->validate($cvvCode)) {
@@ -550,7 +550,7 @@ class PurchaseHelper
                 return null;
             }
         } catch (Exception $e) {
-            $this->logger->error('Error fetching CVV code: ' . $e->getMessage());
+            $this->logger->error('Error fetching CVV code: ' . $e->getMessage(), array('entity' => $order));
             return null;
         }
     }
@@ -565,7 +565,7 @@ class PurchaseHelper
     {
         try {
             $cardholderAdapter = $this->paymentVerificationFactory->createPaymentCardholder($order->getPayment()->getMethod());
-            $cardholder = $cardholderAdapter->getData($order->getPayment());
+            $cardholder = $cardholderAdapter->getData($order);
 
             if (empty($cardholder)) {
                 $firstname = $order->getBillingAddress()->getFirstname();
@@ -579,7 +579,7 @@ class PurchaseHelper
 
             return $cardholder;
         } catch (Exception $e) {
-            $this->logger->error('Error fetching cardholder: ' . $e->getMessage());
+            $this->logger->error('Error fetching cardholder: ' . $e->getMessage(), array('entity' => $order));
             return '';
         }
     }
@@ -587,17 +587,17 @@ class PurchaseHelper
     /**
      * Gets last4 for order payment method.
      *
-     * @param OrderPaymentInterface $orderPayment
+     * @param Order $order
      * @return string|null
      */
-    protected function getLast4(OrderPaymentInterface $orderPayment)
+    protected function getLast4(Order $order)
     {
         try {
-            $last4Adapter = $this->paymentVerificationFactory->createPaymentLast4($orderPayment->getMethod());
+            $last4Adapter = $this->paymentVerificationFactory->createPaymentLast4($order->getPayment()->getMethod());
 
-            $this->logger->debug('Getting last4 using ' . get_class($last4Adapter));
+            $this->logger->debug('Getting last4 using ' . get_class($last4Adapter), array('entity' => $order));
 
-            $last4 = $last4Adapter->getData($orderPayment);
+            $last4 = $last4Adapter->getData($order);
             $last4 = preg_replace('/\D/', '', $last4);
 
             if (!empty($last4) && strlen($last4) == 4 && is_numeric($last4)) {
@@ -606,7 +606,7 @@ class PurchaseHelper
 
             return null;
         } catch (Exception $e) {
-            $this->logger->error('Error fetching last4: ' . $e->getMessage());
+            $this->logger->error('Error fetching last4: ' . $e->getMessage(), array('entity' => $order));
             return null;
         }
     }
@@ -614,17 +614,17 @@ class PurchaseHelper
     /**
      * Gets expiration month for order payment method.
      *
-     * @param OrderPaymentInterface $orderPayment
+     * @param Order $order
      * @return int|null
      */
-    protected function getExpMonth(OrderPaymentInterface $orderPayment)
+    protected function getExpMonth(Order $order)
     {
         try {
-            $monthAdapter = $this->paymentVerificationFactory->createPaymentExpMonth($orderPayment->getMethod());
+            $monthAdapter = $this->paymentVerificationFactory->createPaymentExpMonth($order->getPayment()->getMethod());
 
-            $this->logger->debug('Getting expiry month using ' . get_class($monthAdapter));
+            $this->logger->debug('Getting expiry month using ' . get_class($monthAdapter), array('entity' => $order));
 
-            $expMonth = $monthAdapter->getData($orderPayment);
+            $expMonth = $monthAdapter->getData($order);
             $expMonth = preg_replace('/\D/', '', $expMonth);
 
             $expMonth = intval($expMonth);
@@ -634,7 +634,7 @@ class PurchaseHelper
 
             return $expMonth;
         } catch (Exception $e) {
-            $this->logger->error('Error fetching expiration month: ' . $e->getMessage());
+            $this->logger->error('Error fetching expiration month: ' . $e->getMessage(), array('entity' => $order));
             return null;
         }
     }
@@ -642,17 +642,17 @@ class PurchaseHelper
     /**
      * Gets expiration year for order payment method.
      *
-     * @param OrderPaymentInterface $orderPayment
+     * @param Order $order
      * @return int|null
      */
-    protected function getExpYear(OrderPaymentInterface $orderPayment)
+    protected function getExpYear(Order $order)
     {
         try {
-            $yearAdapter = $this->paymentVerificationFactory->createPaymentExpYear($orderPayment->getMethod());
+            $yearAdapter = $this->paymentVerificationFactory->createPaymentExpYear($order->getPayment()->getMethod());
 
-            $this->logger->debug('Getting expiry year using ' . get_class($yearAdapter));
+            $this->logger->debug('Getting expiry year using ' . get_class($yearAdapter), array('entity' => $order));
 
-            $expYear = $yearAdapter->getData($orderPayment);
+            $expYear = $yearAdapter->getData($order);
             $expYear = preg_replace('/\D/', '', $expYear);
 
             $expYear = intval($expYear);
@@ -667,7 +667,7 @@ class PurchaseHelper
 
             return $expYear;
         } catch (Exception $e) {
-            $this->logger->error('Error fetching expiration year: ' . $e->getMessage());
+            $this->logger->error('Error fetching expiration year: ' . $e->getMessage(), array('entity' => $order));
             return null;
         }
     }
@@ -675,17 +675,17 @@ class PurchaseHelper
     /**
      * Gets credit card bin for order payment method.
      *
-     * @param OrderPaymentInterface $orderPayment
+     * @param Order $order
      * @return int|null
      */
-    protected function getBin(OrderPaymentInterface $orderPayment)
+    protected function getBin(Order $order)
     {
         try {
-            $binAdapter = $this->paymentVerificationFactory->createPaymentBin($orderPayment->getMethod());
+            $binAdapter = $this->paymentVerificationFactory->createPaymentBin($order->getPayment()->getMethod());
 
-            $this->logger->debug('Getting bin using ' . get_class($binAdapter));
+            $this->logger->debug('Getting bin using ' . get_class($binAdapter), array('entity' => $order));
 
-            $bin = $binAdapter->getData($orderPayment);
+            $bin = $binAdapter->getData($order);
             $bin = preg_replace('/\D/', '', $bin);
 
             if (empty($bin)) {
@@ -700,7 +700,7 @@ class PurchaseHelper
 
             return $bin;
         } catch (Exception $e) {
-            $this->logger->error('Error fetching expiration bin: ' . $e->getMessage());
+            $this->logger->error('Error fetching expiration bin: ' . $e->getMessage(), array('entity' => $order));
             return null;
         }
     }

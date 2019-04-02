@@ -9,15 +9,15 @@ class ExpYearMapper extends DataMapper
     /**
      * Gets credit card expiration year on Magento's default location on database
      *
-     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return null|string
      */
-    public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
+    public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
-        $expYear = $orderPayment->getCcExpYear();
+        $expYear = $order->getPayment()->getCcExpYear();
         $expYear = is_null($expYear) ? '' : $expYear;
 
-        $this->logger->debug('Expiry year found on base mapper: ' . (empty($expYear) ? 'false' : $expYear));
+        $this->logger->debug('Expiry year found on base mapper: ' . (empty($expYear) ? 'false' : $expYear), array('entity' => $order));
 
         return $expYear;
     }

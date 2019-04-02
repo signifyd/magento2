@@ -9,15 +9,15 @@ class ExpMonthMapper extends DataMapper
     /**
      * Gets credit card expiration month on Magento's default location on database
      *
-     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return null|string
      */
-    public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
+    public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
-        $expMonth = $orderPayment->getCcExpMonth();
+        $expMonth = $order->getPayment()->getCcExpMonth();
         $expMonth = is_null($expMonth) ? '' : $expMonth;
 
-        $this->logger->debug('Expiry month found on base mapper: ' . (empty($expMonth) ? 'false' : $expMonth));
+        $this->logger->debug('Expiry month found on base mapper: ' . (empty($expMonth) ? 'false' : $expMonth), array('entity' => $order));
 
         return $expMonth;
     }
