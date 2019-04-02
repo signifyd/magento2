@@ -49,7 +49,8 @@
                         }
                     </style>
                 ]]></label>
-                <field id="test" translate="label comment" type="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <!-- Dont remove dummy field, it is necessary to show this group -->
+                <field id="dummy" translate="label comment" type="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                 </field>
             </group>
             <group id="general" translate="label" type="text" sortOrder="300" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -63,6 +64,10 @@
                 <field id="key" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Signifyd API Key</label>
                     <comment><![CDATA[Your API key can be found on the <a href="https://app.signifyd.com/settings" target="_blank" title="This external link will open in a new window">settings page</a> in the Signifyd console. Don't have an account? <a href="https://www.signifyd.com/contact/" target="_blank" title="This external link will open in a new window">Contact us</a>]]></comment>
+                </field>
+                <field id="version" translate="label comment" type="label" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Version</label>
+                    <comment><model>Signifyd\Connect\Model\System\Config\Version</model></comment>
                 </field>
             </group>
             <group id="advanced" translate="label comment" type="text" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -81,7 +86,7 @@
             </group>
             <group id="webhook" translate="label comment" type="text" sortOrder="450" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Webhook Url</label>
-                <field id="guarantee_positive_action" translate="label comment" type="label" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="url" translate="label comment" type="label" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Webhook Url</label>
                     <comment><model>Signifyd\Connect\Model\WebhookLink</model></comment>
                 </field>
