@@ -30,4 +30,8 @@
     <event name="sales_order_creditmemo_refund">
         <observer name="onCancel" instance="Signifyd\Connect\Observer\Cancel" />
     </event>
+
+    <event name="sales_order_shipment_track_save_commit_after">
+        <observer name="onSaveShipmentTrack" instance="Signifyd\Connect\Observer\Fulfillment" />
+    </event>
 </config>
