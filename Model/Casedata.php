@@ -249,7 +249,7 @@ class Casedata extends AbstractModel
 
                         $completeCase = true;
 
-                        $order->addStatusHistoryComment("Signifyd: order status updated, {$orderAction["reason"]}", array('entity' => $case));
+                        $order->addStatusHistoryComment("Signifyd: order status updated, {$orderAction["reason"]}");
                     } catch (\Exception $e){
                         $this->logger->debug($e->__toString(), array('entity' => $case));
 
