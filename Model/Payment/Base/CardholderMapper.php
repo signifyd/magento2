@@ -9,12 +9,12 @@ class CardholderMapper extends DataMapper
     /**
      * Gets cardholder name on Magento's default location on database
      *
-     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return null|string
      */
-    public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
+    public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
-        $cardholder = $orderPayment->getCcOwner();
+        $cardholder = $order->getPayment()->getCcOwner();
         $cardholder = is_null($cardholder) ? '' : $cardholder;
         return $cardholder;
     }

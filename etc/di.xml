@@ -9,11 +9,20 @@
             </argument>
         </arguments>
     </virtualType>
+
+    <!-- Loggers -->
     <type name="Signifyd\Connect\Logger\Handler">
         <arguments>
             <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+            <argument name="fileName" xsi:type="string">var/log/signifyd_connect.log</argument>
         </arguments>
     </type>
+    <virtualType name="debuggerHandler" type="Signifyd\Connect\Logger\Handler">
+        <arguments>
+            <argument name="fileName" xsi:type="string">var/log/signifyd_connect_debug.log</argument>
+        </arguments>
+    </virtualType>
+
     <type name="Signifyd\Connect\Logger\Logger">
         <arguments>
             <argument name="name" xsi:type="string">SignifydLogger</argument>
@@ -23,7 +32,17 @@
             <argument name="processors" xsi:type="array"></argument>
         </arguments>
     </type>
+    <type name="Signifyd\Connect\Logger\Debugger">
+        <arguments>
+            <argument name="name" xsi:type="string">SignifydDebugger</argument>
+            <argument name="handlers"  xsi:type="array">
+                <item name="system" xsi:type="object">debuggerHandler</item>
+            </argument>
+            <argument name="processors" xsi:type="array"></argument>
+        </arguments>
+    </type>
 
+    <!-- Payment data factory -->
     <type name="Signifyd\Connect\Model\PaymentVerificationFactory">
         <arguments>
             <argument name="config" xsi:type="object">Magento\Payment\Gateway\Config\Config</argument>
@@ -37,11 +56,16 @@
         </arguments>
     </type>
 
+    <!-- Plugins -->
     <type name="Magento\Paypal\Model\Payflowlink">
         <plugin name="Signifyd_Connect_Magento_Paypal_Model_Payflowlink" type="\Signifyd\Connect\Plugin\Magento\Paypal\Model\Payflowlink" />
     </type>
 
     <type name="Magento\Authorizenet\Model\TransactionService">
         <plugin name="Signifyd_Connect_Magento_Authorizenet_Model_TransactionService" type="\Signifyd\Connect\Plugin\Magento\Authorizenet\Model\TransactionService" />
+    </type>
+
+    <type name="Magento\Sales\Model\Order">
+        <plugin name="Signifyd_Connect_Magento_Sales_Model_Order" type="\Signifyd\Connect\Plugin\Magento\Sales\Model\Order" />
     </type>
 </config>

@@ -89,6 +89,12 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
         }
 
+        if (version_compare($context->getVersion(), '3.2.1') < 0) {
+            if ($setup->tableExists('signifyd_connect_retries')) {
+                $setup->getConnection()->dropTable('signifyd_connect_retries');
+            }
+        }
+
         $setup->endSetup();
     }
 }

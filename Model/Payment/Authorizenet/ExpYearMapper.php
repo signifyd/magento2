@@ -11,10 +11,10 @@ class ExpYearMapper extends Base_ExpYearMapper
     /**
      * Gets expiry year from XML response from Authorize.net
      *
-     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return null|string
      */
-    public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment)
+    public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $responseXmlDocument = $this->getSignifydPaymentData();
 
@@ -23,10 +23,10 @@ class ExpYearMapper extends Base_ExpYearMapper
             $expYear = substr($expYear, -2);
         }
 
-        $this->logger->debug('Expiry year found on payment mapper: ' . (empty($expYear) ? 'false' : $expYear));
+        $this->logger->debug('Expiry year found on payment mapper: ' . (empty($expYear) ? 'false' : $expYear), array('entity' => $order));
 
         if (empty($expYear)) {
-            $expYear = parent::getPaymentData($orderPayment);
+            $expYear = parent::getPaymentData($order);
         }
 
         return $expYear;

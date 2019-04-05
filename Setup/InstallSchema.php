@@ -29,10 +29,10 @@ class InstallSchema implements InstallSchemaInterface
      */
     public function install(SchemaSetupInterface $setup, ModuleContextInterface $context)
     {
-        $installer = $setup;
-        $installer->startSetup();
-        if (!$installer->tableExists('signifyd_connect_case')) {
-            $table = $installer->getConnection()->newTable($installer->getTable('signifyd_connect_case'));
+        $setup->startSetup();
+
+        if (!$setup->tableExists('signifyd_connect_case')) {
+            $table = $setup->getConnection()->newTable($setup->getTable('signifyd_connect_case'));
             $table->addColumn(
                 'order_increment',
                 Table::TYPE_TEXT,
@@ -111,45 +111,14 @@ class InstallSchema implements InstallSchemaInterface
                     'Magento Status'
                 )
                 ->setComment('Signifyd Cases');
-            $installer->getConnection()->createTable($table);
-        }
-
-		// Retry table, stores orders that fail to pose as cases
-        if (!$installer->tableExists('signifyd_connect_retries')) {
-            $table = $installer->getConnection()->newTable($installer->getTable('signifyd_connect_retries'));
-            $table->addColumn(
-                    'order_increment',
-                    Table::TYPE_TEXT,
-                    255,
-                    [
-                        'nullable' => false,
-                        'primary' => true
-                    ],
-                    'Order ID'
-                )
-                ->addColumn(
-                    'created',
-                    Table::TYPE_TIMESTAMP,
-                    null,
-                    [],
-                    'Creation Time'
-                )
-                ->addColumn(
-                    'updated',
-                    Table::TYPE_TIMESTAMP,
-                    null,
-                    [],
-                    'Last Attempt'
-                )
-                ->setComment('Signifyd Retries');
-            $installer->getConnection()->createTable($table);
+            $setup->getConnection()->createTable($table);
         }
 
         // The plan here is to add the signifyd case data directly to the order tables
         $tableName = $setup->getTable('sales_order');
         $gridTableName = $setup->getTable('sales_order_grid');
 
-        if ($installer->getConnection()->isTableExists($tableName)) {
+        if ($setup->getConnection()->isTableExists($tableName)) {
             $columns = [
                 'signifyd_score' => [
                     'type' => Table::TYPE_FLOAT,
