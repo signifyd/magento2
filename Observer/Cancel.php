@@ -79,7 +79,13 @@ class Cancel implements ObserverInterface
                 $this->helper->cancelCaseOnSignifyd($order);
             }
         } catch (\Exception $ex) {
-            $this->logger->error($ex->getMessage());
+            $context = array();
+
+            if (isset($order) && $order instanceof Order) {
+                $context['entity'] = $order;
+            }
+
+            $this->logger->error($ex->getMessage(), $context);
         }
     }
 }

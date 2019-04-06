@@ -18,6 +18,7 @@ With composer installed, run the command below on terminal. This will install/up
 
 ```bash
 cd MAGENTO_ROOT
+composer config repositories.signifydmage2 git https://github.com/Signifyd/magento2.git
 composer require signifyd/module-connect
 bin/magento setup:upgrade
 bin/magento setup:di:compile

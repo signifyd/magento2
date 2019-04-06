@@ -19,28 +19,28 @@ interface PaymentVerificationInterface
      * Must return desired data. This is the event that is called from outside
      * Throws an exception if provided payment method is different to verification implementation.
      *
-     * @param OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return string
      * @throws \InvalidArgumentException
      */
-    public function getData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment);
+    public function getData(\Magento\Sales\Model\Order $order);
 
     /**
      * Actually gets data from payment method
      * Throws an exception if provided payment method is different to verification implementation.
      *
-     * @param OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return string
      * @throws \InvalidArgumentException
      */
-    public function getPaymentData(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment);
+    public function getPaymentData(\Magento\Sales\Model\Order $order);
 
     /**
      * Compatibility with Magento built in PaymentVerificationInterface
      *
-     * @param OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return string
      * @throws \InvalidArgumentException
      */
-    public function getCode(\Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment);
+    public function getCode(\Magento\Sales\Model\Order $order);
 }
