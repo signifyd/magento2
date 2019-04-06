@@ -2,8 +2,11 @@
 
 namespace Signifyd\Connect\Helper;
 
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
+use Signifyd\Connect\Model\Fulfillment;
+use Signifyd\Connect\Model\FulfillmentFactory;
+use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
+use Signifyd\Connect\Model\ResourceModel\Fulfillment as FulfillmentResourceModel;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Core\SignifydModel;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
@@ -16,9 +19,24 @@ class FulfillmentHelper
     protected $casedataFactory;
 
     /**
+     * @var FulfillmentFactory
+     */
+    protected $fulfillmentFactory;
+
+    /**
      * @var CasedataResourceModel
      */
     protected $casedataResourceModel;
+
+    /**
+     * @var FulfillmentResourceModel
+     */
+    protected $fulfillmentResourceModel;
+
+    /**
+     * @var OrderResourceModel
+     */
+    protected $orderResourceModel;
 
     /**
      * @var Logger
@@ -30,23 +48,24 @@ class FulfillmentHelper
      */
     protected $configHelper;
 
-    /**
-     * @var OrderResourceModel
-     */
-    protected $orderResourceModel;
-
     public function __construct(
         CasedataFactory $casedataFactory,
+        FulfillmentFactory $fulfillmentFactory,
         CasedataResourceModel $casedataResourceModel,
+        FulfillmentResourceModel $fulfillmentResourceModel,
+        OrderResourceModel $orderResourceModel,
         Logger $logger,
-        ConfigHelper $configHelper,
-        OrderResourceModel $orderResourceModel
+        ConfigHelper $configHelper
     ) {
         $this->casedataFactory = $casedataFactory;
+        $this->fulfillmentFactory = $fulfillmentFactory;
+
         $this->casedataResourceModel = $casedataResourceModel;
+        $this->fulfillmentResourceModel = $fulfillmentResourceModel;
+        $this->orderResourceModel = $orderResourceModel;
+
         $this->logger = $logger;
         $this->configHelper = $configHelper;
-        $this->orderResourceModel = $orderResourceModel;
     }
 
     public function postFulfillmentToSignifyd(\Magento\Sales\Model\Order\Shipment $shipment)
@@ -67,28 +86,38 @@ class FulfillmentHelper
             return false;
         }
 
-        if ($case->getEntries('fulfilled') == 1) {
-            return false;
-        }
-
         try {
-            $this->logger->debug("Fulfillment for case order {$orderIncrementId}");
+            $shipmentIncrementId = $shipment->getIncrementId();
 
-            $fulfillment = $this->generateFulfillment($shipment);
+            $this->logger->debug("Fulfillment for case order {$orderIncrementId}, shipment {$shipmentIncrementId}");
 
-            if ($fulfillment == false) {
+            $fulfillment = $this->getFulfillmentFromDatabase($shipmentIncrementId);
+
+            if ($fulfillment->getId()) {
+                $this->logger->debug("Fulfillment for shipment {$shipmentIncrementId} already sent");
                 return false;
+            } else {
+                $fulfillmentData = $this->generateFulfillmentData($shipment);
+
+                if ($fulfillmentData == false) {
+                    $this->logger->debug("Fulfillment for shipment {$shipmentIncrementId} is not ready to be sent");
+                    return false;
+                }
+
+                $fulfillment = $this->prepareFulfillmentToDatabase($fulfillmentData);
             }
 
-            $id = $this->configHelper->getSignifydApi($order)->createFulfillment($orderIncrementId, $fulfillment);
+            $id = $this->configHelper->getSignifydApi($order)->createFulfillment($orderIncrementId, $fulfillmentData);
 
             if ($id == false) {
                 $message = "Signifyd: Fullfilment failed to send";
             } else {
                 $message = "Signifyd: Fullfilment sent";
 
-                $case->setEntries('fulfilled', 1);
                 $this->casedataResourceModel->save($case);
+
+                $fulfillment->setMagentoStatus(Fulfillment::COMPLETED_STATUS);
+                $this->fulfillmentResourceModel->save($fulfillment);
             }
         } catch (Exception $e) {
             $this->logger->debug("Fulfillment error: {$e->getMessage()}");
@@ -104,10 +133,47 @@ class FulfillmentHelper
     }
 
     /**
+     * @param $shipmentIncrementId
+     * @return \Signifyd\Connect\Model\Fulfillment
+     */
+    public function getFulfillmentFromDatabase($shipmentIncrementId)
+    {
+        $fulfillment = $this->fulfillmentFactory->create();
+        $this->fulfillmentResourceModel->load($fulfillment, $shipmentIncrementId);
+        return $fulfillment;
+    }
+
+    /**
+     * @param \Signifyd\Models\Fulfillment $fulfillmentData
+     * @return \Signifyd\Connect\Model\Fulfillment
+     */
+    public function prepareFulfillmentToDatabase(\Signifyd\Models\Fulfillment $fulfillmentData)
+    {
+        /** @var \Signifyd\Connect\Model\Fulfillment $fulfillment */
+        $fulfillment = $this->fulfillmentFactory->create();
+        $fulfillment->setData('id', $fulfillmentData->id);
+        $fulfillment->setData('order_id', $fulfillmentData->orderId);
+        $fulfillment->setData('created_at', $fulfillmentData->createdAt);
+        $fulfillment->setData('delivery_email', $fulfillmentData->deliveryEmail);
+        $fulfillment->setData('fulfillment_status', $fulfillmentData->fulfillmentStatus);
+        $fulfillment->setData('tracking_numbers', serialize($fulfillmentData->trackingNumbers));
+        $fulfillment->setData('tracking_urls', serialize($fulfillmentData->trackingUrls));
+        $fulfillment->setData('products', serialize($fulfillmentData->products));
+        $fulfillment->setData('shipment_status', $fulfillmentData->shipmentStatus);
+        $fulfillment->setData('delivery_address', serialize($fulfillmentData->deliveryAddress));
+        $fulfillment->setData('recipient_name', $fulfillmentData->recipientName);
+        $fulfillment->setData('confirmation_name', $fulfillmentData->confirmationName);
+        $fulfillment->setData('confirmation_phone', $fulfillmentData->confirmationPhone);
+        $fulfillment->setData('shipping_carrier', $fulfillmentData->shippingCarrier);
+
+        return $fulfillment;
+    }
+
+    /**
      * @param \Magento\Sales\Model\Order\Shipment $shipment
      * @return bool|\Signifyd\Models\Fulfillment
      */
-    public function generateFulfillment(\Magento\Sales\Model\Order\Shipment $shipment)
+    public function generateFulfillmentData(\Magento\Sales\Model\Order\Shipment $shipment)
     {
         $trackingNumbers = $this->getTrackingNumbers($shipment);
 
@@ -199,7 +265,7 @@ class FulfillmentHelper
     {
         $shipmentsCount = $shipment->getOrder()->getShipmentsCollection()->count();
 
-        if ($shipmentsCount == 1 && $shipment->getOrder()->canShip() == false) {
+        if ($shipment->getOrder()->canShip() == false) {
             return 'complete';
         } else {
             return 'partial';
