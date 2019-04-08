@@ -95,6 +95,143 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
         }
 
+        if (version_compare($context->getVersion(), '3.3.0') < 0) {
+            if ($setup->tableExists('signifyd_connect_fulfillment') == false) {
+                $table = $setup->getConnection()->newTable($setup->getTable('signifyd_connect_fulfillment'));
+                $table
+                    ->addColumn(
+                        'id',
+                        Table::TYPE_TEXT,
+                        50,
+                        ['nullable' => false, 'primary' => true],
+                        'Fulfillment (Shipment) ID'
+                    )
+                    ->addColumn(
+                        'order_id',
+                        Table::TYPE_TEXT,
+                        32,
+                        ['nullable' => false],
+                        'Order ID'
+                    )
+                    ->addColumn(
+                        'created_at',
+                        Table::TYPE_TEXT,
+                        30,
+                        ['nullable' => false],
+                        'Created at'
+                    )
+                    ->addColumn(
+                        'delivery_email',
+                        Table::TYPE_TEXT,
+                        255,
+                        [
+                            'nullable' => true,
+                            'default' => null
+                        ],
+                        'Delivery e-mail'
+                    )
+                    ->addColumn(
+                        'fulfillment_status',
+                        Table::TYPE_TEXT,
+                        30,
+                        [
+                            'nullable' => false
+                        ],
+                        'Fulfillment status'
+                    )
+                    ->addColumn(
+                        'tracking_numbers',
+                        Table::TYPE_TEXT,
+                        255,
+                        [
+                            'nullable' => true
+                        ],
+                        'Tracking numbers'
+                    )
+                    ->addColumn(
+                        'tracking_urls',
+                        Table::TYPE_TEXT,
+                        null,
+                        [
+                            'nullable' => true
+                        ],
+                        'Traching URLs'
+                    )
+                    ->addColumn(
+                        'products',
+                        Table::TYPE_TEXT,
+                        false,
+                        [
+                            'nullable' => true
+                        ],
+                        'Products'
+                    )
+                    ->addColumn(
+                        'shipment_status',
+                        Table::TYPE_TEXT,
+                        30,
+                        [
+                            'nullable' => true
+                        ],
+                        'Shipment status'
+                    )
+                    ->addColumn(
+                        'delivery_address',
+                        Table::TYPE_TEXT,
+                        null,
+                        [
+                            'nullable' => true
+                        ],
+                        'Delivery address'
+                    )
+                    ->addColumn(
+                        'recipient_name',
+                        Table::TYPE_TEXT,
+                        255,
+                        [
+                            'nullable' => true
+                        ],
+                        'Recipient name'
+                    )
+                    ->addColumn(
+                        'confirmation_name',
+                        Table::TYPE_TEXT,
+                        255,
+                        [
+                            'nullable' => true
+                        ],
+                        'Confirmation name'
+                    )
+                    ->addColumn(
+                        'confirmation_phone',
+                        Table::TYPE_TEXT,
+                        50,
+                        [
+                            'nullable' => true
+                        ],
+                        'Confirmation phone'
+                    )
+                    ->addColumn(
+                        'shipping_carrier',
+                        Table::TYPE_TEXT,
+                        255,
+                        [
+                            'nullable' => true
+                        ],
+                        'Shipping carrier'
+                    )
+                    ->addColumn(
+                        'magento_status',
+                        Table::TYPE_TEXT,
+                        50,
+                        ['nullable' => false, 'default' => 'waiting_submission'],
+                        'Magento Status'
+                    )
+                    ->setComment('Signifyd Fulfillments');
+                $setup->getConnection()->createTable($table);
+            }
+        }
+
         $setup->endSetup();
     }
 }

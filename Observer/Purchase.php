@@ -292,7 +292,7 @@ class Purchase implements ObserverInterface
      * @param $order
      * @return bool
      */
-    public function holdOrder($order)
+    public function holdOrder(\Magento\Sales\Model\Order $order)
     {
         $case = $this->helper->getCase($order);
         $positiveAction = $case->getPositiveAction();
@@ -333,7 +333,9 @@ class Purchase implements ObserverInterface
 
             if (!$this->helper->hasGuaranty($order)) {
                 $this->logger->debug('Purchase Observer Order Hold: No: ' . $order->getIncrementId(), array('entity' => $order));
-                $order->hold()->getResource()->save($order);
+                $order->hold();
+                $order->addStatusHistoryComment("Signifyd: after order place");
+                $order->getResource()->save($order);
             }
         }
 

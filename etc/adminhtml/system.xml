@@ -38,7 +38,7 @@
                         </g>
                     </svg>
                     <p>
-                        <a href="https://www.signifyd.com/resources/manual/magento-2/installation" target="_blank" title="This external link will open in a new window">For installation instructions please refer to our product manual</a>. If you have questions or need assistance please contact <a href="mailto:support@signifyd.com">support</a>.
+                        <a></a>For setup instructions view our <a href="https://www.signifyd.com/resources/manual/magento2-v3-configure/" target="_blank" >user guide</a>. If you have questions or need assistance, please <a href="https://community.signifyd.com/support/s/contactsupport" target="_blank">contact support</a>.
                     </p>
                     <style>
                         #row_signifyd_hint_test {
@@ -49,7 +49,8 @@
                         }
                     </style>
                 ]]></label>
-                <field id="test" translate="label comment" type="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <!-- Dont remove dummy field, it is necessary to show this group -->
+                <field id="dummy" translate="label comment" type="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                 </field>
             </group>
             <group id="general" translate="label" type="text" sortOrder="300" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -81,7 +82,7 @@
             </group>
             <group id="webhook" translate="label comment" type="text" sortOrder="450" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Webhook Url</label>
-                <field id="guarantee_positive_action" translate="label comment" type="label" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="url" translate="label comment" type="label" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Webhook Url</label>
                     <comment><model>Signifyd\Connect\Model\WebhookLink</model></comment>
                 </field>
@@ -92,6 +93,11 @@
                     <label>Log Options</label>
                     <comment>Enables logging of errors related to the plugin for debugging and troubleshooting issues.</comment>
                     <source_model>Signifyd\Connect\Model\System\Config\Source\Options\Loglevel</source_model>
+                </field>
+                <field id="version" translate="label comment" type="text" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Version</label>
+                    <frontend_model>Signifyd\Connect\Block\Adminhtml\System\Config\Field\Version</frontend_model>
+                    <comment>The version number of the Signifyd extension.</comment>
                 </field>
             </group>
         </section>

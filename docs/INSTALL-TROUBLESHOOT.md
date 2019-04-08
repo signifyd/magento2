@@ -87,7 +87,7 @@ If there are warnings on Magento admin, on the extension configuration section, 
 This script will create all of the necessary structures. You will need to run it directly on your MySQL database. If there are any 'duplicate column' errors during this script execution, they can be ignored.
 
 ```mysql
-CREATE TABLE IF NOT EXISTS `signifyd_connect_case1` (
+CREATE TABLE IF NOT EXISTS `signifyd_connect_case` (
   `order_increment` varchar(255) NOT NULL COMMENT 'Order ID',
   `signifyd_status` varchar(255) NOT NULL DEFAULT 'PENDING' COMMENT 'Signifyd Status',
   `code` varchar(255) NOT NULL COMMENT 'Code',
