@@ -119,7 +119,7 @@ class FulfillmentHelper
                 $fulfillment->setMagentoStatus(Fulfillment::COMPLETED_STATUS);
                 $this->fulfillmentResourceModel->save($fulfillment);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->logger->debug("Fulfillment error: {$e->getMessage()}");
             return false;
         }
@@ -340,7 +340,7 @@ class FulfillmentHelper
         try {
             $imageUrl = $product->getImage();
             $imageUrl = $product->getMediaConfig()->getMediaUrl($imageUrl);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $imageUrl = null;
         }
 
