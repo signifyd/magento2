@@ -104,7 +104,7 @@ class Order
                 $debugBacktraceLog = implode("\n", $debugBacktraceLog);
                 $this->logger->debug("Backtrace: \n{$debugBacktraceLog}\n\n");
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->logger('Exception logging order state change: ' . $e->getMessage());
         }
 
