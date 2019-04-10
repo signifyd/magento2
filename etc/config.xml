@@ -27,6 +27,7 @@
                 <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\Authorizenet\Last4Mapper</signifyd_last4_adapter>
                 <signifyd_exp_month_adapter>Signifyd\Connect\Model\Payment\Authorizenet\ExpMonthMapper</signifyd_exp_month_adapter>
                 <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\Authorizenet\ExpYearMapper</signifyd_exp_year_adapter>
+                <signifyd_transaction_id_adapter>Signifyd\Connect\Model\Payment\Authorizenet\TransactionIdMapper</signifyd_transaction_id_adapter>
             </authorizenet_directpost>
 
             <braintree>
