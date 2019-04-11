@@ -10,6 +10,8 @@
                 <!--The device fingerprint enable configuration must be kept only at the default and database with no UI-->
                 <!--option to change it at the admin (MAG1-55)-->
                 <enable_device_fingerprint>1</enable_device_fingerprint>
+
+                <restrict_states_default>pending_payment,payment_review,canceled,closed,complete</restrict_states_default>
                 <restrict_states_create>holded,pending_payment,payment_review,canceled,closed,complete</restrict_states_create>
                 <restrict_payment_methods>checkmo,cashondelivery,banktransfer,purchaseorder</restrict_payment_methods>
             </general>

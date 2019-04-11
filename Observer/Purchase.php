@@ -168,7 +168,7 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            if ($this->isRestricted($paymentMethod, $state)) {
+            if ($this->isRestricted($paymentMethod, $state, 'create')) {
                 $this->logger->debug('Case creation for order ' . $incrementId . ' with state ' . $state . ' is restricted', array('entity' => $order));
                 return;
             }

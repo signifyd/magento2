@@ -18,7 +18,7 @@ Use the command below on the database to change settings. Replace `holded,pendin
 To include custom create states use the command below on your database:
 
 ```
-INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/restrict_states_default', 'holded,pending_payment,payment_review,canceled,closed,complete');
+INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/restrict_states_create', 'holded,pending_payment,payment_review,canceled,closed,complete');
 ```
 
 ### Update custom states
@@ -26,7 +26,7 @@ INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/restrict_st
 To modify an existing custom state, use the command below:
 
 ```
-UPDATE core_config_data SET value='holded,pending_payment,payment_review,canceled,closed,complete' WHERE path='signifyd/general/restrict_states_default';
+UPDATE core_config_data SET value='holded,pending_payment,payment_review,canceled,closed,complete' WHERE path='signifyd/general/restrict_states_create';
 ```
 
 ### Delete custom states
@@ -34,7 +34,7 @@ UPDATE core_config_data SET value='holded,pending_payment,payment_review,cancele
 To use the extension default states, use the command below:
 
 ```
-DELETE FROM core_config_data WHERE path='signifyd/general/restrict_states_default';
+DELETE FROM core_config_data WHERE path='signifyd/general/restrict_states_create';
 ```
 
 ### Checking current restriction settings
