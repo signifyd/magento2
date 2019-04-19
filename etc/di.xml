@@ -53,6 +53,7 @@
             <argument name="expMonthDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\ExpMonthMapper</argument>
             <argument name="expYearDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\ExpYearMapper</argument>
             <argument name="binDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\BinMapper</argument>
+            <argument name="transactionIdDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\TransactionIdMapper</argument>
         </arguments>
     </type>
 

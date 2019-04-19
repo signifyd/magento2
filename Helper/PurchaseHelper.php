@@ -194,6 +194,7 @@ class PurchaseHelper
         $purchase->currency = $order->getOrderCurrencyCode();
         $purchase->orderId = $order->getIncrementId();
         $purchase->paymentGateway = $order->getPayment()->getMethod();
+        $purchase->transactionId = $this->getTransactionId($order);
         $purchase->createdAt = date('c', strtotime($order->getCreatedAt()));
         $purchase->browserIpAddress = $this->getIPAddress($order);
 
@@ -700,7 +701,33 @@ class PurchaseHelper
 
             return $bin;
         } catch (Exception $e) {
-            $this->logger->error('Error fetching expiration bin: ' . $e->getMessage(), array('entity' => $order));
+            $this->logger->error('Error fetching bin: ' . $e->getMessage(), array('entity' => $order));
+            return null;
+        }
+    }
+
+    /**
+     * Gets transaction ID for order payment method.
+     *
+     * @param Order $order
+     * @return int|null
+     */
+    protected function getTransactionId(Order $order)
+    {
+        try {
+            $transactionIdAdapter = $this->paymentVerificationFactory->createPaymentTransactionId($order->getPayment()->getMethod());
+
+            $this->logger->debug('Getting transaction ID using ' . get_class($transactionIdAdapter), array('entity' => $order));
+
+            $transactionId = $transactionIdAdapter->getData($order);
+
+            if (empty($transactionId)) {
+                return null;
+            }
+
+            return $transactionId;
+        } catch (Exception $e) {
+            $this->logger->error('Error fetching transaction ID: ' . $e->getMessage(), array('entity' => $order));
             return null;
         }
     }

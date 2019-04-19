@@ -10,6 +10,8 @@
                 <!--The device fingerprint enable configuration must be kept only at the default and database with no UI-->
                 <!--option to change it at the admin (MAG1-55)-->
                 <enable_device_fingerprint>1</enable_device_fingerprint>
+
+                <restrict_states_default>pending_payment,payment_review,canceled,closed,complete</restrict_states_default>
                 <restrict_states_create>holded,pending_payment,payment_review,canceled,closed,complete</restrict_states_create>
                 <restrict_payment_methods>checkmo,cashondelivery,banktransfer,purchaseorder</restrict_payment_methods>
             </general>
@@ -27,6 +29,7 @@
                 <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\Authorizenet\Last4Mapper</signifyd_last4_adapter>
                 <signifyd_exp_month_adapter>Signifyd\Connect\Model\Payment\Authorizenet\ExpMonthMapper</signifyd_exp_month_adapter>
                 <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\Authorizenet\ExpYearMapper</signifyd_exp_year_adapter>
+                <signifyd_transaction_id_adapter>Signifyd\Connect\Model\Payment\Authorizenet\TransactionIdMapper</signifyd_transaction_id_adapter>
             </authorizenet_directpost>
 
             <braintree>

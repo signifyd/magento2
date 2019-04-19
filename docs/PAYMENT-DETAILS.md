@@ -12,6 +12,7 @@ The extension will try to fetch the following payment data:
 - Last 4
 - Expiry Month
 - Expiry Year
+- Transaction ID
 
 As each payment gateway has it own workflow, there is no guarantee that the extension will find the payment data. To support a variety of payment gateways and extensibility mappers can be used to pass payment data from any payment gateway.  
 
@@ -132,12 +133,14 @@ Here is a list of the payment methods that have a built in helper on the extensi
 - CVV Status
 - AVS Status
 - Last4
+- Transaction ID
 
 ### PayPal Express/PayPal Standard
 - Code: paypal_express
 - Magento built in
 
-**No data is available**
+**Available data**
+- Transaction ID
 
 ### PayPal Payments Pro/PayPal Payflow Pro
 - Code: payflowpro
@@ -149,6 +152,7 @@ Here is a list of the payment methods that have a built in helper on the extensi
 - Last4
 - Expiry Month
 - Expiry Year
+- Transaction ID
 
 ### PayPal Payflow Link
 - Code: payflow_link
@@ -160,6 +164,7 @@ Here is a list of the payment methods that have a built in helper on the extensi
 - Last4
 - Expiry Month
 - Expiry Year
+- Transaction ID
 
 ### PayPal Payments Advanced
 - Code: payflow_advanced
@@ -171,6 +176,7 @@ Here is a list of the payment methods that have a built in helper on the extensi
 - Last4
 - Expiry Month
 - Expiry Year
+- Transaction ID
 
 ### Braintree
 - Code: braintree
@@ -182,3 +188,4 @@ Here is a list of the payment methods that have a built in helper on the extensi
 - Last4
 - Expiry Month
 - Expiry Year
+- Transaction ID
