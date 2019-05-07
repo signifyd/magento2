@@ -59,6 +59,11 @@ class PaymentVerificationFactory
     protected $binDefaultAdapter;
 
     /**
+     * @var PaymentVerificationInterface
+     */
+    protected $transactionIdDefaultAdapter;
+
+    /**
      * @param ObjectManagerInterface $objectManager
      * @param ConfigInterface|Config $config
      * @param PaymentVerificationInterface $avsDefaultAdapter
@@ -78,7 +83,8 @@ class PaymentVerificationFactory
         PaymentVerificationInterface $last4DefaultAdapter,
         PaymentVerificationInterface $expMonthDefaultAdapter,
         PaymentVerificationInterface $expYearDefaultAdapter,
-        PaymentVerificationInterface $binDefaultAdapter
+        PaymentVerificationInterface $binDefaultAdapter,
+        PaymentVerificationInterface $transactionIdDefaultAdapter
     ) {
         $this->config = $config;
         $this->objectManager = $objectManager;
@@ -89,6 +95,7 @@ class PaymentVerificationFactory
         $this->expMonthDefaultAdapter = $expMonthDefaultAdapter;
         $this->expYearDefaultAdapter = $expYearDefaultAdapter;
         $this->binDefaultAdapter = $binDefaultAdapter;
+        $this->transactionIdDefaultAdapter = $transactionIdDefaultAdapter;
     }
 
     /**
@@ -180,6 +187,19 @@ class PaymentVerificationFactory
     public function createPaymentBin($paymentCode)
     {
         return $this->create($this->binDefaultAdapter, $paymentCode, 'signifyd_bin_adapter');
+    }
+
+    /**
+     * Creates instance of bin mapper.
+     * Exception will be thrown if mapper does not implement PaymentVerificationInterface.
+     *
+     * @param string $paymentCode
+     * @return PaymentVerificationInterface
+     * @throws \Exception
+     */
+    public function createPaymentTransactionId($paymentCode)
+    {
+        return $this->create($this->transactionIdDefaultAdapter, $paymentCode, 'signifyd_transaction_id_adapter');
     }
 
     /**
