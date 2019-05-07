@@ -8,7 +8,7 @@
 
 Orders placed using a specific payment method can be excluded from being sent to Signifyd. These orders will not be created in Signifyd and the extension will not interfere with the order workflow i.e. place the order on hold or capture the payment.
 
-By default the extension will automatically exclude orders with the following payment methods from being sent to Signifyd  `checkmo,cashondelivery,banktransfer,purchaseorder`. If you want to modify the payment methods (add or remove) you will need to provide a list of payment methods codes in a comma separated list. 
+By default the extension will automatically exclude orders with the following payment methods from being sent to Signifyd  `checkmo,cashondelivery,banktransfer,purchaseorder`. If you want to modify the payment methods (add or remove) you will need to provide a list of payment methods codes in a comma separated list. You will also need to clear the configuration or full cache for the change to take effect.
 
 ### Add custom payment methods
 
