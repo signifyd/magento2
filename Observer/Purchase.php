@@ -162,7 +162,11 @@ class Purchase implements ObserverInterface
             $state = $order->getState();
             $incrementId = $order->getIncrementId();
 
-            $this->logger->debug("Creating case for order {$incrementId}, state {$state}, payment method {$paymentMethod}", array('entity' => $order));
+            $checkOwnEventsMethodsEvent = $observer->getEvent()->getCheckOwnEventsMethods();
+
+            if (is_null($checkOwnEventsMethodsEvent) == false) {
+                $checkOwnEventsMethods = $checkOwnEventsMethodsEvent;
+            }
 
             if ($checkOwnEventsMethods && in_array($paymentMethod, $this->ownEventsMethods)) {
                 return;
@@ -177,6 +181,8 @@ class Purchase implements ObserverInterface
             if ($this->helper->doesCaseExist($order)) {
                 return;
             }
+
+            $this->logger->debug("Creating case for order {$incrementId}, state {$state}, payment method {$paymentMethod}", array('entity' => $order));
 
             $orderData = $this->helper->processOrderData($order);
 
