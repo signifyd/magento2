@@ -1,11 +1,8 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
+
 declare(strict_types=1);
 
-namespace Magento\Sales\Model\Order;
+namespace Test\Integration\Cases\Create\Customer;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Framework\ObjectManagerInterface;
@@ -17,8 +14,6 @@ use Magento\TestFramework\Helper\Bootstrap;
 use Magento\Sales\Model\OrderRepository;
 
 /**
- * Class verifies order creation.
- *
  * @magentoDbIsolation enabled
  * @magentoAppArea frontend
  */
@@ -45,8 +40,8 @@ class GuestTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @magentoDataFixture Magento/Sales/_files/guest_quote_with_addresses.php
      * @magentoDataFixture configFixture
+     * @magentoDataFixture Magento/Sales/_files/guest_quote_with_addresses.php
      *
      * @return void
      */
