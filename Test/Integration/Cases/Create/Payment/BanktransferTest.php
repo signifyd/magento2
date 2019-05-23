@@ -15,7 +15,6 @@ class BanktransferTest extends TestCase
 {
     /**
      * @magentoDataFixture configFixture
-     * @magentoDataFixture Magento/Authorizenet/_files/order.php
      */
     public function testCreateCaseBanktransfer(): void
     {

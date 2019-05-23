@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Test\Integration\Cases\Create\Customer;
+namespace Test\Integration\Cases\Create\Product;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
-use Magento\Framework\ObjectManagerInterface;
 use Magento\Quote\Api\GuestCartManagementInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteIdMask;
 use Magento\Quote\Model\QuoteIdMaskFactory;
+use Magento\TestFramework\Helper\Bootstrap;
 use Magento\Sales\Model\OrderRepository;
 use Signifyd\Connect\Test\Integration\TestCase;
 
@@ -17,7 +17,7 @@ use Signifyd\Connect\Test\Integration\TestCase;
  * @magentoDbIsolation enabled
  * @magentoAppArea frontend
  */
-class GuestTest extends TestCase
+class VirtualTest extends TestCase
 {
     /**
      * @var QuoteIdMaskFactory
@@ -39,7 +39,7 @@ class GuestTest extends TestCase
      *
      * @return void
      */
-    public function testSendCaseGuestCustomer(): void
+    public function testSendCaseVirtualProduct(): void
     {
         $orderIncrementId = rand(90000000, 99999999);
 
@@ -68,17 +68,25 @@ class GuestTest extends TestCase
         $case = $this->objectManager->get('\Signifyd\Connect\Model\Casedata');
         $case->load($orderIncrementId);
 
+        $allVirtual = true;
+
+        foreach ($order->getAllItems() as $item) {
+            if ($item->getProductType() !== 'virtual') {
+                $allVirtual = false;
+            }
+        }
+
         $this->assertEmpty($order->getCustomerId());
         $this->assertEquals($case->getOrderIncrement(), $orderIncrementId);
         $this->assertNotEmpty($case->getCode());
+        $this->assertEquals($allVirtual, true);
 
     }
 
     public static function configFixture()
     {
+        require __DIR__ . '/../../../_files/settings/general.php';
         require __DIR__ . '/../../../_files/settings/restrict_none_payment_methods.php';
-        require __DIR__ . '/../../../_files/order/guest_quote_with_addresses_product_simple.php';
+        require __DIR__ . '/../../../_files/order/guest_quote_with_addresses_product_virtual.php';
     }
 }
-
-
