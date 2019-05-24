@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Test\Integration\Cases\Create\Customer;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
-use Magento\Framework\ObjectManagerInterface;
 use Magento\Quote\Api\GuestCartManagementInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteIdMask;

@@ -98,6 +98,11 @@ class Index extends Action
         $this->logger->debug('API: request hash: ' . $hash);
         $this->logger->debug('API: request topic: ' . $topic);
 
+        return $this->processRequest($request, $hash, $topic);
+    }
+
+    public function processRequest($request, $hash, $topic)
+    {
         if ($hash == null || empty($request)) {
             $this->getResponse()->appendBody("You have successfully reached the webhook endpoint");
             $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
