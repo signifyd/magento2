@@ -19,6 +19,11 @@ class TestCase extends \PHPUnit\Framework\TestCase
     protected $logger;
 
     /**
+     * @var string
+     */
+    protected $incrementId;
+
+    /**
      * @inheritdoc
      */
     protected function setUp()
@@ -27,6 +32,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
         $this->objectManager = Bootstrap::getObjectManager();
         $this->logger = $this->objectManager->create('\Signifyd\Connect\Logger\Logger');
+
+        $this->incrementId = '10-' . time();
 
         require __DIR__ . '/_files/settings/general.php';
     }

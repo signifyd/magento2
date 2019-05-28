@@ -46,9 +46,9 @@ $shippingAddress = $objectManager->create(Address::class, [
 
 /** @var Order $order */
 $order = $objectManager->create(Order::class);
-$order->setIncrementId('100000002')
+$order->setIncrementId('bank_transfer_order')
     ->setQuoteId(2)
-    ->setIncrementId('100000002')
+    ->setIncrementId('bank_transfer_order')
     ->setBaseGrandTotal($amount)
     ->setBaseCurrencyCode('USD')
     ->setBaseTaxAmount($amount)

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Test\Integration\Cases\Create\Payment;
+namespace Signifyd\Connect\Test\Integration\Cases\Create\Payment;
 
 use \Magento\Framework\Event\Manager as EventManager;
 use Signifyd\Connect\Test\Integration\TestCase;
@@ -19,14 +19,13 @@ class AuthorizenetDirectpostTest extends TestCase
      */
     public function testCreateCaseAuthorizenetDirectpost(): void
     {
-        $orderIncrementId = rand(90000000, 99999999);
         $ccTransId = rand(90000000000, 99999999999);
         $xmlFile = __DIR__ . '/../../../_files/settings/payment/authorizenet_directpost/transaction_details_response.xml';
 
         /** @var \Magento\Sales\Model\Order $order */
         $order = $this->objectManager->get(\Magento\Sales\Model\Order::class);
         $order->loadByIncrementId('100000002');
-        $order->setIncrementId($orderIncrementId);
+        $order->setIncrementId($this->incrementId);
         $order->getPayment()->setCcAvsStatus('Y');
         $order->getPayment()->setCcTransId($ccTransId);
         $order->place();
@@ -46,10 +45,10 @@ class AuthorizenetDirectpostTest extends TestCase
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
         $case = $this->objectManager->get('\Signifyd\Connect\Model\Casedata');
-        $case->load($orderIncrementId);
+        $case->load($this->incrementId);
 
         $this->assertEquals('authorizenet_directpost', $order->getPayment()->getMethod());
-        $this->assertEquals($orderIncrementId, $case->getOrderIncrement());
+        $this->assertEquals($this->incrementId, $case->getOrderIncrement());
         $this->assertNotEmpty($case->getCode());
     }
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Test\Integration\Cases\Create\Payment;
+namespace Signifyd\Connect\Test\Integration\Cases\Create\Payment;
 
 use Signifyd\Connect\Test\Integration\TestCase;
 use \Magento\Framework\Event\Manager as EventManager;
@@ -18,12 +18,10 @@ class BanktransferTest extends TestCase
      */
     public function testCreateCaseBanktransfer(): void
     {
-        $orderIncrementId = rand(90000000, 99999999);
-
         /** @var \Magento\Sales\Model\Order $order */
         $order = $this->objectManager->get(\Magento\Sales\Model\Order::class);
-        $order->loadByIncrementId('100000002');
-        $order->setIncrementId($orderIncrementId);
+        $order->loadByIncrementId('bank_transfer_order');
+        $order->setIncrementId($this->incrementId);
         $order->place();
         $order->save();
 
@@ -35,10 +33,10 @@ class BanktransferTest extends TestCase
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
         $case = $this->objectManager->get('\Signifyd\Connect\Model\Casedata');
-        $case->load($orderIncrementId);
+        $case->load($this->incrementId);
 
         $this->assertEquals('banktransfer', $order->getPayment()->getMethod());
-        $this->assertEquals($orderIncrementId, $case->getOrderIncrement());
+        $this->assertEquals($this->incrementId, $case->getOrderIncrement());
         $this->assertNotEmpty($case->getCode());
     }
 

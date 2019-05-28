@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Test\Integration\Cases\Create\Product;
+namespace Signifyd\Connect\Test\Integration\Cases\Create\Product;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Quote\Api\GuestCartManagementInterface;
@@ -41,12 +41,10 @@ class VirtualTest extends TestCase
      */
     public function testSendCaseVirtualProduct(): void
     {
-        $orderIncrementId = rand(90000000, 99999999);
-
         /** @var Quote $quote */
         $quote = $this->objectManager->create(Quote::class);
         $quote->load('guest_quote', 'reserved_order_id');
-        $quote->setReservedOrderId($orderIncrementId);
+        $quote->setReservedOrderId($this->incrementId);
         $quote->save();
 
         $checkoutSession = $this->objectManager->get(CheckoutSession::class);
@@ -66,7 +64,7 @@ class VirtualTest extends TestCase
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
         $case = $this->objectManager->get('\Signifyd\Connect\Model\Casedata');
-        $case->load($orderIncrementId);
+        $case->load($this->incrementId);
 
         $allVirtual = true;
 
@@ -77,7 +75,7 @@ class VirtualTest extends TestCase
         }
 
         $this->assertEmpty($order->getCustomerId());
-        $this->assertEquals($orderIncrementId, $case->getOrderIncrement());
+        $this->assertEquals($this->incrementId, $case->getOrderIncrement());
         $this->assertNotEmpty($case->getCode());
         $this->assertEquals(true, $allVirtual);
 

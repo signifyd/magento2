@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Test\Integration\Cases\Create\Customer;
+namespace Signifyd\Connect\Test\Integration\Cases\Create\Customer;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Quote\Api\GuestCartManagementInterface;

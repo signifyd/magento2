@@ -1,6 +1,6 @@
 <?php
 
-namespace Test\Integration\Cases\Webhook;
+namespace Signifyd\Connect\Test\Integration\Cases\Webhook;
 
 use Signifyd\Connect\Test\Integration\TestCase;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -13,6 +13,12 @@ class ReviewTest extends TestCase
      */
     public function testWebhookReviewCase()
     {
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = $this->objectManager->create(\Magento\Sales\Model\Order::class);
+        $order->loadByIncrementId('bank_transfer_order');
+        $order->setIncrementId('100000002');
+        $order->save();
+
         /** @var \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig */
         $scopeConfig = $this->objectManager->create(ScopeConfigInterface::class);
         $key = $scopeConfig->getValue('signifyd/general/key', ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
