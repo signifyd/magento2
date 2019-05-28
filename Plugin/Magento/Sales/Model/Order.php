@@ -105,7 +105,7 @@ class Order
                 $this->logger->debug("Backtrace: \n{$debugBacktraceLog}\n\n");
             }
         } catch (\Exception $e) {
-            $this->logger('Exception logging order state change: ' . $e->getMessage());
+            $this->logger->debug('Exception logging order state change: ' . $e->getMessage());
         }
 
         return array($state);
