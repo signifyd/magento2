@@ -77,9 +77,9 @@ class VirtualTest extends TestCase
         }
 
         $this->assertEmpty($order->getCustomerId());
-        $this->assertEquals($case->getOrderIncrement(), $orderIncrementId);
+        $this->assertEquals($orderIncrementId, $case->getOrderIncrement());
         $this->assertNotEmpty($case->getCode());
-        $this->assertEquals($allVirtual, true);
+        $this->assertEquals(true, $allVirtual);
 
     }
 

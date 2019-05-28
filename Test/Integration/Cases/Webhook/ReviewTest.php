@@ -11,7 +11,7 @@ class ReviewTest extends TestCase
     /**
      * @magentoDataFixture configFixture
      */
-    public function testReviewCase()
+    public function testWebhookReviewCase()
     {
         /** @var \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig */
         $scopeConfig = $this->objectManager->create(ScopeConfigInterface::class);
@@ -28,14 +28,14 @@ class ReviewTest extends TestCase
         $case = $this->objectManager->create(Casedata::class);
         $case->load('100000002');
 
-        $this->assertEquals($case->getData('guarantee'), 'APPROVED');
-        $this->assertEquals($case->getData('score'), '792');
-        $this->assertEquals($case->getData('magento_status'), Casedata::COMPLETED_STATUS);
+        $this->assertEquals('APPROVED', $case->getData('guarantee'));
+        $this->assertEquals('792', $case->getData('score'));
+        $this->assertEquals(Casedata::COMPLETED_STATUS, $case->getData('magento_status'));
     }
 
     public static function configFixture()
     {
         require __DIR__ . '/../../_files/order/banktransfer.php';
-        require __DIR__ . '/../../_files/case/create.php';
+        require __DIR__ . '/../../_files/case/create_in_review_fixed_date_time.php';
     }
 }

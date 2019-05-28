@@ -68,7 +68,7 @@ class GuestTest extends TestCase
         $case->load($orderIncrementId);
 
         $this->assertEmpty($order->getCustomerId());
-        $this->assertEquals($case->getOrderIncrement(), $orderIncrementId);
+        $this->assertEquals($orderIncrementId, $case->getOrderIncrement());
         $this->assertNotEmpty($case->getCode());
 
     }

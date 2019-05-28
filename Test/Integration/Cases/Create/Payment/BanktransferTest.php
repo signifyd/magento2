@@ -37,8 +37,8 @@ class BanktransferTest extends TestCase
         $case = $this->objectManager->get('\Signifyd\Connect\Model\Casedata');
         $case->load($orderIncrementId);
 
-        $this->assertEquals($order->getPayment()->getMethod(), 'banktransfer');
-        $this->assertEquals($case->getOrderIncrement(), $orderIncrementId);
+        $this->assertEquals('banktransfer', $order->getPayment()->getMethod());
+        $this->assertEquals($orderIncrementId, $case->getOrderIncrement());
         $this->assertNotEmpty($case->getCode());
     }
 
