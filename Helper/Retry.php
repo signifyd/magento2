@@ -10,6 +10,7 @@ use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Model\Casedata;
+use Signifyd\Connect\Logger\Logger;
 
 class Retry extends AbstractHelper
 {
@@ -28,11 +29,17 @@ class Retry extends AbstractHelper
      */
     protected $objectManager;
 
+    /**
+     * @var Logger
+     */
+    protected $logger;
+
     public function __construct(
         Context $context,
         Casedata $caseData,
         ConfigHelper $configHelper,
-        ObjectManagerInterface $objectManager
+        ObjectManagerInterface $objectManager,
+        Logger $logger
     )
     {
         parent::__construct($context);
@@ -40,6 +47,7 @@ class Retry extends AbstractHelper
         $this->caseData = $caseData;
         $this->configHelper = $configHelper;
         $this->objectManager = $objectManager;
+        $this->logger = $logger;
     }
 
     /**

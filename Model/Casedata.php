@@ -147,8 +147,10 @@ class Casedata extends AbstractModel
             $orderAction = $this->handleGuaranteeChange($caseData) ?: $orderAction;
         }
 
-        $case->setCode($request->caseId);
-        $order->setSignifydCode($request->caseId);
+        if (isset($request->caseId) && empty($request->caseId) == false) {
+            $case->setCode($request->caseId);
+            $order->setSignifydCode($request->caseId);
+        }
 
         $guarantee = $case->getGuarantee();
         $score = $case->getScore();
