@@ -6,6 +6,18 @@
 
 $addresses = [
     [
+        'firstname' => 'John',
+        'lastname' => 'Doe',
+        'email' => 'customer@example.com',
+        'street' => 'Pearl St',
+        'city' => 'Los Angeles',
+        'region' => 'CA',
+        'postcode' => '10020',
+        'country_id' => 'US',
+        'telephone' => '22-333-44',
+        'address_type' => 'billing'
+    ],
+    [
         'telephone' => 3234676,
         'postcode' => 47676,
         'country_id' => 'US',

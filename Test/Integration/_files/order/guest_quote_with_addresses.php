@@ -5,6 +5,14 @@
  */
 declare(strict_types=1);
 
+if (isset($storeId) == false) {
+    $storeId = 1;
+}
+
+if (isset($reservedOrderId) == false) {
+    $reservedOrderId = 'guest_quote';
+}
+
 $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
 
 require __DIR__ . '/address_list.php';
@@ -23,16 +31,14 @@ $billingAddress->setAddressType('billing');
 $shippingAddress = clone $billingAddress;
 $shippingAddress->setId(null)->setAddressType('shipping');
 
-$store = $objectManager->get(\Magento\Store\Model\StoreManagerInterface::class)->getStore();
-
 /** @var \Magento\Quote\Model\Quote $quote */
 $quote = $objectManager->create(\Magento\Quote\Model\Quote::class);
 $quote->setCustomerIsGuest(true)
-    ->setStoreId($store->getId())
-    ->setReservedOrderId('guest_quote')
+    ->setStoreId($storeId)
+    ->setReservedOrderId($reservedOrderId)
     ->setBillingAddress($billingAddress)
     ->setShippingAddress($shippingAddress);
-$quote->getPayment()->setMethod('checkmo');
+$quote->getPayment()->setMethod('banktransfer');
 $quote->getShippingAddress()->setShippingMethod('flatrate_flatrate')->setCollectShippingRates(1);
 $quote->collectTotals();
 

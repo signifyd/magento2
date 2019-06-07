@@ -8,7 +8,7 @@ class ReviewTest extends CreateTest
 {
     public function testCronCreateCase()
     {
-        // Bypassing automatic test by PHPUnit
+        // Bypassing test
     }
 
     /**
@@ -24,7 +24,7 @@ class ReviewTest extends CreateTest
         $case = $this->getCase();
 
         $this->assertNotEquals('PENDING', $case->getData('signifyd_status'));
-        $this->assertEquals(Casedata::PROCESSING_RESPONSE_STATUS, $case->getData('magento_status'));
+        $this->assertEquals(Casedata::COMPLETED_STATUS, $case->getData('magento_status'));
         $this->assertNotEmpty($case->getData('score'));
     }
 
@@ -50,24 +50,12 @@ class ReviewTest extends CreateTest
             $this->updateCaseForRetry($case);
 
             // Give Signifyd some time to review case
-            sleep(10);
+            sleep(20);
 
             return $this->tryToReviewCase($retry+1);
         } else {
             return false;
         }
-    }
-
-    /**
-     * @return Casedata
-     */
-    public function getCase()
-    {
-        /** @var \Signifyd\Connect\Model\Casedata $case */
-        $case = $this->objectManager->create(Casedata::class);
-        $case->load($this->incrementId);
-
-        return $case;
     }
 
     public function updateCaseForRetry($case = null)

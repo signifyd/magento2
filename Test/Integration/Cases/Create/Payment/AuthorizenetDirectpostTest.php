@@ -4,31 +4,26 @@ declare(strict_types=1);
 
 namespace Signifyd\Connect\Test\Integration\Cases\Create\Payment;
 
-use \Magento\Framework\Event\Manager as EventManager;
-use Signifyd\Connect\Test\Integration\TestCase;
+use Magento\Framework\Event\Manager as EventManager;
+use Signifyd\Connect\Test\Integration\OrderTestCase;
 
 /**
  * @magentoDbIsolation enabled
  * @magentoAppArea frontend
  */
-class AuthorizenetDirectpostTest extends TestCase
+class AuthorizenetDirectpostTest extends OrderTestCase
 {
     /**
      * @magentoDataFixture configFixture
-     * @magentoDataFixture Magento/Authorizenet/_files/order.php
      */
     public function testCreateCaseAuthorizenetDirectpost(): void
     {
         $ccTransId = rand(90000000000, 99999999999);
         $xmlFile = __DIR__ . '/../../../_files/settings/payment/authorizenet_directpost/transaction_details_response.xml';
 
-        /** @var \Magento\Sales\Model\Order $order */
-        $order = $this->objectManager->get(\Magento\Sales\Model\Order::class);
-        $order->loadByIncrementId('100000002');
-        $order->setIncrementId($this->incrementId);
+        $order = $this->placeQuote($this->getQuote('guest_quote'));
         $order->getPayment()->setCcAvsStatus('Y');
         $order->getPayment()->setCcTransId($ccTransId);
-        $order->place();
         $order->save();
 
         $registry = $this->objectManager->get(\Magento\Framework\Registry::class);
@@ -43,9 +38,7 @@ class AuthorizenetDirectpostTest extends TestCase
             'check_own_events_methods' => false
         ]);
 
-        /** @var \Signifyd\Connect\Model\Casedata $case */
-        $case = $this->objectManager->get('\Signifyd\Connect\Model\Casedata');
-        $case->load($this->incrementId);
+        $case = $this->getCase();
 
         $this->assertEquals('authorizenet_directpost', $order->getPayment()->getMethod());
         $this->assertEquals($this->incrementId, $case->getOrderIncrement());
@@ -55,5 +48,6 @@ class AuthorizenetDirectpostTest extends TestCase
     public static function configFixture()
     {
         require __DIR__ . '/../../../_files/settings/payment/authorizenet_directpost.php';
+        require __DIR__ . '/../../../_files/order/authorizenet_directpost.php';
     }
 }

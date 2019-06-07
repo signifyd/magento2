@@ -2,15 +2,17 @@
 
 namespace Signifyd\Connect\Test\Integration\Cases\Cron;
 
-use Signifyd\Connect\Test\Integration\TestCase;
+use Signifyd\Connect\Test\Integration\OrderTestCase;
 use Signifyd\Connect\Model\Casedata;
 
-class CreateTest extends TestCase
+class CreateTest extends OrderTestCase
 {
     /**
      * @var \Signifyd\Connect\Cron\RetryCaseJob $retryCaseJob
      */
     protected $retryCaseJob;
+
+    protected $paymentMethod = 'banktransfer';
 
     public function setUp()
     {
@@ -24,11 +26,7 @@ class CreateTest extends TestCase
      */
     public function testCronCreateCase()
     {
-        /** @var \Magento\Sales\Model\Order $order */
-        $order = $this->objectManager->create(\Magento\Sales\Model\Order::class);
-        $order->loadByIncrementId('bank_transfer_order');
-        $order->setIncrementId($this->incrementId);
-        $order->save();
+        $this->placeQuote($this->getQuote('guest_quote'));
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
         $case = $this->objectManager->create(Casedata::class);
@@ -41,11 +39,11 @@ class CreateTest extends TestCase
         ]);
         $case->save();
 
+        require __DIR__ . '/../../_files/settings/restrict_none_payment_methods.php';
+
         $this->retryCaseJob->execute();
 
-        /** @var \Signifyd\Connect\Model\Casedata $case */
-        $case = $this->objectManager->create(Casedata::class);
-        $case->load($this->incrementId);
+        $case = $this->getCase();
 
         $this->assertEquals('PENDING', $case->getData('signifyd_status'));
         $this->assertEquals(Casedata::IN_REVIEW_STATUS, $case->getData('magento_status'));
@@ -54,6 +52,6 @@ class CreateTest extends TestCase
 
     public static function configFixture()
     {
-        require __DIR__ . '/../../_files/order/banktransfer.php';
+        require __DIR__ . '/../../_files/order/guest_quote_with_addresses_product_simple.php';
     }
 }

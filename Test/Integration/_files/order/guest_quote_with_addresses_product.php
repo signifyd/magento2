@@ -9,8 +9,12 @@ if (isset($productType) == false) {
     $productType = 'simple';
 }
 
+if (isset($productQty) == false) {
+    $productQty = 2;
+}
+
 require __DIR__ . '/guest_quote_with_addresses.php';
-require __DIR__ . "/../product/{$productType}.php";
+require_once __DIR__ . "/../product/{$productType}.php";
 
 $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
 
@@ -21,8 +25,8 @@ $product = $productRepository->get("{$productType}-product-signifyd");
 
 /** @var \Magento\Quote\Model\Quote $quote */
 $quote = $objectManager->create(\Magento\Quote\Model\Quote::class);
-$quote->load('guest_quote', 'reserved_order_id');
-$quote->addProduct($product);
+$quote->load($reservedOrderId, 'reserved_order_id');
+$quote->addProduct($product)->setQty($productQty);
 $quote->getShippingAddress()->setCollectShippingRates(1);
 $quote->collectTotals();
 

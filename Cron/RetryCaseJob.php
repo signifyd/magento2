@@ -96,7 +96,7 @@ class RetryCaseJob
         $inProcessingCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::PROCESSING_RESPONSE_STATUS);
 
         foreach ($inProcessingCases as $case) {
-            $this->logger->debug("Signifyd: preparing for review case no: {$case['order_increment']}", array('entity' => $case));
+            $this->logger->debug("Signifyd: preparing for process case no: {$case['order_increment']}", array('entity' => $case));
 
             $this->caseRetryObj->processResponseStatus($case, $this->getOrder($case['order_increment']));
         }

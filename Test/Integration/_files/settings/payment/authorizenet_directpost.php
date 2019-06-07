@@ -1,13 +1,22 @@
 <?php
 
+use Magento\TestFramework\Helper\Bootstrap;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Encryption\Encryptor;
+
+require __DIR__ . '/../env.php';
+
+$objectManager = Bootstrap::getObjectManager();
+/** @var \Magento\Framework\Encryption\Encryptor $encryptor */
+$encryptor = $objectManager->create(Encryptor::class);
 
 $configData = [
     ScopeConfigInterface::SCOPE_TYPE_DEFAULT => [
         '' => [
             'payment/authorizenet_directpost/active' => '1',
-            'payment/authorizenet_directpost/login' => 'TestLogin',
-            'payment/authorizenet_directpost/trans_md5' => 'TestHash',
+            'payment/authorizenet_directpost/login' => $encryptor->encrypt($envSettings['payment/authorizenet_directpost/login']),
+            'payment/authorizenet_directpost/trans_md5' => $encryptor->encrypt($envSettings['payment/authorizenet_directpost/trans_md5']),
+            'payment/authorizenet_directpost/trans_key' => $encryptor->encrypt($envSettings['payment/authorizenet_directpost/trans_key']),
             'payment/authorizenet_directpost/useccv' => '1',
             'payment/authorizenet_directpost/specificcountry' => NULL,
             'payment/authorizenet_directpost/min_order_total' => NULL,

@@ -141,17 +141,22 @@ class Retry extends AbstractHelper
      */
     public function processResponseStatus($case, $order)
     {
-        $orderAction = array('action' => null, 'reason' => null);
         $negativeAction = $case->getNegativeAction();
         $positiveAction = $case->getPositiveAction();
 
-        if ($case->getGuarantee() == 'DECLINED' && $negativeAction != 'nothing') {
-            $orderAction = array("action" => $negativeAction, "reason" => "guarantee declined");
-        } else {
-            if ($case->getGuarantee() == 'APPROVED' && $positiveAction != 'nothing') {
+        switch ($case->getGuarantee()) {
+            case 'DECLINED':
+                $orderAction = array("action" => $negativeAction, "reason" => "guarantee declined");
+                break;
+
+            case 'APPROVED':
                 $orderAction = array("action" => $positiveAction, "reason" => "guarantee approved");
-            }
+                break;
+
+            default:
+                $orderAction = array('action' => null, 'reason' => null);
         }
+
         $caseData = array('order' => $order);
         /** @var \Signifyd\Connect\Model\Casedata $caseObj */
         $caseObj = $this->objectManager->create('Signifyd\Connect\Model\Casedata');

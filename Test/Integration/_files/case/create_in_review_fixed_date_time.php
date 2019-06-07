@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../order/guest_quote_with_addresses_product_simple.php';
-
 $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
 
 /** @var \Signifyd\Connect\Model\Casedata $case */

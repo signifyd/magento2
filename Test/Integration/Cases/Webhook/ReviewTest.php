@@ -2,22 +2,20 @@
 
 namespace Signifyd\Connect\Test\Integration\Cases\Webhook;
 
-use Signifyd\Connect\Test\Integration\TestCase;
+use Signifyd\Connect\Test\Integration\OrderTestCase;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Signifyd\Connect\Model\Casedata;
 
-class ReviewTest extends TestCase
+class ReviewTest extends OrderTestCase
 {
+    protected $incrementId = '100000002';
+
     /**
      * @magentoDataFixture configFixture
      */
-    public function testWebhookReviewCase()
+    public function testWebhookReviewCase(): void
     {
-        /** @var \Magento\Sales\Model\Order $order */
-        $order = $this->objectManager->create(\Magento\Sales\Model\Order::class);
-        $order->loadByIncrementId('bank_transfer_order');
-        $order->setIncrementId('100000002');
-        $order->save();
+        $this->placeQuote($this->getQuote('guest_quote'));
 
         /** @var \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig */
         $scopeConfig = $this->objectManager->create(ScopeConfigInterface::class);
@@ -32,7 +30,7 @@ class ReviewTest extends TestCase
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
         $case = $this->objectManager->create(Casedata::class);
-        $case->load('100000002');
+        $case->load($this->incrementId);
 
         $this->assertEquals('APPROVED', $case->getData('guarantee'));
         $this->assertEquals('792', $case->getData('score'));
@@ -41,7 +39,7 @@ class ReviewTest extends TestCase
 
     public static function configFixture()
     {
-        require __DIR__ . '/../../_files/order/banktransfer.php';
+        require __DIR__ . '/../../_files/order/guest_quote_with_addresses_product_simple.php';
         require __DIR__ . '/../../_files/case/create_in_review_fixed_date_time.php';
     }
 }
