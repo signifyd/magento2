@@ -361,7 +361,7 @@ class PurchaseHelper
     public function getCase(Order $order)
     {
         /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->objectManager->get('Signifyd\Connect\Model\Casedata');
+        $case = $this->objectManager->create('Signifyd\Connect\Model\Casedata');
         $case->load($order->getIncrementId());
         return $case;
     }
