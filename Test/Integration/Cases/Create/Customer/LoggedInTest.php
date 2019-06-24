@@ -15,8 +15,6 @@ class LoggedInTest extends OrderTestCase
 {
     /**
      * @magentoDataFixture configFixture
-     * @magentoDataFixture Magento/Customer/_files/customer.php
-     * @magentoDataFixture Magento/Customer/_files/customer_address.php
      *
      * @return void
      */
@@ -26,10 +24,10 @@ class LoggedInTest extends OrderTestCase
         $customerRepository = $this->objectManager->create(CustomerRepositoryInterface::class);
         $customer = $customerRepository->getById(1);
 
-        /** @var Quote $quote */
+        /** @var \Magento\Quote\Model\Quote $quote */
         $quote = $this->getQuote('guest_quote');
-        $quote->setCustomer($customer);
         $quote->setCustomerIsGuest(false);
+        $quote->assignCustomer($customer);
         $quote->save();
 
         $order = $this->placeQuote($quote);
@@ -42,6 +40,8 @@ class LoggedInTest extends OrderTestCase
 
     public static function configFixture()
     {
+        require __DIR__ . '/../../../_files/customer/customer.php';
+        require __DIR__ . '/../../../_files/customer/customer_address.php';
         require __DIR__ . '/../../../_files/settings/restrict_none_payment_methods.php';
         require __DIR__ . '/../../../_files/order/guest_quote_with_addresses_product_simple.php';
     }

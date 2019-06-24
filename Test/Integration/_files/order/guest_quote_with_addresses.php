@@ -5,7 +5,12 @@
  */
 declare(strict_types=1);
 
+use Magento\TestFramework\Helper\Bootstrap;
+
 if (isset($storeId) == false) {
+//    $store = Bootstrap::getObjectManager()->create(\Magento\Store\Model\Store::class);
+//    $storeId = $store->load('fixturestore')->getId();
+
     $storeId = 1;
 }
 

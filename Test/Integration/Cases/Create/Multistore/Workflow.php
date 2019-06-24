@@ -22,7 +22,7 @@ class Workflow extends OrderTestCase
         $defaultStoreIncrementId = $this->incrementId = '10-' . time();
         $alternateStoreIncrementId = $this->incrementId = '40-' . time();
 
-        $alternateStoreOrder = $this->placeQuote($this->getQuote('guest_quote_alt_store', $alternateStoreIncrementId));
+        $alternateStoreOrder = $this->placeQuote($this->getQuote('guest_quote_alt', $alternateStoreIncrementId));
         $defaultStoreOrder = $this->placeQuote($this->getQuote('guest_quote', $defaultStoreIncrementId));
 
         $defaultStoreCase = $this->getCase($defaultStoreIncrementId);
@@ -34,8 +34,7 @@ class Workflow extends OrderTestCase
         $this->assertNotEmpty($defaultStoreCase->getCode());
         $this->assertNotEmpty($alternateStoreCase->getCode());
 
-        $this->assertEquals(1, $defaultStoreOrder->getStoreId());
-        $this->assertEquals(4, $alternateStoreOrder->getStoreId());
+        $this->assertNotEquals($alternateStoreOrder->getStoreId(), $defaultStoreOrder->getStoreId());
 
         $this->assertEquals('new', $defaultStoreOrder->getState());
         $this->assertEquals('holded', $alternateStoreOrder->getState());
@@ -43,6 +42,7 @@ class Workflow extends OrderTestCase
 
     public static function configFixture()
     {
+        require __DIR__ . '/../../../_files/multistore/core_fixturestore.php';
         require __DIR__ . '/../../../_files/settings/multistore/workflow.php';
         require __DIR__ . '/../../../_files/settings/restrict_none_payment_methods.php';
         require __DIR__ . '/../../../_files/order/guest_quote_with_addresses_product_simple.php';

@@ -29,14 +29,13 @@ class OrderTestCase extends TestCase
     }
 
     /**
-     * @param $quote
+     * @param \Magento\Quote\Model\Quote $quote
      * @return \Magento\Sales\Model\Order
      */
     public function placeQuote($quote)
     {
         /** @var CheckoutSession $checkoutSession */
         $checkoutSession = $this->objectManager->get(CheckoutSession::class);
-
 
         $checkoutSession->start();
         $checkoutSession->resetCheckout();
@@ -108,7 +107,9 @@ class OrderTestCase extends TestCase
         /** @var $invoice \Magento\Sales\Model\Order\Invoice */
         $invoice = $invoiceFactory->prepareInvoice($order, $itemsToInvoice);
         $invoice->register();
-        $invoice->capture();
+        if ($invoice->canCapture()) {
+            $invoice->capture();
+        }
         $invoice->save();
         $order->save();
 
