@@ -27,6 +27,11 @@
             <argument name="fileName" xsi:type="string">var/log/signifyd_connect_test.log</argument>
         </arguments>
     </virtualType>
+    <virtualType name="installHandler" type="Signifyd\Connect\Logger\Handler">
+        <arguments>
+            <argument name="fileName" xsi:type="string">var/log/signifyd_connect_install.log</argument>
+        </arguments>
+    </virtualType>
 
     <type name="Signifyd\Connect\Logger\Logger">
         <arguments>
@@ -51,6 +56,15 @@
             <argument name="name" xsi:type="string">SignifydTest</argument>
             <argument name="handlers"  xsi:type="array">
                 <item name="system" xsi:type="object">testHandler</item>
+            </argument>
+            <argument name="processors" xsi:type="array"></argument>
+        </arguments>
+    </type>
+    <type name="Signifyd\Connect\Logger\Install">
+        <arguments>
+            <argument name="name" xsi:type="string">SignifydInstall</argument>
+            <argument name="handlers"  xsi:type="array">
+                <item name="system" xsi:type="object">installHandler</item>
             </argument>
             <argument name="processors" xsi:type="array"></argument>
         </arguments>
