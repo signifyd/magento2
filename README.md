@@ -50,7 +50,8 @@ View our Magento 2 product manual to learn how to [configure the extension](http
 
 ## Logs
 
-Logs can be found on MAGENTO_ROOT/var/log/signifyd_connect.log file.
+Info or general logs can be found on MAGENTO_ROOT/var/log/signifyd_connect.log file.
+If debug mode is enabled those logs can be found on MAGENTO_ROOT/var/log/signifyd_connect_debug.log
 
 ## Advanced Settings
 
