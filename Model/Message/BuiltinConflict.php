@@ -78,7 +78,7 @@ class BuiltinConflict implements \Magento\Framework\Notification\MessageInterfac
      */
     public function getIdentity()
     {
-        return md5('SIGNIFYD_CONNECT_BUILTIN_CONFLICT');
+        return sha1('SIGNIFYD_CONNECT_BUILTIN_CONFLICT');
     }
     /**
      * Retrieve message text

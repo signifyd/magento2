@@ -10,6 +10,7 @@ use Signifyd\Connect\Model\ResourceModel\Fulfillment as FulfillmentResourceModel
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Core\SignifydModel;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+use Magento\Framework\Serialize\SerializerInterface;
 
 class FulfillmentHelper
 {
@@ -48,6 +49,22 @@ class FulfillmentHelper
      */
     protected $configHelper;
 
+    /**
+     * @var SerializerInterface
+     */
+    protected $serializer;
+
+    /**
+     * FulfillmentHelper constructor.
+     * @param CasedataFactory $casedataFactory
+     * @param FulfillmentFactory $fulfillmentFactory
+     * @param CasedataResourceModel $casedataResourceModel
+     * @param FulfillmentResourceModel $fulfillmentResourceModel
+     * @param OrderResourceModel $orderResourceModel
+     * @param Logger $logger
+     * @param ConfigHelper $configHelper
+     * @param SerializerInterface $serializer
+     */
     public function __construct(
         CasedataFactory $casedataFactory,
         FulfillmentFactory $fulfillmentFactory,
@@ -55,7 +72,8 @@ class FulfillmentHelper
         FulfillmentResourceModel $fulfillmentResourceModel,
         OrderResourceModel $orderResourceModel,
         Logger $logger,
-        ConfigHelper $configHelper
+        ConfigHelper $configHelper,
+        SerializerInterface $serializer
     ) {
         $this->casedataFactory = $casedataFactory;
         $this->fulfillmentFactory = $fulfillmentFactory;
@@ -66,6 +84,7 @@ class FulfillmentHelper
 
         $this->logger = $logger;
         $this->configHelper = $configHelper;
+        $this->serializer = $serializer;
     }
 
     public function postFulfillmentToSignifyd(\Magento\Sales\Model\Order\Shipment $shipment)
@@ -156,11 +175,11 @@ class FulfillmentHelper
         $fulfillment->setData('created_at', $fulfillmentData->createdAt);
         $fulfillment->setData('delivery_email', $fulfillmentData->deliveryEmail);
         $fulfillment->setData('fulfillment_status', $fulfillmentData->fulfillmentStatus);
-        $fulfillment->setData('tracking_numbers', serialize($fulfillmentData->trackingNumbers));
-        $fulfillment->setData('tracking_urls', serialize($fulfillmentData->trackingUrls));
-        $fulfillment->setData('products', serialize($fulfillmentData->products));
+        $fulfillment->setData('tracking_numbers', $this->serializer->serialize($fulfillmentData->trackingNumbers));
+        $fulfillment->setData('tracking_urls', $this->serializer->serialize($fulfillmentData->trackingUrls));
+        $fulfillment->setData('products', $this->serializer->serialize($fulfillmentData->products));
         $fulfillment->setData('shipment_status', $fulfillmentData->shipmentStatus);
-        $fulfillment->setData('delivery_address', serialize($fulfillmentData->deliveryAddress));
+        $fulfillment->setData('delivery_address', $this->serializer->serialize($fulfillmentData->deliveryAddress));
         $fulfillment->setData('recipient_name', $fulfillmentData->recipientName);
         $fulfillment->setData('confirmation_name', $fulfillmentData->confirmationName);
         $fulfillment->setData('confirmation_phone', $fulfillmentData->confirmationPhone);

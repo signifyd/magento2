@@ -87,7 +87,7 @@ abstract class DataMapper implements PaymentVerificationInterface
      * @param \Magento\Sales\Model\Order $order
      * @return string
      */
-    final public function getCode(\Magento\Sales\Model\Order $order)
+    public function getCode(\Magento\Sales\Model\Order $order)
     {
         if ($this->getDataCalled) {
             return null;
@@ -103,7 +103,7 @@ abstract class DataMapper implements PaymentVerificationInterface
      * @param \Magento\Sales\Model\Order $order
      * @return string
      */
-    final public function getData(\Magento\Sales\Model\Order $order)
+    public function getData(\Magento\Sales\Model\Order $order)
     {
         $this->checkMethod($order->getPayment());
         return $this->getPaymentData($order);

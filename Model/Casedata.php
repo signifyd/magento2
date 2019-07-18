@@ -14,6 +14,7 @@ use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Sales\Model\Order;
 use Signifyd\Connect\Logger\Logger;
+use Magento\Framework\Serialize\SerializerInterface;
 
 /**
  * ORM model declaration for case data
@@ -68,12 +69,18 @@ class Casedata extends AbstractModel
     protected $logger;
 
     /**
+     * @var SerializerInterface
+     */
+    protected $serializer;
+
+    /**
      * Casedata constructor.
      * @param Context $context
      * @param Registry $registry
      * @param \Signifyd\Connect\Helper\ConfigHelper $configHelper
      * @param InvoiceService $invoiceService
      * @param Logger
+     * @param SerializerInterface $serializer
      */
     public function __construct(
         Context $context,
@@ -83,7 +90,8 @@ class Casedata extends AbstractModel
         InvoiceSender $invoiceSender,
         ObjectManagerInterface $objectManager,
         \Magento\Sales\Model\OrderFactory $orderFactory,
-        Logger $logger
+        Logger $logger,
+        SerializerInterface $serializer
     )
     {
         $this->configHelper = $configHelper;
@@ -92,6 +100,7 @@ class Casedata extends AbstractModel
         $this->objectManager = $objectManager;
         $this->orderFactory = $orderFactory;
         $this->logger = $logger;
+        $this->serializer = $serializer;
 
         parent::__construct($context, $registry);
     }
@@ -516,7 +525,7 @@ class Casedata extends AbstractModel
         $entries = $this->getData('entries_text');
 
         if (!empty($entries)) {
-            @$entries = unserialize($entries);
+            $entries = $this->serializer->unserialize($entries);
         }
 
         if (!is_array($entries)) {
@@ -539,7 +548,7 @@ class Casedata extends AbstractModel
             $entries[$index] = $value;
         }
 
-        @$entries = serialize($entries);
+        $entries = $this->serializer->serialize($entries);
         $this->setData('entries_text', $entries);
 
         return $this;

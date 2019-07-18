@@ -9,6 +9,7 @@ use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\View\Element\UiComponent\ContextInterface;
 use Magento\Framework\View\Element\UiComponentFactory;
 use Magento\Ui\Component\Listing\Columns\Column;
+use Magento\Framework\Serialize\SerializerInterface;
 
 /**
  * Class CaseLink
@@ -21,10 +22,16 @@ class CaseLink extends Column
     protected $objectManager;
 
     /**
+     * @var SerializerInterface
+     */
+    protected $serializer;
+
+    /**
      * CaseLink constructor.
      * @param ContextInterface $context
      * @param UiComponentFactory $uiComponentFactory
      * @param ObjectManagerInterface $objectManager
+     * @param SerializerInterface $serializer
      * @param array $components
      * @param array $data
      */
@@ -32,10 +39,12 @@ class CaseLink extends Column
         ContextInterface $context,
         UiComponentFactory $uiComponentFactory,
         ObjectManagerInterface $objectManager,
+        SerializerInterface $serializer,
         array $components = [],
         array $data = []
     ) {
         $this->objectManager = $objectManager;
+        $this->serializer = $serializer;
         parent::__construct($context, $uiComponentFactory, $components, $data);
     }
 
@@ -59,7 +68,7 @@ class CaseLink extends Column
                     $entries = $case->getEntriesText();
 
                     if (!empty($entries)) {
-                        @$entries = unserialize($entries);
+                        $entries = $this->serializer->unserialize($entries);
                         if (is_array($entries) && isset($entries['testInvestigation']) && $entries['testInvestigation'] == true) {
                             $item[$name] = "TEST: {$item[$name]}";
                         }
