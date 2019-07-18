@@ -5,6 +5,7 @@
  */
 namespace Signifyd\Connect\Ui\Component\Listing\Columns;
 
+use Braintree\Exception;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\View\Element\UiComponent\ContextInterface;
 use Magento\Framework\View\Element\UiComponentFactory;
@@ -68,7 +69,10 @@ class CaseLink extends Column
                     $entries = $case->getEntriesText();
 
                     if (!empty($entries)) {
-                        $entries = $this->serializer->unserialize($entries);
+                        try {
+                            $entries = $this->serializer->unserialize($entries);
+                        } catch (\InvalidArgumentException $e) {
+                        }
                         if (is_array($entries) && isset($entries['testInvestigation']) && $entries['testInvestigation'] == true) {
                             $item[$name] = "TEST: {$item[$name]}";
                         }

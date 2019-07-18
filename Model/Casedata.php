@@ -525,7 +525,10 @@ class Casedata extends AbstractModel
         $entries = $this->getData('entries_text');
 
         if (!empty($entries)) {
-            $entries = $this->serializer->unserialize($entries);
+            try {
+                $entries = $this->serializer->unserialize($entries);
+            } catch (\InvalidArgumentException $e) {
+            }
         }
 
         if (!is_array($entries)) {
@@ -548,7 +551,11 @@ class Casedata extends AbstractModel
             $entries[$index] = $value;
         }
 
-        $entries = $this->serializer->serialize($entries);
+        try {
+            $entries = $this->serializer->serialize($entries);
+        } catch (\InvalidArgumentException $e) {
+        }
+
         $this->setData('entries_text', $entries);
 
         return $this;

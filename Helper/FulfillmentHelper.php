@@ -175,17 +175,30 @@ class FulfillmentHelper
         $fulfillment->setData('created_at', $fulfillmentData->createdAt);
         $fulfillment->setData('delivery_email', $fulfillmentData->deliveryEmail);
         $fulfillment->setData('fulfillment_status', $fulfillmentData->fulfillmentStatus);
-        $fulfillment->setData('tracking_numbers', $this->serializer->serialize($fulfillmentData->trackingNumbers));
-        $fulfillment->setData('tracking_urls', $this->serializer->serialize($fulfillmentData->trackingUrls));
-        $fulfillment->setData('products', $this->serializer->serialize($fulfillmentData->products));
+        $fulfillment->setData('tracking_numbers', $this->serialize($fulfillmentData->trackingNumbers));
+        $fulfillment->setData('tracking_urls', $this->serialize($fulfillmentData->trackingUrls));
+        $fulfillment->setData('products', $this->serialize($fulfillmentData->products));
         $fulfillment->setData('shipment_status', $fulfillmentData->shipmentStatus);
-        $fulfillment->setData('delivery_address', $this->serializer->serialize($fulfillmentData->deliveryAddress));
+        $fulfillment->setData('delivery_address', $this->serialize($fulfillmentData->deliveryAddress));
         $fulfillment->setData('recipient_name', $fulfillmentData->recipientName);
         $fulfillment->setData('confirmation_name', $fulfillmentData->confirmationName);
         $fulfillment->setData('confirmation_phone', $fulfillmentData->confirmationPhone);
         $fulfillment->setData('shipping_carrier', $fulfillmentData->shippingCarrier);
 
         return $fulfillment;
+    }
+
+    /**
+     * @param $data
+     * @return bool|string
+     */
+    public function serialize($data)
+    {
+        try {
+            return $this->serializer->serialize($data);
+        } catch (\InvalidArgumentException $e) {
+            return '';
+        }
     }
 
     /**
