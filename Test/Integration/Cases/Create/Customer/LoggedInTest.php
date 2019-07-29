@@ -18,7 +18,7 @@ class LoggedInTest extends OrderTestCase
      *
      * @return void
      */
-    public function testSendCaseLoggedInCustomer(): void
+    public function testSendCaseLoggedInCustomer()
     {
         /** @var \Magento\Customer\Api\CustomerRepositoryInterface $customerRepository */
         $customerRepository = $this->objectManager->create(CustomerRepositoryInterface::class);
