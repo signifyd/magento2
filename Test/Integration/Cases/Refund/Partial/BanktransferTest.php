@@ -12,7 +12,7 @@ use Signifyd\Connect\Test\Integration\Cases\Cron\ReviewTest;
  */
 class BanktransferTest extends ReviewTest
 {
-    public function testCronReviewCase(): void
+    public function testCronReviewCase()
     {
         // Bypassing test
     }
@@ -20,7 +20,7 @@ class BanktransferTest extends ReviewTest
     /**
      * @magentoDataFixture configFixture
      */
-    public function testRefundOrderBanktransfer(): void
+    public function testRefundOrderBanktransfer()
     {
         parent::testCronReviewCase();
 
