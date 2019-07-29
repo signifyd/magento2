@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Customer:etc/sections.xsd">
+    <action name="checkout/cart/add">
+        <section name="signifyd-fingerprint"/>
+    </action>
+
+    <action name="checkout/cart/addgroup">
+        <section name="signifyd-fingerprint"/>
+    </action>
+
+    <action name="checkout/cart/index">
+        <section name="signifyd-fingerprint"/>
+    </action>
+
+    <action name="customer/account/logout">
+        <section name="signifyd-fingerprint"/>
+    </action>
+
+    <action name="customer/account/loginPost">
+        <section name="signifyd-fingerprint"/>
+    </action>
+
+    <action name="customer/account/createPost">
+        <section name="signifyd-fingerprint"/>
+    </action>
+
+    <action name="customer/ajax/login">
+        <section name="signifyd-fingerprint"/>
+    </action>
+
+    <action name="checkout/onepage/success">
+        <section name="signifyd-fingerprint"/>
+    </action>
+
+    <action name="checkout/onepage/saveOrder">
+        <section name="signifyd-fingerprint"/>
+    </action>
+</config>
