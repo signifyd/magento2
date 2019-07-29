@@ -13,7 +13,7 @@ class ReviewTest extends OrderTestCase
     /**
      * @magentoDataFixture configFixture
      */
-    public function testWebhookReviewCase(): void
+    public function testWebhookReviewCase()
     {
         $this->placeQuote($this->getQuote('guest_quote'));
 

@@ -17,7 +17,7 @@ class Workflow extends OrderTestCase
      *
      * @return void
      */
-    public function testSendCaseMultistoreWorkflow(): void
+    public function testSendCaseMultistoreWorkflow()
     {
         $defaultStoreIncrementId = $this->incrementId = '10-' . time();
         $alternateStoreIncrementId = $this->incrementId = '40-' . time();

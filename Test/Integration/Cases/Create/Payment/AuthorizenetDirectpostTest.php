@@ -16,7 +16,7 @@ class AuthorizenetDirectpostTest extends OrderTestCase
     /**
      * @magentoDataFixture configFixture
      */
-    public function testCreateCaseAuthorizenetDirectpost(): void
+    public function testCreateCaseAuthorizenetDirectpost()
     {
         $ccTransId = rand(90000000000, 99999999999);
         $xmlFile = __DIR__ . '/../../../_files/settings/payment/authorizenet_directpost/transaction_details_response.xml';

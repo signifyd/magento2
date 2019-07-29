@@ -17,7 +17,7 @@ class VirtualTest extends OrderTestCase
      *
      * @return void
      */
-    public function testSendCaseVirtualProduct(): void
+    public function testSendCaseVirtualProduct()
     {
         /** @var \Magento\Sales\Model\Order $order */
         $order = $this->placeQuote($this->getQuote('guest_quote'));

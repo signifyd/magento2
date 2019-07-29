@@ -12,7 +12,7 @@ use Signifyd\Connect\Test\Integration\Cases\Cron\ReviewTest;
  */
 class AuthorizenetDirectpostTest extends ReviewTest
 {
-    public function testCronReviewCase(): void
+    public function testCronReviewCase()
     {
         // Bypassing test
     }
@@ -20,7 +20,7 @@ class AuthorizenetDirectpostTest extends ReviewTest
     /**
      * @magentoDataFixture configFixture
      */
-    public function testRefundOrderAuthorizenetDirectpost(): void
+    public function testRefundOrderAuthorizenetDirectpost()
     {
         parent::testCronReviewCase();
 

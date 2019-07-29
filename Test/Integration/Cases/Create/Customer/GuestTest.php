@@ -17,7 +17,7 @@ class GuestTest extends OrderTestCase
      *
      * @return void
      */
-    public function testSendCaseGuestCustomer(): void
+    public function testSendCaseGuestCustomer()
     {
         $order = $this->placeQuote($this->getQuote('guest_quote'));
 
