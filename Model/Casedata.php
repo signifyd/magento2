@@ -139,8 +139,6 @@ class Casedata extends AbstractModel
             /** @var $case \Signifyd\Connect\Model\Casedata */
             $case = $caseData['case'];
             $response = $caseData['response'];
-            // TODO: Remove below line
-            $response->guaranteeDisposition = 'PENDING';
             $order = $caseData['order'];
             $orderAction = array("action" => null, "reason" => '');
 
