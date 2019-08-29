@@ -121,7 +121,7 @@ class Retry extends AbstractHelper
         }
 
         try {
-            $caseData['request'] = $this->configHelper->getSignifydApi($case)->getCase($case->getCode());
+            $caseData['response'] = $this->configHelper->getSignifydApi($case)->getCase($case->getCode());
             $caseData['case'] = $case;
             $caseData['order'] = $order;
             /** @var \Signifyd\Connect\Model\Casedata $caseObj */

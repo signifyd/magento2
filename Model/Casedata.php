@@ -135,53 +135,54 @@ class Casedata extends AbstractModel
      */
     public function updateCase($caseData)
     {
-        /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $caseData['case'];
-        $request = $caseData['request'];
-        $order = $caseData['order'];
+        try {
+            /** @var $case \Signifyd\Connect\Model\Casedata */
+            $case = $caseData['case'];
+            $response = $caseData['response'];
+            $order = $caseData['order'];
+            $orderAction = array("action" => null, "reason" => '');
 
-        $orderAction = array("action" => null, "reason" => '');
-        if (isset($request->score) && $case->getScore() != $request->score) {
-            $case->setScore($request->score);
-            $order->setSignifydScore($request->score);
-        }
+            if (isset($response->score) && $case->getScore() != $response->score) {
+                $case->setScore($response->score);
+                $order->setSignifydScore($response->score);
+            }
 
-        if (isset($request->status) && $case->getSignifydStatus() != $request->status) {
-            $case->setSignifydStatus($request->status);
-        }
+            if (isset($response->status) && $case->getSignifydStatus() != $response->status) {
+                $case->setSignifydStatus($response->status);
+            }
 
-        if (isset($request->guaranteeDisposition) && $case->getGuarantee() != $request->guaranteeDisposition) {
-            $case->setGuarantee($request->guaranteeDisposition);
-            $order->setSignifydGuarantee($request->guaranteeDisposition);
-            $orderAction = $this->handleGuaranteeChange($caseData) ?: $orderAction;
-        }
+            if (isset($response->guaranteeDisposition) && $case->getGuarantee() != $response->guaranteeDisposition) {
+                $case->setGuarantee($response->guaranteeDisposition);
+                $order->setSignifydGuarantee($response->guaranteeDisposition);
+                $orderAction = $this->handleGuaranteeChange($caseData) ?: $orderAction;
+            }
 
-        if (isset($request->caseId) && empty($request->caseId) == false) {
-            $case->setCode($request->caseId);
-            $order->setSignifydCode($request->caseId);
-        }
+            if (isset($response->caseId) && empty($response->caseId) == false) {
+                $case->setCode($response->caseId);
+                $order->setSignifydCode($response->caseId);
+            }
 
-        $guarantee = $case->getGuarantee();
-        $score = $case->getScore();
-        if (empty($guarantee) == false && $guarantee != 'N/A' && empty($score) == false) {
-            $case->setMagentoStatus(Casedata::PROCESSING_RESPONSE_STATUS);
-            $case->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-        }
+            $guarantee = $case->getGuarantee();
+            $score = $case->getScore();
 
-        if (isset($request->testInvestigation)) {
-            $case->setEntries('testInvestigation', $request->testInvestigation);
-        }
+            // If guarentee is PENDING, do not move Magento status to the next step
+            if (empty($guarantee) == false && $guarantee != 'N/A' && $guarantee != 'PENDING' && empty($score) == false) {
+                $case->setMagentoStatus(Casedata::PROCESSING_RESPONSE_STATUS);
+                $case->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
+            }
 
-        try{
+            if (isset($response->testInvestigation)) {
+                $case->setEntries('testInvestigation', $response->testInvestigation);
+            }
+
             $order->getResource()->save($order);
             $this->getResource()->save($case);
             $this->updateOrder($caseData, $orderAction, $case);
             $this->logger->info('Case was saved, id:' . $case->getIncrementId(), array('entity' => $case));
-        } catch (\Exception $e){
+        } catch (\Exception $e) {
             $this->logger->critical($e->__toString(), array('entity' => $case));
             return false;
         }
-
 
         return true;
     }
