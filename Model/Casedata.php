@@ -139,6 +139,8 @@ class Casedata extends AbstractModel
             /** @var $case \Signifyd\Connect\Model\Casedata */
             $case = $caseData['case'];
             $response = $caseData['response'];
+            // TODO: Remove below line
+            $response->guaranteeDisposition = 'PENDING';
             $order = $caseData['order'];
             $orderAction = array("action" => null, "reason" => '');
 
@@ -501,8 +503,8 @@ class Casedata extends AbstractModel
         $positiveAction = $caseData['case']->getPositiveAction();
 
         $this->logger->debug("Signifyd: Positive action for {$caseData['case']->getOrderIncrement()}: " . $positiveAction, array('entity' => $caseData['case']));
-        $request = $caseData['request'];
-        switch ($request->guaranteeDisposition){
+        $response = $caseData['response'];
+        switch ($response->guaranteeDisposition){
             case "DECLINED":
                 return array("action" => $negativeAction, "reason" => "guarantee declined");
                 break;
@@ -510,7 +512,7 @@ class Casedata extends AbstractModel
                 return array("action" => $positiveAction, "reason" => "guarantee approved");
                 break;
             default:
-                $this->logger->debug("Signifyd: Unknown guaranty: " . $request->guaranteeDisposition, array('entity' => $caseData['case']));
+                $this->logger->debug("Signifyd: Unknown guaranty: " . $response->guaranteeDisposition, array('entity' => $caseData['case']));
                 break;
         }
 
