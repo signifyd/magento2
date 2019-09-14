@@ -126,7 +126,7 @@ class Index extends Action
             $caseData = array(
                 "case" => $case,
                 "order" => $order,
-                "request" => $requestJson
+                "response" => $requestJson
             );
 
             if ($case->isEmpty()) {
