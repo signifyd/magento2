@@ -243,6 +243,11 @@ class FulfillmentHelper
         $trackingNumbers = array();
 
         $trackingCollection = $shipment->getTracksCollection();
+        /**
+         * Sometimes Magento loads tracking collection before the $shipment object gets loaded, leaving collection
+         * without shipment filter. Forcing shipment filter to avoid issues.
+         */
+        $trackingCollection->setShipmentFilter($shipment->getId());
 
         /** @var \Magento\Sales\Model\Order\Shipment\Track $tracking */
         foreach ($trackingCollection->getItems() as $tracking) {
