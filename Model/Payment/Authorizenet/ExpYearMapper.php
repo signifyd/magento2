@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\ExpYearMapper as Base_ExpYearMapper;
 
 class ExpYearMapper extends Base_ExpYearMapper
 {
-    protected $allowedMethods = array('authorizenet_directpost');
+    protected $allowedMethods = ['authorizenet_directpost'];
 
     /**
      * Gets expiry year from XML response from Authorize.net
@@ -23,7 +23,7 @@ class ExpYearMapper extends Base_ExpYearMapper
             $expYear = substr($expYear, -2);
         }
 
-        $this->logger->debug('Expiry year found on payment mapper: ' . (empty($expYear) ? 'false' : $expYear), array('entity' => $order));
+        $this->logger->debug('Expiry year found on payment mapper: ' . (empty($expYear) ? 'false' : $expYear), ['entity' => $order]);
 
         if (empty($expYear)) {
             $expYear = parent::getPaymentData($order);

@@ -123,11 +123,11 @@ class Index extends Action
             /** @var $case \Signifyd\Connect\Model\Casedata */
             $case = $this->objectManager->create('Signifyd\Connect\Model\Casedata')->load($requestJson->orderId);
 
-            $caseData = array(
+            $caseData = [
                 "case" => $case,
                 "order" => $order,
                 "response" => $requestJson
-            );
+            ];
 
             if ($case->isEmpty()) {
                 $message = "Case {$requestJson->orderId} on request not found on Magento";

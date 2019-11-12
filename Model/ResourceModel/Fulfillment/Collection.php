@@ -10,5 +10,4 @@ class Collection extends AbstractCollection
     {
         $this->_init('Signifyd\Connect\Model\Fulfillment', 'Signifyd\Connect\Model\ResourceModel\Fulfillment');
     }
-
 }

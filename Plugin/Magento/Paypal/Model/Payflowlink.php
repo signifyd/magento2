@@ -17,8 +17,7 @@ class Payflowlink
      */
     public function __construct(
         Registry $registry
-    )
-    {
+    ) {
         $this->registry = $registry;
     }
 
@@ -30,6 +29,6 @@ class Payflowlink
     public function beforeProcess(\Magento\Paypal\Model\Payflowlink $subject, $responseData)
     {
         $this->registry->register('signifyd_payment_data', $responseData);
-        return array($responseData);
+        return [$responseData];
     }
 }

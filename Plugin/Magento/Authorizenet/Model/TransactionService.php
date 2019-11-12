@@ -17,8 +17,7 @@ class TransactionService
      */
     public function __construct(
         Registry $registry
-    )
-    {
+    ) {
         $this->registry = $registry;
     }
 

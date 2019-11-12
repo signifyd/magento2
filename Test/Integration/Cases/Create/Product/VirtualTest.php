@@ -35,7 +35,6 @@ class VirtualTest extends OrderTestCase
         $this->assertEquals($this->incrementId, $case->getOrderIncrement());
         $this->assertNotEmpty($case->getCode());
         $this->assertEquals(true, $allVirtual);
-
     }
 
     public static function configFixture()

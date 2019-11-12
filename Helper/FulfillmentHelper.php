@@ -240,7 +240,7 @@ class FulfillmentHelper
      */
     public function getTrackingNumbers(\Magento\Sales\Model\Order\Shipment $shipment)
     {
-        $trackingNumbers = array();
+        $trackingNumbers = [];
 
         $trackingCollection = $shipment->getTracksCollection();
         /**
@@ -317,7 +317,7 @@ class FulfillmentHelper
      */
     public function getTrackingUrls(\Magento\Sales\Model\Order\Shipment $shipment)
     {
-        return array();
+        return [];
     }
 
     /**
@@ -326,7 +326,7 @@ class FulfillmentHelper
      */
     public function getProducts(\Magento\Sales\Model\Order\Shipment $shipment)
     {
-        $products = array();
+        $products = [];
 
         /** @var \Magento\Sales\Model\Order\Shipment\Item $item */
         foreach ($shipment->getAllItems() as $item) {
@@ -394,14 +394,14 @@ class FulfillmentHelper
      */
     public function getShipmentStatus(\Magento\Sales\Model\Order\Shipment $shipment)
     {
-        $validShipmentStatus = array(
+        $validShipmentStatus = [
             'in transit',
             'out for delivery',
             'waiting for pickup',
             'failed attempt',
             'delivered',
             'exception'
-        );
+        ];
 
         return null;
     }

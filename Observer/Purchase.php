@@ -173,7 +173,7 @@ class Purchase implements ObserverInterface
             }
 
             if ($this->isRestricted($paymentMethod, $state, 'create')) {
-                $this->logger->debug('Case creation for order ' . $incrementId . ' with state ' . $state . ' is restricted', array('entity' => $order));
+                $this->logger->debug('Case creation for order ' . $incrementId . ' with state ' . $state . ' is restricted', ['entity' => $order]);
                 return;
             }
 
@@ -182,7 +182,7 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            $this->logger->debug("Creating case for order {$incrementId}, state {$state}, payment method {$paymentMethod}", array('entity' => $order));
+            $this->logger->debug("Creating case for order {$incrementId}, state {$state}, payment method {$paymentMethod}", ['entity' => $order]);
 
             $orderData = $this->helper->processOrderData($order);
 
@@ -195,19 +195,19 @@ class Purchase implements ObserverInterface
             // Initial hold order
             $this->holdOrder($order);
 
-            if ($result){
+            if ($result) {
                 $case->setCode($result);
                 $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS)->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
                 try {
                     $case->getResource()->save($case);
-                    $this->logger->debug('Case saved. Order No:' . $incrementId, array('entity' => $order));
+                    $this->logger->debug('Case saved. Order No:' . $incrementId, ['entity' => $order]);
                 } catch (\Exception $e) {
-                    $this->logger->error('Exception in: ' . __FILE__ . ', on line: ' . __LINE__, array('entity' => $order));
-                    $this->logger->error('Exception:' . $e->__toString(), array('entity' => $order));
+                    $this->logger->error('Exception in: ' . __FILE__ . ', on line: ' . __LINE__, ['entity' => $order]);
+                    $this->logger->error('Exception:' . $e->__toString(), ['entity' => $order]);
                 }
             }
         } catch (\Exception $ex) {
-            $context = array();
+            $context = [];
 
             if (isset($order) && $order instanceof Order) {
                 $context['entity'] = $order;
@@ -257,7 +257,7 @@ class Purchase implements ObserverInterface
      * @param null $state
      * @return bool
      */
-    public function isRestricted($paymentMethodCode, $state, $action='default')
+    public function isRestricted($paymentMethodCode, $state, $action = 'default')
     {
         if (empty($state)) {
             return true;
@@ -279,7 +279,7 @@ class Purchase implements ObserverInterface
      * @param string $action
      * @return bool
      */
-    public function isStateRestricted($state, $action='default')
+    public function isStateRestricted($state, $action = 'default')
     {
         $restrictedStates = $this->configHelper->getConfigData("signifyd/general/restrict_states_{$action}");
         $restrictedStates = explode(',', $restrictedStates);
@@ -325,7 +325,7 @@ class Purchase implements ObserverInterface
                     $reason = "unknown reason";
                 }
 
-                $this->logger->debug("Order {$order->getIncrementId()} can not be held because {$reason}", array('entity' => $order));
+                $this->logger->debug("Order {$order->getIncrementId()} can not be held because {$reason}", ['entity' => $order]);
 
                 return false;
             }
@@ -341,7 +341,7 @@ class Purchase implements ObserverInterface
             }
 
             if (!$this->helper->hasGuaranty($order)) {
-                $this->logger->debug('Purchase Observer Order Hold: No: ' . $order->getIncrementId(), array('entity' => $order));
+                $this->logger->debug('Purchase Observer Order Hold: No: ' . $order->getIncrementId(), ['entity' => $order]);
                 $order->hold();
                 $order->addStatusHistoryComment("Signifyd: after order place");
                 $order->getResource()->save($order);

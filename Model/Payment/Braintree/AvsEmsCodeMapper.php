@@ -17,7 +17,7 @@ use Signifyd\Connect\Model\Payment\Base\AvsEmsCodeMapper as Base_AvsEmsCodeMappe
  */
 class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
 {
-    protected $allowedMethods = array('braintree');
+    protected $allowedMethods = ['braintree'];
 
     /**
      * List of mapping AVS codes
@@ -63,7 +63,7 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
             }
         }
 
-        $this->logger->debug('AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus), array('entity' => $order));
+        $this->logger->debug('AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus), ['entity' => $order]);
 
         if (empty($avsStatus)) {
             $avsStatus = parent::getPaymentData($order);

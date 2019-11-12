@@ -17,7 +17,7 @@ use Signifyd\Connect\Model\Payment\Base\CvvEmsCodeMapper as Base_CvvEmsCodeMappe
  */
 class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
 {
-    protected $allowedMethods = array('braintree');
+    protected $allowedMethods = ['braintree'];
 
     /**
      * List of mapping CVV codes
@@ -49,11 +49,11 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
             $cvvStatus = self::$cvvMap[$additionalInfo['cvvResponseCode']];
 
             if ($this->validate($cvvStatus) == false) {
-                $cvvStatus = NULL;
+                $cvvStatus = null;
             }
         }
 
-        $this->logger->debug('CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus), array('entity' => $order));
+        $this->logger->debug('CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus), ['entity' => $order]);
 
         if (empty($cvvStatus)) {
             $cvvStatus = parent::getPaymentData($order);

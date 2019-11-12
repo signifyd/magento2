@@ -8,7 +8,7 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
 {
     use MapperTrait;
 
-    protected $allowedMethods = array('stripe_payments');
+    protected $allowedMethods = ['stripe_payments'];
 
     /**
      * List of mapping AVS codes
@@ -66,7 +66,7 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
             $avsStatus = null;
         }
 
-        $this->logger->debug('AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus), array('entity' => $order));
+        $this->logger->debug('AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus), ['entity' => $order]);
 
         if (empty($avsStatus)) {
             $avsStatus = parent::getPaymentData($order);

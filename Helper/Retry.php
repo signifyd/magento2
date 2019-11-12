@@ -40,8 +40,7 @@ class Retry extends AbstractHelper
         ConfigHelper $configHelper,
         ObjectManagerInterface $objectManager,
         Logger $logger
-    )
-    {
+    ) {
         parent::__construct($context);
 
         $this->caseData = $caseData;
@@ -64,13 +63,16 @@ class Retry extends AbstractHelper
         $from = date('Y-m-d H:i:s', $lastTime);
 
         $casesCollection = $this->caseData->getCollection();
-        $casesCollection->addFieldToFilter('updated', array('gteq' => $from));
-        $casesCollection->addFieldToFilter('magento_status', array('eq' => $status));
-        $casesCollection->addFieldToFilter('retries', array('lt' => count($retryTimes)));
-        $casesCollection->addExpressionFieldToSelect('seconds_after_update',
-            "TIME_TO_SEC(TIMEDIFF('{$current}', updated))", array('updated'));
+        $casesCollection->addFieldToFilter('updated', ['gteq' => $from]);
+        $casesCollection->addFieldToFilter('magento_status', ['eq' => $status]);
+        $casesCollection->addFieldToFilter('retries', ['lt' => count($retryTimes)]);
+        $casesCollection->addExpressionFieldToSelect(
+            'seconds_after_update',
+            "TIME_TO_SEC(TIMEDIFF('{$current}', updated))",
+            ['updated']
+        );
 
-        $casesToRetry = array();
+        $casesToRetry = [];
 
         foreach ($casesCollection->getItems() as $case) {
             $retries = $case->getData('retries');
@@ -93,7 +95,7 @@ class Retry extends AbstractHelper
      */
     public function calculateRetryTimes()
     {
-        $retryTimes = array();
+        $retryTimes = [];
 
         for ($retry = 0; $retry < 15; $retry++) {
             // Increment retry times exponentially
@@ -129,7 +131,7 @@ class Retry extends AbstractHelper
             $caseObj->updateCase($caseData);
             return true;
         } catch (\Exception $e) {
-            $this->logger->critical($e->__toString(), array('entity' => $order));
+            $this->logger->critical($e->__toString(), ['entity' => $order]);
             return false;
         }
     }
@@ -146,18 +148,18 @@ class Retry extends AbstractHelper
 
         switch ($case->getGuarantee()) {
             case 'DECLINED':
-                $orderAction = array("action" => $negativeAction, "reason" => "guarantee declined");
+                $orderAction = ["action" => $negativeAction, "reason" => "guarantee declined"];
                 break;
 
             case 'APPROVED':
-                $orderAction = array("action" => $positiveAction, "reason" => "guarantee approved");
+                $orderAction = ["action" => $positiveAction, "reason" => "guarantee approved"];
                 break;
 
             default:
-                $orderAction = array('action' => null, 'reason' => null);
+                $orderAction = ['action' => null, 'reason' => null];
         }
 
-        $caseData = array('order' => $order);
+        $caseData = ['order' => $order];
         /** @var \Signifyd\Connect\Model\Casedata $caseObj */
         $caseObj = $this->objectManager->create('Signifyd\Connect\Model\Casedata');
         $caseObj->updateOrder($caseData, $orderAction, $case);

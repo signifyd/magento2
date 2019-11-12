@@ -13,5 +13,4 @@ class Collection extends AbstractCollection
     {
         $this->_init('Signifyd\Connect\Model\Casedata', 'Signifyd\Connect\Model\ResourceModel\Casedata');
     }
-
 }

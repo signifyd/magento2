@@ -24,7 +24,7 @@ class BinMapper extends DataMapper
             $bin = substr($ccNumber, 0, 6);
         }
 
-        $this->logger->debug('Bin found on base mapper: ' . (empty($bin) ? 'false' : $bin), array('entity' => $order));
+        $this->logger->debug('Bin found on base mapper: ' . (empty($bin) ? 'false' : $bin), ['entity' => $order]);
 
         return $bin;
     }

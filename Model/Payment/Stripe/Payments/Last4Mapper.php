@@ -8,7 +8,7 @@ class Last4Mapper extends Base_Last4Mapper
 {
     use MapperTrait;
 
-    protected $allowedMethods = array('stripe_payments');
+    protected $allowedMethods = ['stripe_payments'];
 
     /**
      * Gets last 4 credit card digits
@@ -33,7 +33,7 @@ class Last4Mapper extends Base_Last4Mapper
             $last4 = null;
         }
 
-        $this->logger->debug('Last4 found on payment mapper: ' . (empty($last4) ? 'false' : 'true'), array('entity' => $order));
+        $this->logger->debug('Last4 found on payment mapper: ' . (empty($last4) ? 'false' : 'true'), ['entity' => $order]);
 
         if (empty($last4)) {
             $last4 = parent::getPaymentData($order);

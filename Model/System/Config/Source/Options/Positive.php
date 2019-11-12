@@ -32,28 +32,27 @@ class Positive implements ArrayInterface
     public function __construct(
         ScopeConfigInterface $coreConfig,
         \Magento\Framework\App\RequestInterface $request
-    )
-    {
+    ) {
         $this->coreConfig = $coreConfig;
         $this->request = $request;
     }
 
     public function toOptionArray()
     {
-        $options = array(
-            array(
+        $options = [
+            [
                 'value' => 'nothing',
                 'label' => 'Do nothing'
-            ),
-            array(
+            ],
+            [
                 'value' => 'unhold',
                 'label' => 'Update status to processing'
-            ),
-            array(
+            ],
+            [
                 'value' => 'capture',
                 'label' => 'Capture payment and update order status'
-            )
-        );
+            ]
+        ];
 
         $store = $this->request->getParam('store');
         $website = $this->request->getParam('website');
@@ -72,10 +71,10 @@ class Positive implements ArrayInterface
         }
 
         if ($this->coreConfig->getValue('signifyd/advanced/guarantee_positive_action', $scopeType, $scopeCode) == 'hold') {
-            $options[] = array(
+            $options[] = [
                 'value' => 'hold',
                 'label' => 'Leave on hold',
-            );
+            ];
         }
 
         return $options;

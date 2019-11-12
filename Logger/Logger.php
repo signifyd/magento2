@@ -30,8 +30,8 @@ class Logger extends \Monolog\Logger
      */
     public function __construct(
         $name,
-        array $handlers = array(),
-        array $processors = array(),
+        array $handlers = [],
+        array $processors = [],
         ConfigHelper $configHelper
     ) {
         $this->configHelper = $configHelper;
@@ -46,7 +46,7 @@ class Logger extends \Monolog\Logger
      * @param array $context
      * @return bool
      */
-    public function addRecord($level, $message, array $context = array())
+    public function addRecord($level, $message, array $context = [])
     {
         if (isset($context['entity'])) {
             $log = $this->configHelper->getConfigData('signifyd/logs/log', $context['entity']);

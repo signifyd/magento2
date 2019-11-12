@@ -8,7 +8,7 @@ class ExpYearMapper extends Base_ExpYearMapper
 {
     use MapperTrait;
 
-    protected $allowedMethods = array('stripe_payments');
+    protected $allowedMethods = ['stripe_payments'];
 
     /**
      * Gets expiry year
@@ -34,7 +34,7 @@ class ExpYearMapper extends Base_ExpYearMapper
             $expYear = null;
         }
 
-        $this->logger->debug('Expiry year found on payment mapper: ' . (empty($expYear) ? 'false' : $expYear), array('entity' => $order));
+        $this->logger->debug('Expiry year found on payment mapper: ' . (empty($expYear) ? 'false' : $expYear), ['entity' => $order]);
 
         if (empty($expYear)) {
             $expYear = parent::getPaymentData($order);

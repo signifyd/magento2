@@ -54,12 +54,12 @@ class Config implements ObserverInterface
      *
      * @var array
      */
-    protected $desiredDatabaseStructure = array(
-        'signifyd_connect_case' => array('order_increment', 'signifyd_status', 'code', 'score', 'guarantee', 'entries_text',
-            'created', 'updated', 'magento_status', 'retries'),
-        'sales_order' => array('signifyd_score', 'signifyd_guarantee', 'signifyd_code', 'origin_store_code'),
-        'sales_order_grid' => array('signifyd_score', 'signifyd_guarantee', 'signifyd_code')
-    );
+    protected $desiredDatabaseStructure = [
+        'signifyd_connect_case' => ['order_increment', 'signifyd_status', 'code', 'score', 'guarantee', 'entries_text',
+            'created', 'updated', 'magento_status', 'retries'],
+        'sales_order' => ['signifyd_score', 'signifyd_guarantee', 'signifyd_code', 'origin_store_code'],
+        'sales_order_grid' => ['signifyd_score', 'signifyd_guarantee', 'signifyd_code']
+    ];
 
     public function __construct(
         ResourceConnection $resource,

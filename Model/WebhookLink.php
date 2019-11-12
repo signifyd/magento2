@@ -54,7 +54,7 @@ class WebhookLink implements CommentInterface
             $storeId = empty($storeId) ? $this->storeManager->getDefaultStoreView()->getId() : $storeId;
             $this->urlBuilder->setScope($storeId);
 
-            $url = $this->urlBuilder->getUrl('signifyd_connect/webhooks/index', array('_nosid' => true));
+            $url = $this->urlBuilder->getUrl('signifyd_connect/webhooks/index', ['_nosid' => true]);
             $url = "<a href=\"" . $url . "\">$url</a>";
         } else {
             $url = "{{store url}}/signifyd_connect/webhooks/index";

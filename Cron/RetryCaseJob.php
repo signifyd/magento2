@@ -61,7 +61,7 @@ class RetryCaseJob
         $waitingCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::WAITING_SUBMISSION_STATUS);
 
         foreach ($waitingCases as $case) {
-            $this->logger->debug("Signifyd: preparing for send case no: {$case['order_increment']}", array('entity' => $case));
+            $this->logger->debug("Signifyd: preparing for send case no: {$case['order_increment']}", ['entity' => $case]);
 
             $order = $this->getOrder($case['order_increment']);
 
@@ -85,7 +85,7 @@ class RetryCaseJob
         $inReviewCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::IN_REVIEW_STATUS);
 
         foreach ($inReviewCases as $case) {
-            $this->logger->debug("Signifyd: preparing for review case no: {$case['order_increment']}", array('entity' => $case));
+            $this->logger->debug("Signifyd: preparing for review case no: {$case['order_increment']}", ['entity' => $case]);
 
             $this->caseRetryObj->processInReviewCase($case, $this->getOrder($case['order_increment']));
         }
@@ -96,7 +96,7 @@ class RetryCaseJob
         $inProcessingCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::PROCESSING_RESPONSE_STATUS);
 
         foreach ($inProcessingCases as $case) {
-            $this->logger->debug("Signifyd: preparing for process case no: {$case['order_increment']}", array('entity' => $case));
+            $this->logger->debug("Signifyd: preparing for process case no: {$case['order_increment']}", ['entity' => $case]);
 
             $this->caseRetryObj->processResponseStatus($case, $this->getOrder($case['order_increment']));
         }

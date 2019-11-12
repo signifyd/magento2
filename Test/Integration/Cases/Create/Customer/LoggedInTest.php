@@ -46,5 +46,3 @@ class LoggedInTest extends OrderTestCase
         require __DIR__ . '/../../../_files/order/guest_quote_with_addresses_product_simple.php';
     }
 }
-
-

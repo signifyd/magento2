@@ -33,8 +33,7 @@ class Order
         Debugger $logger,
         ConfigHelper $configHelper,
         UrlInterface $url
-    )
-    {
+    ) {
         $this->logger = $logger;
         $this->configHelper = $configHelper;
         $this->url = $url;
@@ -108,6 +107,6 @@ class Order
             $this->logger->debug('Exception logging order state change: ' . $e->getMessage());
         }
 
-        return array($state);
+        return [$state];
     }
 }

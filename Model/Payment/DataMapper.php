@@ -17,7 +17,7 @@ abstract class DataMapper implements PaymentVerificationInterface
      * List of payment methods codes
      * @var array
      */
-    protected $allowedMethods = array();
+    protected $allowedMethods = [];
 
     /**
      * Flag to prevent accidental loop for getCode/getData calls
@@ -37,8 +37,7 @@ abstract class DataMapper implements PaymentVerificationInterface
     public function __construct(
         Registry $registry,
         Logger $logger
-    )
-    {
+    ) {
         $this->registry = $registry;
         $this->logger = $logger;
     }

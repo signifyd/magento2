@@ -21,7 +21,7 @@ trait MapperTrait
             if (is_object($charge)) {
                 return $charge;
             } else {
-                $this->logger->debug('No Stripe charge on registry, fetching from Strupe API', array('entity' => $order));
+                $this->logger->debug('No Stripe charge on registry, fetching from Strupe API', ['entity' => $order]);
 
                 $lastTransactionId = $order->getPayment()->getLastTransId();
 

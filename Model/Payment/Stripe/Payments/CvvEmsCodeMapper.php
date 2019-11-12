@@ -8,7 +8,7 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
 {
     use MapperTrait;
 
-    protected $allowedMethods = array('stripe_payments');
+    protected $allowedMethods = ['stripe_payments'];
 
     /**
      * List of mapping CVV codes
@@ -53,7 +53,7 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
             $cvvStatus = null;
         }
 
-        $this->logger->debug('CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus), array('entity' => $order));
+        $this->logger->debug('CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus), ['entity' => $order]);
 
         if (empty($cvvStatus)) {
             $cvvStatus = parent::getPaymentData($order);

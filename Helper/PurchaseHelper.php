@@ -120,7 +120,7 @@ class PurchaseHelper
      */
     protected function filterIp($ipString)
     {
-        $matches = array();
+        $matches = [];
 
         $pattern = '(([0-9]{1,3}(?:\.[0-9]{1,3}){3})|([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))';
 
@@ -139,7 +139,7 @@ class PurchaseHelper
      */
     protected function getVersions()
     {
-        $version = array();
+        $version = [];
         $productMetadata = $this->objectManager->get('\Magento\Framework\App\ProductMetadata');
         $version['storePlatformVersion'] = $productMetadata->getVersion();
         $version['signifydClientApp'] = 'Magento 2';
@@ -185,7 +185,7 @@ class PurchaseHelper
             $purchase->orderChannel = "WEB";
         }
 
-        $purchase->products = array();
+        $purchase->products = [];
         foreach ($items as $item) {
             $purchase->products[] = $this->makeProduct($item);
         }
@@ -200,10 +200,10 @@ class PurchaseHelper
 
         $couponCode = $order->getCouponCode();
         if (!empty($couponCode)) {
-            $purchase->discountCodes = array(
+            $purchase->discountCodes = [
                 'amount' => abs($order->getDiscountAmount()),
                 'code' => $couponCode
-            );
+            ];
         }
 
         $purchase->shipments = $this->makeShipments($order);
@@ -217,7 +217,7 @@ class PurchaseHelper
 
     protected function makeShipments(Order $order)
     {
-        $shipments = array();
+        $shipments = [];
         $shippingMethod = $order->getShippingMethod();
 
         if (!empty($shippingMethod)) {
@@ -330,8 +330,8 @@ class PurchaseHelper
 
         /* @var $customer \Magento\Customer\Model\Customer */
         $customer = $this->objectManager->get('Magento\Customer\Model\Customer')->load($order->getCustomerId());
-        $this->logger->debug("Customer data: " . json_encode($customer), array('entity' => $order));
-        if(!is_null($customer) && !$customer->isEmpty()) {
+        $this->logger->debug("Customer data: " . json_encode($customer), ['entity' => $order]);
+        if (!is_null($customer) && !$customer->isEmpty()) {
             $user->createdDate = date('c', strtotime($customer->getCreatedAt()));
         }
         /** @var $orders \Magento\Sales\Model\ResourceModel\Order\Collection */
@@ -342,7 +342,7 @@ class PurchaseHelper
         $orderCount = 0;
         $orderTotal = 0.0;
         /** @var $o \Magento\Sales\Model\Order*/
-        foreach($orders as $o) {
+        foreach ($orders as $o) {
             $orderCount++;
             $orderTotal += floatval($o->getGrandTotal());
         }
@@ -430,12 +430,12 @@ class PurchaseHelper
         $id = $this->configHelper->getSignifydApi($order)->createCase($caseData);
         
         if ($id) {
-            $this->logger->debug("Case sent. Id is $id", array('entity' => $order));
+            $this->logger->debug("Case sent. Id is $id", ['entity' => $order]);
             $order->addStatusHistoryComment("Signifyd: case created {$id}");
             $order->save();
             return $id;
         } else {
-            $this->logger->error("Case failed to send.", array('entity' => $order));
+            $this->logger->error("Case failed to send.", ['entity' => $order]);
             return false;
         }
     }
@@ -446,34 +446,34 @@ class PurchaseHelper
      */
     public function cancelCaseOnSignifyd(Order $order)
     {
-        $this->logger->debug("Trying to cancel case for order " . $order->getIncrementId(), array('entity' => $order));
+        $this->logger->debug("Trying to cancel case for order " . $order->getIncrementId(), ['entity' => $order]);
 
         $case = $this->getCase($order);
 
         if ($case->isEmpty()) {
-            $this->logger->debug("Guarantee cancel skipped: case not found for order " . $order->getIncrementId(), array('entity' => $order));
+            $this->logger->debug("Guarantee cancel skipped: case not found for order " . $order->getIncrementId(), ['entity' => $order]);
             return false;
         }
 
         $guarantee = $case->getData('guarantee');
 
-        if (empty($guarantee) || in_array($guarantee, array('DECLINED', 'N/A'))) {
-            $this->logger->debug("Guarantee cancel skipped: current guarantee is {$guarantee}", array('entity' => $order));
+        if (empty($guarantee) || in_array($guarantee, ['DECLINED', 'N/A'])) {
+            $this->logger->debug("Guarantee cancel skipped: current guarantee is {$guarantee}", ['entity' => $order]);
             return false;
         }
 
         /** @var \Magento\Sales\Model\Order\Item $item */
         foreach ($order->getAllItems() as $item) {
             if ($item->getQtyToCancel() > 0 || $item->getQtyToRefund() > 0) {
-                $this->logger->debug("Guarantee cancel skipped: order still have items not canceled or refunded", array('entity' => $order));
+                $this->logger->debug("Guarantee cancel skipped: order still have items not canceled or refunded", ['entity' => $order]);
                 return false;
             }
         }
 
-        $this->logger->debug('Cancelling case ' . $case->getId(), array('entity' => $order));
+        $this->logger->debug('Cancelling case ' . $case->getId(), ['entity' => $order]);
         $disposition = $this->configHelper->getSignifydApi($order)->cancelGuarantee($case->getCode());
         
-        $this->logger->debug("Cancel disposition result {$disposition}", array('entity' => $order));
+        $this->logger->debug("Cancel disposition result {$disposition}", ['entity' => $order]);
 
         if ($disposition == 'CANCELED') {
             $case->setData('guarantee', $disposition);
@@ -513,7 +513,7 @@ class PurchaseHelper
         try {
             $avsAdapter = $this->paymentVerificationFactory->createPaymentAvs($order->getPayment()->getMethod());
 
-            $this->logger->debug('Getting AVS code using ' . get_class($avsAdapter), array('entity' => $order));
+            $this->logger->debug('Getting AVS code using ' . get_class($avsAdapter), ['entity' => $order]);
 
             $avsCode = $avsAdapter->getData($order);
             $avsCode = trim(strtoupper($avsCode));
@@ -524,7 +524,7 @@ class PurchaseHelper
                 return null;
             }
         } catch (Exception $e) {
-            $this->logger->error('Error fetching AVS code: ' . $e->getMessage(), array('entity' => $order));
+            $this->logger->error('Error fetching AVS code: ' . $e->getMessage(), ['entity' => $order]);
             return '';
         }
     }
@@ -540,7 +540,7 @@ class PurchaseHelper
         try {
             $cvvAdapter = $this->paymentVerificationFactory->createPaymentCvv($order->getPayment()->getMethod());
 
-            $this->logger->debug('Getting CVV code using ' . get_class($cvvAdapter), array('entity' => $order));
+            $this->logger->debug('Getting CVV code using ' . get_class($cvvAdapter), ['entity' => $order]);
 
             $cvvCode = $cvvAdapter->getData($order);
             $cvvCode = trim(strtoupper($cvvCode));
@@ -551,7 +551,7 @@ class PurchaseHelper
                 return null;
             }
         } catch (Exception $e) {
-            $this->logger->error('Error fetching CVV code: ' . $e->getMessage(), array('entity' => $order));
+            $this->logger->error('Error fetching CVV code: ' . $e->getMessage(), ['entity' => $order]);
             return null;
         }
     }
@@ -576,11 +576,11 @@ class PurchaseHelper
 
             $cardholder = strtoupper($cardholder);
             $cardholder = preg_replace('/[^A-Z ]/', '', $cardholder);
-            $cardholder = preg_replace( '/  +/', ' ', $cardholder);
+            $cardholder = preg_replace('/  +/', ' ', $cardholder);
 
             return $cardholder;
         } catch (Exception $e) {
-            $this->logger->error('Error fetching cardholder: ' . $e->getMessage(), array('entity' => $order));
+            $this->logger->error('Error fetching cardholder: ' . $e->getMessage(), ['entity' => $order]);
             return '';
         }
     }
@@ -596,7 +596,7 @@ class PurchaseHelper
         try {
             $last4Adapter = $this->paymentVerificationFactory->createPaymentLast4($order->getPayment()->getMethod());
 
-            $this->logger->debug('Getting last4 using ' . get_class($last4Adapter), array('entity' => $order));
+            $this->logger->debug('Getting last4 using ' . get_class($last4Adapter), ['entity' => $order]);
 
             $last4 = $last4Adapter->getData($order);
             $last4 = preg_replace('/\D/', '', $last4);
@@ -607,7 +607,7 @@ class PurchaseHelper
 
             return null;
         } catch (Exception $e) {
-            $this->logger->error('Error fetching last4: ' . $e->getMessage(), array('entity' => $order));
+            $this->logger->error('Error fetching last4: ' . $e->getMessage(), ['entity' => $order]);
             return null;
         }
     }
@@ -623,7 +623,7 @@ class PurchaseHelper
         try {
             $monthAdapter = $this->paymentVerificationFactory->createPaymentExpMonth($order->getPayment()->getMethod());
 
-            $this->logger->debug('Getting expiry month using ' . get_class($monthAdapter), array('entity' => $order));
+            $this->logger->debug('Getting expiry month using ' . get_class($monthAdapter), ['entity' => $order]);
 
             $expMonth = $monthAdapter->getData($order);
             $expMonth = preg_replace('/\D/', '', $expMonth);
@@ -635,7 +635,7 @@ class PurchaseHelper
 
             return $expMonth;
         } catch (Exception $e) {
-            $this->logger->error('Error fetching expiration month: ' . $e->getMessage(), array('entity' => $order));
+            $this->logger->error('Error fetching expiration month: ' . $e->getMessage(), ['entity' => $order]);
             return null;
         }
     }
@@ -651,7 +651,7 @@ class PurchaseHelper
         try {
             $yearAdapter = $this->paymentVerificationFactory->createPaymentExpYear($order->getPayment()->getMethod());
 
-            $this->logger->debug('Getting expiry year using ' . get_class($yearAdapter), array('entity' => $order));
+            $this->logger->debug('Getting expiry year using ' . get_class($yearAdapter), ['entity' => $order]);
 
             $expYear = $yearAdapter->getData($order);
             $expYear = preg_replace('/\D/', '', $expYear);
@@ -668,7 +668,7 @@ class PurchaseHelper
 
             return $expYear;
         } catch (Exception $e) {
-            $this->logger->error('Error fetching expiration year: ' . $e->getMessage(), array('entity' => $order));
+            $this->logger->error('Error fetching expiration year: ' . $e->getMessage(), ['entity' => $order]);
             return null;
         }
     }
@@ -684,7 +684,7 @@ class PurchaseHelper
         try {
             $binAdapter = $this->paymentVerificationFactory->createPaymentBin($order->getPayment()->getMethod());
 
-            $this->logger->debug('Getting bin using ' . get_class($binAdapter), array('entity' => $order));
+            $this->logger->debug('Getting bin using ' . get_class($binAdapter), ['entity' => $order]);
 
             $bin = $binAdapter->getData($order);
             $bin = preg_replace('/\D/', '', $bin);
@@ -701,7 +701,7 @@ class PurchaseHelper
 
             return $bin;
         } catch (Exception $e) {
-            $this->logger->error('Error fetching bin: ' . $e->getMessage(), array('entity' => $order));
+            $this->logger->error('Error fetching bin: ' . $e->getMessage(), ['entity' => $order]);
             return null;
         }
     }
@@ -717,7 +717,7 @@ class PurchaseHelper
         try {
             $transactionIdAdapter = $this->paymentVerificationFactory->createPaymentTransactionId($order->getPayment()->getMethod());
 
-            $this->logger->debug('Getting transaction ID using ' . get_class($transactionIdAdapter), array('entity' => $order));
+            $this->logger->debug('Getting transaction ID using ' . get_class($transactionIdAdapter), ['entity' => $order]);
 
             $transactionId = $transactionIdAdapter->getData($order);
 
@@ -727,7 +727,7 @@ class PurchaseHelper
 
             return $transactionId;
         } catch (Exception $e) {
-            $this->logger->error('Error fetching transaction ID: ' . $e->getMessage(), array('entity' => $order));
+            $this->logger->error('Error fetching transaction ID: ' . $e->getMessage(), ['entity' => $order]);
             return null;
         }
     }

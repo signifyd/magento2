@@ -46,7 +46,7 @@ class Router implements \Magento\Framework\App\RouterInterface
          */
         $identifier = trim($request->getPathInfo(), '/');
 
-        if(strpos($identifier, 'signifyd/webhooks') !== false && strpos($identifier, 'signifyd/webhooks/handler') === false) {
+        if (strpos($identifier, 'signifyd/webhooks') !== false && strpos($identifier, 'signifyd/webhooks/handler') === false) {
             /*
              * We must set module, controller path and action name for our controller class(Controller/Test/Test.php)
              */

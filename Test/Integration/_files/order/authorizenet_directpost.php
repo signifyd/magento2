@@ -27,4 +27,3 @@ $quote->getPayment()->save();
 
 $quote->collectTotals();
 $quote->save();
-

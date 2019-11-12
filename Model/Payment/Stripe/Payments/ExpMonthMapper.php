@@ -8,7 +8,7 @@ class ExpMonthMapper extends Base_ExpMonthMapper
 {
     use MapperTrait;
 
-    protected $allowedMethods = array('stripe_payments');
+    protected $allowedMethods = ['stripe_payments'];
 
     /**
      * Gets expiry month
@@ -33,7 +33,7 @@ class ExpMonthMapper extends Base_ExpMonthMapper
             $expMonth = null;
         }
 
-        $this->logger->debug('Expiry month found on payment mapper: ' . (empty($expMonth) ? 'false' : $expMonth), array('entity' => $order));
+        $this->logger->debug('Expiry month found on payment mapper: ' . (empty($expMonth) ? 'false' : $expMonth), ['entity' => $order]);
 
         if (empty($expMonth)) {
             $expMonth = parent::getPaymentData($order);
