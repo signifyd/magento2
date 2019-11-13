@@ -18,7 +18,7 @@ class AuthorizenetDirectpost extends Purchase
 
         if (!empty($orderIncrementId)) {
             /** @var \Magento\Sales\Model\Order $order */
-            $order = $this->objectManagerInterface->create('\Magento\Sales\Model\Order');
+            $order = $this->objectManagerInterface->create(\Magento\Sales\Model\Order::class);
             $order->loadByIncrementId($orderIncrementId);
 
             if ($order instanceof \Magento\Sales\Model\Order) {

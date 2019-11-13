@@ -34,7 +34,8 @@ class ExpYearMapper extends Base_ExpYearMapper
             $expYear = null;
         }
 
-        $this->logger->debug('Expiry year found on payment mapper: ' . (empty($expYear) ? 'false' : $expYear), ['entity' => $order]);
+        $message = 'Expiry year found on payment mapper: ' . (empty($expYear) ? 'false' : $expYear);
+        $this->logger->debug($message, ['entity' => $order]);
 
         if (empty($expYear)) {
             $expYear = parent::getPaymentData($order);

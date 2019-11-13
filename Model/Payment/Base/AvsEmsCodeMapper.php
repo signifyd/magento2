@@ -11,7 +11,10 @@ class AvsEmsCodeMapper extends DataMapper
      *
      * @var array
      */
-    protected $validAvsResponseCodes = ['X', 'Y', 'A', 'W', 'Z', 'N', 'U', 'R', 'E', 'S', 'D', 'M', 'B', 'P', 'C', 'I', 'G'];
+    protected $validAvsResponseCodes = [
+        'X', 'Y', 'A', 'W', 'Z', 'N', 'U', 'R',
+        'E', 'S', 'D', 'M', 'B', 'P', 'C', 'I', 'G'
+    ];
 
     /**
      * Gets payment AVS verification code.
@@ -24,7 +27,8 @@ class AvsEmsCodeMapper extends DataMapper
         $avsStatus = $order->getPayment()->getCcAvsStatus();
         $avsStatus = $this->validate($avsStatus) ? $avsStatus : null;
 
-        $this->logger->debug('AVS found on base mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus), ['entity' => $order]);
+        $message = 'AVS found on base mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
+        $this->logger->debug($message, ['entity' => $order]);
 
         return $avsStatus;
     }

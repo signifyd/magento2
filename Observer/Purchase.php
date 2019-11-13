@@ -103,7 +103,7 @@ class Purchase implements ObserverInterface
         $this->configHelper = $configHelper;
         $this->objectManagerInterface = $objectManagerInterface;
         $this->storeManager = empty($storeManager) ?
-            $objectManagerInterface->get('Magento\Store\Model\StoreManagerInterface') :
+            $objectManagerInterface->get(\Magento\Store\Model\StoreManagerInterface::class) :
             $storeManager;
         $this->request = $request;
     }
@@ -164,7 +164,7 @@ class Purchase implements ObserverInterface
 
             $checkOwnEventsMethodsEvent = $observer->getEvent()->getCheckOwnEventsMethods();
 
-            if (is_null($checkOwnEventsMethodsEvent) == false) {
+            if ($checkOwnEventsMethodsEvent !== null) {
                 $checkOwnEventsMethods = $checkOwnEventsMethodsEvent;
             }
 
@@ -173,7 +173,8 @@ class Purchase implements ObserverInterface
             }
 
             if ($this->isRestricted($paymentMethod, $state, 'create')) {
-                $this->logger->debug('Case creation for order ' . $incrementId . ' with state ' . $state . ' is restricted', ['entity' => $order]);
+                $message = 'Case creation for order ' . $incrementId . ' with state ' . $state . ' is restricted';
+                $this->logger->debug($message, ['entity' => $order]);
                 return;
             }
 
@@ -182,7 +183,8 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            $this->logger->debug("Creating case for order {$incrementId}, state {$state}, payment method {$paymentMethod}", ['entity' => $order]);
+            $message = "Creating case for order {$incrementId}, state {$state}, payment method {$paymentMethod}";
+            $this->logger->debug($message, ['entity' => $order]);
 
             $orderData = $this->helper->processOrderData($order);
 
@@ -325,7 +327,8 @@ class Purchase implements ObserverInterface
                     $reason = "unknown reason";
                 }
 
-                $this->logger->debug("Order {$order->getIncrementId()} can not be held because {$reason}", ['entity' => $order]);
+                $message = "Order {$order->getIncrementId()} can not be held because {$reason}";
+                $this->logger->debug($message, ['entity' => $order]);
 
                 return false;
             }
@@ -341,7 +344,8 @@ class Purchase implements ObserverInterface
             }
 
             if (!$this->helper->hasGuaranty($order)) {
-                $this->logger->debug('Purchase Observer Order Hold: No: ' . $order->getIncrementId(), ['entity' => $order]);
+                $message = 'Purchase Observer Order Hold: No: ' . $order->getIncrementId();
+                $this->logger->debug($message, ['entity' => $order]);
                 $order->hold();
                 $order->addStatusHistoryComment("Signifyd: after order place");
                 $order->getResource()->save($order);

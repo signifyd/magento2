@@ -33,7 +33,8 @@ class Last4Mapper extends Base_Last4Mapper
             $last4 = null;
         }
 
-        $this->logger->debug('Last4 found on payment mapper: ' . (empty($last4) ? 'false' : 'true'), ['entity' => $order]);
+        $message = 'Last4 found on payment mapper: ' . (empty($last4) ? 'false' : 'true');
+        $this->logger->debug($message, ['entity' => $order]);
 
         if (empty($last4)) {
             $last4 = parent::getPaymentData($order);

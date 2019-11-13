@@ -28,7 +28,6 @@ use Signifyd\Connect\Logger\Logger;
 /**
  * Class PurchaseHelper
  * Handles the conversion from Magento Order to Signifyd Case and sends to Signifyd service.
- * @package Signifyd\Connect\Helper
  */
 class PurchaseHelper
 {
@@ -109,7 +108,7 @@ class PurchaseHelper
         }
 
         /** @var $case \Magento\Framework\HTTP\PhpEnvironment\RemoteAddress */
-        $remoteAddressHelper = $this->objectManager->get('Magento\Framework\HTTP\PhpEnvironment\RemoteAddress');
+        $remoteAddressHelper = $this->objectManager->get(\Magento\Framework\HTTP\PhpEnvironment\RemoteAddress::class);
         return $this->filterIp($remoteAddressHelper->getRemoteAddress());
     }
 
@@ -122,7 +121,15 @@ class PurchaseHelper
     {
         $matches = [];
 
-        $pattern = '(([0-9]{1,3}(?:\.[0-9]{1,3}){3})|([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))';
+        $pattern = '(([0-9]{1,3}(?:\.[0-9]{1,3}){3})|([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|' .
+            '([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|' .
+            '([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|' .
+            '([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|' .
+            '[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|' .
+            'fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|' .
+            '(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|' .
+            '([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|' .
+            '(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))';
 
         preg_match_all($pattern, $ipString, $matches);
 
@@ -140,7 +147,7 @@ class PurchaseHelper
     protected function getVersions()
     {
         $version = [];
-        $productMetadata = $this->objectManager->get('\Magento\Framework\App\ProductMetadata');
+        $productMetadata = $this->objectManager->get(\Magento\Framework\App\ProductMetadata::class);
         $version['storePlatformVersion'] = $productMetadata->getVersion();
         $version['signifydClientApp'] = 'Magento 2';
         $version['storePlatform'] = 'Magento 2';
@@ -154,7 +161,7 @@ class PurchaseHelper
      */
     protected function makeProduct(Item $item)
     {
-        $product = SignifydModel::Make("\\Signifyd\\Models\\Product");
+        $product = SignifydModel::Make(\Signifyd\Models\Product::class);
         $product->itemId = $item->getSku();
         $product->itemName = $item->getName();
         $product->itemIsDigital = (bool) $item->getIsVirtual();
@@ -175,7 +182,7 @@ class PurchaseHelper
 
         // Get all of the purchased products
         $items = $order->getAllItems();
-        $purchase = SignifydModel::Make("\\Signifyd\\Models\\Purchase");
+        $purchase = SignifydModel::Make(\Signifyd\Models\Purchase::class);
         $purchase->avsResponseCode = $this->getAvsCode($order);
         $purchase->cvvResponseCode = $this->getCvvCode($order);
 
@@ -208,7 +215,10 @@ class PurchaseHelper
 
         $purchase->shipments = $this->makeShipments($order);
 
-        if (!empty($originStoreCode) && $originStoreCode != 'admin' && $this->deviceHelper->isDeviceFingerprintEnabled()) {
+        if (!empty($originStoreCode) &&
+            $originStoreCode != 'admin' &&
+            $this->deviceHelper->isDeviceFingerprintEnabled()
+        ) {
             $purchase->orderSessionId = $this->deviceHelper->generateFingerprint($order->getQuoteId());
         }
 
@@ -222,7 +232,7 @@ class PurchaseHelper
 
         if (!empty($shippingMethod)) {
             $shippingMethod = $order->getShippingMethod(true);
-            $shipment = SignifydModel::Make("\\Signifyd\\Models\\Shipment");
+            $shipment = SignifydModel::Make(\Signifyd\Models\Shipment::class);
             $shipment->shipper = $shippingMethod->getCarrierCode();
             $shipment->shippingPrice = floatval($order->getShippingAmount());
             $shipment->shippingMethod = $shippingMethod->getMethod();
@@ -238,7 +248,7 @@ class PurchaseHelper
         /** @var \Magento\Framework\ObjectManagerInterface $om */
         $om = \Magento\Framework\App\ObjectManager::getInstance();
         /** @var \Magento\Framework\App\State $state */
-        $state =  $om->get('Magento\Framework\App\State');
+        $state =  $om->get(\Magento\Framework\App\State::class);
         return 'adminhtml' === $state->getAreaCode();
     }
 
@@ -248,7 +258,7 @@ class PurchaseHelper
      */
     protected function formatSignifydAddress($mageAddress)
     {
-        $address = SignifydModel::Make("\\Signifyd\\Models\\Address");
+        $address = SignifydModel::Make(\Signifyd\Models\Address::class);
 
         $address->streetAddress = $mageAddress->getStreetLine(1);
         $address->unit = $mageAddress->getStreetLine(2);
@@ -271,11 +281,11 @@ class PurchaseHelper
      */
     protected function makeRecipient(Order $order)
     {
-        $recipient = SignifydModel::Make("\\Signifyd\\Models\\Recipient");
+        $recipient = SignifydModel::Make(\Signifyd\Models\Recipient::class);
 
         $address = $order->getShippingAddress();
 
-        if (is_null($address) == false) {
+        if ($address !== null) {
             $recipient->fullName = $address->getName();
             $recipient->confirmationEmail = $address->getEmail();
             $recipient->confirmationPhone = $address->getTelephone();
@@ -303,7 +313,7 @@ class PurchaseHelper
         $payment = $order->getPayment();
 
         $billingAddress = $order->getBillingAddress();
-        $card = SignifydModel::Make("\\Signifyd\\Models\\Card");
+        $card = SignifydModel::Make(\Signifyd\Models\Card::class);
         $card->cardHolderName = $this->getCardholder($order);
         $card->bin = $this->getBin($order);
         $card->last4 = $this->getLast4($order);
@@ -314,7 +324,6 @@ class PurchaseHelper
         return $card;
     }
 
-
     /** Construct a user account blob
      * @param $order Order
      * @return UserAccount
@@ -322,20 +331,20 @@ class PurchaseHelper
     protected function makeUserAccount(Order $order)
     {
         /* @var $user \Signifyd\Models\UserAccount */
-        $user = SignifydModel::Make("\\Signifyd\\Models\\UserAccount");
+        $user = SignifydModel::Make(\Signifyd\Models\UserAccount::class);
         $user->emailAddress = $order->getCustomerEmail();
         $user->username = $order->getCustomerEmail();
         $user->accountNumber = $order->getCustomerId();
         $user->phone = $order->getBillingAddress()->getTelephone();
 
         /* @var $customer \Magento\Customer\Model\Customer */
-        $customer = $this->objectManager->get('Magento\Customer\Model\Customer')->load($order->getCustomerId());
+        $customer = $this->objectManager->get(\Magento\Customer\Model\Customer::class)->load($order->getCustomerId());
         $this->logger->debug("Customer data: " . json_encode($customer), ['entity' => $order]);
-        if (!is_null($customer) && !$customer->isEmpty()) {
+        if ($customer !== null && !$customer->isEmpty()) {
             $user->createdDate = date('c', strtotime($customer->getCreatedAt()));
         }
         /** @var $orders \Magento\Sales\Model\ResourceModel\Order\Collection */
-        $orders = $this->objectManager->get('\Magento\Sales\Model\ResourceModel\Order\Collection');
+        $orders = $this->objectManager->get(\Magento\Sales\Model\ResourceModel\Order\Collection::class);
         $orders->addFieldToFilter('customer_id', $order->getCustomerId());
         $orders->load();
 
@@ -361,7 +370,7 @@ class PurchaseHelper
     public function getCase(Order $order)
     {
         /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->objectManager->create('Signifyd\Connect\Model\Casedata');
+        $case = $this->objectManager->create(\Signifyd\Connect\Model\Casedata::class);
         $case->load($order->getIncrementId());
         return $case;
     }
@@ -385,7 +394,7 @@ class PurchaseHelper
      */
     public function processOrderData($order)
     {
-        $case = SignifydModel::Make("\\Signifyd\\Models\\CaseModel");
+        $case = SignifydModel::Make(\Signifyd\Models\CaseModel::class);
         $case->card = $this->makeCardInfo($order);
         $case->purchase = $this->makePurchase($order);
         $case->recipient = $this->makeRecipient($order);
@@ -410,7 +419,7 @@ class PurchaseHelper
     public function createNewCase($order)
     {
         /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->objectManager->create('Signifyd\Connect\Model\Casedata');
+        $case = $this->objectManager->create(\Signifyd\Connect\Model\Casedata::class);
         $case->setId($order->getIncrementId())
             ->setSignifydStatus("PENDING")
             ->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()))
@@ -451,7 +460,8 @@ class PurchaseHelper
         $case = $this->getCase($order);
 
         if ($case->isEmpty()) {
-            $this->logger->debug("Guarantee cancel skipped: case not found for order " . $order->getIncrementId(), ['entity' => $order]);
+            $message = 'Guarantee cancel skipped: case not found for order ' . $order->getIncrementId();
+            $this->logger->debug($message, ['entity' => $order]);
             return false;
         }
 
@@ -465,7 +475,8 @@ class PurchaseHelper
         /** @var \Magento\Sales\Model\Order\Item $item */
         foreach ($order->getAllItems() as $item) {
             if ($item->getQtyToCancel() > 0 || $item->getQtyToRefund() > 0) {
-                $this->logger->debug("Guarantee cancel skipped: order still have items not canceled or refunded", ['entity' => $order]);
+                $message = 'Guarantee cancel skipped: order still have items not canceled or refunded';
+                $this->logger->debug($message, ['entity' => $order]);
                 return false;
             }
         }
@@ -565,7 +576,8 @@ class PurchaseHelper
     protected function getCardholder(Order $order)
     {
         try {
-            $cardholderAdapter = $this->paymentVerificationFactory->createPaymentCardholder($order->getPayment()->getMethod());
+            $paymentMethod = $order->getPayment()->getMethod();
+            $cardholderAdapter = $this->paymentVerificationFactory->createPaymentCardholder($paymentMethod);
             $cardholder = $cardholderAdapter->getData($order);
 
             if (empty($cardholder)) {
@@ -602,7 +614,7 @@ class PurchaseHelper
             $last4 = preg_replace('/\D/', '', $last4);
 
             if (!empty($last4) && strlen($last4) == 4 && is_numeric($last4)) {
-                return strval($last4);
+                return (string) $last4;
             }
 
             return null;
@@ -628,7 +640,7 @@ class PurchaseHelper
             $expMonth = $monthAdapter->getData($order);
             $expMonth = preg_replace('/\D/', '', $expMonth);
 
-            $expMonth = intval($expMonth);
+            $expMonth = (int) $expMonth;
             if ($expMonth < 1 || $expMonth > 12) {
                 return null;
             }
@@ -656,7 +668,7 @@ class PurchaseHelper
             $expYear = $yearAdapter->getData($order);
             $expYear = preg_replace('/\D/', '', $expYear);
 
-            $expYear = intval($expYear);
+            $expYear = (int) $expYear;
             if ($expYear <= 0) {
                 return null;
             }
@@ -693,7 +705,7 @@ class PurchaseHelper
                 return null;
             }
 
-            $bin = intval($bin);
+            $bin = (int) $bin;
             // A credit card does not starts with zero, so the bin intaval has to be at least 100.000
             if ($bin < 100000) {
                 return null;
@@ -715,9 +727,11 @@ class PurchaseHelper
     protected function getTransactionId(Order $order)
     {
         try {
-            $transactionIdAdapter = $this->paymentVerificationFactory->createPaymentTransactionId($order->getPayment()->getMethod());
+            $paymentMethod = $order->getPayment()->getMethod();
+            $transactionIdAdapter = $this->paymentVerificationFactory->createPaymentTransactionId($paymentMethod);
 
-            $this->logger->debug('Getting transaction ID using ' . get_class($transactionIdAdapter), ['entity' => $order]);
+            $message = 'Getting transaction ID using ' . get_class($transactionIdAdapter);
+            $this->logger->debug($message, ['entity' => $order]);
 
             $transactionId = $transactionIdAdapter->getData($order);
 

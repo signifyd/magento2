@@ -11,6 +11,6 @@ class Collection extends AbstractCollection
 {
     protected function _construct()
     {
-        $this->_init('Signifyd\Connect\Model\Casedata', 'Signifyd\Connect\Model\ResourceModel\Casedata');
+        $this->_init(\Signifyd\Connect\Model\Casedata::class, \Signifyd\Connect\Model\ResourceModel\Casedata::class);
     }
 }

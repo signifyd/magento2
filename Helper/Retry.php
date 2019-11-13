@@ -127,7 +127,7 @@ class Retry extends AbstractHelper
             $caseData['case'] = $case;
             $caseData['order'] = $order;
             /** @var \Signifyd\Connect\Model\Casedata $caseObj */
-            $caseObj = $this->objectManager->create('Signifyd\Connect\Model\Casedata');
+            $caseObj = $this->objectManager->create(\Signifyd\Connect\Model\Casedata::class);
             $caseObj->updateCase($caseData);
             return true;
         } catch (\Exception $e) {
@@ -161,7 +161,7 @@ class Retry extends AbstractHelper
 
         $caseData = ['order' => $order];
         /** @var \Signifyd\Connect\Model\Casedata $caseObj */
-        $caseObj = $this->objectManager->create('Signifyd\Connect\Model\Casedata');
+        $caseObj = $this->objectManager->create(\Signifyd\Connect\Model\Casedata::class);
         $caseObj->updateOrder($caseData, $orderAction, $case);
     }
 }

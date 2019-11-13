@@ -52,6 +52,7 @@ class Negative implements ArrayInterface
 
         $store = $this->request->getParam('store');
         $website = $this->request->getParam('website');
+        $negativeConfigPath = 'signifyd/advanced/guarantee_negative_action';
 
         if (empty($store)) {
             if (empty($website)) {
@@ -66,7 +67,7 @@ class Negative implements ArrayInterface
             $scopeCode = $store;
         }
 
-        if ($this->coreConfig->getValue('signifyd/advanced/guarantee_negative_action', $scopeType, $scopeCode) == 'hold') {
+        if ($this->coreConfig->getValue($negativeConfigPath, $scopeType, $scopeCode) == 'hold') {
             $options[] = [
                 'value' => 'hold',
                 'label' => 'Leave on hold',

@@ -215,7 +215,7 @@ class FulfillmentHelper
         }
 
         /** @var \Signifyd\Models\Fulfillment $fulfillment */
-        $fulfillment = SignifydModel::Make("\\Signifyd\\Models\\Fulfillment");
+        $fulfillment = SignifydModel::Make(\Signifyd\Models\Fulfillment::class);
         $fulfillment->id = $shipment->getIncrementId();
         $fulfillment->orderId = $shipment->getOrder()->getIncrementId();
         $fulfillment->createdAt = $this->getCreatedAt($shipment);
@@ -338,7 +338,7 @@ class FulfillmentHelper
              */
 
             /** @var \Signifyd\Models\Product $product */
-            $product = SignifydModel::Make("\\Signifyd\\Models\\Product");
+            $product = SignifydModel::Make(\Signifyd\Models\Product::class);
             $product->itemId = $item->getSku();
             $product->itemName = $item->getName();
             $product->itemIsDigital = (bool) $item->getOrderItem()->getIsVirtual();
@@ -413,7 +413,7 @@ class FulfillmentHelper
     public function getDeliveryAddress(\Magento\Sales\Model\Order\Shipment $shipment)
     {
         /** @var \Signifyd\Models\Address $deliveryAddress */
-        $deliveryAddress = SignifydModel::Make("\\Signifyd\\Models\\Address");
+        $deliveryAddress = SignifydModel::Make(\Signifyd\Models\Address::class);
         $deliveryAddress->streetAddress = $this->getStreetAddress($shipment);
         $deliveryAddress->unit = null;
         $deliveryAddress->city = $shipment->getShippingAddress()->getCity();

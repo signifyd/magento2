@@ -62,7 +62,7 @@ class Index extends Action
         // Compatibility with Magento 2.3+ which required form_key on every request
         // Magento expects class to implement \Magento\Framework\App\CsrfAwareActionInterface but this causes
         // a backward incompatibility to Magento versions below 2.3
-        if (interface_exists("\Magento\Framework\App\CsrfAwareActionInterface")) {
+        if (interface_exists(\Magento\Framework\App\CsrfAwareActionInterface::class)) {
             $request = $this->getRequest();
             if ($request instanceof RequestInterface && $request->isPost() && empty($request->getParam('form_key'))) {
                 $request->setParam('form_key', $formKey->getFormKey());
@@ -121,7 +121,7 @@ class Index extends Action
             /** @var $order \Magento\Sales\Model\Order */
             $order = $this->orderFactory->create()->loadByIncrementId($requestJson->orderId);
             /** @var $case \Signifyd\Connect\Model\Casedata */
-            $case = $this->objectManager->create('Signifyd\Connect\Model\Casedata')->load($requestJson->orderId);
+            $case = $this->objectManager->create(\Signifyd\Connect\Model\Casedata::class)->load($requestJson->orderId);
 
             $caseData = [
                 "case" => $case,
@@ -156,7 +156,7 @@ class Index extends Action
 
         if ($signifydApi->validWebhookRequest($request, $hash, $topic)) {
             /** @var \Signifyd\Connect\Model\Casedata $caseObj */
-            $caseObj = $this->objectManager->create('Signifyd\Connect\Model\Casedata');
+            $caseObj = $this->objectManager->create(\Signifyd\Connect\Model\Casedata::class);
             $caseObj->updateCase($caseData);
             $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
             return;

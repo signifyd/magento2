@@ -21,7 +21,6 @@ class TransactionService
         $this->registry = $registry;
     }
 
-
     /**
      * @param \Magento\Authorizenet\Model\TransactionService $subject
      * @param $result

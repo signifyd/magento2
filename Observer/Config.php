@@ -106,7 +106,8 @@ class Config implements ObserverInterface
             if ($databaseFailure) {
                 $this->messageManager->addError("Signifyd: There is one or more database modifications missing. " .
                     "Please, follow instructions on ‘Database Errors’ sections of " .
-                    "<a href='https://github.com/signifyd/magento2/blob/master/README.md' target='_blank'>README</a> on GitHub");
+                    "<a href='https://github.com/signifyd/magento2/blob/master/README.md' target='_blank'>README</a> " .
+                    "on GitHub");
 
                 $enablePath = 'signifyd/general/enabled';
 

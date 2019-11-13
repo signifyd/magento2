@@ -61,7 +61,8 @@ class RetryCaseJob
         $waitingCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::WAITING_SUBMISSION_STATUS);
 
         foreach ($waitingCases as $case) {
-            $this->logger->debug("Signifyd: preparing for send case no: {$case['order_increment']}", ['entity' => $case]);
+            $message = "Signifyd: preparing for send case no: {$case['order_increment']}";
+            $this->logger->debug($message, ['entity' => $case]);
 
             $order = $this->getOrder($case['order_increment']);
 
@@ -70,7 +71,7 @@ class RetryCaseJob
 
             if ($result) {
                 /** @var \Signifyd\Connect\Model\Casedata $caseObj */
-                $caseObj = $this->_objectManager->create('Signifyd\Connect\Model\Casedata')
+                $caseObj = $this->_objectManager->create(\Signifyd\Connect\Model\Casedata::class)
                     ->load($case->getOrderIncrement())
                     ->setCode($result)
                     ->setMagentoStatus(Casedata::IN_REVIEW_STATUS)
@@ -85,7 +86,8 @@ class RetryCaseJob
         $inReviewCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::IN_REVIEW_STATUS);
 
         foreach ($inReviewCases as $case) {
-            $this->logger->debug("Signifyd: preparing for review case no: {$case['order_increment']}", ['entity' => $case]);
+            $message = "Signifyd: preparing for review case no: {$case['order_increment']}";
+            $this->logger->debug($message, ['entity' => $case]);
 
             $this->caseRetryObj->processInReviewCase($case, $this->getOrder($case['order_increment']));
         }
@@ -96,7 +98,8 @@ class RetryCaseJob
         $inProcessingCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::PROCESSING_RESPONSE_STATUS);
 
         foreach ($inProcessingCases as $case) {
-            $this->logger->debug("Signifyd: preparing for process case no: {$case['order_increment']}", ['entity' => $case]);
+            $message = "Signifyd: preparing for process case no: {$case['order_increment']}";
+            $this->logger->debug($message, ['entity' => $case]);
 
             $this->caseRetryObj->processResponseStatus($case, $this->getOrder($case['order_increment']));
         }
@@ -108,6 +111,6 @@ class RetryCaseJob
 
     public function getOrder($incrementId)
     {
-        return $this->_objectManager->get('Magento\Sales\Model\Order')->loadByIncrementId($incrementId);
+        return $this->_objectManager->get(\Magento\Sales\Model\Order::class)->loadByIncrementId($incrementId);
     }
 }

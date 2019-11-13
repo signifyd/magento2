@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Signifyd\Connect\Test\Integration\Cases\Refund\Partial;
+namespace Signifyd\Connect\Test\Integration\Cases\Refund\Full;
 
 use Signifyd\Connect\Test\Integration\Cases\Cron\ReviewTest;
 

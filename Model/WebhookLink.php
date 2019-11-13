@@ -60,6 +60,9 @@ class WebhookLink implements CommentInterface
             $url = "{{store url}}/signifyd_connect/webhooks/index";
         }
 
-        return "{$url} <br /> Use this URL to setup your Magento <a href='https://app.signifyd.com/settings/notifications' target='_blank'>webhook</a> from the Signifyd console. You MUST setup the webhook to enable order workflows and syncing of guarantees back to Magento.";
+        return "{$url} <br /> Use this URL to setup your Magento " .
+            "<a href='https://app.signifyd.com/settings/notifications' target='_blank'>webhook</a> " .
+            "from the Signifyd console. You MUST setup the webhook to enable order workflows ".
+            "and syncing of guarantees back to Magento.";
     }
 }

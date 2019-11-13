@@ -62,7 +62,7 @@ class Unhold extends \Magento\Sales\Controller\Adminhtml\Order\Unhold
         }
 
         /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->_objectManager->get('Signifyd\Connect\Model\Casedata');
+        $case = $this->_objectManager->get(\Signifyd\Connect\Model\Casedata::class);
         $case->load($order->getIncrementId());
 
         if (!$case->isHoldReleased()) {
@@ -72,7 +72,8 @@ class Unhold extends \Magento\Sales\Controller\Adminhtml\Order\Unhold
 
         $resultRedirect = parent::execute();
 
-        $order->addStatusHistoryComment("Signifyd: order status updated by {$this->authSession->getUser()->getUserName()}");
+        $message = "Signifyd: order status updated by {$this->authSession->getUser()->getUserName()}";
+        $order->addStatusHistoryComment($message);
         $order->save();
 
         return $resultRedirect;

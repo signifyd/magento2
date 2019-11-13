@@ -35,8 +35,8 @@ trait MapperTrait
 
                 $customCurlClient = false;
 
-                if (class_exists('\Stripe\HttpClient\CurlClient') &&
-                    is_callable(['\Stripe\ApiRequestor', 'setHttpClient'])
+                if (class_exists(\Stripe\HttpClient\CurlClient::class) &&
+                    is_callable([\Stripe\ApiRequestor::class, 'setHttpClient'])
                 ) {
                     $curl = new \Stripe\HttpClient\CurlClient();
                     $curl->setTimeout(2);

@@ -84,7 +84,8 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 // If anything is different, so use $oldRestrictedPaymentMethods on database settings
                 if (empty($diff1) == false || empty($diff2) == false) {
                     $oldRestrictedPaymentMethods = implode(',', $oldRestrictedPaymentMethods);
-                    $this->configWriter->save('signifyd/general/restrict_payment_methods', $oldRestrictedPaymentMethods);
+                    $restrictedPaymentMethodsPath = 'signifyd/general/restrict_payment_methods';
+                    $this->configWriter->save($restrictedPaymentMethodsPath, $oldRestrictedPaymentMethods);
                 }
             }
         }

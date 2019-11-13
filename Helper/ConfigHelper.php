@@ -150,7 +150,8 @@ class ConfigHelper
         if (isset($this->signifydAPI[$storeCode]) === false ||
             $this->signifydAPI[$storeCode] instanceof \Signifyd\Core\SignifydAPI == false) {
             $signifydSettingsMagento = $this->getSignifydSettingsMagento($entity);
-            $this->signifydAPI[$storeCode] = $this->signifydAPIFactory->create(['settings' => $signifydSettingsMagento]);
+            $data = ['settings' => $signifydSettingsMagento];
+            $this->signifydAPI[$storeCode] = $this->signifydAPIFactory->create($data);
         }
 
         return $this->signifydAPI[$storeCode];

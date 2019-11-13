@@ -15,7 +15,7 @@ class CardholderMapper extends DataMapper
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $cardholder = $order->getPayment()->getCcOwner();
-        $cardholder = is_null($cardholder) ? '' : $cardholder;
+        $cardholder = $cardholder === null ? '' : $cardholder;
         return $cardholder;
     }
 }

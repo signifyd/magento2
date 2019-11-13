@@ -18,7 +18,8 @@ class TransactionIdMapper extends Base_TransactionIdMapper
     {
         $transactionId = $this->getSignifydPaymentData('PNREF');
 
-        $this->logger->debug('Transaction ID found on payment mapper: ' . (empty($transactionId) ? 'false' : $transactionId), ['entity' => $order]);
+        $message = 'Transaction ID found on payment mapper: ' . (empty($transactionId) ? 'false' : $transactionId);
+        $this->logger->debug($message, ['entity' => $order]);
 
         if (empty($transactionId)) {
             $transactionId = parent::getPaymentData($order);

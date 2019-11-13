@@ -23,7 +23,8 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
             $avsStatus = null;
         }
 
-        $this->logger->debug('AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus), ['entity' => $order]);
+        $message = 'AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
+        $this->logger->debug($message, ['entity' => $order]);
 
         if (empty($avsStatus)) {
             $avsStatus = parent::getPaymentData($order);
