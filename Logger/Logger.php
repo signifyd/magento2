@@ -30,9 +30,9 @@ class Logger extends \Monolog\Logger
      */
     public function __construct(
         $name,
+        ConfigHelper $configHelper,
         array $handlers = [],
-        array $processors = [],
-        ConfigHelper $configHelper = null
+        array $processors = []
     ) {
         $this->configHelper = $configHelper;
         $this->log = $this->configHelper->getConfigData('signifyd/logs/log');
