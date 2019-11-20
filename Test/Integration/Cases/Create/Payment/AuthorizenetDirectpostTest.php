@@ -19,7 +19,7 @@ class AuthorizenetDirectpostTest extends OrderTestCase
     public function testCreateCaseAuthorizenetDirectpost()
     {
         $ccTransId = rand(90000000000, 99999999999);
-        $xmlFile = __DIR__ . '/../../../_files/settings/payment/authorizenet_directpost/transaction_details_response.xml';
+        $xmlFile = __DIR__.'/../../../_files/settings/payment/authorizenet_directpost/transaction_details_response.xml';
 
         $order = $this->placeQuote($this->getQuote('guest_quote'));
         $order->getPayment()->setCcAvsStatus('Y');

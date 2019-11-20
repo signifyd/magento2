@@ -58,8 +58,7 @@ class ConfigHelper
         \Signifyd\Connect\Helper\SignifydSettingsMagentoFactory $signifydSettingsMagentoFactory,
         \Signifyd\Connect\Api\Core\SignifydAPIFactory $signifydAPIFactory,
         \Magento\Store\Model\StoreManagerInterface $storeManager
-    )
-    {
+    ) {
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->signifydSettingsMagentoFactory = $signifydSettingsMagentoFactory;
         $this->signifydAPIFactory = $signifydAPIFactory;
@@ -151,7 +150,8 @@ class ConfigHelper
         if (isset($this->signifydAPI[$storeCode]) === false ||
             $this->signifydAPI[$storeCode] instanceof \Signifyd\Core\SignifydAPI == false) {
             $signifydSettingsMagento = $this->getSignifydSettingsMagento($entity);
-            $this->signifydAPI[$storeCode] = $this->signifydAPIFactory->create(array('settings' => $signifydSettingsMagento));
+            $data = ['settings' => $signifydSettingsMagento];
+            $this->signifydAPI[$storeCode] = $this->signifydAPIFactory->create($data);
         }
 
         return $this->signifydAPI[$storeCode];

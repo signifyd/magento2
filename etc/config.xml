@@ -57,6 +57,14 @@
                 <signifyd_exp_month_adapter>Signifyd\Connect\Model\Payment\Payflow\Link\ExpMonthMapper</signifyd_exp_month_adapter>
                 <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\Payflow\Link\ExpYearMapper</signifyd_exp_year_adapter>
             </payflow_advanced>
+
+            <stripe_payments>
+                <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Stripe\Payments\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
+                <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Stripe\Payments\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
+                <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\Stripe\Payments\Last4Mapper</signifyd_last4_adapter>
+                <signifyd_exp_month_adapter>Signifyd\Connect\Model\Payment\Stripe\Payments\ExpMonthMapper</signifyd_exp_month_adapter>
+                <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\Stripe\Payments\ExpYearMapper</signifyd_exp_year_adapter>
+            </stripe_payments>
         </payment>
     </default>
 </config>

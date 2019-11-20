@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\CvvEmsCodeMapper as Base_CvvEmsCodeMappe
 
 class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
 {
-    protected $allowedMethods = array('payflow_link', 'payflow_advanced');
+    protected $allowedMethods = ['payflow_link', 'payflow_advanced'];
 
     /**
      * Gets payment CVV verification code.
@@ -19,10 +19,11 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
         $cvvStatus = $this->getSignifydPaymentData('PROCCVV2');
 
         if ($this->validate($cvvStatus) == false) {
-            $cvvStatus = NULL;
+            $cvvStatus = null;
         }
 
-        $this->logger->debug('CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus), array('entity' => $order));
+        $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);
+        $this->logger->debug($message, ['entity' => $order]);
 
         if (empty($cvvStatus)) {
             $cvvStatus = parent::getPaymentData($order);

@@ -9,7 +9,6 @@ namespace Signifyd\Connect\Api\Core;
  * After remove this class it is necessary to replace all its occurrences with \Signifyd\Core\SignifydAPIFactory
  *
  * Class SignifydAPIFactory
- * @package Signifyd\Connect\Api\Core
  */
 class SignifydAPIFactory extends \Signifyd\Core\SignifydAPIFactory
 {

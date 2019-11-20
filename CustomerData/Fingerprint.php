@@ -7,10 +7,6 @@ use Magento\Framework\DataObject;
 use Magento\Checkout\Model\Session;
 use Signifyd\Connect\Helper\DeviceHelper;
 
-/**
- * Class FingerprintSection
- * @package Signifyd\Connect\CustomerData
- */
 class Fingerprint extends DataObject implements SectionSourceInterface
 {
     /**

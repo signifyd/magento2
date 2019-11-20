@@ -39,28 +39,19 @@ class Router implements \Magento\Framework\App\RouterInterface
         if ($request->getModuleName() === 'signifyd_connect') {
             return;
         }
-        /*
-         * We will search “examplerouter” and “exampletocms” words and make forward depend on word
-         * -examplerouter will forward to base router to match Signifydtest front name, test controller path and test controller class
-         * -exampletocms will set front name to cms, controller path to page and action to view
-         */
+
         $identifier = trim($request->getPathInfo(), '/');
 
-        if(strpos($identifier, 'signifyd/webhooks') !== false && strpos($identifier, 'signifyd/webhooks/handler') === false) {
-            /*
-             * We must set module, controller path and action name for our controller class(Controller/Test/Test.php)
-             */
+        if (strpos($identifier, 'signifyd/webhooks') !== false &&
+            strpos($identifier, 'signifyd/webhooks/handler') === false
+        ) {
             $request->setModuleName('signifyd_connect')->setControllerName('webhooks')->setActionName('index');
         } else {
-            //There is no match
             return;
         }
 
-        /*
-         * We have match and now we will forward action
-         */
         return $this->actionFactory->create(
-            'Magento\Framework\App\Action\Forward',
+            \Magento\Framework\App\Action\Forward::class,
             ['request' => $request]
         );
     }

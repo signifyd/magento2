@@ -17,11 +17,9 @@ class TransactionService
      */
     public function __construct(
         Registry $registry
-    )
-    {
+    ) {
         $this->registry = $registry;
     }
-
 
     /**
      * @param \Magento\Authorizenet\Model\TransactionService $subject

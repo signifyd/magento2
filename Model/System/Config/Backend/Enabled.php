@@ -58,7 +58,7 @@ class Enabled extends \Magento\Framework\App\Config\Value
         }
 
         $objectManager = ObjectManager::getInstance();
-        $moduleManager = $objectManager->get('\Magento\Framework\Module\Manager');
+        $moduleManager = $objectManager->get(\Magento\Framework\Module\Manager::class);
         $isBuiltinEnabled = $moduleManager->isOutputEnabled('Magento_Signifyd') ? true : false;
 
         if (!$isBuiltinEnabled) {
@@ -79,7 +79,9 @@ class Enabled extends \Magento\Framework\App\Config\Value
                     $this->setValue(0);
                 }
 
-                $this->messageManager->addError(__('ERROR: Another Signifyd integration is already enabled. You must disable the active integration before enabling a new one.'));
+                $message = __('ERROR: Another Signifyd integration is already enabled. ' .
+                    'You must disable the active integration before enabling a new one.');
+                $this->messageManager->addErrorMessage($message);
 
                 break;
             }

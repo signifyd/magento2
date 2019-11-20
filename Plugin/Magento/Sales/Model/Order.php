@@ -33,8 +33,7 @@ class Order
         Debugger $logger,
         ConfigHelper $configHelper,
         UrlInterface $url
-    )
-    {
+    ) {
         $this->logger = $logger;
         $this->configHelper = $configHelper;
         $this->url = $url;
@@ -53,8 +52,9 @@ class Order
             // Log level 2 => debug
             if ($log == 2) {
                 $currentState = $subject->getState();
+                $incrementId = $subject->getIncrementId();
 
-                $this->logger->debug("Order {$subject->getIncrementId()} state change from {$currentState} to {$state}");
+                $this->logger->debug("Order {$incrementId} state change from {$currentState} to {$state}");
                 $this->logger->debug("Request URL: {$this->url->getCurrentUrl()}");
 
                 $debugBacktrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
@@ -68,7 +68,7 @@ class Order
                     if (isset($step['class'])) {
                         $function .= $step['class'];
 
-                        if ($step['class'] != 'Signifyd\Connect\Plugin\Magento\Sales\Model\Order') {
+                        if ($step['class'] != \Signifyd\Connect\Plugin\Magento\Sales\Model\Order::class) {
                             list($vendor, $module, $class) = explode('\\', $step['class'], 3);
 
                             if ($vendor != "Magento") {
@@ -108,6 +108,6 @@ class Order
             $this->logger->debug('Exception logging order state change: ' . $e->getMessage());
         }
 
-        return array($state);
+        return [$state];
     }
 }

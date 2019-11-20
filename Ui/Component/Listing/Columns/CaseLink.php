@@ -13,7 +13,7 @@ use Magento\Ui\Component\Listing\Columns\Column;
 use Magento\Framework\Serialize\SerializerInterface;
 
 /**
- * Class CaseLink
+ * Class CaseLink show case link on orger grid
  */
 class CaseLink extends Column
 {
@@ -62,10 +62,12 @@ class CaseLink extends Column
             foreach ($dataSource['data']['items'] as &$item) {
                 // Scores should be whole numbers
                 if (is_numeric($item[$name])) {
-                    $item[$name] = intval($item[$name]);
+                    $item[$name] = (int) $item[$name];
                 } else {
                     /** @var \Signifyd\Connect\Model\Casedata $case */
-                    $case = $this->objectManager->create('Signifyd\Connect\Model\Casedata')->load($item['increment_id']);
+                    $case = $this->objectManager
+                        ->create(\Signifyd\Connect\Model\Casedata::class)
+                        ->load($item['increment_id']);
                     $entries = $case->getEntriesText();
 
                     if (!empty($entries)) {
@@ -73,7 +75,11 @@ class CaseLink extends Column
                             $entries = $this->serializer->unserialize($entries);
                         } catch (\InvalidArgumentException $e) {
                         }
-                        if (is_array($entries) && isset($entries['testInvestigation']) && $entries['testInvestigation'] == true) {
+
+                        if (is_array($entries) &&
+                            isset($entries['testInvestigation']) &&
+                            $entries['testInvestigation'] == true
+                        ) {
                             $item[$name] = "TEST: {$item[$name]}";
                         }
                     }

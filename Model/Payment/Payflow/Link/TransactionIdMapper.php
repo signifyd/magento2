@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\TransactionIdMapper as Base_TransactionI
 
 class TransactionIdMapper extends Base_TransactionIdMapper
 {
-    protected $allowedMethods = array('payflow_link', 'payflow_advanced');
+    protected $allowedMethods = ['payflow_link', 'payflow_advanced'];
 
     /**
      * Gets transaction ID from Payflow response
@@ -18,7 +18,8 @@ class TransactionIdMapper extends Base_TransactionIdMapper
     {
         $transactionId = $this->getSignifydPaymentData('PNREF');
 
-        $this->logger->debug('Transaction ID found on payment mapper: ' . (empty($transactionId) ? 'false' : $transactionId), array('entity' => $order));
+        $message = 'Transaction ID found on payment mapper: ' . (empty($transactionId) ? 'false' : $transactionId);
+        $this->logger->debug($message, ['entity' => $order]);
 
         if (empty($transactionId)) {
             $transactionId = parent::getPaymentData($order);

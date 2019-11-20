@@ -15,9 +15,10 @@ class ExpYearMapper extends DataMapper
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $expYear = $order->getPayment()->getCcExpYear();
-        $expYear = is_null($expYear) ? '' : $expYear;
+        $expYear = $expYear === null ? '' : $expYear;
 
-        $this->logger->debug('Expiry year found on base mapper: ' . (empty($expYear) ? 'false' : $expYear), array('entity' => $order));
+        $message = 'Expiry year found on base mapper: ' . (empty($expYear) ? 'false' : $expYear);
+        $this->logger->debug($message, ['entity' => $order]);
 
         return $expYear;
     }

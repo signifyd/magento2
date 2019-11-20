@@ -20,8 +20,7 @@ class SignifydSettingsMagento extends SignifydSettings
         Logger $logger,
         DirectoryList $directoryList
     ) {
-        $this->loggerError = function($message) use ($logger)
-        {
+        $this->loggerError = function ($message) use ($logger) {
             $logger->error("API Error: " . $message);
         };
         $this->logFileLocation = $directoryList->getPath('log');

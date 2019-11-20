@@ -14,6 +14,6 @@ class Fulfillment extends AbstractModel
 
     protected function _construct()
     {
-        $this->_init('Signifyd\Connect\Model\ResourceModel\Fulfillment');
+        $this->_init(\Signifyd\Connect\Model\ResourceModel\Fulfillment::class);
     }
 }

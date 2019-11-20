@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\AvsEmsCodeMapper as Base_AvsEmsCodeMappe
 
 class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
 {
-    protected $allowedMethods = array('payflow_link', 'payflow_advanced');
+    protected $allowedMethods = ['payflow_link', 'payflow_advanced'];
 
     /**
      * Gets payment AVS verification code.
@@ -20,10 +20,11 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
         $avsStatus = $this->getSignifydPaymentData('PROCAVS');
 
         if ($this->validate($avsStatus) == false) {
-            $avsStatus = NULL;
+            $avsStatus = null;
         }
 
-        $this->logger->debug('AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus), array('entity' => $order));
+        $message = 'AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
+        $this->logger->debug($message, ['entity' => $order]);
 
         if (empty($avsStatus)) {
             $avsStatus = parent::getPaymentData($order);

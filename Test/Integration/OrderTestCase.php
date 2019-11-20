@@ -113,7 +113,9 @@ class OrderTestCase extends TestCase
         $invoice->save();
         $order->save();
 
-        $invoice = $this->objectManager->get(\Magento\Sales\Api\InvoiceRepositoryInterface::class)->get($invoice->getId());
+        $invoice = $this->objectManager
+            ->get(\Magento\Sales\Api\InvoiceRepositoryInterface::class)
+            ->get($invoice->getId());
 
         /** @var \Magento\Sales\Model\Order\CreditmemoFactory $creditmemoFactory */
         $creditmemoFactory = $this->objectManager->get(\Magento\Sales\Model\Order\CreditmemoFactory::class);

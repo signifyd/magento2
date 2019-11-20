@@ -45,7 +45,7 @@ class View extends \Magento\Sales\Block\Adminhtml\Order\View
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 
         /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $objectManager->get('Signifyd\Connect\Model\Casedata');
+        $case = $objectManager->get(\Signifyd\Connect\Model\Casedata::class);
         $case->load($order->getIncrementId());
         return $case;
     }

@@ -8,7 +8,9 @@ class Collection extends AbstractCollection
 {
     protected function _construct()
     {
-        $this->_init('Signifyd\Connect\Model\Fulfillment', 'Signifyd\Connect\Model\ResourceModel\Fulfillment');
+        $this->_init(
+            \Signifyd\Connect\Model\Fulfillment::class,
+            \Signifyd\Connect\Model\ResourceModel\Fulfillment::class
+        );
     }
-
 }

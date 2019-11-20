@@ -25,8 +25,7 @@ class BuiltinConflict implements \Magento\Framework\Notification\MessageInterfac
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $config,
         \Magento\Store\Model\StoreRepository $storeRepository
-    )
-    {
+    ) {
         $this->config = $config;
         $this->storeRepository = $storeRepository;
     }
@@ -39,7 +38,7 @@ class BuiltinConflict implements \Magento\Framework\Notification\MessageInterfac
     public function isDisplayed()
     {
         $objectManager = ObjectManager::getInstance();
-        $moduleManager = $objectManager->get('\Magento\Framework\Module\Manager');
+        $moduleManager = $objectManager->get(\Magento\Framework\Module\Manager::class);
         $isBuiltinModuleEnabled = $moduleManager->isOutputEnabled('Magento_Signifyd') ? true : false;
 
         if (!$isBuiltinModuleEnabled) {
@@ -87,7 +86,8 @@ class BuiltinConflict implements \Magento\Framework\Notification\MessageInterfac
      */
     public function getText()
     {
-        return __('WARNING: You have multiple Signifyd integrations enabled. To avoid conflicts, please disable one of the enabled integrations.');
+        return __('WARNING: You have multiple Signifyd integrations enabled. ' .
+            'To avoid conflicts, please disable one of the enabled integrations.');
     }
     /**
      * Retrieve message severity

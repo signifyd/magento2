@@ -54,12 +54,15 @@ class WebhookLink implements CommentInterface
             $storeId = empty($storeId) ? $this->storeManager->getDefaultStoreView()->getId() : $storeId;
             $this->urlBuilder->setScope($storeId);
 
-            $url = $this->urlBuilder->getUrl('signifyd_connect/webhooks/index', array('_nosid' => true));
+            $url = $this->urlBuilder->getUrl('signifyd_connect/webhooks/index', ['_nosid' => true]);
             $url = "<a href=\"" . $url . "\">$url</a>";
         } else {
             $url = "{{store url}}/signifyd_connect/webhooks/index";
         }
 
-        return "{$url} <br /> Use this URL to setup your Magento <a href='https://app.signifyd.com/settings/notifications' target='_blank'>webhook</a> from the Signifyd console. You MUST setup the webhook to enable order workflows and syncing of guarantees back to Magento.";
+        return "{$url} <br /> Use this URL to setup your Magento " .
+            "<a href='https://app.signifyd.com/settings/notifications' target='_blank'>webhook</a> " .
+            "from the Signifyd console. You MUST setup the webhook to enable order workflows ".
+            "and syncing of guarantees back to Magento.";
     }
 }

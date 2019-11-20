@@ -15,9 +15,10 @@ class ExpMonthMapper extends DataMapper
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $expMonth = $order->getPayment()->getCcExpMonth();
-        $expMonth = is_null($expMonth) ? '' : $expMonth;
+        $expMonth = $expMonth === null ? '' : $expMonth;
 
-        $this->logger->debug('Expiry month found on base mapper: ' . (empty($expMonth) ? 'false' : $expMonth), array('entity' => $order));
+        $message = 'Expiry month found on base mapper: ' . (empty($expMonth) ? 'false' : $expMonth);
+        $this->logger->debug($message, ['entity' => $order]);
 
         return $expMonth;
     }

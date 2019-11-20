@@ -32,27 +32,27 @@ class Negative implements ArrayInterface
     public function __construct(
         ScopeConfigInterface $coreConfig,
         \Magento\Framework\App\RequestInterface $request
-    )
-    {
+    ) {
         $this->coreConfig = $coreConfig;
         $this->request = $request;
     }
 
     public function toOptionArray()
     {
-        $options = array(
-            array(
+        $options = [
+            [
                 'value' => 'nothing',
                 'label' => 'Do nothing'
-            ),
-            array(
+            ],
+            [
                 'value' => 'cancel',
                 'label' => 'Void payment and cancel order'
-            )
-        );
+            ]
+        ];
 
         $store = $this->request->getParam('store');
         $website = $this->request->getParam('website');
+        $negativeConfigPath = 'signifyd/advanced/guarantee_negative_action';
 
         if (empty($store)) {
             if (empty($website)) {
@@ -67,11 +67,11 @@ class Negative implements ArrayInterface
             $scopeCode = $store;
         }
 
-        if ($this->coreConfig->getValue('signifyd/advanced/guarantee_negative_action', $scopeType, $scopeCode) == 'hold') {
-            $options[] = array(
+        if ($this->coreConfig->getValue($negativeConfigPath, $scopeType, $scopeCode) == 'hold') {
+            $options[] = [
                 'value' => 'hold',
                 'label' => 'Leave on hold',
-            );
+            ];
         }
 
         return $options;
