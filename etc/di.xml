@@ -97,8 +97,4 @@
     <type name="Magento\Sales\Model\Order">
         <plugin name="Signifyd_Connect_Magento_Sales_Model_Order" type="\Signifyd\Connect\Plugin\Magento\Sales\Model\Order" />
     </type>
-
-    <type name="StripeIntegration\Payments\Helper\Generic">
-        <plugin name="Signifyd_Connect_StripeIntegration_Payments_Helper_Generic" type="\Signifyd\Connect\Plugin\StripeIntegration\Payments\Helper\Generic" />
-    </type>
 </config>
