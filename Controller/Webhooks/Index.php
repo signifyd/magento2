@@ -11,6 +11,7 @@ use Magento\Framework\Stdlib\DateTime\DateTime;
 use Signifyd\Connect\Logger\Logger;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Filesystem\Driver\File;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
@@ -38,11 +39,19 @@ class Index extends Action
     protected $orderFactory;
 
     /**
+     * @var File
+     */
+    protected $file;
+
+    /**
+     * Index constructor.
      * @param Context $context
      * @param DateTime $dateTime
      * @param Logger $logger
      * @param \Signifyd\Connect\Helper\ConfigHelper $configHelper
      * @param \Magento\Sales\Model\OrderFactory $orderFactory
+     * @param \Magento\Framework\Data\Form\FormKey $formKey
+     * @param \Magento\Framework\View\File $file
      */
     public function __construct(
         Context $context,
@@ -50,7 +59,8 @@ class Index extends Action
         Logger $logger,
         \Signifyd\Connect\Helper\ConfigHelper $configHelper,
         \Magento\Sales\Model\OrderFactory $orderFactory,
-        \Magento\Framework\Data\Form\FormKey $formKey
+        \Magento\Framework\Data\Form\FormKey $formKey,
+        File $file
     ) {
         parent::__construct($context);
 
@@ -58,6 +68,7 @@ class Index extends Action
         $this->objectManager = $context->getObjectManager();
         $this->configHelper = $configHelper;
         $this->orderFactory = $orderFactory;
+        $this->file = $file;
 
         // Compatibility with Magento 2.3+ which required form_key on every request
         // Magento expects class to implement \Magento\Framework\App\CsrfAwareActionInterface but this causes
@@ -79,7 +90,7 @@ class Index extends Action
             return $HTTP_RAW_POST_DATA;
         }
 
-        $post = file_get_contents("php://input");
+        $post = $this->file->fileGetContents("php://input");
 
         if ($post) {
             return $post;

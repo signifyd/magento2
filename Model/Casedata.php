@@ -466,17 +466,18 @@ class Casedata extends AbstractModel
 
                 break;
 
+            // Do nothing, but do not complete the case on Magento side
+            // This action should be used when something is processing on Signifyd end and extension should wait
+            // E.g.: Signifyd returns guarantee disposition PENDING because case it is on manual review
+            case 'wait':
+                $orderAction['action'] = false;
+                break;
+
             // Nothing is an action from Signifyd workflow, different from when no action is given (null or empty)
             // If workflow is set to do nothing, so complete the case
             case 'nothing':
                 $orderAction['action'] = false;
-
-                try {
-                    $completeCase = true;
-                } catch (\Exception $e) {
-                    $this->logger->debug($e->__toString(), ['entity' => $case]);
-                    return false;
-                }
+                $completeCase = true;
                 break;
         }
 
@@ -513,8 +514,13 @@ class Casedata extends AbstractModel
         switch ($response->guaranteeDisposition) {
             case "DECLINED":
                 return ["action" => $negativeAction, "reason" => "guarantee declined"];
+
             case "APPROVED":
                 return ["action" => $positiveAction, "reason" => "guarantee approved"];
+
+            case 'PENDING':
+                return ["action" => 'wait', "reason" => 'case in manual review'];
+
             default:
                 $message = "Signifyd: Unknown guaranty: " . $response->guaranteeDisposition;
                 $this->logger->debug($message, ['entity' => $caseData['case']]);
