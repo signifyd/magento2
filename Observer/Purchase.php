@@ -191,6 +191,19 @@ class Purchase implements ObserverInterface
             // Add order to database
             $case = $this->helper->createNewCase($order);
 
+            // Stop case sending if order has an async payment method
+            if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig())) {
+                $case->setMagentoStatus(Casedata::ASYNC_WAIT);
+                try {
+                    $case->save();
+                    $this->logger->debug('Case for order:#' . $incrementId . ' was not sent because of an async payment method');
+                } catch (\Exception $ex) {
+                    $this->logger->error($ex->__toString());
+                }
+
+                return;
+            }
+
             // Post case to signifyd service
             $result = $this->helper->postCaseToSignifyd($orderData, $order);
 
@@ -236,6 +249,20 @@ class Purchase implements ObserverInterface
         } else {
             return false;
         }
+    }
+
+    /**
+     * Get restricted payment methods from store configs
+     *
+     * @return array|mixed
+     */
+    public function getAsyncPaymentMethodsConfig()
+    {
+        $asyncPaymentMethods = $this->configHelper->getConfigData('signifyd/general/async_payment_methods');
+        $asyncPaymentMethods = explode(',', $asyncPaymentMethods);
+        $asyncPaymentMethods = array_map('trim', $asyncPaymentMethods);
+
+        return $asyncPaymentMethods;
     }
 
     /**
