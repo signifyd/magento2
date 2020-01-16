@@ -33,6 +33,9 @@ class Casedata extends AbstractModel
     /* The status for a case that is completed */
     const COMPLETED_STATUS              = "completed";
 
+    /* The status for a case that is awiting async payment methods to finish */
+    const ASYNC_WAIT                    = "async_wait";
+
     /**
      * @var \Signifyd\Connect\Helper\ConfigHelper
      */
