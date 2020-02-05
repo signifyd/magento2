@@ -2,6 +2,12 @@
 
 # Install Troubleshoot
 
+## Stripe payments error on 3.5.0 and 3.5.1
+
+This is a known bug that has been fixed on 3.5.2 release. Upgrade to latest version to fix it
+
+If during installation or on checkout process an exception with message "Payment model name is not provided in config" is raised and store does not have stripe_payments payment method installed and store is using Signifyd version 3.5.0 or 3.5.1, upgrate to latest version to fix it.
+
 ## Third-party cache errors
 
 If something does not go as expected, try to clear any additional caches on the environment (e.g. PHP APC or OPCache, Redis, Varnish).
