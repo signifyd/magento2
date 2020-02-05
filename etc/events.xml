@@ -5,6 +5,7 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
     <event name="sales_order_save_commit_after">
         <observer name="onPurchase" instance="Signifyd\Connect\Observer\Purchase" />
+        <observer name="signifydDebugLogs" instance="Signifyd\Connect\Observer\Debug\Order" />
     </event>
 
     <event name="checkout_submit_all_after">

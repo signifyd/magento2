@@ -54,55 +54,8 @@ class Order
                 $currentState = $subject->getState();
                 $incrementId = $subject->getIncrementId();
 
-                $this->logger->debug("Order {$incrementId} state change from {$currentState} to {$state}");
+                $this->logger->debug("setState on order {$incrementId} state change from {$currentState} to {$state}");
                 $this->logger->debug("Request URL: {$this->url->getCurrentUrl()}");
-
-                $debugBacktrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-                $debugBacktraceLog = [];
-                $nonMagentoModules = [];
-
-                foreach ($debugBacktrace as $i => $step) {
-                    $debugBacktraceLog[$i] = [];
-                    $function = '';
-
-                    if (isset($step['class'])) {
-                        $function .= $step['class'];
-
-                        if ($step['class'] != \Signifyd\Connect\Plugin\Magento\Sales\Model\Order::class) {
-                            list($vendor, $module, $class) = explode('\\', $step['class'], 3);
-
-                            if ($vendor != "Magento") {
-                                $nonMagentoModules["{$vendor}\\{$module}"] = '';
-                            }
-                        }
-                    }
-
-                    if (isset($step['type'])) {
-                        $function .= $step['type'];
-                    }
-
-                    if (isset($step['function'])) {
-                        $function .= $step['function'];
-                    }
-
-                    $debugBacktraceLog[$i][] = "\t[{$i}] {$function}";
-
-                    $file = isset($step['file']) ? str_replace(BP, '', $step['file']) : false;
-
-                    if ($file !== false) {
-                        $debugBacktraceLog[$i][] = "line {$step['line']} on {$file}";
-                    }
-
-                    $debugBacktraceLog[$i] = implode(', ', $debugBacktraceLog[$i]);
-                }
-
-                if (empty($nonMagentoModules) == false) {
-                    $nonMagentoModulesList = implode(', ', array_keys($nonMagentoModules));
-                    $this->logger->debug("WARNING: non Magento modules found on backtrace: {$nonMagentoModulesList}");
-                }
-
-                $debugBacktraceLog = implode("\n", $debugBacktraceLog);
-                $this->logger->debug("Backtrace: \n{$debugBacktraceLog}\n\n");
             }
         } catch (\Exception $e) {
             $this->logger->debug('Exception logging order state change: ' . $e->getMessage());
