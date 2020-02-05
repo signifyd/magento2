@@ -108,7 +108,8 @@ class Order implements ObserverInterface
 
                     if (empty($nonMagentoModules) == false) {
                         $nonMagentoModulesList = implode(', ', array_keys($nonMagentoModules));
-                        $this->logger->debug("WARNING: non Magento modules found on backtrace: {$nonMagentoModulesList}");
+                        $this->logger->debug("WARNING: non Magento modules found on backtrace: " .
+                            $nonMagentoModulesList);
                     }
 
                     $debugBacktraceLog = implode("\n", $debugBacktraceLog);
@@ -116,6 +117,7 @@ class Order implements ObserverInterface
                 }
             }
         } catch (\Exception $e) {
+            $this->logger->debug("State debug failed: " . $e->getMessage());
         }
     }
 }
