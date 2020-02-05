@@ -32,15 +32,17 @@ All mappers should implement Signifyd\Connect\Api\PaymentVerificationInterface. 
 
 For the inclusion of a custom payment, it is necessary to find the payment method code.
 
-Usually it is possible to find the payment method code inside the payment method config.xml file, inside the `<default><payment>` tag. Something like this:
+Usually it is possible to find the payment method code inside the payment method config.xml file, inside the `<default><signifyd><payment>` tag. Something like this:
 
-```
+```xml
 <default>
-	<payment>
-		<payment_method_code>
-		...
-		</payment_method_code>
-	</payment>
+    <signifyd>
+        <payment>
+            <payment_method_code>
+            ...
+            </payment_method_code>
+        </payment>
+    </signifyd>
 </default>
 ```
 
@@ -67,11 +69,13 @@ On config.xml set the mapper to be used for the payment method and information a
 ```xml
 <config>
 	<default>
-		<payment>
-			<payment_method_code>
-				<signifyd_information_code_adapter>Mapper\Class</signifyd_information_code_adapter>
-			</payment_method_code>
-		</payment>
+        <signifyd>
+            <payment>
+                <payment_method_code>
+                    <signifyd_information_code_adapter>Mapper\Class</signifyd_information_code_adapter>
+                </payment_method_code>
+            </payment>
+        </signifyd>
 	</default>
 </config>
 ```
@@ -97,6 +101,8 @@ If restricting the use of the mapper to some specific payment methods is needed,
 Here is a template for mapper class implementation:
 
 _**Replace bold parts with specific information for custom extension, payment method and information**_
+
+_**Do not implement a validate() method inside these classes**_
 
 ```php
 namespace Path\Your\Namespace;
@@ -181,6 +187,17 @@ Here is a list of the payment methods that have a built in helper on the extensi
 ### Braintree
 - Code: braintree
 - Magento built in
+
+**Available data**
+- CVV Status
+- AVS Status
+- Last4
+- Expiry Month
+- Expiry Year
+- Transaction ID
+
+### Stripe Payments
+- Code: stripe_payments
 
 **Available data**
 - CVV Status

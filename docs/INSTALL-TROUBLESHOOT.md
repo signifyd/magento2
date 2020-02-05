@@ -4,21 +4,9 @@
 
 ## Stripe payments error on 3.5.0 and 3.5.1
 
-This is a known bug that will be fixed on 3.5.2 release. So it is not necessary to keep track of below modifications.
+This is a known bug that has been fixed on 3.5.2 release. Upgrade to latest version to fix it
 
-If during installation or on checkout process an exception with message "Payment model name is not provided in config" is raised and store does not have stripe_payments payment method installed, follow bellow instructions as an workaround.
-
-On etc/config.xml find <stripe_payments> tag (line 61) and remove these lines and clear the cache.
-
-```xml
-<stripe_payments>
-    <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Stripe\Payments\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
-    <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Stripe\Payments\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
-    <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\Stripe\Payments\Last4Mapper</signifyd_last4_adapter>
-    <signifyd_exp_month_adapter>Signifyd\Connect\Model\Payment\Stripe\Payments\ExpMonthMapper</signifyd_exp_month_adapter>
-    <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\Stripe\Payments\ExpYearMapper</signifyd_exp_year_adapter>
-</stripe_payments>
-```
+If during installation or on checkout process an exception with message "Payment model name is not provided in config" is raised and store does not have stripe_payments payment method installed and store is using Signifyd version 3.5.0 or 3.5.1, upgrate to latest version to fix it.
 
 ## Third-party cache errors
 

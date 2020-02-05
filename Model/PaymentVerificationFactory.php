@@ -6,6 +6,7 @@ use Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Api\PaymentVerificationInterface;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Framework\Exception\LocalizedException;
+use Signifyd\Connect\Helper\ConfigHelper;
 
 /**
  * Creates verification service for provided payment method, or PaymentVerificationInterface::class
@@ -64,6 +65,11 @@ class PaymentVerificationFactory
     protected $transactionIdDefaultAdapter;
 
     /**
+     * @var ConfigHelper
+     */
+    protected $configHelper;
+
+    /**
      * @param ObjectManagerInterface $objectManager
      * @param ConfigInterface|Config $config
      * @param PaymentVerificationInterface $avsDefaultAdapter
@@ -73,6 +79,7 @@ class PaymentVerificationFactory
      * @param PaymentVerificationInterface $expMonthDefaultAdapter
      * @param PaymentVerificationInterface $expYearDefaultAdapter
      * @param PaymentVerificationInterface $binDefaultAdapter
+     * @param ConfigHelper $configHelper
      */
     public function __construct(
         ObjectManagerInterface $objectManager,
@@ -84,7 +91,8 @@ class PaymentVerificationFactory
         PaymentVerificationInterface $expMonthDefaultAdapter,
         PaymentVerificationInterface $expYearDefaultAdapter,
         PaymentVerificationInterface $binDefaultAdapter,
-        PaymentVerificationInterface $transactionIdDefaultAdapter
+        PaymentVerificationInterface $transactionIdDefaultAdapter,
+        ConfigHelper $configHelper
     ) {
         $this->config = $config;
         $this->objectManager = $objectManager;
@@ -96,6 +104,7 @@ class PaymentVerificationFactory
         $this->expYearDefaultAdapter = $expYearDefaultAdapter;
         $this->binDefaultAdapter = $binDefaultAdapter;
         $this->transactionIdDefaultAdapter = $transactionIdDefaultAdapter;
+        $this->configHelper = $configHelper;
     }
 
     /**
@@ -206,6 +215,10 @@ class PaymentVerificationFactory
      * Creates instance of PaymentVerificationInterface.
      * Default implementation will be returned if payment method does not implement PaymentVerificationInterface.
      *
+     * Will search for payment verification class on payment/[method]/[config_key] configuration path first
+     * If not found will try for signifyd/payment/[method]/[config_key]
+     * We keep looking on payment/[method]/[config_key] because this is the path on 3.5.1 and older versions
+     *
      * @param PaymentVerificationInterface $defaultAdapter
      * @param string $paymentCode
      * @param string $configKey
@@ -217,7 +230,12 @@ class PaymentVerificationFactory
     {
         $this->config->setMethodCode($paymentCode);
         $verificationClass = $this->config->getValue($configKey);
-        if ($verificationClass === null) {
+
+        if (empty($verificationClass)) {
+            $verificationClass = $this->configHelper->getConfigData("signifyd/payment/{$paymentCode}/{$configKey}");
+        }
+
+        if (empty($verificationClass)) {
             return $defaultAdapter;
         }
 
