@@ -233,6 +233,16 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
         }
 
+        if (version_compare($context->getVersion(), '3.6.0') < 0) {
+            $data = [
+                'scope' => 'default',
+                'scope_id' => 0,
+                'path' => 'signifyd/general/async_payment_methods',
+                'value' => 'cybersource,adyen_cc',
+            ];
+            $setup->getConnection()->insertOnDuplicate($setup->getTable('core_config_data'), $data, ['value']);
+        }
+
         $setup->endSetup();
     }
 }

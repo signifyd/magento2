@@ -2,11 +2,13 @@
 
 namespace Signifyd\Connect\Cron;
 
+use Exception;
 use Magento\Sales\Model\OrderFactory;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Helper\Retry;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Casedata;
+use Signifyd\Connect\Model\Payment\Adyen\Mapper as AdyenMapper;
 use Signifyd\Connect\Model\Payment\Cybersorurce\Mapper;
 
 class AsyncJob
@@ -35,6 +37,10 @@ class AsyncJob
      * @var Mapper
      */
     private $cybersource;
+    /**
+     * @var AdyenMapper
+     */
+    private $adyen_cc;
 
     public function __construct(
         PurchaseHelper $helper,
@@ -42,7 +48,8 @@ class AsyncJob
         Retry $caseRetryObj,
         Casedata $caseData,
         OrderFactory $orderFactory,
-        Mapper $cybersource
+        Mapper $cybersource,
+        AdyenMapper $adyen
     ) {
         $this->caseRetryObj = $caseRetryObj;
         $this->logger = $logger;
@@ -50,6 +57,7 @@ class AsyncJob
         $this->orderFactory = $orderFactory;
         $this->caseData = $caseData;
         $this->cybersource = $cybersource;
+        $this->adyen_cc = $adyen;
     }
 
     public function execute()
@@ -63,8 +71,8 @@ class AsyncJob
             $this->logger->debug($message, ['entity' => $case]);
             $caseObj = $this->caseData->load($case->getOrderIncrement());
             $order = $this->getOrder($case['order_increment']);
-            $data = $this->checkData($order);
             $retries = (int)$caseObj->getData('retries') + 1;
+            $data = $this->checkData($order, $retries);
             if (false !== $data) {
                 $caseData = $this->helper->processOrderData($order);
                 $this->addData($caseData, $data);
@@ -118,11 +126,16 @@ class AsyncJob
         return $casesToRetry;
     }
 
-    public function checkData($order)
+    public function checkData($order, $retries)
     {
         $orderPayment = $order->getPayment();
         $paymentMethod = $orderPayment->getMethod();
-        $data = $this->{strtolower($paymentMethod)}->getData($order);
+        try {
+            $data = $this->{strtolower($paymentMethod)}->getData($order, $retries);
+        } catch (Exception $ex) {
+            $this->logger->error($ex->__toString());
+            $data = false;
+        }
 
         return $data;
     }
@@ -134,6 +147,8 @@ class AsyncJob
         $case->card->expiryMonth = $data['cc_exp_month'];
         $case->card->expiryYear = $data['cc_exp_year'];
         $case->card->hash = $data['cc_trans_id'];
+        $case->purchase->avsResponseCode = $data['cc_avs_status'];
+        $case->purchase->cvvResponseCode = $data['cc_cvv_status'];
 
         return true;
     }
