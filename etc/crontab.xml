@@ -4,8 +4,5 @@
         <job name="cron_retry" instance="Signifyd\Connect\Cron\RetryCaseJob" method="execute">
             <schedule>*/1 * * * *</schedule>
         </job>
-        <job name="async_retry" instance="Signifyd\Connect\Cron\AsyncJob" method="execute">
-            <schedule>*/5 * * * *</schedule>
-        </job>
     </group>
 </config>
