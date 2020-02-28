@@ -14,6 +14,7 @@
                 <restrict_states_default>pending_payment,payment_review,canceled,closed,complete</restrict_states_default>
                 <restrict_states_create>holded,pending_payment,payment_review,canceled,closed,complete</restrict_states_create>
                 <restrict_payment_methods>checkmo,cashondelivery,banktransfer,purchaseorder</restrict_payment_methods>
+                <async_payment_methods>cybersource</async_payment_methods>
             </general>
             <advanced>
                 <guarantee_negative_action>nothing</guarantee_negative_action>
