@@ -193,8 +193,14 @@ class PurchaseHelper
         }
 
         $purchase->products = [];
+
+        /** @var \Magento\Sales\Model\Order\Item $item */
         foreach ($items as $item) {
-            $purchase->products[] = $this->makeProduct($item);
+            $children = $item->getChildrenItems();
+
+            if (is_array($children) == false || empty($children)) {
+                $purchase->products[] = $this->makeProduct($item);
+            }
         }
 
         $purchase->totalPrice = $order->getGrandTotal();
@@ -437,7 +443,7 @@ class PurchaseHelper
     public function postCaseToSignifyd($caseData, $order)
     {
         $id = $this->configHelper->getSignifydApi($order)->createCase($caseData);
-        
+
         if ($id) {
             $this->logger->debug("Case sent. Id is $id", ['entity' => $order]);
             $order->addStatusHistoryComment("Signifyd: case created {$id}");
@@ -483,7 +489,7 @@ class PurchaseHelper
 
         $this->logger->debug('Cancelling case ' . $case->getId(), ['entity' => $order]);
         $disposition = $this->configHelper->getSignifydApi($order)->cancelGuarantee($case->getCode());
-        
+
         $this->logger->debug("Cancel disposition result {$disposition}", ['entity' => $order]);
 
         if ($disposition == 'CANCELED') {
@@ -528,7 +534,7 @@ class PurchaseHelper
 
             $avsCode = $avsAdapter->getData($order);
             $avsCode = trim(strtoupper($avsCode));
-            
+
             if ($avsAdapter->validate($avsCode)) {
                 return $avsCode;
             } else {
