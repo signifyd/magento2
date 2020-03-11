@@ -12,6 +12,7 @@ use Signifyd\Connect\Logger\Logger;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Filesystem\Driver\File;
+use Signifyd\Connect\Model\Casedata;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
@@ -142,6 +143,14 @@ class Index extends Action
 
             if ($case->isEmpty()) {
                 $message = "Case {$requestJson->orderId} on request not found on Magento";
+                $this->getResponse()->appendBody($message);
+                $this->logger->debug("API: {$message}");
+                $this->getResponse()->setStatusCode(Http::STATUS_CODE_400);
+                return;
+            }
+
+            if ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS) {
+                $message = "Case {$requestJson->orderId} it is not ready to be updated";
                 $this->getResponse()->appendBody($message);
                 $this->logger->debug("API: {$message}");
                 $this->getResponse()->setStatusCode(Http::STATUS_CODE_400);
