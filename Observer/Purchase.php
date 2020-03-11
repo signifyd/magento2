@@ -196,7 +196,8 @@ class Purchase implements ObserverInterface
                 $case->setMagentoStatus(Casedata::ASYNC_WAIT);
                 try {
                     $case->save();
-                    $this->logger->debug('Case for order:#' . $incrementId . ' was not sent because of an async payment method');
+                    $message = 'Case for order:#' . $incrementId . ' was not sent because of an async payment method';
+                    $this->logger->debug($message);
                 } catch (\Exception $ex) {
                     $this->logger->error($ex->__toString());
                 }

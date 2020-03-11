@@ -151,7 +151,7 @@ class InstallSchema implements InstallSchemaInterface
                         $connection->addColumn($gridTableName, $name, $definition);
                     }
                 } catch (\Exception $e) {
-                    throw new \Exception('Error modifying sales_order table: ' . $e->getMessage());
+                    throw new \Zend_Db_Exception('Error modifying sales_order table: ' . $e->getMessage());
                 }
             }
 
