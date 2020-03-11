@@ -67,14 +67,14 @@ class Mapper
     public function processAvs($avs)
     {
         $validCodes = [
-            "F" =>  "Z",
-            "H" =>	"Y",
-            "T" =>	"A",
-            "1" =>	"S",
-            "2" =>	"E",
-            "K" =>	"N",
-            "L" =>	"Z",
-            "O" =>	"A"
+            "F" => "Z",
+            "H" => "Y",
+            "T" => "A",
+            "1" => "S",
+            "2" => "E",
+            "K" => "N",
+            "L" => "Z",
+            "O" => "A"
         ];
 
         return (array_key_exists($avs, $validCodes)) ? $validCodes[$avs] : $avs;

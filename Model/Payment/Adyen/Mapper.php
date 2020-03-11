@@ -89,7 +89,7 @@ class Mapper
         $validCode = null;
         $avsArr = explode(" ", $cvc);
         switch ($avsArr[0]) {
-            case '0' :
+            case '0':
                 $validCode = null;
                 break;
             case '1':
