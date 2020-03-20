@@ -15,6 +15,7 @@ use Magento\Framework\ObjectManagerInterface;
 use Magento\Sales\Model\Order;
 use Signifyd\Connect\Logger\Logger;
 use Magento\Framework\Serialize\SerializerInterface;
+use Signifyd\Connect\Helper\OrderHelper;
 
 /**
  * ORM model declaration for case data
@@ -77,6 +78,11 @@ class Casedata extends AbstractModel
     protected $serializer;
 
     /**
+     * @var OrderHelper
+     */
+    protected $orderHelper;
+
+    /**
      * Casedata constructor.
      * @param Context $context
      * @param Registry $registry
@@ -84,6 +90,7 @@ class Casedata extends AbstractModel
      * @param InvoiceService $invoiceService
      * @param Logger
      * @param SerializerInterface $serializer
+     * @param OrderHelper $orderHelper
      */
     public function __construct(
         Context $context,
@@ -94,7 +101,8 @@ class Casedata extends AbstractModel
         ObjectManagerInterface $objectManager,
         \Magento\Sales\Model\OrderFactory $orderFactory,
         Logger $logger,
-        SerializerInterface $serializer
+        SerializerInterface $serializer,
+        OrderHelper $orderHelper
     ) {
         $this->configHelper = $configHelper;
         $this->invoiceService = $invoiceService;
@@ -103,6 +111,7 @@ class Casedata extends AbstractModel
         $this->orderFactory = $orderFactory;
         $this->logger = $logger;
         $this->serializer = $serializer;
+        $this->orderHelper = $orderHelper;
 
         parent::__construct($context, $registry);
     }
@@ -230,31 +239,10 @@ class Casedata extends AbstractModel
                         $order->addCommentToStatusHistory($message);
                     }
                 } else {
-                    $notHoldableStates = [
-                        Order::STATE_CANCELED,
-                        Order::STATE_PAYMENT_REVIEW,
-                        Order::STATE_COMPLETE,
-                        Order::STATE_CLOSED,
-                        Order::STATE_HOLDED
-                    ];
-
-                    if ($order->getState() == Order::STATE_HOLDED) {
-                        $completeCase = true;
-                    }
-
-                    if (in_array($order->getState(), $notHoldableStates)) {
-                        $reason = "order is on {$order->getState()} state";
-                    } elseif ($order->getActionFlag(Order::ACTION_FLAG_HOLD) === false) {
-                        $reason = "order action flag is set to do not hold";
-                    } else {
-                        $reason = "unknown reason";
-                    }
-
+                    $reason = $this->orderHelper->getCannotHoldReason($order);
                     $message = "Order {$order->getIncrementId()} can not be held because {$reason}";
                     $this->logger->debug($message, ['entity' => $case]);
-
                     $orderAction['action'] = false;
-
                     $order->addStatusHistoryComment("Signifyd: order cannot be updated to on hold, {$reason}");
                 }
                 break;
@@ -276,16 +264,7 @@ class Casedata extends AbstractModel
                         $order->addStatusHistoryComment("Signifyd: order status cannot be updated, {$e->getMessage()}");
                     }
                 } else {
-                    if ($order->getState() != Order::STATE_HOLDED && $order->isPaymentReview() == false) {
-                        $reason = "order is not holded";
-                        $completeCase = true;
-                    } elseif ($order->isPaymentReview()) {
-                        $reason = 'order is in payment review';
-                    } elseif ($order->getActionFlag(Order::ACTION_FLAG_UNHOLD) === false) {
-                        $reason = "order action flag is set to do not unhold";
-                    } else {
-                        $reason = "unknown reason";
-                    }
+                    $reason = $this->orderHelper->getCannotUnholdReason($order);
 
                     $message = "Order {$order->getIncrementId()} ({$order->getState()} > {$order->getStatus()}) " .
                         "can not be removed from hold because {$reason}. " .
@@ -318,41 +297,10 @@ class Casedata extends AbstractModel
                         $order->addStatusHistoryComment("Signifyd: order cannot be canceled, {$e->getMessage()}");
                     }
                 } else {
-                    $notCancelableStates = [
-                        Order::STATE_CANCELED,
-                        Order::STATE_PAYMENT_REVIEW,
-                        Order::STATE_COMPLETE,
-                        Order::STATE_CLOSED,
-                        Order::STATE_HOLDED
-                    ];
-
-                    if (in_array($order->getState(), $notCancelableStates)) {
-                        $reason = "order is on {$order->getState()} state";
-                    } elseif (!$order->canReviewPayment() && $order->canFetchPaymentReviewUpdate()) {
-                        $reason = "conflict with payment review";
-                    } elseif ($order->getActionFlag(Order::ACTION_FLAG_CANCEL) === false) {
-                        $reason = "order action flag is set to do not cancel";
-                    } else {
-                        $allInvoiced = true;
-                        foreach ($order->getAllItems() as $item) {
-                            if ($item->getQtyToInvoice()) {
-                                $allInvoiced = false;
-                                break;
-                            }
-                        }
-                        if ($allInvoiced) {
-                            $reason = "all order items are invoiced";
-                            $completeCase = true;
-                        } else {
-                            $reason = "unknown reason";
-                        }
-                    }
-
+                    $reason = $this->orderHelper->getCannotCancelReason($order);
                     $message = "Order {$order->getIncrementId()} cannot be canceled because {$reason}";
                     $this->logger->debug($message, ['entity' => $case]);
-
                     $orderAction['action'] = false;
-
                     $order->addStatusHistoryComment("Signifyd: order cannot be canceled, {$reason}");
                 }
 
@@ -371,13 +319,7 @@ class Casedata extends AbstractModel
                         /** @var \Magento\Sales\Model\Order\Invoice $invoice */
                         $invoice = $this->invoiceService->prepareInvoice($order);
 
-                        if ($invoice->isEmpty()) {
-                            throw new \Exception('failed to generate invoice');
-                        }
-
-                        if ($invoice->getTotalQty() == 0) {
-                            throw new \Exception('no items found to invoice');
-                        }
+                        $this->orderHelper->isInvoiceValid($invoice);
 
                         $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
                         $invoice->addComment('Signifyd: Automatic invoice');
@@ -414,41 +356,10 @@ class Casedata extends AbstractModel
 
                         $completeCase = true;
                     } else {
-                        $notInvoiceableStates = [
-                            Order::STATE_CANCELED,
-                            Order::STATE_PAYMENT_REVIEW,
-                            Order::STATE_COMPLETE,
-                            Order::STATE_CLOSED,
-                            Order::STATE_HOLDED
-                        ];
-
-                        if (in_array($order->getState(), $notInvoiceableStates)) {
-                            $reason = "order is on {$order->getState()} state";
-                        } elseif ($order->getActionFlag(Order::ACTION_FLAG_INVOICE) === false) {
-                            $reason = "order action flag is set to do not invoice";
-                        } else {
-                            $canInvoiceAny = false;
-
-                            foreach ($order->getAllItems() as $item) {
-                                if ($item->getQtyToInvoice() > 0 && !$item->getLockedDoInvoice()) {
-                                    $canInvoiceAny = true;
-                                    break;
-                                }
-                            }
-
-                            if ($canInvoiceAny) {
-                                $reason = "unknown reason";
-                            } else {
-                                $reason = "no items can be invoiced";
-                                $completeCase = true;
-                            }
-                        }
-
+                        $reason = $this->orderHelper->getCannotInvoiceReason($order);
                         $message = "Order {$order->getIncrementId()} can not be invoiced because {$reason}";
                         $this->logger->debug($message, ['entity' => $case]);
-
                         $orderAction['action'] = false;
-
                         $order->addStatusHistoryComment("Signifyd: unable to create invoice: {$reason}");
 
                         if ($order->canHold()) {
@@ -545,6 +456,7 @@ class Casedata extends AbstractModel
             try {
                 $entries = $this->serializer->unserialize($entries);
             } catch (\InvalidArgumentException $e) {
+                $entries = [];
             }
         }
 
@@ -568,11 +480,7 @@ class Casedata extends AbstractModel
             $entries[$index] = $value;
         }
 
-        try {
-            $entries = $this->serializer->serialize($entries);
-        } catch (\InvalidArgumentException $e) {
-        }
-
+        $entries = $this->serializer->serialize($entries);
         $this->setData('entries_text', $entries);
 
         return $this;
@@ -583,7 +491,7 @@ class Casedata extends AbstractModel
         $holdReleased = $this->getEntries('hold_released');
         return ($holdReleased == 1) ? true : false;
     }
-    
+
     public function getPositiveAction()
     {
         if ($this->isHoldReleased()) {

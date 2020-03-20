@@ -19,20 +19,29 @@ class Mapper
             return false;
         }
 
-        if (!array_key_exists('adyen_avs_result', $additionalInfo) || !array_key_exists('adyen_cvc_result', $additionalInfo)) {
+        if (!array_key_exists('adyen_avs_result', $additionalInfo) ||
+            !array_key_exists('adyen_cvc_result', $additionalInfo)) {
             if ($retries < 5) {
                 return false;
             }
         }
 
-        $expireDate = isset($additionalInfo['adyen_expiry_date']) ? explode("/", $additionalInfo['adyen_expiry_date']) : [];
+        $expireDate = isset($additionalInfo['adyen_expiry_date']) ?
+            explode("/", $additionalInfo['adyen_expiry_date']) : [];
+
         $data = [
-            'card_type' => isset($additionalInfo['cc_type']) ? $additionalInfo['cc_type'] : $order->getPayment()->getCcType(),
-            'cc_trans_id' => isset($additionalInfo['pspReference']) ? $additionalInfo['pspReference'] : $order->getPayment()->getLastTransId(),
-            'cc_last_4' => isset($additionalInfo['cardSummary']) ? $additionalInfo['cardSummary'] : $order->getPayment()->getCcLast4(),
-            'cc_number' => isset($additionalInfo['adyen_card_bin']) ? $additionalInfo['adyen_card_bin'] : null,
-            'cc_avs_status' => isset($additionalInfo['adyen_avs_result']) ? $this->processAvs($additionalInfo['adyen_avs_result']) : $order->getPayment()->getAvsStatus(),
-            'cc_cvv_status' => isset($additionalInfo['adyen_cvc_result']) ? $this->processCvc($additionalInfo['adyen_cvc_result']) : null,
+            'card_type' => isset($additionalInfo['cc_type']) ?
+                $additionalInfo['cc_type'] : $order->getPayment()->getCcType(),
+            'cc_trans_id' => isset($additionalInfo['pspReference']) ?
+                $additionalInfo['pspReference'] : $order->getPayment()->getLastTransId(),
+            'cc_last_4' => isset($additionalInfo['cardSummary']) ?
+                $additionalInfo['cardSummary'] : $order->getPayment()->getCcLast4(),
+            'cc_number' => isset($additionalInfo['adyen_card_bin']) ?
+                $additionalInfo['adyen_card_bin'] : null,
+            'cc_avs_status' => isset($additionalInfo['adyen_avs_result']) ?
+                $this->processAvs($additionalInfo['adyen_avs_result']) : $order->getPayment()->getAvsStatus(),
+            'cc_cvv_status' => isset($additionalInfo['adyen_cvc_result']) ?
+                $this->processCvc($additionalInfo['adyen_cvc_result']) : null,
             'cc_exp_month' => isset($expireDate[0]) ? $expireDate[0] : null,
             'cc_exp_year' => isset($expireDate[1]) ? $expireDate[1] : null,
         ];
@@ -89,7 +98,7 @@ class Mapper
         $validCode = null;
         $avsArr = explode(" ", $cvc);
         switch ($avsArr[0]) {
-            case '0' :
+            case '0':
                 $validCode = null;
                 break;
             case '1':

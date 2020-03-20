@@ -74,6 +74,7 @@ class CaseLink extends Column
                         try {
                             $entries = $this->serializer->unserialize($entries);
                         } catch (\InvalidArgumentException $e) {
+                            $entries = [];
                         }
 
                         if (is_array($entries) &&
