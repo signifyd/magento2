@@ -253,8 +253,8 @@ class FulfillmentHelper
         foreach ($trackingCollection->getItems() as $tracking) {
             $number = trim($tracking->getNumber());
 
-            if (empty($number) == false) {
-                $trackingNumbers[] = $tracking->getNumber();
+            if (empty($number) === false && is_object($number) === false && is_array($number) === false) {
+                $trackingNumbers[] = $number;
             }
         }
 
