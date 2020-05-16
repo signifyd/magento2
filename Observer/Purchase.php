@@ -198,6 +198,9 @@ class Purchase implements ObserverInterface
                     $case->save();
                     $message = 'Case for order:#' . $incrementId . ' was not sent because of an async payment method';
                     $this->logger->debug($message);
+
+                    // Initial hold order
+                    $this->holdOrder($order);
                 } catch (\Exception $ex) {
                     $this->logger->error($ex->__toString());
                 }
