@@ -129,7 +129,6 @@ class Index extends Action
                     // Test is only verifying that the endpoint is reachable. So we just complete here
                     $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
                     return;
-                    break;
 
                 case 'cases/creation':
                     $message = 'Case creation will not be processed by Magento';
@@ -137,7 +136,6 @@ class Index extends Action
                     $this->logger->debug("API: {$message}");
                     $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
                     return;
-                    break;
             }
 
             /** @var $order \Magento\Sales\Model\Order */
