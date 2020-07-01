@@ -124,10 +124,20 @@ class Index extends Action
         $requestJson = json_decode($request);
 
         if (json_last_error() == JSON_ERROR_NONE) {
-            // Test is only verifying that the endpoint is reachable. So we just complete here
-            if ($topic === 'cases/test') {
-                $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
-                return;
+            switch (($topic)) {
+                case 'cases/test':
+                    // Test is only verifying that the endpoint is reachable. So we just complete here
+                    $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
+                    return;
+                    break;
+
+                case 'cases/creation':
+                    $message = 'Case creation will not be processed by Magento';
+                    $this->getResponse()->appendBody($message);
+                    $this->logger->debug("API: {$message}");
+                    $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
+                    return;
+                    break;
             }
 
             /** @var $order \Magento\Sales\Model\Order */
