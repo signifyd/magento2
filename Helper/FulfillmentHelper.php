@@ -90,6 +90,7 @@ class FulfillmentHelper
     public function postFulfillmentToSignifyd(\Magento\Sales\Model\Order\Shipment $shipment)
     {
         if ($shipment->getId() <= 0) {
+            $this->logger->info('Fulfillment will not proceed because shipment has no ID');
             return false;
         }
 
@@ -102,6 +103,7 @@ class FulfillmentHelper
         $caseCode = $case instanceof \Signifyd\Connect\Model\Casedata ? $case->getCode() : null;
 
         if (empty($caseCode)) {
+            $this->logger->info('Fulfillment will not proceed because no case has been found: ' . $orderIncrementId);
             return false;
         }
 
