@@ -8,6 +8,10 @@
         <observer name="signifydDebugLogs" instance="Signifyd\Connect\Observer\Debug\Order" />
     </event>
 
+    <event name="sales_order_save_before">
+        <observer name="orderSaveBefore" instance="Signifyd\Connect\Observer\Order\Save\Before" />
+    </event>
+
     <event name="checkout_submit_all_after">
         <observer name="onCheckout" instance="Signifyd\Connect\Observer\Purchase" />
     </event>
