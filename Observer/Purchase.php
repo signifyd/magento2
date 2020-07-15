@@ -23,12 +23,12 @@ use Magento\Framework\App\RequestInterface;
 class Purchase implements ObserverInterface
 {
     /**
-     * @var \Signifyd\Connect\Logger\Logger;
+     * @var Logger;
      */
     protected $logger;
 
     /**
-     * @var \Signifyd\Connect\Helper\PurchaseHelper
+     * @var PurchaseHelper
      */
     protected $helper;
 
@@ -126,33 +126,6 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            $saveOrder = false;
-
-            // Saving store code to order, to know where the order is been created
-            if (empty($order->getData('origin_store_code')) && is_object($this->storeManager)) {
-                $storeCode = $this->storeManager->getStore($this->helper->isAdmin() ? 'admin' : true)->getCode();
-
-                if (!empty($storeCode)) {
-                    $order->setData('origin_store_code', $storeCode);
-                    $saveOrder = true;
-                }
-            }
-
-            // Fix for Magento bug https://github.com/magento/magento2/issues/7227
-            // x_forwarded_for should be copied from quote, but quote does not have the field on database
-            if (empty($order->getData('x_forwarded_for')) && is_object($this->request)) {
-                $xForwardIp = $this->request->getServer('HTTP_X_FORWARDED_FOR');
-
-                if (empty($xForwardIp) == false) {
-                    $order->setData('x_forwarded_for', $xForwardIp);
-                    $saveOrder = true;
-                }
-            }
-
-            if ($saveOrder) {
-                $order->save();
-            }
-
             // Check if a payment is available for this order yet
             if ($order->getState() == \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT) {
                 return;
@@ -198,6 +171,9 @@ class Purchase implements ObserverInterface
                     $case->save();
                     $message = 'Case for order:#' . $incrementId . ' was not sent because of an async payment method';
                     $this->logger->debug($message);
+
+                    // Initial hold order
+                    $this->holdOrder($order);
                 } catch (\Exception $ex) {
                     $this->logger->error($ex->__toString());
                 }

@@ -8,10 +8,14 @@
 namespace Signifyd\Connect\Cron;
 
 use Magento\Framework\ObjectManagerInterface;
+use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+use Magento\Sales\Model\OrderFactory;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Helper\Retry;
 use Signifyd\Connect\Model\Casedata;
+use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
+use Signifyd\Connect\Model\CasedataFactory;
 
 class RetryCaseJob
 {
@@ -35,16 +39,60 @@ class RetryCaseJob
      */
     protected $caseRetryObj;
 
+    /**
+     * @var OrderResourceModel
+     */
+    protected $orderResourceModel;
+
+    /**
+     * @var OrderFactory
+     */
+    protected $orderFactory;
+
+    /**
+     * @var CasedataResourceModel
+     */
+    protected $casedataResourceModel;
+
+    /**
+     * @var CasedataFactory\
+     */
+    protected $casedataFactory;
+
+    /**
+     * @var \StripeIntegration\Payments\Model\Config
+     */
+    protected $stripeConfig;
+
+    /**
+     * RetryCaseJob constructor.
+     * @param ObjectManagerInterface $objectManager
+     * @param PurchaseHelper $helper
+     * @param Logger $logger
+     * @param Retry $caseRetryObj
+     * @param OrderResourceModel $orderResourceModel
+     * @param OrderFactory $orderFactory
+     * @param CasedataResourceModel $casedataResourceModel
+     * @param CasedataFactory $casedataFactory
+     */
     public function __construct(
         ObjectManagerInterface $objectManager,
         PurchaseHelper $helper,
         Logger $logger,
-        Retry $caseRetryObj
+        Retry $caseRetryObj,
+        OrderResourceModel $orderResourceModel,
+        OrderFactory $orderFactory,
+        CasedataResourceModel $casedataResourceModel,
+        CasedataFactory $casedataFactory
     ) {
         $this->_objectManager = $objectManager;
         $this->_helper = $helper;
         $this->logger = $logger;
         $this->caseRetryObj = $caseRetryObj;
+        $this->orderResourceModel = $orderResourceModel;
+        $this->orderFactory = $orderFactory;
+        $this->casedataResourceModel = $casedataResourceModel;
+        $this->casedataFactory = $casedataFactory;
     }
 
     /**
@@ -70,13 +118,15 @@ class RetryCaseJob
             $result = $this->_helper->postCaseToSignifyd($caseData, $order);
 
             if ($result) {
-                /** @var \Signifyd\Connect\Model\Casedata $caseObj */
-                $caseObj = $this->_objectManager->create(\Signifyd\Connect\Model\Casedata::class)
-                    ->load($case->getOrderIncrement())
-                    ->setCode($result)
+                /** @var Casedata $caseObj */
+                $caseObj = $this->casedataFactory->create();
+                $this->casedataResourceModel->load($caseObj, $case->getOrderIncrement());
+
+                $caseObj->setCode($result)
                     ->setMagentoStatus(Casedata::IN_REVIEW_STATUS)
                     ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                $caseObj->save();
+
+                $this->casedataResourceModel->save($caseObj);
             }
         }
 
@@ -109,8 +159,41 @@ class RetryCaseJob
         return $this;
     }
 
+    /**
+     * @param $incrementId
+     * @return \Magento\Sales\Model\Order
+     */
     public function getOrder($incrementId)
     {
-        return $this->_objectManager->get(\Magento\Sales\Model\Order::class)->loadByIncrementId($incrementId);
+        $order = $this->orderFactory->create();
+        $this->orderResourceModel->load($order, $incrementId, 'increment_id');
+
+        if ($order->getPayment()->getMethod() == 'stripe_payments') {
+            $this->reInitStripe($order);
+        }
+
+        return $order;
+    }
+
+    /**
+     * @param \Magento\Sales\Model\Order $order
+     * @return bool
+     */
+    public function reInitStripe(\Magento\Sales\Model\Order $order)
+    {
+        if (class_exists(\StripeIntegration\Payments\Model\Config::class) === false) {
+            return false;
+        }
+
+        if ($this->stripeConfig === null) {
+            $this->stripeConfig = $this->_objectManager->get(\StripeIntegration\Payments\Model\Config::class);
+        }
+
+        if (version_compare(\StripeIntegration\Payments\Model\Config::$moduleVersion, '1.8.8') >= 0 &&
+            method_exists($this->stripeConfig, 'reInitStripe')) {
+            $this->stripeConfig->reInitStripe($order->getStoreId(), $order->getBaseCurrencyCode(), null);
+        }
+
+        return true;
     }
 }
