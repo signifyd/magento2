@@ -51,6 +51,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
     public function upgrade(SchemaSetupInterface $setup, ModuleContextInterface $context)
     {
         $setup->startSetup();
+        $this->ensureColumnsPresent($setup);
 
         if (version_compare($context->getVersion(), '3.0.0') < 0) {
             $setup->getConnection()->addColumn($setup->getTable('sales_order'), 'origin_store_code', [
@@ -244,5 +245,47 @@ class UpgradeSchema implements UpgradeSchemaInterface
         }
 
         $setup->endSetup();
+    }
+
+    private function ensureColumnsPresent($setup)
+    {
+        $tableName = $setup->getTable('sales_order');
+        $gridTableName = $setup->getTable('sales_order_grid');
+
+        if ($setup->getConnection()->isTableExists($tableName)) {
+            $columns = [
+                'signifyd_score' => [
+                    'type' => Table::TYPE_FLOAT,
+                    'default' => null,
+                    'comment' => 'Score',
+                ],
+                'signifyd_guarantee' => [
+                    'type' => Table::TYPE_TEXT,
+                    'LENGTH' => 64,
+                    'default' => 'N/A',
+                    'nullable' => false,
+                    'comment' => 'Guarantee Status',
+                ],
+                'signifyd_code' => [
+                    'type' => Table::TYPE_TEXT,
+                    'LENGTH' => 255,
+                    'default' => '',
+                    'nullable' => false,
+                    'comment' => 'Code',
+                ],
+            ];
+
+            try {
+                /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
+                $connection = $setup->getConnection();
+
+                foreach ($columns as $name => $definition) {
+                    $connection->addColumn($tableName, $name, $definition);
+                    $connection->addColumn($gridTableName, $name, $definition);
+                }
+            } catch (\Exception $e) {
+                throw new \Zend_Db_Exception('Error modifying sales_order table: ' . $e->getMessage());
+            }
+        }
     }
 }
