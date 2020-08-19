@@ -9,18 +9,34 @@ use Magento\Framework\Setup\InstallSchemaInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\SchemaSetupInterface;
 use Magento\Framework\DB\Ddl\Table;
+use Signifyd\Connect\Setup\SchemaModification\AddTableColumns;
+use Signifyd\Connect\Setup\SchemaModification\AddTables;
 
 /**
  * @codeCoverageIgnore
  */
 class InstallSchema implements InstallSchemaInterface
 {
+    const TABLE_SIGNIFYD_CONNECT_CASE = 'signifyd_connect_case';
+
     protected $logger;
+    /**
+     * @var SchemaModification\AddTables
+     */
+    private $addTables;
+    /**
+     * @var SchemaModification\AddTableColumns
+     */
+    private $addTableColumns;
 
     public function __construct(
+        AddTables $addTables,
+        AddTableColumns $addTableColumns,
         \Signifyd\Connect\Logger\Install $logger
     ) {
         $this->logger = $logger;
+        $this->addTables = $addTables;
+        $this->addTableColumns = $addTableColumns;
     }
 
     /**
@@ -32,128 +48,9 @@ class InstallSchema implements InstallSchemaInterface
         try {
             $setup->startSetup();
 
-            if (!$setup->tableExists('signifyd_connect_case')) {
-                $table = $setup->getConnection()->newTable($setup->getTable('signifyd_connect_case'));
-                $table->addColumn(
-                    'order_increment',
-                    Table::TYPE_TEXT,
-                    255,
-                    [
-                        'nullable' => false,
-                        'primary' => true
-                    ],
-                    'Order ID'
-                )
-                    ->addColumn(
-                        'signifyd_status',
-                        Table::TYPE_TEXT,
-                        255,
-                        [
-                            'nullable' => false,
-                            'default' => 'PENDING'
-                        ],
-                        'Signifyd Status'
-                    )
-                    ->addColumn(
-                        'code',
-                        Table::TYPE_TEXT,
-                        255,
-                        [
-                            'nullable' => false,
-                        ],
-                        'Code'
-                    )
-                    ->addColumn(
-                        'score',
-                        Table::TYPE_FLOAT,
-                        null,
-                        [],
-                        'Score'
-                    )
-                    ->addColumn(
-                        'guarantee',
-                        Table::TYPE_TEXT,
-                        64,
-                        [
-                            'nullable' => false,
-                            'default' => 'N/A'
-                        ],
-                        'Guarantee Status'
-                    )
-                    ->addColumn(
-                        'entries_text',
-                        Table::TYPE_TEXT,
-                        null,
-                        ['nullable' => false],
-                        'Entries'
-                    )
-                    ->addColumn(
-                        'created',
-                        Table::TYPE_TIMESTAMP,
-                        null,
-                        [],
-                        'Creation Time'
-                    )
-                    ->addColumn(
-                        'updated',
-                        Table::TYPE_TIMESTAMP,
-                        null,
-                        [],
-                        'Update Time'
-                    )
-                    ->addColumn(
-                        'magento_status',
-                        Table::TYPE_TEXT,
-                        255,
-                        [
-                            'nullable' => false,
-                            'default' => 'waiting_submission'
-                        ],
-                        'Magento Status'
-                    )
-                    ->setComment('Signifyd Cases');
-                $setup->getConnection()->createTable($table);
-            }
+            $this->addTables->execute($setup);
 
-            // The plan here is to add the signifyd case data directly to the order tables
-            $tableName = $setup->getTable('sales_order');
-            $gridTableName = $setup->getTable('sales_order_grid');
-
-            if ($setup->getConnection()->isTableExists($tableName)) {
-                $columns = [
-                    'signifyd_score' => [
-                        'type' => Table::TYPE_FLOAT,
-                        'default' => null,
-                        'comment' => 'Score',
-                    ],
-                    'signifyd_guarantee' => [
-                        'type' => Table::TYPE_TEXT,
-                        'LENGTH' => 64,
-                        'default' => 'N/A',
-                        'nullable' => false,
-                        'comment' => 'Guarantee Status',
-                    ],
-                    'signifyd_code' => [
-                        'type' => Table::TYPE_TEXT,
-                        'LENGTH' => 255,
-                        'default' => '',
-                        'nullable' => false,
-                        'comment' => 'Code',
-                    ],
-                ];
-
-                try {
-                    /** @var \Magento\Framework\DB\Adapter\Pdo\Mysql $connection */
-                    $connection = $setup->getConnection();
-
-                    foreach ($columns as $name => $definition) {
-                        $connection->addColumn($tableName, $name, $definition);
-                        $connection->addColumn($gridTableName, $name, $definition);
-                    }
-                } catch (\Exception $e) {
-                    throw new \Zend_Db_Exception('Error modifying sales_order table: ' . $e->getMessage());
-                }
-            }
+            $this->addTableColumns->execute($setup);
 
             $this->logger->debug('Installation completed successfully');
         } catch (\Exception $e) {

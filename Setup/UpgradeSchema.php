@@ -9,9 +9,11 @@ use Magento\Framework\Setup\UpgradeSchemaInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\SchemaSetupInterface;
 use Magento\Framework\DB\Ddl\Table;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Signifyd\Connect\Observer\Purchase;
+use Signifyd\Connect\Setup\SchemaModification\AddTableColumns;
+use Signifyd\Connect\Setup\SchemaModification\AddTables;
+use Zend_Db_Exception;
 
 /**
  * @codeCoverageIgnore
@@ -29,17 +31,34 @@ class UpgradeSchema implements UpgradeSchemaInterface
     protected $purchaseObserver;
 
     /**
+     * @var AddTables
+     */
+    private $addTables;
+
+    /**
+     * @var AddTableColumns
+     */
+    private $addTableColumns;
+
+    /**
      * TODO: Make changes  to be able to save current restricted payment gateways from code to database
      *
      * InstallSchema constructor.
-     * @param \Signifyd\Connect\Helper\ConfigHelper $configHelper
+     * @param AddTables $addTables
+     * @param AddTableColumns $addTableColumns
+     * @param WriterInterface $configWriter
+     * @param Purchase $purchaseObserver
      */
     public function __construct(
+        AddTables $addTables,
+        AddTableColumns $addTableColumns,
         WriterInterface $configWriter,
         Purchase $purchaseObserver
     ) {
         $this->configWriter = $configWriter;
         $this->purchaseObserver = $purchaseObserver;
+        $this->addTables = $addTables;
+        $this->addTableColumns = $addTableColumns;
     }
 
     /**
@@ -47,10 +66,14 @@ class UpgradeSchema implements UpgradeSchemaInterface
      *
      * @param SchemaSetupInterface $setup
      * @param ModuleContextInterface $context
+     * @throws Zend_Db_Exception
      */
     public function upgrade(SchemaSetupInterface $setup, ModuleContextInterface $context)
     {
         $setup->startSetup();
+
+        $this->addTables->execute($setup);
+        $this->addTableColumns->execute($setup);
 
         if (version_compare($context->getVersion(), '3.0.0') < 0) {
             $setup->getConnection()->addColumn($setup->getTable('sales_order'), 'origin_store_code', [
