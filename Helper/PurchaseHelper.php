@@ -249,15 +249,6 @@ class PurchaseHelper
         return $shipments;
     }
 
-    public function isAdmin()
-    {
-        /** @var \Magento\Framework\ObjectManagerInterface $om */
-        $om = \Magento\Framework\App\ObjectManager::getInstance();
-        /** @var \Magento\Framework\App\State $state */
-        $state =  $om->get(\Magento\Framework\App\State::class);
-        return 'adminhtml' === $state->getAreaCode();
-    }
-
     /**
      * @param $mageAddress Address
      * @return SignifydAddress
