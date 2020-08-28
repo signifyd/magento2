@@ -18,11 +18,12 @@ class AccountGenerator
      */
     public function beforeGenerate(MagentoAccountGenerator $subject, OrderItem $orderItem, int $qty, array $options)
     {
-        $giftCardCreatedCodes = $orderItem->getProductOptionByCode('giftcard_created_codes');
+        $giftcardCreatedCodes = $orderItem->getProductOptionByCode('giftcard_created_codes');
+        $giftcardCodesCount = is_array($giftcardCreatedCodes) ? count($giftcardCreatedCodes) : 0;
         $orderItemQty = $orderItem->getQtyOrdered() - $orderItem->getQtyCanceled() - $orderItem->getQtyRefunded();
 
-        if ($qty > $orderItemQty - count($giftCardCreatedCodes)) {
-            $qty = $orderItemQty - count($giftCardCreatedCodes);
+        if ($qty > $orderItemQty - $giftcardCodesCount) {
+            $qty = $orderItemQty - $giftcardCodesCount;
         }
 
         return [$orderItem, $qty, $options];
