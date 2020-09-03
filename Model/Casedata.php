@@ -189,7 +189,7 @@ class Casedata extends AbstractModel
             $order->getResource()->save($order);
             $this->getResource()->save($case);
             $this->updateOrder($caseData, $orderAction, $case);
-            $this->logger->info('Case was saved, id:' . $case->getIncrementId(), ['entity' => $case]);
+            $this->logger->info('Case was updated, id:' . $case->getOrderIncrement(), ['entity' => $case]);
         } catch (\Exception $e) {
             $this->logger->critical($e->__toString(), ['entity' => $case]);
             return false;
@@ -403,6 +403,7 @@ class Casedata extends AbstractModel
             $case->setMagentoStatus(Casedata::COMPLETED_STATUS)
                 ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
             $case->getResource()->save($case);
+            $this->logger->info('Case was saved, id:' . $case->getOrderIncrement(), ['entity' => $case]);
         }
 
         return true;
