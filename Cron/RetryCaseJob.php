@@ -115,14 +115,14 @@ class RetryCaseJob
             $order = $this->getOrder($case['order_increment']);
 
             $caseData = $this->_helper->processOrderData($order);
-            $result = $this->_helper->postCaseToSignifyd($caseData, $order);
+            $caseResponse = $this->_helper->postCaseToSignifyd($caseData, $order);
 
-            if ($result) {
+            if (is_object($caseResponse)) {
                 /** @var Casedata $caseObj */
                 $caseObj = $this->casedataFactory->create();
                 $this->casedataResourceModel->load($caseObj, $case->getOrderIncrement());
 
-                $caseObj->setCode($result)
+                $caseObj->setCode($caseResponse->getCaseId())
                     ->setMagentoStatus(Casedata::IN_REVIEW_STATUS)
                     ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
 

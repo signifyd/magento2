@@ -16,6 +16,8 @@ use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Model\Casedata;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\App\RequestInterface;
+use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
+use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -83,11 +85,24 @@ class Purchase implements ObserverInterface
     protected $request;
 
     /**
+     * @var CasedataResourceModel
+     */
+    protected $casedataResourceModel;
+
+    /**
+     * @var OrderResourceModel
+     */
+    protected $orderResourceModel;
+
+    /**
      * Purchase constructor.
      * @param Logger $logger
      * @param PurchaseHelper $helper
      * @param ConfigHelper $configHelper
      * @param ObjectManagerInterface $objectManagerInterface
+     * @param RequestInterface $request
+     * @param CasedataResourceModel $casedataResourceModel
+     * @param OrderResourceModel $orderResourceModel
      * @param StoreManagerInterface|null $storeManager
      */
     public function __construct(
@@ -95,17 +110,21 @@ class Purchase implements ObserverInterface
         PurchaseHelper $helper,
         ConfigHelper $configHelper,
         ObjectManagerInterface $objectManagerInterface,
-        StoreManagerInterface $storeManager = null,
-        RequestInterface $request
+        RequestInterface $request,
+        CasedataResourceModel $casedataResourceModel,
+        OrderResourceModel $orderResourceModel,
+        StoreManagerInterface $storeManager = null
     ) {
         $this->logger = $logger;
         $this->helper = $helper;
         $this->configHelper = $configHelper;
         $this->objectManagerInterface = $objectManagerInterface;
+        $this->request = $request;
+        $this->casedataResourceModel = $casedataResourceModel;
+        $this->orderResourceModel = $orderResourceModel;
         $this->storeManager = empty($storeManager) ?
             $objectManagerInterface->get(\Magento\Store\Model\StoreManagerInterface::class) :
             $storeManager;
-        $this->request = $request;
     }
 
     /**
@@ -161,14 +180,14 @@ class Purchase implements ObserverInterface
 
             $orderData = $this->helper->processOrderData($order);
 
-            // Add order to database
+            // Add case to database
             $case = $this->helper->createNewCase($order);
 
             // Stop case sending if order has an async payment method
             if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig())) {
                 $case->setMagentoStatus(Casedata::ASYNC_WAIT);
                 try {
-                    $case->save();
+                    $this->casedataResourceModel->save($case);
                     $message = 'Case for order:#' . $incrementId . ' was not sent because of an async payment method';
                     $this->logger->debug($message);
 
@@ -182,16 +201,16 @@ class Purchase implements ObserverInterface
             }
 
             // Post case to signifyd service
-            $result = $this->helper->postCaseToSignifyd($orderData, $order);
+            $caseResponse = $this->helper->postCaseToSignifyd($orderData, $order);
 
             // Initial hold order
             $this->holdOrder($order);
 
-            if ($result) {
-                $case->setCode($result);
+            if (is_object($caseResponse)) {
+                $case->setCode($caseResponse->getCaseId());
                 $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS)->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
                 try {
-                    $case->getResource()->save($case);
+                    $this->casedataResourceModel->save($case);
                     $this->logger->debug('Case saved. Order No:' . $incrementId, ['entity' => $order]);
                 } catch (\Exception $e) {
                     $this->logger->error('Exception in: ' . __FILE__ . ', on line: ' . __LINE__, ['entity' => $order]);
@@ -347,12 +366,12 @@ class Purchase implements ObserverInterface
                 }
             }
 
-            if (!$this->helper->hasGuaranty($order)) {
+            if ($this->helper->hasGuaranty($order) === false) {
                 $message = 'Purchase Observer Order Hold: No: ' . $order->getIncrementId();
                 $this->logger->debug($message, ['entity' => $order]);
                 $order->hold();
-                $order->addStatusHistoryComment("Signifyd: after order place");
-                $order->getResource()->save($order);
+                $order->addCommentToStatusHistory("Signifyd: after order place");
+                $this->orderResourceModel->save($order);
             }
         }
 

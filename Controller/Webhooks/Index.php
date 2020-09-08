@@ -180,9 +180,9 @@ class Index extends Action
             return;
         }
 
-        $signifydApi = $this->configHelper->getSignifydApi($case);
+        $signifydWebhookApi = $this->configHelper->getSignifydWebhookApi($case);
 
-        if ($signifydApi->validWebhookRequest($request, $hash, $topic)) {
+        if ($signifydWebhookApi->validWebhookRequest($request, $hash, $topic)) {
             /** @var \Signifyd\Connect\Model\Casedata $caseObj */
             $caseObj = $this->objectManager->create(\Signifyd\Connect\Model\Casedata::class);
             $caseObj->updateCase($caseData);

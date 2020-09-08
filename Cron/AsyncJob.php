@@ -66,6 +66,7 @@ class AsyncJob
          * Getting all the cases that were not submitted to Signifyd
          */
         $waitingCases = $this->getAsyncWaitingCases(Casedata::ASYNC_WAIT);
+
         foreach ($waitingCases as $case) {
             $message = "Signifyd: preparing for send case no: {$case['order_increment']}";
             $this->logger->debug($message, ['entity' => $case]);
@@ -73,16 +74,18 @@ class AsyncJob
             $order = $this->getOrder($case['order_increment']);
             $retries = (int)$caseObj->getData('retries') + 1;
             $data = $this->checkData($order, $retries);
+            $caseResponse = false;
+
             if (false !== $data) {
                 $caseData = $this->helper->processOrderData($order);
                 $this->addData($caseData, $data);
-                $result = $this->helper->postCaseToSignifyd($caseData, $order);
+                $caseResponse = $this->helper->postCaseToSignifyd($caseData, $order);
                 $caseObj->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
                 $retries = 0;
             } else {
                 if ($case->getRetries() == 5) {
                     $caseData = $this->helper->processOrderData($order);
-                    $result = $this->helper->postCaseToSignifyd($caseData, $order);
+                    $caseResponse = $this->helper->postCaseToSignifyd($caseData, $order);
                     $caseObj->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
                     $retries = 0;
                 } else {
@@ -90,8 +93,8 @@ class AsyncJob
                 }
             }
 
-            if (isset($result) && $result) {
-                $caseObj->setCode($result);
+            if (is_object($caseResponse)) {
+                $caseObj->setCode($caseResponse->getCaseId());
             }
 
             $caseObj->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
@@ -119,6 +122,7 @@ class AsyncJob
         $casesCollection->addFieldToFilter('magento_status', ['eq' => $status]);
         $casesCollection->addFieldToFilter('retries', ['lt' => 6]);
         $casesToRetry = [];
+
         foreach ($casesCollection->getItems() as $case) {
             $casesToRetry[$case->getId()] = $case;
         }

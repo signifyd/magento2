@@ -8,7 +8,6 @@ use Signifyd\Connect\Model\FulfillmentFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Fulfillment as FulfillmentResourceModel;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Core\SignifydModel;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Framework\Serialize\SerializerInterface;
 
@@ -126,9 +125,9 @@ class FulfillmentHelper
                 $fulfillment = $this->prepareFulfillmentToDatabase($fulfillmentData);
             }
 
-            $id = $this->configHelper->getSignifydApi($order)->createFulfillment($orderIncrementId, $fulfillmentData);
+            $fulfillmentBulkResponse = $this->configHelper->getSignifydCaseApi($order)->addFulfillment($fulfillmentData);
 
-            if ($id == false) {
+            if ($fulfillmentBulkResponse->isError()) {
                 $message = "Signifyd: Fullfilment failed to send";
             } else {
                 $message = "Signifyd: Fullfilment sent";
@@ -145,7 +144,7 @@ class FulfillmentHelper
 
         $this->logger->debug($message);
 
-        $order->addStatusHistoryComment($message);
+        $order->addCommentToStatusHistory($message);
         $this->orderResourceModel->save($order);
 
         return true;
@@ -163,27 +162,27 @@ class FulfillmentHelper
     }
 
     /**
-     * @param \Signifyd\Models\Fulfillment $fulfillmentData
+     * @param array $fulfillmentData
      * @return \Signifyd\Connect\Model\Fulfillment
      */
-    public function prepareFulfillmentToDatabase(\Signifyd\Models\Fulfillment $fulfillmentData)
+    public function prepareFulfillmentToDatabase(array $fulfillmentData)
     {
         /** @var \Signifyd\Connect\Model\Fulfillment $fulfillment */
         $fulfillment = $this->fulfillmentFactory->create();
-        $fulfillment->setData('id', $fulfillmentData->id);
-        $fulfillment->setData('order_id', $fulfillmentData->orderId);
-        $fulfillment->setData('created_at', $fulfillmentData->createdAt);
-        $fulfillment->setData('delivery_email', $fulfillmentData->deliveryEmail);
-        $fulfillment->setData('fulfillment_status', $fulfillmentData->fulfillmentStatus);
-        $fulfillment->setData('tracking_numbers', $this->serialize($fulfillmentData->trackingNumbers));
-        $fulfillment->setData('tracking_urls', $this->serialize($fulfillmentData->trackingUrls));
-        $fulfillment->setData('products', $this->serialize($fulfillmentData->products));
-        $fulfillment->setData('shipment_status', $fulfillmentData->shipmentStatus);
-        $fulfillment->setData('delivery_address', $this->serialize($fulfillmentData->deliveryAddress));
-        $fulfillment->setData('recipient_name', $fulfillmentData->recipientName);
-        $fulfillment->setData('confirmation_name', $fulfillmentData->confirmationName);
-        $fulfillment->setData('confirmation_phone', $fulfillmentData->confirmationPhone);
-        $fulfillment->setData('shipping_carrier', $fulfillmentData->shippingCarrier);
+        $fulfillment->setData('id', $fulfillmentData['id']);
+        $fulfillment->setData('order_id', $fulfillmentData['orderId']);
+        $fulfillment->setData('created_at', $fulfillmentData['createdAt']);
+        $fulfillment->setData('delivery_email', $fulfillmentData['deliveryEmail']);
+        $fulfillment->setData('fulfillment_status', $fulfillmentData['fulfillmentStatus']);
+        $fulfillment->setData('tracking_numbers', $this->serialize($fulfillmentData['trackingNumbers']));
+        $fulfillment->setData('tracking_urls', $this->serialize($fulfillmentData['trackingUrls']));
+        $fulfillment->setData('products', $this->serialize($fulfillmentData['products']));
+        $fulfillment->setData('shipment_status', $fulfillmentData['shipmentStatus']);
+        $fulfillment->setData('delivery_address', $this->serialize($fulfillmentData['deliveryAddress']));
+        $fulfillment->setData('recipient_name', $fulfillmentData['recipientName']);
+        $fulfillment->setData('confirmation_name', $fulfillmentData['confirmationName']);
+        $fulfillment->setData('confirmation_phone', $fulfillmentData['confirmationPhone']);
+        $fulfillment->setData('shipping_carrier', $fulfillmentData['shippingCarrier']);
 
         return $fulfillment;
     }
@@ -203,7 +202,7 @@ class FulfillmentHelper
 
     /**
      * @param \Magento\Sales\Model\Order\Shipment $shipment
-     * @return bool|\Signifyd\Models\Fulfillment
+     * @return bool|array
      */
     public function generateFulfillmentData(\Magento\Sales\Model\Order\Shipment $shipment)
     {
@@ -214,22 +213,21 @@ class FulfillmentHelper
             return false;
         }
 
-        /** @var \Signifyd\Models\Fulfillment $fulfillment */
-        $fulfillment = SignifydModel::Make(\Signifyd\Models\Fulfillment::class);
-        $fulfillment->id = $shipment->getIncrementId();
-        $fulfillment->orderId = $shipment->getOrder()->getIncrementId();
-        $fulfillment->createdAt = $this->getCreatedAt($shipment);
-        $fulfillment->deliveryEmail = $this->getDeliveryEmail($shipment);
-        $fulfillment->fulfillmentStatus = $this->getFulfillmentStatus($shipment);
-        $fulfillment->trackingNumbers = $trackingNumbers;
-        $fulfillment->trackingUrls = $this->getTrackingUrls($shipment);
-        $fulfillment->products = $this->getProducts($shipment);
-        $fulfillment->shipmentStatus = $this->getShipmentStatus($shipment);
-        $fulfillment->deliveryAddress = $this->getDeliveryAddress($shipment);
-        $fulfillment->recipientName = $shipment->getShippingAddress()->getName();
-        $fulfillment->confirmationName = null;
-        $fulfillment->confirmationPhone = null;
-        $fulfillment->shippingCarrier = $shipment->getOrder()->getShippingMethod();
+        $fulfillment = [];
+        $fulfillment['id'] = $shipment->getIncrementId();
+        $fulfillment['orderId'] = $shipment->getOrder()->getIncrementId();
+        $fulfillment['createdAt'] = $this->getCreatedAt($shipment);
+        $fulfillment['deliveryEmail'] = $this->getDeliveryEmail($shipment);
+        $fulfillment['fulfillmentStatus'] = $this->getFulfillmentStatus($shipment);
+        $fulfillment['trackingNumbers'] = $trackingNumbers;
+        $fulfillment['trackingUrls'] = $this->getTrackingUrls($shipment);
+        $fulfillment['products'] = $this->getProducts($shipment);
+        $fulfillment['shipmentStatus'] = $this->getShipmentStatus($shipment);
+        $fulfillment['deliveryAddress'] = $this->getDeliveryAddress($shipment);
+        $fulfillment['recipientName'] = $shipment->getShippingAddress()->getName();
+        $fulfillment['confirmationName'] = null;
+        $fulfillment['confirmationPhone'] = null;
+        $fulfillment['shippingCarrier'] = $shipment->getOrder()->getShippingMethod();
 
         return $fulfillment;
     }
@@ -338,18 +336,17 @@ class FulfillmentHelper
              * Since we don’t pass itemSubCategory or itemCategory in the create case we should keep these empty.
              */
 
-            /** @var \Signifyd\Models\Product $product */
-            $product = SignifydModel::Make(\Signifyd\Models\Product::class);
-            $product->itemId = $item->getSku();
-            $product->itemName = $item->getName();
-            $product->itemIsDigital = (bool) $item->getOrderItem()->getIsVirtual();
-            $product->itemCategory = null;
-            $product->itemSubCategory = null;
-            $product->itemUrl = $this->getItemUrl($item);
-            $product->itemImage = $this->getItemImage($item);
-            $product->itemQuantity = floatval($item->getQty());
-            $product->itemPrice = floatval($item->getPrice());
-            $product->itemWeight = floatval($item->getWeight());
+            $product = [];
+            $product['itemId'] = $item->getSku();
+            $product['itemName'] = $item->getName();
+            $product['itemIsDigital'] = (bool) $item->getOrderItem()->getIsVirtual();
+            $product['itemCategory'] = null;
+            $product['itemSubCategory'] = null;
+            $product['itemUrl'] = $this->getItemUrl($item);
+            $product['itemImage'] = $this->getItemImage($item);
+            $product['itemQuantity'] = floatval($item->getQty());
+            $product['itemPrice'] = floatval($item->getPrice());
+            $product['itemWeight'] = floatval($item->getWeight());
 
             $products[] = $product;
         }
@@ -388,7 +385,7 @@ class FulfillmentHelper
     /**
      * Magento do not track shipment stauts
      *
-     * Rewrite this method if you have and want to send these informations to Signifyd
+     * Rewrite/plugin this method if you have and want to send these informations to Signifyd
      *
      * @param \Magento\Sales\Model\Order\Shipment $shipment
      * @return null
@@ -409,18 +406,17 @@ class FulfillmentHelper
 
     /**
      * @param \Magento\Sales\Model\Order\Shipment $shipment
-     * @return \Signifyd\Models\Address
+     * @return array
      */
     public function getDeliveryAddress(\Magento\Sales\Model\Order\Shipment $shipment)
     {
-        /** @var \Signifyd\Models\Address $deliveryAddress */
-        $deliveryAddress = SignifydModel::Make(\Signifyd\Models\Address::class);
-        $deliveryAddress->streetAddress = $this->getStreetAddress($shipment);
-        $deliveryAddress->unit = null;
-        $deliveryAddress->city = $shipment->getShippingAddress()->getCity();
-        $deliveryAddress->provinceCode = $shipment->getShippingAddress()->getRegionCode();
-        $deliveryAddress->postalCode = $shipment->getShippingAddress()->getPostcode();
-        $deliveryAddress->countryCode = $shipment->getShippingAddress()->getCountry();
+        $deliveryAddress = [];
+        $deliveryAddress['streetAddress'] = $this->getStreetAddress($shipment);
+        $deliveryAddress['unit'] = null;
+        $deliveryAddress['city'] = $shipment->getShippingAddress()->getCity();
+        $deliveryAddress['provinceCode'] = $shipment->getShippingAddress()->getRegionCode();
+        $deliveryAddress['postalCode'] = $shipment->getShippingAddress()->getPostcode();
+        $deliveryAddress['countryCode'] = $shipment->getShippingAddress()->getCountry();
 
         return $deliveryAddress;
     }
