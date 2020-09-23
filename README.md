@@ -71,7 +71,13 @@ Restrict orders with specific payment methods from being sent to Signifyd.
 
 [Restrict orders by payment methods](docs/RESTRICT-PAYMENTS.md) 
 
-### Pass custom payment data using payment helpers
+### Pass custom payment data using payment gateways APIs
+
+The Signifyd extension will use external class to collect payment data (avsResponseCode, cvvResponseCode, cardBin, cardLast4, cardExpiryMonth and cardExpiryYear) from payment gateway APIs when submitting an order for guarantee. If these fields are missing from submitted orders you can pass these fields by using existing gateways APIs integrations on our SDK or building your own. 
+
+[Payment gateways](docs/PAYMENT-DETAILS-GATEWAY.md)
+
+### Pass custom payment data using payment mappers
 
 The Signifyd extension will try to collect payment data (avsResponseCode, cvvResponseCode, cardBin, cardLast4, cardExpiryMonth and cardExpiryYear) from Magento when submitting an order for guarantee. If these fields are missing from submitted orders you can pass these fields by using the extension's mappers. 
 

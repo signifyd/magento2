@@ -2,12 +2,13 @@
 
 namespace Signifyd\Connect\Model\Payment;
 
+use Adyen\Config;
 use Magento\Framework\Registry;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Signifyd\Connect\Api\PaymentVerificationInterface;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\PaymentGatewayFactory;
+use Signifyd\Connect\Helper\ConfigHelper;
 
 abstract class DataMapper implements PaymentVerificationInterface
 {
@@ -15,11 +16,6 @@ abstract class DataMapper implements PaymentVerificationInterface
      * @var Registry
      */
     protected $registry;
-
-    /**
-     * @var ScopeConfigInterface
-     */
-    protected $scopeConfig;
 
     /**
      * @var JsonSerializer
@@ -49,25 +45,30 @@ abstract class DataMapper implements PaymentVerificationInterface
     protected $logger;
 
     /**
+     * @var ConfigHelper
+     */
+    protected $configHelper;
+
+    /**
      * DataMapper constructor.
      * @param Registry $registry
-     * @param ScopeConfigInterface $scopeConfig
      * @param JsonSerializer $jsonSerializer
      * @param PaymentGatewayFactory $paymentGatewayFactory
      * @param Logger $logger
+     * @param ConfigHelper $configHelper
      */
     public function __construct(
         Registry $registry,
-        ScopeConfigInterface $scopeConfig,
         JsonSerializer $jsonSerializer,
         PaymentGatewayFactory $paymentGatewayFactory,
-        Logger $logger
+        Logger $logger,
+        ConfigHelper $configHelper
     ) {
         $this->registry = $registry;
-        $this->scopeConfig = $scopeConfig;
         $this->jsonSerializer = $jsonSerializer;
         $this->paymentGatewayFactory = $paymentGatewayFactory;
         $this->logger = $logger;
+        $this->configHelper = $configHelper;
     }
 
     /**
@@ -162,8 +163,9 @@ abstract class DataMapper implements PaymentVerificationInterface
     public function getGatewayIntegrationSettings(\Magento\Sales\Model\Order $order)
     {
         $paymentMethod = $order->getPayment()->getMethod();
-        $gatewayIntegrationSettings = $this->scopeConfig->getValue(
-            "signifyd/gateway_integration/{$paymentMethod}"
+        $gatewayIntegrationSettings = $this->configHelper->getConfigData(
+            "signifyd/gateway_integration/{$paymentMethod}",
+            $order
         );
 
         if (empty($gatewayIntegrationSettings) === false) {
@@ -214,7 +216,10 @@ abstract class DataMapper implements PaymentVerificationInterface
                         break;
 
                     case 'path':
-                        $gatewayIntegrationSettings['params'][$key] = $this->scopeConfig->getValue($param['path']);
+                        $gatewayIntegrationSettings['params'][$key] = $this->configHelper->getConfigData(
+                            $param['path'],
+                            $order
+                        );
                         break;
                 }
             }
