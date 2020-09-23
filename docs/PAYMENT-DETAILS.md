@@ -1,6 +1,6 @@
 ﻿[Signifyd Extension for Magento 2](../README.md) > Pass payment gateway details **using mappers**
 
-# Pass payment gateway details **using mappers**
+# Pass payment details - using mappers
 
 ## Overview
 

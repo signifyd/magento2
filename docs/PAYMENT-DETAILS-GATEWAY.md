@@ -1,6 +1,6 @@
 ﻿[Signifyd Extension for Magento 2](../README.md) > Pass payment gateway details **using payment gateways APIs**
 
-# Pass payment gateway details **using payment gateways APIs**
+# Pass payment details - using payment gateways APIs
 
 ## Overview
 
@@ -123,7 +123,7 @@ class CustomGateway extends AbstractGateway
 }
 ```
 
-And finally provide settings to Signifyd extension on Magento database by adding settings on core_config_data table as explained on * Use existing payment gateway classes* section.
+And finally provide settings to Signifyd extension on Magento database by adding settings on core_config_data table as explained on *Use existing payment gateway classes* section.
 
 ```sql
 INSERT INTO core_config_data(path, value) VALUES(
