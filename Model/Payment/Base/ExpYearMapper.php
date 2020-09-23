@@ -22,4 +22,15 @@ class ExpYearMapper extends DataMapper
 
         return $expYear;
     }
+
+    /**
+     * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
+     * @return string
+     */
+    public function getPaymentDataFromGatewayResponse(\Signifyd\Models\Payment\Response\ResponseInterface $response)
+    {
+        $expYear = $response->getExpiryYear();
+
+        return (empty($expYear) ? '' : $expYear);
+    }
 }

@@ -43,4 +43,14 @@ interface PaymentVerificationInterface
      * @throws \InvalidArgumentException
      */
     public function getCode(\Magento\Sales\Model\Order $order);
+
+    /**
+     * Fetch data directly from payment gateway response instead of getting it from Magento database
+     * A class implementing GatewayInterface should be implemented and setup on settings in order to
+     * retrieve a ResponseInterface that will be passed to this method
+     *
+     * @param \Signifyd\Models\Payment\GatewayInterface $paymentGateway
+     * @return mixed
+     */
+    public function getPaymentDataFromGatewayResponse(\Signifyd\Models\Payment\Response\ResponseInterface $response);
 }

@@ -30,8 +30,23 @@ class CvvEmsCodeMapper extends DataMapper
         return $cidStatus;
     }
 
+    /**
+     * @param $response
+     * @return bool
+     */
     public function validate($response)
     {
         return in_array($response, $this->validCvvResponseCodes);
+    }
+
+    /**
+     * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
+     * @return string
+     */
+    public function getPaymentDataFromGatewayResponse(\Signifyd\Models\Payment\Response\ResponseInterface $response)
+    {
+        $cvvStatus = $response->getCvv();
+
+        return $this->validate($cvvStatus) ? $cvvStatus : null;
     }
 }

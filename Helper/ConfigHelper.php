@@ -131,7 +131,7 @@ class ConfigHelper
      * @param \Magento\Framework\Model\AbstractModel|null $entity
      * @return mixed
      */
-    public function getSignifydApi($type = 'case', \Magento\Framework\Model\AbstractModel $entity = null)
+    public function getSignifydApi($type, \Magento\Framework\Model\AbstractModel $entity = null)
     {
         $type = strtolower($type);
         $apiId = $type . $this->getStoreCode($entity, true);

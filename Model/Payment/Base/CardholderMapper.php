@@ -18,4 +18,15 @@ class CardholderMapper extends DataMapper
         $cardholder = $cardholder === null ? '' : $cardholder;
         return $cardholder;
     }
+
+    /**
+     * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
+     * @return string
+     */
+    public function getPaymentDataFromGatewayResponse(\Signifyd\Models\Payment\Response\ResponseInterface $response)
+    {
+        $cardholder = $response->getCardholder();
+
+        return empty($cardholder) ? '' : null;
+    }
 }
