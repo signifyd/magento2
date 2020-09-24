@@ -4,27 +4,27 @@
 
 ## Overview
 
-Use integrations directly to payment gateway APIs to fetch most of these information:
+Use integrations directly with payment gateway APIs to fetch most of these information:
 
 - AVS Response Code
 - CVV Response Code
 - Bin
-- Last 4
+- Credit card - Last 4 digits
 - Expiry Month
 - Expiry Year
 - Transaction ID
 
 ## Basic Structure
 
-In order to fetch information a gateway class must implement \Signifyd\Models\Payment\GatewayInterface and return as response a class implementing \Signifyd\Models\Payment\Response\ResponseInterface.
+In order to fetch information, a gateway class must implement \Signifyd\Models\Payment\GatewayInterface. It must return a class implementing \Signifyd\Models\Payment\Response\ResponseInterface as response.
 
-Signifyd SDK also provide a abstract gateway class \Signifyd\Models\Payment\AbstractGateway which can be extended by the final gateway class implementation and a default response class \Signifyd\Models\Payment\Response\DefaultResponse, which it is strongly recommended to be used as either the final response class or as parent for the final response class.
+The Signifyd SDK also provides an abstract gateway class \Signifyd\Models\Payment\AbstractGateway, which can be extended by the final gateway class implementation and a default response class \Signifyd\Models\Payment\Response\DefaultResponse It is strongly recommended that the default response class to be used as either the final response class or as parent for the final response class.
 
-Before start building your own classes, check if it is not already implemented under \Signifyd\Models\Payment namespace.
+Before starting building your own classes, check if they are not already implemented under \Signifyd\Models\Payment namespace.
 
 ## Use existing payment gateway classes
 
-If the payment gateway class already exists for the desired payment gateway, it is only needed to provide a configuration to get it working. Each payment method extension should have it's own settings. Some payment methods extensions have this configuration built in on Signifyd extension, as we can see for AuthorizeNet official extension on etc/config.xml:
+If the payment gateway class already exists for the desired payment gateway, you only need to provide a configuration to get it working. Each payment method extension should have its own settings. Some payment methods extensions have this configuration built into the Signifyd extension, as you can see for AuthorizeNet official extension on etc/config.xml:
 
 ```xml
 <config>
@@ -38,33 +38,33 @@ If the payment gateway class already exists for the desired payment gateway, it 
 </config>
 ```
 
-Settings for a gateway must be set on core_config_data table on Magento database using below string as path.
+The settings for a gateway must be set on the core_config_data table within the Magento database using the string below as path.
 
 ```
 signifyd/gateway_integration/{payment_method_code}
 ```
 
-The value must be a JSON string which need to include two properties: gateway and params.
+The value must be a JSON string which needs to include two properties: gateway and params.
 
-The "gateway" property must include the gateway class name with duplicated slashes. E.g. if class name is \Signifyd\Models\Payment\Authorizenet it must be provided as \\Signifyd\\Models\\Payment\\Authorizenet.
+The "gateway" property must include the gateway class name with duplicated slashes. E.g. if the class' name is \Signifyd\Models\Payment\Authorizenet, then it must be provided as \\Signifyd\\Models\\Payment\\Authorizenet.
 
-The "params" property should include information needed by payment gateway class to comunicate with gateway API. E.g. for \Signifyd\Models\Payment\Authorizenet class params "name" and "transactionKey".
+The "params" property should include the information needed by the payment gateway class to comunicate with the gateway API. E.g. for \Signifyd\Models\Payment\Authorizenet - the class parameters "name" and "transactionKey".
 
-Each param on "params" property can be provided as a direct value or as a path for some existing Magento setting.
+Each parameter on "params" property can be provided as a direct value or as a path for some existing Magento setting.
 
-To provide a param as a direct value properties "type" and "value" must be provided. For "type" property the string "direct" must be set and "value" property must contain the param actual value. Below example show how to provide AuthorizeNet transaction key.
+To provide a parameter as a direct value, the properties "type" and "value" must be provided. For the "type" property, the string "direct" must be set and the "value" property must contain the parameter's actual value. Below example shows how to provide the AuthorizeNet transaction key.
 
 ```json
 {"params":{"transactionKey":{"type":"direct","value":"XSS983HDN3"}}}
 ```
 
-To provide a param as a reference to an existing Magento setting properties "type" and "path" must me provided. For "type" property the string "path" must be set and "path" property must contain the path for the desired setting. Below example show how to get AuthorizeNet transaction key from AuthorizeNet official extension, this way it is not necessary to re-type the transaction key directly on settings, extension will get it from the provided path. Also, if for some reason the transaction key is changed on AuthorizeNet extension settings will be not necessary to change it on gateway integration settings.
+To provide a parameter as a reference to an existing Magento setting, the properties "type" and "path" must me provided. For the "type" property, the string "path" must be set and the "path" property must contain the path for the desired setting. Below example shows how to get the AuthorizeNet transaction key from AuthorizeNet's official extension: this way re-typing the transaction key directly in settings is not necessary. The extension will get it from the provided path. Also, if for some reason the transaction key is changed on AuthorizeNet's extension settings, changing it on the gateway integration settings will not be necessary.
 
 ```json
 {"params":{"transactionKey":{"type":"path","path":"authorize_net/anet_core/trans_key"}}}
 ```
 
-Finally, after it is defined the gateway class and params, perform the insert SQL command on database.
+Finally, after the gateway class and parameters are defined, perform the insert SQL command on the database.
 
 ```sql
 INSERT INTO core_config_data(path, value) VALUES(
@@ -73,19 +73,19 @@ INSERT INTO core_config_data(path, value) VALUES(
 );
 ```
 
-**Note:** gateway class name must include extra slash scapes on SQL command
+**Note:** the gateway class name must include extra slash scapes on the SQL command.
 
 It is possible to use multiscope (multi store) settings on core_config_data if needed.
 
 ## Build custom payment gateway
 
-The new gateway class must implement \Signifyd\Models\Payment\GatewayInterface and return as response a class implementing \Signifyd\Models\Payment\Response\ResponseInterface.
+The new gateway class must implement \Signifyd\Models\Payment\GatewayInterface and return a class implementing \Signifyd\Models\Payment\Response\ResponseInterface as response.
 
-Signifyd SDK also provide a abstract gateway class \Signifyd\Models\Payment\AbstractGateway which can be extended by the final gateway class implementation and a default response class \Signifyd\Models\Payment\Response\DefaultResponse, which it is strongly recommended to be used either as the final response class or as parent for the final response class.
+The Signifyd SDK also provides an abstract gateway class \Signifyd\Models\Payment\AbstractGateway, which can be extended by the final gateway class implementation and a default response class \Signifyd\Models\Payment\Response\DefaultResponse. It is strongly recommended that the default response class to be used as either the final response class or as parent for the final response class.
 
-If \Signifyd\Models\Payment\AbstractGateway class is used as parent class for the new custom class, params set on core_config_data will be set on $params property.
+If the \Signifyd\Models\Payment\AbstractGateway class is used as a parent class for the new custom class, the parameters set on core_config_data will be set on the $params property.
 
-Below a example of a gateway class implementation.
+Below is an example of a gateway class implementation.
 
 ```php
 <?php
@@ -123,7 +123,7 @@ class CustomGateway extends AbstractGateway
 }
 ```
 
-And finally provide settings to Signifyd extension on Magento database by adding settings on core_config_data table as explained on *Use existing payment gateway classes* section.
+And finally, provide settings to the Signifyd extension on Magento database by adding settings on the core_config_data table as explained in the *Use existing payment gateway classes* section.
 
 ```sql
 INSERT INTO core_config_data(path, value) VALUES(
