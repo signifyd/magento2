@@ -45,7 +45,6 @@ class OrderHelper
     {
         if ($order->getState() != Order::STATE_HOLDED && $order->isPaymentReview() == false) {
             $reason = "order is not holded";
-            $completeCase = true;
         } elseif ($order->isPaymentReview()) {
             $reason = 'order is in payment review';
         } elseif ($order->getActionFlag(Order::ACTION_FLAG_UNHOLD) === false) {
@@ -87,7 +86,6 @@ class OrderHelper
             }
             if ($allInvoiced) {
                 $reason = "all order items are invoiced";
-                $completeCase = true;
             } else {
                 $reason = "unknown reason";
             }
@@ -128,7 +126,6 @@ class OrderHelper
                 $reason = "unknown reason";
             } else {
                 $reason = "no items can be invoiced";
-                $completeCase = true;
             }
         }
 

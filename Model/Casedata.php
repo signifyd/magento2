@@ -244,6 +244,10 @@ class Casedata extends AbstractModel
                     $this->logger->debug($message, ['entity' => $case]);
                     $orderAction['action'] = false;
                     $order->addStatusHistoryComment("Signifyd: order cannot be updated to on hold, {$reason}");
+
+                    if ($order->getState() == Order::STATE_HOLDED) {
+                        $completeCase = true;
+                    }
                 }
                 break;
 
@@ -270,10 +274,12 @@ class Casedata extends AbstractModel
                         "can not be removed from hold because {$reason}. " .
                         "Case status: {$case->getSignifydStatus()}";
                     $this->logger->debug($message, ['entity' => $case]);
-
+                    $order->addStatusHistoryComment("Signifyd: order status cannot be updated, {$reason}");
                     $orderAction['action'] = false;
 
-                    $order->addStatusHistoryComment("Signifyd: order status cannot be updated, {$reason}");
+                    if ($reason == "order is not holded") {
+                        $completeCase = true;
+                    }
                 }
                 break;
 
@@ -302,6 +308,10 @@ class Casedata extends AbstractModel
                     $this->logger->debug($message, ['entity' => $case]);
                     $orderAction['action'] = false;
                     $order->addStatusHistoryComment("Signifyd: order cannot be canceled, {$reason}");
+
+                    if ($reason == "all order items are invoiced") {
+                        $completeCase = true;
+                    }
                 }
 
                 if ($orderAction['action'] == false && $order->canHold()) {
@@ -361,6 +371,10 @@ class Casedata extends AbstractModel
                         $this->logger->debug($message, ['entity' => $case]);
                         $orderAction['action'] = false;
                         $order->addStatusHistoryComment("Signifyd: unable to create invoice: {$reason}");
+
+                        if ($reason == "no items can be invoiced") {
+                            $completeCase = true;
+                        }
 
                         if ($order->canHold()) {
                             $order->hold();
