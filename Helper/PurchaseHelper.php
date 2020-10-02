@@ -161,11 +161,11 @@ class PurchaseHelper
      */
     protected function makeProduct(Item $item)
     {
-        $itemPrice = floatval(number_format($item->getPrice(), 0, '.', ''));
+        $itemPrice = floatval(number_format($item->getPriceInclTax(), 2, '.', ''));
 
         if ($itemPrice <= 0) {
             if ($item->getParentItem()->getProductType() === 'configurable') {
-                $itemPrice = $item->getParentItem()->getPrice();
+                $itemPrice = floatval(number_format($item->getParentItem()->getPriceInclTax(), 2, '.', ''));
             }
         }
 
