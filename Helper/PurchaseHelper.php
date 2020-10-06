@@ -248,7 +248,7 @@ class PurchaseHelper
             $shippingMethod = $order->getShippingMethod(true);
             $shipment = SignifydModel::Make(\Signifyd\Models\Shipment::class);
             $shipment->shipper = $shippingMethod->getCarrierCode();
-            $shipment->shippingPrice = floatval($order->getShippingAmount());
+            $shipment->shippingPrice = floatval($order->getShippingAmount()) + floatval($order->getShippingTaxAmount());
             $shipment->shippingMethod = $shippingMethod->getMethod();
 
             $shipments[] = $shipment;
