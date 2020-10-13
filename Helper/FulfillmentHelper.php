@@ -9,8 +9,8 @@ use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Fulfillment as FulfillmentResourceModel;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Core\SignifydModel;
-use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Framework\Serialize\SerializerInterface;
+use Signifyd\Connect\Helper\OrderHelper;
 
 class FulfillmentHelper
 {
@@ -35,11 +35,6 @@ class FulfillmentHelper
     protected $fulfillmentResourceModel;
 
     /**
-     * @var OrderResourceModel
-     */
-    protected $orderResourceModel;
-
-    /**
      * @var Logger
      */
     protected $logger;
@@ -55,36 +50,41 @@ class FulfillmentHelper
     protected $serializer;
 
     /**
+     * @var OrderHelper
+     */
+    protected $orderHelper;
+
+    /**
      * FulfillmentHelper constructor.
      * @param CasedataFactory $casedataFactory
      * @param FulfillmentFactory $fulfillmentFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param FulfillmentResourceModel $fulfillmentResourceModel
-     * @param OrderResourceModel $orderResourceModel
      * @param Logger $logger
      * @param ConfigHelper $configHelper
      * @param SerializerInterface $serializer
+     * @param OrderHelper $orderHelper
      */
     public function __construct(
         CasedataFactory $casedataFactory,
         FulfillmentFactory $fulfillmentFactory,
         CasedataResourceModel $casedataResourceModel,
         FulfillmentResourceModel $fulfillmentResourceModel,
-        OrderResourceModel $orderResourceModel,
         Logger $logger,
         ConfigHelper $configHelper,
-        SerializerInterface $serializer
+        SerializerInterface $serializer,
+        OrderHelper $orderHelper
     ) {
         $this->casedataFactory = $casedataFactory;
         $this->fulfillmentFactory = $fulfillmentFactory;
 
         $this->casedataResourceModel = $casedataResourceModel;
         $this->fulfillmentResourceModel = $fulfillmentResourceModel;
-        $this->orderResourceModel = $orderResourceModel;
 
         $this->logger = $logger;
         $this->configHelper = $configHelper;
         $this->serializer = $serializer;
+        $this->orderHelper = $orderHelper;
     }
 
     public function postFulfillmentToSignifyd(\Magento\Sales\Model\Order\Shipment $shipment)
@@ -133,8 +133,6 @@ class FulfillmentHelper
             } else {
                 $message = "Signifyd: Fullfilment sent";
 
-                $this->casedataResourceModel->save($case);
-
                 $fulfillment->setMagentoStatus(Fulfillment::COMPLETED_STATUS);
                 $this->fulfillmentResourceModel->save($fulfillment);
             }
@@ -144,9 +142,7 @@ class FulfillmentHelper
         }
 
         $this->logger->debug($message);
-
-        $order->addStatusHistoryComment($message);
-        $this->orderResourceModel->save($order);
+        $this->orderHelper->addCommentToStatusHistory($order, $message);
 
         return true;
     }

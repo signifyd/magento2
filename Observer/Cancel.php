@@ -25,20 +25,26 @@ class Cancel implements ObserverInterface
     /**
      * @var \Signifyd\Connect\Helper\PurchaseHelper
      */
-    protected $helper;
+    protected $purchaseHelper;
 
     /**
      * @var \Signifyd\Connect\Helper\ConfigHelper
      */
     protected $configHelper;
 
+    /**
+     * Cancel constructor.
+     * @param Logger $logger
+     * @param PurchaseHelper $purchaseHelper
+     * @param \Signifyd\Connect\Helper\ConfigHelper $configHelper
+     */
     public function __construct(
         Logger $logger,
-        PurchaseHelper $helper,
+        PurchaseHelper $purchaseHelper,
         \Signifyd\Connect\Helper\ConfigHelper $configHelper
     ) {
         $this->logger = $logger;
-        $this->helper = $helper;
+        $this->purchaseHelper = $purchaseHelper;
         $this->configHelper = $configHelper;
     }
 
@@ -74,10 +80,7 @@ class Cancel implements ObserverInterface
                 return;
             }
 
-            // Check if case already exists for this order
-            if ($this->helper->doesCaseExist($order)) {
-                $this->helper->cancelCaseOnSignifyd($order);
-            }
+            $this->purchaseHelper->cancelCaseOnSignifyd($order);
         } catch (\Exception $ex) {
             $context = [];
 

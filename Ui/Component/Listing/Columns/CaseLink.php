@@ -5,12 +5,12 @@
  */
 namespace Signifyd\Connect\Ui\Component\Listing\Columns;
 
-use Braintree\Exception;
-use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\View\Element\UiComponent\ContextInterface;
 use Magento\Framework\View\Element\UiComponentFactory;
 use Magento\Ui\Component\Listing\Columns\Column;
 use Magento\Framework\Serialize\SerializerInterface;
+use Signifyd\Connect\Model\CasedataFactory;
+use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 
 /**
  * Class CaseLink show case link on orger grid
@@ -18,34 +18,43 @@ use Magento\Framework\Serialize\SerializerInterface;
 class CaseLink extends Column
 {
     /**
-     * @var ObjectManagerInterface
-     */
-    protected $objectManager;
-
-    /**
      * @var SerializerInterface
      */
     protected $serializer;
 
     /**
+     * @var CasedataFactory
+     */
+    protected $casedataFactory;
+
+    /**
+     * @var CasedataResourceModel
+     */
+    protected $casedataResourceModel;
+
+    /**
      * CaseLink constructor.
      * @param ContextInterface $context
      * @param UiComponentFactory $uiComponentFactory
-     * @param ObjectManagerInterface $objectManager
      * @param SerializerInterface $serializer
+     * @param CasedataFactory $casedataFactory
+     * @param CasedataResourceModel $casedataResourceModel
      * @param array $components
      * @param array $data
      */
     public function __construct(
         ContextInterface $context,
         UiComponentFactory $uiComponentFactory,
-        ObjectManagerInterface $objectManager,
         SerializerInterface $serializer,
+        CasedataFactory $casedataFactory,
+        CasedataResourceModel $casedataResourceModel,
         array $components = [],
         array $data = []
     ) {
-        $this->objectManager = $objectManager;
         $this->serializer = $serializer;
+        $this->casedataResourceModel = $casedataResourceModel;
+        $this->casedataFactory = $casedataFactory;
+
         parent::__construct($context, $uiComponentFactory, $components, $data);
     }
 
@@ -65,9 +74,8 @@ class CaseLink extends Column
                     $item[$name] = (int) $item[$name];
                 } else {
                     /** @var \Signifyd\Connect\Model\Casedata $case */
-                    $case = $this->objectManager
-                        ->create(\Signifyd\Connect\Model\Casedata::class)
-                        ->load($item['increment_id']);
+                    $case = $this->casedataFactory->create();
+                    $this->casedataResourceModel->load($case, $item['increment_id']);
                     $entries = $case->getEntriesText();
 
                     if (!empty($entries)) {

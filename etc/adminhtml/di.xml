@@ -8,5 +8,12 @@
         </arguments>
     </type>
 
-    <preference for="Magento\Sales\Block\Adminhtml\Order\View" type="Signifyd\Connect\Block\Adminhtml\Order\View" />
+    <!-- Plugins -->
+    <type name="Magento\Sales\Block\Adminhtml\Order\View">
+        <plugin name="Signifyd_Connect_Plugin_Magento_Sales_Block_Adminhtml_Order_View" type="\Signifyd\Connect\Plugin\Magento\Sales\Block\Adminhtml\Order\View" />
+    </type>
+
+    <type name="Magento\Sales\Controller\Adminhtml\Order\Unhold">
+        <plugin name="Signifyd_Connect_Plugin_Magento_Sales_Controller_Adminhtml_Order_Unhold" type="\Signifyd\Connect\Plugin\Magento\Sales\Controller\Adminhtml\Order\Unhold" />
+    </type>
 </config>

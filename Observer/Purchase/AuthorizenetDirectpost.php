@@ -8,7 +8,8 @@ use Magento\Framework\Event\Observer;
 class AuthorizenetDirectpost extends Purchase
 {
     /**
-     * @param \Magento\Framework\Event\Observer $observer
+     * @param Observer $observer
+     * @param bool $checkOwnEventsMethods
      */
     public function execute(Observer $observer, $checkOwnEventsMethods = true)
     {
@@ -18,14 +19,14 @@ class AuthorizenetDirectpost extends Purchase
 
         if (!empty($orderIncrementId)) {
             /** @var \Magento\Sales\Model\Order $order */
-            $order = $this->objectManagerInterface->create(\Magento\Sales\Model\Order::class);
-            $order->loadByIncrementId($orderIncrementId);
+            $order = $this->orderFactory->create();
+            $this->orderResourceModel->load($order, $orderIncrementId, 'increment_id');
 
             if ($order instanceof \Magento\Sales\Model\Order) {
                 $observer->getEvent()->setOrder($order);
             }
         }
 
-        return parent::execute($observer, false);
+        parent::execute($observer, false);
     }
 }

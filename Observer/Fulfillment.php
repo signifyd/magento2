@@ -14,6 +14,11 @@ class Fulfillment implements ObserverInterface
     /** @var Registry */
     protected $registry;
 
+    /**
+     * Fulfillment constructor.
+     * @param Registry $registry
+     * @param FulfillmentHelper $fulfillmentHelper
+     */
     public function __construct(
         Registry $registry,
         FulfillmentHelper $fulfillmentHelper

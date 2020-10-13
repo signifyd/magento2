@@ -12,10 +12,12 @@ use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Sales\Model\OrderFactory;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\PurchaseHelper;
+use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\Retry;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
+use Magento\Framework\App\ResourceConnection;
 
 class RetryCaseJob
 {
@@ -27,12 +29,18 @@ class RetryCaseJob
     /**
      * @var \Magento\Framework\ObjectManagerInterface
      */
-    protected $_objectManager;
+    protected $objectManager;
 
     /**
-     * @var \Signifyd\Connect\Helper\PurchaseHelper
+     * @var PurchaseHelper
      */
-    protected $_helper;
+    protected $purchaseHelper;
+
+    /**
+     * @var ConfigHelper
+     */
+    protected $configHelper;
+
 
     /**
      * @var \Signifyd\Connect\Helper\Retry
@@ -55,9 +63,14 @@ class RetryCaseJob
     protected $casedataResourceModel;
 
     /**
-     * @var CasedataFactory\
+     * @var CasedataFactory
      */
     protected $casedataFactory;
+
+    /**
+     * @var ResourceConnection
+     */
+    protected $resourceConnection;
 
     /**
      * @var \StripeIntegration\Payments\Model\Config
@@ -67,66 +80,110 @@ class RetryCaseJob
     /**
      * RetryCaseJob constructor.
      * @param ObjectManagerInterface $objectManager
-     * @param PurchaseHelper $helper
+     * @param PurchaseHelper $purchaseHelper
+     * @param ConfigHelper $configHelper
      * @param Logger $logger
      * @param Retry $caseRetryObj
      * @param OrderResourceModel $orderResourceModel
      * @param OrderFactory $orderFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param CasedataFactory $casedataFactory
+     * @param ResourceConnection $resourceConnection
      */
     public function __construct(
         ObjectManagerInterface $objectManager,
-        PurchaseHelper $helper,
+        PurchaseHelper $purchaseHelper,
+        ConfigHelper $configHelper,
         Logger $logger,
         Retry $caseRetryObj,
         OrderResourceModel $orderResourceModel,
         OrderFactory $orderFactory,
         CasedataResourceModel $casedataResourceModel,
-        CasedataFactory $casedataFactory
+        CasedataFactory $casedataFactory,
+        ResourceConnection $resourceConnection
     ) {
-        $this->_objectManager = $objectManager;
-        $this->_helper = $helper;
+        $this->objectManager = $objectManager;
+        $this->purchaseHelper = $purchaseHelper;
+        $this->configHelper = $configHelper;
         $this->logger = $logger;
         $this->caseRetryObj = $caseRetryObj;
         $this->orderResourceModel = $orderResourceModel;
         $this->orderFactory = $orderFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->casedataFactory = $casedataFactory;
+        $this->resourceConnection = $resourceConnection;
     }
 
     /**
      * Entry point to Cron job
-     * @return $this
      */
     public function execute()
     {
         $this->logger->debug("Main retry method called");
+
+        $asyncWaitingCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::ASYNC_WAIT);
+
+        /** @var \Signifyd\Connect\Model\Casedata $case */
+        foreach ($asyncWaitingCases as $case) {
+            $this->logger->debug(
+                "Signifyd: preparing for send case no: {$case->getOrderIncrement()}",
+                ['entity' => $case]
+            );
+
+            $caseModel = $this->purchaseHelper->processOrderData($case->getOrder());
+            $avsCode = $caseModel->getPurchase()->getAvsResponseCode();
+            $cvvCode = $caseModel->getPurchase()->getCvvResponseCode();
+            $retries = $case->getData('retries');
+
+            if ($retries >= 5 || empty($avsCode) == false && empty($cvvCode) == false) {
+                try {
+                    $this->resourceConnection->getConnection()->beginTransaction();
+                    $this->casedataResourceModel->loadForUpdate($case, $case->getId());
+
+                    $case->setMagentoStatus(Casedata::WAITING_SUBMISSION_STATUS);
+                    $case->setUpdated();
+
+                    $this->casedataResourceModel->save($case);
+                    $this->resourceConnection->getConnection()->commit();
+                } catch (\Exception $e) {
+                    $this->resourceConnection->getConnection()->rollBack();
+                    $this->logger->error('Failed to save case data to database: ' . $e->getMessage());
+                }
+            }
+        }
 
         /**
          * Getting all the cases that were not submitted to Signifyd
          */
         $waitingCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::WAITING_SUBMISSION_STATUS);
 
+        /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($waitingCases as $case) {
-            $message = "Signifyd: preparing for send case no: {$case['order_increment']}";
-            $this->logger->debug($message, ['entity' => $case]);
+            $this->logger->debug(
+                "Signifyd: preparing for send case no: {$case['order_increment']}",
+                ['entity' => $case]
+            );
 
-            $order = $this->getOrder($case['order_increment']);
+            $this->reInitStripe($case->getOrder());
 
-            $caseData = $this->_helper->processOrderData($order);
-            $result = $this->_helper->postCaseToSignifyd($caseData, $order);
+            $caseModel = $this->purchaseHelper->processOrderData($case->getOrder());
+            $investigationId = $this->purchaseHelper->postCaseToSignifyd($caseModel, $case->getOrder());
 
-            if ($result) {
-                /** @var Casedata $caseObj */
-                $caseObj = $this->casedataFactory->create();
-                $this->casedataResourceModel->load($caseObj, $case->getOrderIncrement());
+            if (empty($investigationId) === false) {
+                try {
+                    $this->resourceConnection->getConnection()->beginTransaction();
+                    $this->casedataResourceModel->loadForUpdate($case, $case->getId());
 
-                $caseObj->setCode($result)
-                    ->setMagentoStatus(Casedata::IN_REVIEW_STATUS)
-                    ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
+                    $case->setCode($investigationId);
+                    $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
+                    $case->setUpdated();
 
-                $this->casedataResourceModel->save($caseObj);
+                    $this->casedataResourceModel->save($case);
+                    $this->resourceConnection->getConnection()->commit();
+                } catch (\Exception $e) {
+                    $this->resourceConnection->getConnection()->rollBack();
+                    $this->logger->error('Failed to save case data to database: ' . $e->getMessage());
+                }
             }
         }
 
@@ -136,10 +193,29 @@ class RetryCaseJob
         $inReviewCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::IN_REVIEW_STATUS);
 
         foreach ($inReviewCases as $case) {
-            $message = "Signifyd: preparing for review case no: {$case['order_increment']}";
-            $this->logger->debug($message, ['entity' => $case]);
+            $this->logger->debug(
+                "Signifyd: preparing for review case no: {$case['order_increment']}",
+                ['entity' => $case]
+            );
 
-            $this->caseRetryObj->processInReviewCase($case, $this->getOrder($case['order_increment']));
+            $this->reInitStripe($case->getOrder());
+
+            try {
+                $response = $this->configHelper->getSignifydApi($case)->getCase($case->getCode());
+
+                $this->resourceConnection->getConnection()->beginTransaction();
+                $this->casedataResourceModel->loadForUpdate($case, $case->getId());
+
+                $case->updateCase($response);
+                $case->updateOrder();
+
+                $this->casedataResourceModel->save($case);
+                $this->orderResourceModel->save($case->getOrder());
+                $this->resourceConnection->getConnection()->commit();
+            } catch (\Exception $e) {
+                $this->resourceConnection->getConnection()->rollBack();
+                $this->logger->error('Failed to save case data to database: ' . $e->getMessage());
+            }
         }
 
         /**
@@ -148,34 +224,34 @@ class RetryCaseJob
         $inProcessingCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::PROCESSING_RESPONSE_STATUS);
 
         foreach ($inProcessingCases as $case) {
-            $message = "Signifyd: preparing for process case no: {$case['order_increment']}";
-            $this->logger->debug($message, ['entity' => $case]);
+            $this->logger->debug(
+                "Signifyd: preparing for process case no: {$case['order_increment']}",
+                ['entity' => $case]
+            );
 
-            $this->caseRetryObj->processResponseStatus($case, $this->getOrder($case['order_increment']));
+            $this->reInitStripe($case->getOrder());
+
+            try {
+                $this->resourceConnection->getConnection()->beginTransaction();
+                $this->casedataResourceModel->loadForUpdate($case, $case->getId());
+
+                $case->updateOrder();
+
+                $this->casedataResourceModel->save($case);
+                $this->orderResourceModel->save($case->getOrder());
+                $this->resourceConnection->getConnection()->commit();
+            } catch (\Exception $e) {
+                $this->resourceConnection->getConnection()->rollBack();
+                $this->logger->error('Failed to save case data to database: ' . $e->getMessage());
+            }
         }
 
         $this->logger->debug("Main retry method ended");
-
-        return $this;
     }
 
     /**
-     * @param $incrementId
-     * @return \Magento\Sales\Model\Order
-     */
-    public function getOrder($incrementId)
-    {
-        $order = $this->orderFactory->create();
-        $this->orderResourceModel->load($order, $incrementId, 'increment_id');
-
-        if ($order->getPayment()->getMethod() == 'stripe_payments') {
-            $this->reInitStripe($order);
-        }
-
-        return $order;
-    }
-
-    /**
+     * On background tasks Stripe must be reinitialized
+     *
      * @param \Magento\Sales\Model\Order $order
      * @return bool
      */
@@ -186,7 +262,7 @@ class RetryCaseJob
         }
 
         if ($this->stripeConfig === null) {
-            $this->stripeConfig = $this->_objectManager->get(\StripeIntegration\Payments\Model\Config::class);
+            $this->stripeConfig = $this->objectManager->get(\StripeIntegration\Payments\Model\Config::class);
         }
 
         if (version_compare(\StripeIntegration\Payments\Model\Config::$moduleVersion, '1.8.8') >= 0 &&

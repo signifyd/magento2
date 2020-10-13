@@ -19,9 +19,14 @@ use Signifyd\Connect\Observer\Purchase;
 class UpgradeSchema implements UpgradeSchemaInterface
 {
     /**
-     * @var \Signifyd\Connect\Helper\ConfigHelper
+     * @var WriterInterface
      */
     protected $configWriter;
+
+    /**
+     * @var ScopeConfigInterface
+     */
+    protected $scopeConfig;
 
     /**
      * @var Purchase
@@ -29,16 +34,18 @@ class UpgradeSchema implements UpgradeSchemaInterface
     protected $purchaseObserver;
 
     /**
-     * TODO: Make changes  to be able to save current restricted payment gateways from code to database
-     *
-     * InstallSchema constructor.
-     * @param \Signifyd\Connect\Helper\ConfigHelper $configHelper
+     * UpgradeSchema constructor.
+     * @param WriterInterface $configWriter
+     * @param ScopeConfigInterface $scopeConfig
+     * @param Purchase $purchaseObserver
      */
     public function __construct(
         WriterInterface $configWriter,
+        ScopeConfigInterface $scopeConfig,
         Purchase $purchaseObserver
     ) {
         $this->configWriter = $configWriter;
+        $this->scopeConfig = $scopeConfig;
         $this->purchaseObserver = $purchaseObserver;
     }
 
@@ -233,14 +240,17 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
         }
 
-        if (version_compare($context->getVersion(), '3.6.0') < 0) {
-            $data = [
-                'scope' => 'default',
-                'scope_id' => 0,
-                'path' => 'signifyd/general/async_payment_methods',
-                'value' => 'cybersource,adyen_cc',
-            ];
-            $setup->getConnection()->insertOnDuplicate($setup->getTable('core_config_data'), $data, ['value']);
+        /**
+         * On 3.6.0 we've added this setting to database, but it is not necessary because it is already
+         * on config.xml file. So now this setting will be removed if has not been changed
+         */
+        if (version_compare($context->getVersion(), '3.7.0') < 0) {
+            $asyncPaymentMethodsPath = 'signifyd/general/async_payment_methods';
+            $asyncPaymentMethods = $this->scopeConfig->getValue($asyncPaymentMethodsPath);
+
+            if ($asyncPaymentMethods == 'cybersource,adyen_cc') {
+                $this->configWriter->delete($asyncPaymentMethodsPath);
+            }
         }
 
         $setup->endSetup();
