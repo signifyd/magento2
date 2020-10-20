@@ -516,8 +516,7 @@ class PurchaseHelper
         }
 
         /** @var \Magento\Sales\Model\Order\Item $item */
-        foreach ($order->getAllItems() as $item)
-        {
+        foreach ($order->getAllItems() as $item) {
             if ($item->getQtyToCancel() > 0 || $item->getQtyToRefund() > 0) {
                 $message = 'Guarantee cancel skipped: order still have items not canceled or refunded';
                 $this->logger->debug($message, ['entity' => $order]);

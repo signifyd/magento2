@@ -205,7 +205,7 @@ class Casedata extends AbstractModel
         $orderAction = $this->handleGuaranteeChange();
 
         $this->logger->debug(
-            $message = "Update order with action: " . $this->serializer->serialize($orderAction),
+            $message = "Updating order with action: " . $this->serializer->serialize($orderAction),
             ['entity' => $this]
         );
 

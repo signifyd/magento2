@@ -41,7 +41,6 @@ class RetryCaseJob
      */
     protected $configHelper;
 
-
     /**
      * @var \Signifyd\Connect\Helper\Retry
      */
