@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<csp_whitelist xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Csp:etc/csp_whitelist.xsd">
+    <policies>
+        <policy id="script-src">
+            <values>
+                <value id="signifyd-cdn-scripts" type="host">https://cdn-scripts.signifyd.com</value>
+                <value id="signifyd-imgs" type="host">https://imgs.signifyd.com</value>
+            </values>
+        </policy>
+        <policy id="img-src">
+            <values>
+                <value id="signifyd-imgs" type="host">https://imgs.signifyd.com</value>
+                <value id="signifyd-online-metrix" type="host">https://*.online-metrix.net</value>
+            </values>
+        </policy>
+        <policy id="frame-src">
+            <values>
+                <value id="signifyd-online-metrix" type="host">https://*.online-metrix.net</value>
+            </values>
+        </policy>
+        <policy id="connect-src">
+            <values>
+                <value id="signifyd-imgs" type="host">https://imgs.signifyd.com</value>
+            </values>
+        </policy>
+        <policy id="frame-src">
+            <values>
+                <value id="signifyd-imgs" type="host">https://imgs.signifyd.com</value>
+            </values>
+        </policy>
+    </policies>
+</csp_whitelist>
