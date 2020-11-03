@@ -11,7 +11,6 @@ use Magento\Framework\Setup\SchemaSetupInterface;
 use Magento\Framework\DB\Ddl\Table;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
-use Signifyd\Connect\Observer\Purchase;
 
 /**
  * @codeCoverageIgnore
@@ -29,24 +28,16 @@ class UpgradeSchema implements UpgradeSchemaInterface
     protected $scopeConfig;
 
     /**
-     * @var Purchase
-     */
-    protected $purchaseObserver;
-
-    /**
      * UpgradeSchema constructor.
      * @param WriterInterface $configWriter
      * @param ScopeConfigInterface $scopeConfig
-     * @param Purchase $purchaseObserver
      */
     public function __construct(
         WriterInterface $configWriter,
-        ScopeConfigInterface $scopeConfig,
-        Purchase $purchaseObserver
+        ScopeConfigInterface $scopeConfig
     ) {
         $this->configWriter = $configWriter;
         $this->scopeConfig = $scopeConfig;
-        $this->purchaseObserver = $purchaseObserver;
     }
 
     /**
@@ -75,26 +66,6 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 'default' => 0,
                 'comment' => 'Number of retries for current case magento_status',
             ]);
-        }
-
-        if (version_compare($context->getVersion(), '3.2.0') < 0) {
-            $oldRestrictedPaymentMethods = $this->purchaseObserver->getOldRestrictMethods();
-
-            if (is_array($oldRestrictedPaymentMethods) &&
-                empty($oldRestrictedPaymentMethods) == false) {
-
-                $restrictedPaymentMethods = $this->purchaseObserver->getRestrictedPaymentMethodsConfig();
-
-                $diff1 = array_diff($oldRestrictedPaymentMethods, $restrictedPaymentMethods);
-                $diff2 = array_diff($restrictedPaymentMethods, $oldRestrictedPaymentMethods);
-
-                // If anything is different, so use $oldRestrictedPaymentMethods on database settings
-                if (empty($diff1) == false || empty($diff2) == false) {
-                    $oldRestrictedPaymentMethods = implode(',', $oldRestrictedPaymentMethods);
-                    $restrictedPaymentMethodsPath = 'signifyd/general/restrict_payment_methods';
-                    $this->configWriter->save($restrictedPaymentMethodsPath, $oldRestrictedPaymentMethods);
-                }
-            }
         }
 
         if (version_compare($context->getVersion(), '3.2.1') < 0) {

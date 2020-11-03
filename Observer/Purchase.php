@@ -74,21 +74,6 @@ class Purchase implements ObserverInterface
     protected $ownEventsMethods = ['authorizenet_directpost'];
 
     /**
-     * Restricted payment methods
-     * @var array
-     * @deprecated
-     *
-     * Restricted payment methods are no longer managed in this method.
-     * Please add customized restricted payment methods to core_config_data table as below.
-     *
-     * INSERT INTO core_config_data(path, value) VALUES (
-     * 'signifyd/general/restrict_payment_methods',
-     * 'checkmo,cashondelivery,banktransfer,purchaseorder'
-     * );
-     */
-    protected $restrictedMethods;
-
-    /**
      * Purchase constructor.
      * @param Logger $logger
      * @param PurchaseHelper $purchaseHelper
@@ -224,25 +209,6 @@ class Purchase implements ObserverInterface
             }
 
             $this->logger->error($ex->getMessage(), $context);
-        }
-    }
-
-    /**
-     * Used on UpgradeScheme starting on version 3.2.0 for backward compatibility
-     *
-     * Do not remove this method
-     *
-     * Tries to get restricted payment methods from class property
-     *
-     * @return array
-     * @deprecated
-     */
-    public function getOldRestrictMethods()
-    {
-        if (isset($this->restrictedMethods) && empty($this->restrictedMethods) == false) {
-            return $this->restrictedMethods;
-        } else {
-            return false;
         }
     }
 
