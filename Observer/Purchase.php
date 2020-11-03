@@ -178,7 +178,7 @@ class Purchase implements ObserverInterface
                     );
 
                     // Initial hold order
-                    $this->holdOrder($order);
+                    $this->holdOrder($order, $case);
                     $this->orderResourceModel->save($order);
                 } catch (\Exception $ex) {
                     $this->logger->error($ex->__toString());
@@ -191,7 +191,7 @@ class Purchase implements ObserverInterface
             $investigationId = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
 
             // Initial hold order
-            $this->holdOrder($order);
+            $this->holdOrder($order, $case);
 
             if ($investigationId) {
                 $case->setCode($investigationId);
@@ -291,12 +291,8 @@ class Purchase implements ObserverInterface
      * @param $order
      * @return bool
      */
-    public function holdOrder(\Magento\Sales\Model\Order $order)
+    public function holdOrder(\Magento\Sales\Model\Order $order, \Signifyd\Connect\Model\Casedata $case)
     {
-        /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->casedataFactory->create();
-        $this->casedataResourceModel->load($case, $order->getIncrementId());
-
         $positiveAction = $case->getPositiveAction();
         $negativeAction = $case->getNegativeAction();
 
