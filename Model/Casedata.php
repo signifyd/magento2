@@ -166,7 +166,7 @@ class Casedata extends AbstractModel
             $order = $this->getOrder();
 
             if (isset($response->score) && $this->getScore() != $response->score) {
-                $this->setScore($response->score);
+                $this->setScore(floor($response->score));
                 $order->setSignifydScore($response->score);
             }
 
