@@ -5,6 +5,7 @@ namespace Signifyd\Connect\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Registry;
 use Signifyd\Connect\Helper\FulfillmentHelper;
+use Signifyd\Connect\Logger\Logger;
 
 class Fulfillment implements ObserverInterface
 {
@@ -15,16 +16,24 @@ class Fulfillment implements ObserverInterface
     protected $registry;
 
     /**
+     * @var Logger
+     */
+    protected $logger;
+
+    /**
      * Fulfillment constructor.
      * @param Registry $registry
      * @param FulfillmentHelper $fulfillmentHelper
+     * @param Logger $logger
      */
     public function __construct(
         Registry $registry,
-        FulfillmentHelper $fulfillmentHelper
+        FulfillmentHelper $fulfillmentHelper,
+        Logger $logger
     ) {
         $this->registry = $registry;
         $this->fulfillmentHelper = $fulfillmentHelper;
+        $this->logger = $logger;
     }
 
     /**
@@ -35,8 +44,12 @@ class Fulfillment implements ObserverInterface
         /** @var \Magento\Sales\Model\Order\Shipment\Track $track */
         $track = $observer->getEvent()->getTrack();
 
+        $this->logger->info('Fulfillment event triggered for object ' . get_class($track));
+
         if ($track instanceof \Magento\Sales\Model\Order\Shipment\Track) {
             $shipment = $track->getShipment();
+
+            $this->logger->info('Fulfillment shipment object ' . get_class($track->getShipment()));
 
             if ($shipment instanceof \Magento\Sales\Model\Order\Shipment) {
                 // This observer can be called multiple times during a single shipment save
@@ -44,6 +57,7 @@ class Fulfillment implements ObserverInterface
                 $registryKey = "signifyd_action_shipment_{$shipment->getId()}";
 
                 if ($this->registry->registry($registryKey) == 1) {
+                    $this->logger->info('Fulfillment will not proceed because registry key found: ' . $registryKey);
                     return;
                 }
 

@@ -239,11 +239,19 @@ class PurchaseHelper
      */
     protected function makeProduct(Item $item)
     {
+        $itemPrice = floatval(number_format($item->getPrice(), 0, '.', ''));
+
+        if ($itemPrice <= 0) {
+            if ($item->getParentItem()->getProductType() === 'configurable') {
+                $itemPrice = $item->getParentItem()->getPrice();
+            }
+        }
+
         $product = SignifydModel::Make(\Signifyd\Models\Product::class);
         $product->itemId = $item->getSku();
         $product->itemName = $item->getName();
         $product->itemIsDigital = (bool) $item->getIsVirtual();
-        $product->itemPrice = $item->getPrice();
+        $product->itemPrice = $itemPrice;
         $product->itemQuantity = (int)$item->getQtyOrdered();
         $product->itemUrl = $item->getProduct()->getProductUrl();
         $product->itemWeight = $item->getProduct()->getWeight();
