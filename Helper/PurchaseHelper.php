@@ -10,8 +10,13 @@ use Braintree\Exception;
 use Magento\Framework\Module\ModuleListInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Address;
-use \Magento\Framework\ObjectManagerInterface;
 use Magento\Sales\Model\Order\Item;
+use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+use Magento\Framework\HTTP\PhpEnvironment\RemoteAddress;
+use Magento\Framework\App\ProductMetadata;
+use Magento\Customer\Model\CustomerFactory;
+use Magento\Customer\Model\ResourceModel\Customer as CustomerResourceModel;
+use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
 use Signifyd\Core\SignifydModel;
 use Signifyd\Models\Address as SignifydAddress;
 use Signifyd\Models\Card;
@@ -21,9 +26,11 @@ use Signifyd\Models\Purchase;
 use Signifyd\Models\Recipient;
 use Signifyd\Models\UserAccount;
 use Signifyd\Connect\Model\PaymentVerificationFactory;
-use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Framework\Registry;
 use Signifyd\Connect\Logger\Logger;
+use Signifyd\Connect\Model\CasedataFactory;
+use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
+use Magento\Framework\App\ResourceConnection;
 
 /**
  * Class PurchaseHelper
@@ -31,6 +38,36 @@ use Signifyd\Connect\Logger\Logger;
  */
 class PurchaseHelper
 {
+    /**
+     * @var OrderResourceModel
+     */
+    protected $orderResourceModel;
+
+    /**
+     * @var RemoteAddress
+     */
+    protected $remoteAddress;
+
+    /**
+     * @var ProductMetadata
+     */
+    protected $productMetadata;
+
+    /**
+     * @var CustomerFactory
+     */
+    protected $customerFactory;
+
+    /**
+     * @var CustomerResourceModel
+     */
+    protected $customerResourceModel;
+
+    /**
+     * @var OrderCollectionFactory
+     */
+    protected $orderCollectionFactory;
+
     /**
      * @var Logger
      */
@@ -40,11 +77,6 @@ class PurchaseHelper
      * @var \Signifyd\Connect\Helper\ConfigHelper
      */
     protected $configHelper;
-
-    /**
-     * @var \Magento\Framework\ObjectManagerInterface
-     */
-    protected $objectManager;
 
     /**
      * @var \Magento\Framework\Module\ModuleListInterface
@@ -67,29 +99,78 @@ class PurchaseHelper
     protected $registry;
 
     /**
-     * @param ObjectManagerInterface $objectManager
+     * @var OrderHelper
+     */
+    protected $orderHelper;
+
+    /**
+     * @var CasedataFactory
+     */
+    protected $casedataFactory;
+
+    /**
+     * @var CasedataResourceModel
+     */
+    protected $casedataResourceModel;
+
+    /**
+     * @var ResourceConnection
+     */
+    protected $resourceConnection;
+
+    /**
+     * PurchaseHelper constructor.
+     * @param OrderResourceModel $orderResourceModel
+     * @param RemoteAddress $remoteAddress
+     * @param ProductMetadata $productMetadata
+     * @param CustomerFactory $customerFactory
+     * @param CustomerResourceModel $customerResourceModel
+     * @param OrderCollectionFactory $orderCollectionFactory
      * @param Logger $logger
      * @param ConfigHelper $configHelper
      * @param ModuleListInterface $moduleList
      * @param DeviceHelper $deviceHelper
      * @param PaymentVerificationFactory $paymentVerificationFactory
+     * @param Registry $registry
+     * @param OrderHelper $orderHelper
+     * @param CasedataFactory $casedataFactory
+     * @param CasedataResourceModel $casedataResourceModel
+     * @param ResourceConnection $resourceConnection
      */
     public function __construct(
-        ObjectManagerInterface $objectManager,
+        OrderResourceModel $orderResourceModel,
+        RemoteAddress $remoteAddress,
+        ProductMetadata $productMetadata,
+        CustomerFactory $customerFactory,
+        CustomerResourceModel $customerResourceModel,
+        OrderCollectionFactory $orderCollectionFactory,
         Logger $logger,
         ConfigHelper $configHelper,
         ModuleListInterface $moduleList,
         DeviceHelper $deviceHelper,
         PaymentVerificationFactory $paymentVerificationFactory,
-        Registry $registry
+        Registry $registry,
+        OrderHelper $orderHelper,
+        CasedataFactory $casedataFactory,
+        CasedataResourceModel $casedataResourceModel,
+        ResourceConnection $resourceConnection
     ) {
+        $this->orderResourceModel = $orderResourceModel;
+        $this->remoteAddress = $remoteAddress;
+        $this->productMetadata = $productMetadata;
+        $this->customerFactory = $customerFactory;
+        $this->customerResourceModel = $customerResourceModel;
+        $this->orderCollectionFactory = $orderCollectionFactory;
         $this->logger = $logger;
-        $this->objectManager = $objectManager;
         $this->moduleList = $moduleList;
         $this->deviceHelper = $deviceHelper;
         $this->paymentVerificationFactory = $paymentVerificationFactory;
         $this->registry = $registry;
         $this->configHelper = $configHelper;
+        $this->orderHelper = $orderHelper;
+        $this->casedataFactory = $casedataFactory;
+        $this->casedataResourceModel = $casedataResourceModel;
+        $this->resourceConnection = $resourceConnection;
     }
 
     /**
@@ -107,9 +188,7 @@ class PurchaseHelper
             return $this->filterIp($order->getRemoteIp());
         }
 
-        /** @var $case \Magento\Framework\HTTP\PhpEnvironment\RemoteAddress */
-        $remoteAddressHelper = $this->objectManager->get(\Magento\Framework\HTTP\PhpEnvironment\RemoteAddress::class);
-        return $this->filterIp($remoteAddressHelper->getRemoteAddress());
+        return $this->filterIp($this->remoteAddress->getRemoteAddress());
     }
 
     /**
@@ -147,8 +226,7 @@ class PurchaseHelper
     protected function getVersions()
     {
         $version = [];
-        $productMetadata = $this->objectManager->get(\Magento\Framework\App\ProductMetadata::class);
-        $version['storePlatformVersion'] = $productMetadata->getVersion();
+        $version['storePlatformVersion'] = $this->productMetadata->getVersion();
         $version['signifydClientApp'] = 'Magento 2';
         $version['storePlatform'] = 'Magento 2';
         $version['signifydClientAppVersion'] = (string)($this->moduleList->getOne('Signifyd_Connect')['setup_version']);
@@ -161,11 +239,19 @@ class PurchaseHelper
      */
     protected function makeProduct(Item $item)
     {
+        $itemPrice = floatval(number_format($item->getPrice(), 0, '.', ''));
+
+        if ($itemPrice <= 0) {
+            if ($item->getParentItem()->getProductType() === 'configurable') {
+                $itemPrice = $item->getParentItem()->getPrice();
+            }
+        }
+
         $product = SignifydModel::Make(\Signifyd\Models\Product::class);
         $product->itemId = $item->getSku();
         $product->itemName = $item->getName();
         $product->itemIsDigital = (bool) $item->getIsVirtual();
-        $product->itemPrice = $item->getPrice();
+        $product->itemPrice = $itemPrice;
         $product->itemQuantity = (int)$item->getQtyOrdered();
         $product->itemUrl = $item->getProduct()->getProductUrl();
         $product->itemWeight = $item->getProduct()->getWeight();
@@ -335,18 +421,23 @@ class PurchaseHelper
         $user->phone = $order->getBillingAddress()->getTelephone();
 
         /* @var $customer \Magento\Customer\Model\Customer */
-        $customer = $this->objectManager->get(\Magento\Customer\Model\Customer::class)->load($order->getCustomerId());
+        $customer = $this->customerFactory->create();
+        $this->customerResourceModel->load($customer, $order->getCustomerId());
+
         $this->logger->debug("Customer data: " . json_encode($customer), ['entity' => $order]);
+
         if ($customer !== null && !$customer->isEmpty()) {
             $user->createdDate = date('c', strtotime($customer->getCreatedAt()));
         }
+
         /** @var $orders \Magento\Sales\Model\ResourceModel\Order\Collection */
-        $orders = $this->objectManager->get(\Magento\Sales\Model\ResourceModel\Order\Collection::class);
+        $orders = $this->orderCollectionFactory->create();
         $orders->addFieldToFilter('customer_id', $order->getCustomerId());
         $orders->load();
 
         $orderCount = 0;
         $orderTotal = 0.0;
+
         /** @var $o \Magento\Sales\Model\Order*/
         foreach ($orders as $o) {
             $orderCount++;
@@ -357,31 +448,6 @@ class PurchaseHelper
         $user->aggregateOrderDollars = $orderTotal;
 
         return $user;
-    }
-
-    /**
-     * Loading the case
-     * @param Order $order
-     * @return \Signifyd\Connect\Model\Casedata
-     */
-    public function getCase(Order $order)
-    {
-        /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->objectManager->create(\Signifyd\Connect\Model\Casedata::class);
-        $case->load($order->getIncrementId());
-        return $case;
-    }
-
-    /**
-     * Check if the related case exists
-     * @param Order $order
-     * @return bool
-     */
-    public function doesCaseExist(Order $order)
-    {
-        /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->getCase($order);
-        return $case->isEmpty() == false && $case->isObjectNew() == false;
     }
 
     /**
@@ -409,39 +475,23 @@ class PurchaseHelper
     }
 
     /**
-     * Saving the case to the database
-     * @param \Magento\Sales\Model\Order $order
-     * @return \Signifyd\Connect\Model\Casedata
-     */
-    public function createNewCase($order)
-    {
-        /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->objectManager->create(\Signifyd\Connect\Model\Casedata::class);
-        $case->setId($order->getIncrementId())
-            ->setSignifydStatus("PENDING")
-            ->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()))
-            ->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()))
-            ->setEntriesText("");
-        $case->save();
-        return $case;
-    }
-
-    /**
-     * @param $caseData
+     * @param $caseModel
      * @param Order $order
      * @return bool
      */
-    public function postCaseToSignifyd($caseData, $order)
+    public function postCaseToSignifyd($caseModel, $order)
     {
-        $id = $this->configHelper->getSignifydApi($order)->createCase($caseData);
+        $investigationId = $this->configHelper->getSignifydApi($order)->createCase($caseModel);
 
-        if ($id) {
-            $this->logger->debug("Case sent. Id is $id", ['entity' => $order]);
-            $order->addStatusHistoryComment("Signifyd: case created {$id}");
-            $order->save();
-            return $id;
+        if ($investigationId) {
+            $this->logger->debug("Case sent. Id is {$investigationId}", ['entity' => $order]);
+            $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: case created {$investigationId}");
+
+            return $investigationId;
         } else {
             $this->logger->error("Case failed to send.", ['entity' => $order]);
+            $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: failed to create case");
+
             return false;
         }
     }
@@ -454,11 +504,15 @@ class PurchaseHelper
     {
         $this->logger->debug("Trying to cancel case for order " . $order->getIncrementId(), ['entity' => $order]);
 
-        $case = $this->getCase($order);
+        /** @var $case \Signifyd\Connect\Model\Casedata */
+        $case = $this->casedataFactory->create();
+        $this->casedataResourceModel->load($case, $order->getIncrementId());
 
         if ($case->isEmpty()) {
-            $message = 'Guarantee cancel skipped: case not found for order ' . $order->getIncrementId();
-            $this->logger->debug($message, ['entity' => $order]);
+            $this->logger->debug(
+                'Guarantee cancel skipped: case not found for order ' . $order->getIncrementId(),
+                ['entity' => $order]
+            );
             return false;
         }
 
@@ -479,35 +533,34 @@ class PurchaseHelper
         }
 
         $this->logger->debug('Cancelling case ' . $case->getId(), ['entity' => $order]);
+
         $disposition = $this->configHelper->getSignifydApi($order)->cancelGuarantee($case->getCode());
 
         $this->logger->debug("Cancel disposition result {$disposition}", ['entity' => $order]);
 
         if ($disposition == 'CANCELED') {
-            $case->setData('guarantee', $disposition);
-            $case->save();
+            try {
+                $this->resourceConnection->getConnection()->beginTransaction();
+                $this->casedataResourceModel->loadForUpdate($case, $case->getId());
 
-            $order->setSignifydGuarantee($disposition);
-            $order->addStatusHistoryComment("Signifyd: guarantee canceled");
-            $order->save();
+                $case->setData('guarantee', $disposition);
+                $order->setSignifydGuarantee($disposition);
+                $order->addCommentToStatusHistory("Signifyd: guarantee canceled");
+
+                $this->casedataResourceModel->save($case);
+                $this->orderResourceModel->save($case->getOrder());
+                $this->resourceConnection->getConnection()->commit();
+            } catch (\Exception $e) {
+                $this->resourceConnection->getConnection()->rollBack();
+                $this->logger->error('Failed to save case data to database: ' . $e->getMessage());
+            }
+
             return true;
         } else {
-            $order->addStatusHistoryComment("Signifyd: failed to cancel guarantee");
-            $order->save();
+            $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: failed to cancel guarantee");
+
+            return false;
         }
-
-        return false;
-    }
-
-    /**
-     * Check if case has guaranty
-     * @param $order
-     * @return bool
-     */
-    public function hasGuaranty($order)
-    {
-        $case = $this->getCase($order);
-        return ($case->getGuarantee() == 'N/A')? false : true;
     }
 
     /**

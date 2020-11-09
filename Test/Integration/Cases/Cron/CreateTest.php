@@ -14,7 +14,7 @@ class CreateTest extends OrderTestCase
 
     protected $paymentMethod = 'banktransfer';
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 

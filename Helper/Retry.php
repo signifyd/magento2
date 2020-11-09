@@ -1,51 +1,47 @@
 <?php
-/**
- * Copyright 2015 SIGNIFYD Inc. All rights reserved.
- * See LICENSE.txt for license details.
- */
 
 namespace Signifyd\Connect\Helper;
 
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
-use Magento\Framework\ObjectManagerInterface;
-use Signifyd\Connect\Model\Casedata;
+use Signifyd\Connect\Model\ResourceModel\Casedata\CollectionFactory as CasedataCollectionFactory;
+use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Logger\Logger;
 
 class Retry extends AbstractHelper
 {
     /**
-     * @var Casedata
+     * @var CasedataCollectionFactory
      */
-    protected $caseData;
+    protected $casedataCollectionFactory;
 
     /**
-     * @var ConfigHelper
+     * @var CasedataResourceModel
      */
-    protected $configHelper;
-
-    /**
-     * @var ObjectManagerInterface
-     */
-    protected $objectManager;
+    protected $casedataResourceModel;
 
     /**
      * @var Logger
      */
     protected $logger;
 
+    /**
+     * Retry constructor.
+     * @param Context $context
+     * @param CasedataCollectionFactory $casedataCollectionFactory
+     * @param CasedataResourceModel $casedataResourceModel
+     * @param Logger $logger
+     */
     public function __construct(
         Context $context,
-        Casedata $caseData,
-        ConfigHelper $configHelper,
-        ObjectManagerInterface $objectManager,
+        CasedataCollectionFactory $casedataCollectionFactory,
+        CasedataResourceModel $casedataResourceModel,
         Logger $logger
     ) {
         parent::__construct($context);
 
-        $this->caseData = $caseData;
-        $this->configHelper = $configHelper;
-        $this->objectManager = $objectManager;
+        $this->casedataCollectionFactory = $casedataCollectionFactory;
+        $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
     }
 
@@ -62,7 +58,7 @@ class Retry extends AbstractHelper
         $current = date('Y-m-d H:i:s', $time);
         $from = date('Y-m-d H:i:s', $lastTime);
 
-        $casesCollection = $this->caseData->getCollection();
+        $casesCollection = $this->casedataCollectionFactory->create();
         $casesCollection->addFieldToFilter('updated', ['gteq' => $from]);
         $casesCollection->addFieldToFilter('magento_status', ['eq' => $status]);
         $casesCollection->addFieldToFilter('retries', ['lt' => count($retryTimes)]);
@@ -74,14 +70,15 @@ class Retry extends AbstractHelper
 
         $casesToRetry = [];
 
+        /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($casesCollection->getItems() as $case) {
             $retries = $case->getData('retries');
             $secondsAfterUpdate = $case->getData('seconds_after_update');
 
             if ($secondsAfterUpdate > $retryTimes[$retries]) {
                 $casesToRetry[$case->getId()] = $case;
-                $case->setData('retries', $retries+1);
-                $case->save();
+                $case->setData('retries', $retries + 1);
+                $this->casedataResourceModel->save($case);
             }
         }
 
@@ -107,61 +104,5 @@ class Retry extends AbstractHelper
         }
 
         return $retryTimes;
-    }
-
-    /**
-     * Process the cases that are in review
-     *
-     * @param $case
-     * @param $order
-     * @return bool
-     */
-    public function processInReviewCase($case, $order)
-    {
-        if (empty($case->getCode())) {
-            return false;
-        }
-
-        try {
-            $caseData['response'] = $this->configHelper->getSignifydApi($case)->getCase($case->getCode());
-            $caseData['case'] = $case;
-            $caseData['order'] = $order;
-            /** @var \Signifyd\Connect\Model\Casedata $caseObj */
-            $caseObj = $this->objectManager->create(\Signifyd\Connect\Model\Casedata::class);
-            $caseObj->updateCase($caseData);
-            return true;
-        } catch (\Exception $e) {
-            $this->logger->critical($e->__toString(), ['entity' => $order]);
-            return false;
-        }
-    }
-
-    /**
-     * @param \Signifyd\Connect\Model\Casedata $case
-     * @param $order
-     * @return mixed
-     */
-    public function processResponseStatus($case, $order)
-    {
-        $negativeAction = $case->getNegativeAction();
-        $positiveAction = $case->getPositiveAction();
-
-        switch ($case->getGuarantee()) {
-            case 'DECLINED':
-                $orderAction = ["action" => $negativeAction, "reason" => "guarantee declined"];
-                break;
-
-            case 'APPROVED':
-                $orderAction = ["action" => $positiveAction, "reason" => "guarantee approved"];
-                break;
-
-            default:
-                $orderAction = ['action' => null, 'reason' => null];
-        }
-
-        $caseData = ['order' => $order];
-        /** @var \Signifyd\Connect\Model\Casedata $caseObj */
-        $caseObj = $this->objectManager->create(\Signifyd\Connect\Model\Casedata::class);
-        $caseObj->updateOrder($caseData, $orderAction, $case);
     }
 }

@@ -14,7 +14,7 @@
                 <restrict_states_default>pending_payment,payment_review,canceled,closed,complete</restrict_states_default>
                 <restrict_states_create>holded,pending_payment,payment_review,canceled,closed,complete</restrict_states_create>
                 <restrict_payment_methods>checkmo,cashondelivery,banktransfer,purchaseorder</restrict_payment_methods>
-                <async_payment_methods>cybersource,adyen_cc</async_payment_methods>
+                <async_payment_methods>cybersource</async_payment_methods>
             </general>
             <advanced>
                 <guarantee_negative_action>nothing</guarantee_negative_action>
@@ -25,6 +25,16 @@
             </logs>
 
             <payment>
+                <adyen_cc>
+                    <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\AdyenCc\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
+                    <signifyd_bin_adapter>Signifyd\Connect\Model\Payment\AdyenCc\BinMapper</signifyd_bin_adapter>
+                    <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\AdyenCc\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
+                    <signifyd_exp_month_adapter>Signifyd\Connect\Model\Payment\AdyenCc\ExpMonthMapper</signifyd_exp_month_adapter>
+                    <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\AdyenCc\ExpYearMapper</signifyd_exp_year_adapter>
+                    <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\AdyenCc\Last4Mapper</signifyd_last4_adapter>
+                    <signifyd_transaction_id_adapter>Signifyd\Connect\Model\Payment\AdyenCc\TransactionIdMapper</signifyd_transaction_id_adapter>
+                </adyen_cc>
+
                 <authorizenet_directpost>
                     <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Authorizenet\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
                     <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\Authorizenet\Last4Mapper</signifyd_last4_adapter>
@@ -37,6 +47,16 @@
                     <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Braintree\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
                     <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Braintree\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
                 </braintree>
+
+                <cybersource>
+                    <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Cybersource\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
+                    <signifyd_bin_adapter>Signifyd\Connect\Model\Payment\Cybersource\BinMapper</signifyd_bin_adapter>
+                    <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Cybersource\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
+                    <signifyd_exp_month_adapter>Signifyd\Connect\Model\Payment\Cybersource\ExpMonthMapper</signifyd_exp_month_adapter>
+                    <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\Cybersource\ExpYearMapper</signifyd_exp_year_adapter>
+                    <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\Cybersource\Last4Mapper</signifyd_last4_adapter>
+                    <signifyd_transaction_id_adapter>Signifyd\Connect\Model\Payment\Cybersource\TransactionIdMapper</signifyd_transaction_id_adapter>
+                </cybersource>
 
                 <payflowpro>
                     <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Payflow\Pro\AvsEmsCodeMapper</signifyd_avs_ems_adapter>

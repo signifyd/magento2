@@ -5,9 +5,34 @@ namespace Signifyd\Connect\Helper;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Invoice;
+use Magento\Sales\Model\Order\Status\HistoryFactory;
+use Magento\Sales\Model\ResourceModel\Order\Status\History as HistoryResourceModel;
 
 class OrderHelper
 {
+    /**
+     * @var HistoryFactory
+     */
+    protected $historyFactory;
+
+    /**
+     * @var HistoryResourceModel
+     */
+    protected $historyResourceModel;
+
+    /**
+     * OrderHelper constructor.
+     * @param HistoryFactory $historyFactory
+     * @param HistoryResourceModel $historyResourceModel
+     */
+    public function __construct(
+        HistoryFactory $historyFactory,
+        HistoryResourceModel $historyResourceModel
+    ) {
+        $this->historyFactory = $historyFactory;
+        $this->historyResourceModel = $historyResourceModel;
+    }
+
     /**
      * @param Order $order
      * @return string
@@ -45,7 +70,6 @@ class OrderHelper
     {
         if ($order->getState() != Order::STATE_HOLDED && $order->isPaymentReview() == false) {
             $reason = "order is not holded";
-            $completeCase = true;
         } elseif ($order->isPaymentReview()) {
             $reason = 'order is in payment review';
         } elseif ($order->getActionFlag(Order::ACTION_FLAG_UNHOLD) === false) {
@@ -87,7 +111,6 @@ class OrderHelper
             }
             if ($allInvoiced) {
                 $reason = "all order items are invoiced";
-                $completeCase = true;
             } else {
                 $reason = "unknown reason";
             }
@@ -128,7 +151,6 @@ class OrderHelper
                 $reason = "unknown reason";
             } else {
                 $reason = "no items can be invoiced";
-                $completeCase = true;
             }
         }
 
@@ -151,5 +173,24 @@ class OrderHelper
         }
 
         return true;
+    }
+
+    /**
+     * Add a comment history to a order without saving the order object
+     *
+     * @param Order $order
+     * @param $comment
+     * @param false $isVisibleOnFront
+     */
+    public function addCommentToStatusHistory(Order $order, $comment, $isVisibleOnFront = false)
+    {
+        $history = $this->historyFactory->create();
+        $history->setStatus($order->getStatus());
+        $history->setComment($comment);
+        $history->setEntityName('order');
+        $history->setIsVisibleOnFront($isVisibleOnFront);
+        $history->setOrder($order);
+
+        $this->historyResourceModel->save($history);
     }
 }

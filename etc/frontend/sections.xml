@@ -36,4 +36,9 @@
     <action name="checkout/onepage/saveOrder">
         <section name="signifyd-fingerprint"/>
     </action>
+
+    <!-- Thirdparty compatibilities -->
+    <action name="amasty_cart/cart/add">
+        <section name="signifyd-fingerprint"/>
+    </action>
 </config>

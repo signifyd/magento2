@@ -11,7 +11,6 @@ use Magento\Framework\Setup\SchemaSetupInterface;
 use Magento\Framework\DB\Ddl\Table;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
-use Signifyd\Connect\Observer\Purchase;
 
 /**
  * @codeCoverageIgnore
@@ -19,27 +18,26 @@ use Signifyd\Connect\Observer\Purchase;
 class UpgradeSchema implements UpgradeSchemaInterface
 {
     /**
-     * @var \Signifyd\Connect\Helper\ConfigHelper
+     * @var WriterInterface
      */
     protected $configWriter;
 
     /**
-     * @var Purchase
+     * @var ScopeConfigInterface
      */
-    protected $purchaseObserver;
+    protected $scopeConfig;
 
     /**
-     * TODO: Make changes  to be able to save current restricted payment gateways from code to database
-     *
-     * InstallSchema constructor.
-     * @param \Signifyd\Connect\Helper\ConfigHelper $configHelper
+     * UpgradeSchema constructor.
+     * @param WriterInterface $configWriter
+     * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
         WriterInterface $configWriter,
-        Purchase $purchaseObserver
+        ScopeConfigInterface $scopeConfig
     ) {
         $this->configWriter = $configWriter;
-        $this->purchaseObserver = $purchaseObserver;
+        $this->scopeConfig = $scopeConfig;
     }
 
     /**
@@ -68,26 +66,6 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 'default' => 0,
                 'comment' => 'Number of retries for current case magento_status',
             ]);
-        }
-
-        if (version_compare($context->getVersion(), '3.2.0') < 0) {
-            $oldRestrictedPaymentMethods = $this->purchaseObserver->getOldRestrictMethods();
-
-            if (is_array($oldRestrictedPaymentMethods) &&
-                empty($oldRestrictedPaymentMethods) == false) {
-
-                $restrictedPaymentMethods = $this->purchaseObserver->getRestrictedPaymentMethodsConfig();
-
-                $diff1 = array_diff($oldRestrictedPaymentMethods, $restrictedPaymentMethods);
-                $diff2 = array_diff($restrictedPaymentMethods, $oldRestrictedPaymentMethods);
-
-                // If anything is different, so use $oldRestrictedPaymentMethods on database settings
-                if (empty($diff1) == false || empty($diff2) == false) {
-                    $oldRestrictedPaymentMethods = implode(',', $oldRestrictedPaymentMethods);
-                    $restrictedPaymentMethodsPath = 'signifyd/general/restrict_payment_methods';
-                    $this->configWriter->save($restrictedPaymentMethodsPath, $oldRestrictedPaymentMethods);
-                }
-            }
         }
 
         if (version_compare($context->getVersion(), '3.2.1') < 0) {
@@ -233,14 +211,17 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
         }
 
-        if (version_compare($context->getVersion(), '3.6.0') < 0) {
-            $data = [
-                'scope' => 'default',
-                'scope_id' => 0,
-                'path' => 'signifyd/general/async_payment_methods',
-                'value' => 'cybersource,adyen_cc',
-            ];
-            $setup->getConnection()->insertOnDuplicate($setup->getTable('core_config_data'), $data, ['value']);
+        /**
+         * On 3.6.0 we've added this setting to database, but it is not necessary because it is already
+         * on config.xml file. So now this setting will be removed if has not been changed
+         */
+        if (version_compare($context->getVersion(), '3.7.0') < 0) {
+            $asyncPaymentMethodsPath = 'signifyd/general/async_payment_methods';
+            $asyncPaymentMethods = $this->scopeConfig->getValue($asyncPaymentMethodsPath);
+
+            if ($asyncPaymentMethods == 'cybersource,adyen_cc') {
+                $this->configWriter->delete($asyncPaymentMethodsPath);
+            }
         }
 
         $setup->endSetup();

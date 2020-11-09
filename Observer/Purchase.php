@@ -9,13 +9,14 @@ namespace Signifyd\Connect\Observer;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order;
-use Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Model\Casedata;
-use Magento\Store\Model\StoreManagerInterface;
-use Magento\Framework\App\RequestInterface;
+use Signifyd\Connect\Model\CasedataFactory;
+use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
+use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+use Magento\Sales\Model\OrderFactory;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -30,7 +31,7 @@ class Purchase implements ObserverInterface
     /**
      * @var PurchaseHelper
      */
-    protected $helper;
+    protected $purchaseHelper;
 
     /**
      * @var ConfigHelper
@@ -38,14 +39,24 @@ class Purchase implements ObserverInterface
     protected $configHelper;
 
     /**
-     * @var StoreManagerInterface
+     * @var CasedataFactory
      */
-    protected $storeManager;
+    protected $casedataFactory;
 
     /**
-     * @var ObjectManagerInterface
+     * @var CasedataResourceModel
      */
-    protected $objectManagerInterface;
+    protected $casedataResourceModel;
+
+    /**
+     * @var OrderResourceModel
+     */
+    protected $orderResourceModel;
+
+    /**
+     * @var OrderFactory
+     */
+    protected $orderFactory;
 
     /**
      * Methods that should wait e-mail sent to hold order
@@ -63,49 +74,31 @@ class Purchase implements ObserverInterface
     protected $ownEventsMethods = ['authorizenet_directpost'];
 
     /**
-     * Restricted payment methods
-     * @var array
-     * @deprecated
-     *
-     * Restricted payment methods are no longer managed in this method.
-     * Please add customized restricted payment methods to core_config_data table as below.
-     *
-     * INSERT INTO core_config_data(path, value) VALUES (
-     * 'signifyd/general/restrict_payment_methods',
-     * 'checkmo,cashondelivery,banktransfer,purchaseorder'
-     * );
-     */
-    protected $restrictedMethods;
-
-    /**
-     * @var RequestInterface
-     */
-    protected $request;
-
-    /**
      * Purchase constructor.
      * @param Logger $logger
-     * @param PurchaseHelper $helper
+     * @param PurchaseHelper $purchaseHelper
      * @param ConfigHelper $configHelper
-     * @param ObjectManagerInterface $objectManagerInterface
-     * @param StoreManagerInterface|null $storeManager
+     * @param CasedataFactory $casedataFactory
+     * @param CasedataResourceModel $casedataResourceModel
+     * @param OrderResourceModel $orderResourceModel
+     * @param OrderFactory $orderFactory
      */
     public function __construct(
         Logger $logger,
-        PurchaseHelper $helper,
+        PurchaseHelper $purchaseHelper,
         ConfigHelper $configHelper,
-        ObjectManagerInterface $objectManagerInterface,
-        StoreManagerInterface $storeManager = null,
-        RequestInterface $request
+        CasedataFactory $casedataFactory,
+        CasedataResourceModel $casedataResourceModel,
+        OrderResourceModel $orderResourceModel,
+        OrderFactory $orderFactory
     ) {
         $this->logger = $logger;
-        $this->helper = $helper;
+        $this->purchaseHelper = $purchaseHelper;
         $this->configHelper = $configHelper;
-        $this->objectManagerInterface = $objectManagerInterface;
-        $this->storeManager = empty($storeManager) ?
-            $objectManagerInterface->get(\Magento\Store\Model\StoreManagerInterface::class) :
-            $storeManager;
-        $this->request = $request;
+        $this->casedataFactory = $casedataFactory;
+        $this->casedataResourceModel = $casedataResourceModel;
+        $this->orderResourceModel = $orderResourceModel;
+        $this->orderFactory = $orderFactory;
     }
 
     /**
@@ -115,6 +108,8 @@ class Purchase implements ObserverInterface
     public function execute(Observer $observer, $checkOwnEventsMethods = true)
     {
         try {
+            $this->logger->info('Processing Signifyd event ' . $observer->getEvent()->getName());
+
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();
 
@@ -151,29 +146,40 @@ class Purchase implements ObserverInterface
                 return;
             }
 
+            /** @var $case \Signifyd\Connect\Model\Casedata */
+            $case = $this->casedataFactory->create();
+            $this->casedataResourceModel->load($case, $order->getIncrementId());
+
             // Check if case already exists for this order
-            if ($this->helper->doesCaseExist($order)) {
+            if ($case->isEmpty() == false) {
                 return;
             }
 
             $message = "Creating case for order {$incrementId}, state {$state}, payment method {$paymentMethod}";
             $this->logger->debug($message, ['entity' => $order]);
 
-            $orderData = $this->helper->processOrderData($order);
-
-            // Add order to database
-            $case = $this->helper->createNewCase($order);
+            /** @var $case \Signifyd\Connect\Model\Casedata */
+            $case = $this->casedataFactory->create();
+            $case->setId($order->getIncrementId());
+            $case->setSignifydStatus("PENDING");
+            $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
+            $case->setUpdated();
+            $case->setEntriesText("");
 
             // Stop case sending if order has an async payment method
             if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig())) {
                 $case->setMagentoStatus(Casedata::ASYNC_WAIT);
+
                 try {
-                    $case->save();
-                    $message = 'Case for order:#' . $incrementId . ' was not sent because of an async payment method';
-                    $this->logger->debug($message);
+                    $this->casedataResourceModel->save($case);
+                    $this->logger->debug(
+                        'Case for order:#' . $incrementId . ' was not sent because of an async payment method',
+                        ['entity' => $case]
+                    );
 
                     // Initial hold order
-                    $this->holdOrder($order);
+                    $this->holdOrder($order, $case);
+                    $this->orderResourceModel->save($order);
                 } catch (\Exception $ex) {
                     $this->logger->error($ex->__toString());
                 }
@@ -181,23 +187,20 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            // Post case to signifyd service
-            $result = $this->helper->postCaseToSignifyd($orderData, $order);
+            $orderData = $this->purchaseHelper->processOrderData($order);
+            $investigationId = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
 
             // Initial hold order
-            $this->holdOrder($order);
+            $this->holdOrder($order, $case);
 
-            if ($result) {
-                $case->setCode($result);
-                $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS)->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                try {
-                    $case->getResource()->save($case);
-                    $this->logger->debug('Case saved. Order No:' . $incrementId, ['entity' => $order]);
-                } catch (\Exception $e) {
-                    $this->logger->error('Exception in: ' . __FILE__ . ', on line: ' . __LINE__, ['entity' => $order]);
-                    $this->logger->error('Exception:' . $e->__toString(), ['entity' => $order]);
-                }
+            if ($investigationId) {
+                $case->setCode($investigationId);
+                $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
+                $case->setUpdated();
             }
+
+            $this->casedataResourceModel->save($case);
+            $this->orderResourceModel->save($order);
         } catch (\Exception $ex) {
             $context = [];
 
@@ -210,26 +213,7 @@ class Purchase implements ObserverInterface
     }
 
     /**
-     * Used on UpgradeScheme starting on version 3.2.0 for backward compatibility
-     *
-     * Do not remove this method
-     *
-     * Tries to get restricted payment methods from class property
-     *
-     * @return array
-     * @deprecated
-     */
-    public function getOldRestrictMethods()
-    {
-        if (isset($this->restrictedMethods) && empty($this->restrictedMethods) == false) {
-            return $this->restrictedMethods;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Get restricted payment methods from store configs
+     * Get async payment methods from store configs
      *
      * @return array|mixed
      */
@@ -307,9 +291,8 @@ class Purchase implements ObserverInterface
      * @param $order
      * @return bool
      */
-    public function holdOrder(\Magento\Sales\Model\Order $order)
+    public function holdOrder(\Magento\Sales\Model\Order $order, \Signifyd\Connect\Model\Casedata $case)
     {
-        $case = $this->helper->getCase($order);
         $positiveAction = $case->getPositiveAction();
         $negativeAction = $case->getNegativeAction();
 
@@ -341,19 +324,15 @@ class Purchase implements ObserverInterface
                 if (!$order->getEmailSent()) {
                     return false;
                 }
-
-                if ($this->helper->hasGuaranty($order)) {
-                    return false;
-                }
             }
 
-            if (!$this->helper->hasGuaranty($order)) {
-                $message = 'Purchase Observer Order Hold: No: ' . $order->getIncrementId();
-                $this->logger->debug($message, ['entity' => $order]);
-                $order->hold();
-                $order->addStatusHistoryComment("Signifyd: after order place");
-                $order->getResource()->save($order);
-            }
+            $this->logger->debug(
+                'Purchase Observer Order Hold: No: ' . $order->getIncrementId(),
+                ['entity' => $order]
+            );
+
+            $order->hold();
+            $order->addCommentToStatusHistory("Signifyd: after order place");
         }
 
         return true;
