@@ -165,7 +165,7 @@ class Index extends Action
             return;
         }
 
-        switch (($topic)) {
+        switch ($topic) {
             case 'cases/test':
                 // Test is only verifying that the endpoint is reachable. So we just complete here
                 $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
@@ -204,6 +204,14 @@ class Index extends Action
             $this->getResponse()->appendBody($message);
             $this->logger->debug("WEBHOOK: {$message}");
             $this->getResponse()->setStatusCode(Http::STATUS_CODE_400);
+            return;
+        }
+
+        if ($case->getMagentoStatus() == Casedata::COMPLETED_STATUS) {
+            $message = "Case {$requestJson->orderId} already completed, no action will be taken";
+            $this->getResponse()->appendBody($message);
+            $this->logger->debug("WEBHOOK: {$message}");
+            $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
             return;
         }
 
