@@ -22,4 +22,15 @@ class ExpMonthMapper extends DataMapper
 
         return $expMonth;
     }
+
+    /**
+     * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
+     * @return string
+     */
+    public function getPaymentDataFromGatewayResponse(\Signifyd\Models\Payment\Response\ResponseInterface $response)
+    {
+        $expMonth = $response->getExpiryMonth();
+
+        return (empty($expMonth) ? null : $expMonth);
+    }
 }

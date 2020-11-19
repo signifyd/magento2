@@ -16,7 +16,6 @@ use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
-use Magento\Sales\Model\OrderFactory;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -54,11 +53,6 @@ class Purchase implements ObserverInterface
     protected $orderResourceModel;
 
     /**
-     * @var OrderFactory
-     */
-    protected $orderFactory;
-
-    /**
      * Methods that should wait e-mail sent to hold order
      * @var array
      */
@@ -81,7 +75,6 @@ class Purchase implements ObserverInterface
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
-     * @param OrderFactory $orderFactory
      */
     public function __construct(
         Logger $logger,
@@ -89,8 +82,7 @@ class Purchase implements ObserverInterface
         ConfigHelper $configHelper,
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
-        OrderResourceModel $orderResourceModel,
-        OrderFactory $orderFactory
+        OrderResourceModel $orderResourceModel
     ) {
         $this->logger = $logger;
         $this->purchaseHelper = $purchaseHelper;
@@ -98,7 +90,6 @@ class Purchase implements ObserverInterface
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
-        $this->orderFactory = $orderFactory;
     }
 
     /**
@@ -188,13 +179,13 @@ class Purchase implements ObserverInterface
             }
 
             $orderData = $this->purchaseHelper->processOrderData($order);
-            $investigationId = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
+            $caseResponse = $this->helper->postCaseToSignifyd($orderData, $order);
 
             // Initial hold order
             $this->holdOrder($order, $case);
 
-            if ($investigationId) {
-                $case->setCode($investigationId);
+            if (is_object($caseResponse)) {
+                $case->setCode($caseResponse->getCaseId());
                 $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
                 $case->setUpdated();
             }

@@ -7,10 +7,16 @@
 
 namespace Signifyd\Connect\Helper;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Signifyd\Core\Api\CaseApiFactory;
+use Signifyd\Core\Api\GuaranteeApiFactory;
+use Signifyd\Core\Api\WebhooksApiFactory;
+
 class ConfigHelper
 {
     /**
-     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     * @var ScopeConfigInterface
      */
     protected $scopeConfigInterface;
 
@@ -21,23 +27,6 @@ class ConfigHelper
     protected $storeCodes = [];
 
     /**
-     * @var SignifydSettingsMagentoFactory
-     */
-    protected $signifydSettingsMagentoFactory;
-
-    /**
-     * Array of SignifydSettingsMagento, one for each store code
-     *
-     * @var array
-     */
-    protected $signifydSettingsMagento = [];
-
-    /**
-     * @var \Signifyd\Core\SignifydAPIFactory
-     */
-    protected $signifydAPIFactory;
-
-    /**
      * Array of SignifydAPI, one for each store code
      *
      * @var array
@@ -45,24 +34,45 @@ class ConfigHelper
     protected $signifydAPI = [];
 
     /**
-     * @var \Magento\Store\Model\StoreManagerInterface
+     * @var StoreManagerInterface
      */
     protected $storeManager;
 
     /**
+     * @var CaseApiFactory
+     */
+    protected $caseApiFactory;
+
+    /**
+     * @var GuaranteeApiFactory
+     */
+    protected $guaranteeApiFactory;
+
+    /**
+     * @var WebhooksApiFactory
+     */
+    protected $webhooksApiFactory;
+
+    /**
      * ConfigHelper constructor.
      * @param ScopeConfigInterface $scopeConfigInterface
+     * @param StoreManagerInterface $storeManager
+     * @param CaseApiFactory $caseApiFactory
+     * @param GuaranteeApiFactory $guaranteeApiFactory
+     * @param WebhooksApiFactory $webhooksApiFactory
      */
     public function __construct(
-        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfigInterface,
-        \Signifyd\Connect\Helper\SignifydSettingsMagentoFactory $signifydSettingsMagentoFactory,
-        \Signifyd\Connect\Api\Core\SignifydAPIFactory $signifydAPIFactory,
-        \Magento\Store\Model\StoreManagerInterface $storeManager
+        ScopeConfigInterface $scopeConfigInterface,
+        StoreManagerInterface $storeManager,
+        CaseApiFactory $caseApiFactory,
+        GuaranteeApiFactory $guaranteeApiFactory,
+        WebhooksApiFactory $webhooksApiFactory
     ) {
         $this->scopeConfigInterface = $scopeConfigInterface;
-        $this->signifydSettingsMagentoFactory = $signifydSettingsMagentoFactory;
-        $this->signifydAPIFactory = $signifydAPIFactory;
         $this->storeManager = $storeManager;
+        $this->caseApiFactory = $caseApiFactory;
+        $this->guaranteeApiFactory = $guaranteeApiFactory;
+        $this->webhooksApiFactory = $webhooksApiFactory;
     }
 
     /**
@@ -117,44 +127,63 @@ class ConfigHelper
     }
 
     /**
-     * Retrieve settings for Signifyd given entity (order os case)
-     *
+     * @param string $type
      * @param \Magento\Framework\Model\AbstractModel|null $entity
      * @return mixed
      */
-    public function getSignifydSettingsMagento(\Magento\Framework\Model\AbstractModel $entity = null)
+    public function getSignifydApi($type, \Magento\Framework\Model\AbstractModel $entity = null)
     {
-        $storeCode = $this->getStoreCode($entity, true);
+        $type = strtolower($type);
+        $apiId = $type . $this->getStoreCode($entity, true);
 
-        if (isset($this->signifydSettingsMagento[$storeCode]) === false ||
-            $this->signifydSettingsMagento[$storeCode] instanceof SignifydSettingsMagento == false) {
-            $this->signifydSettingsMagento[$storeCode] = $this->signifydSettingsMagentoFactory->create();
+        if (isset($this->signifydAPI[$apiId]) === false ||
+            is_object($this->signifydAPI[$apiId]) === false) {
             $apiKey = $this->getConfigData('signifyd/general/key', $entity);
+            $args = ['apiKey' => $apiKey];
 
-            $this->signifydSettingsMagento[$storeCode]->apiKey = $apiKey;
+            switch ($type) {
+                case 'case':
+                    $this->signifydAPI[$apiId] = $this->caseApiFactory->create(['args' => $args]);
+                    break;
+
+                case 'guarantee':
+                    $this->signifydAPI[$apiId] = $this->guaranteeApiFactory->create(['args' => $args]);
+                    break;
+
+                case 'webhook':
+                    $this->signifydAPI[$apiId] = $this->webhooksApiFactory->create(['args' => $args]);
+                    break;
+            }
         }
 
-        return $this->signifydSettingsMagento[$storeCode];
+        return $this->signifydAPI[$apiId];
     }
 
     /**
-     * Retrieve Signifyd API object given entity (order os case)
-     *
      * @param \Magento\Framework\Model\AbstractModel|null $entity
-     * @return \Signifyd\Core\SignifydAPI
+     * @return \Signifyd\Core\Api\CaseApi
      */
-    public function getSignifydApi(\Magento\Framework\Model\AbstractModel $entity = null)
+    public function getSignifydCaseApi(\Magento\Framework\Model\AbstractModel $entity = null)
     {
-        $storeCode = $this->getStoreCode($entity, true);
+        return $this->getSignifydApi('case', $entity);
+    }
 
-        if (isset($this->signifydAPI[$storeCode]) === false ||
-            $this->signifydAPI[$storeCode] instanceof \Signifyd\Core\SignifydAPI == false) {
-            $signifydSettingsMagento = $this->getSignifydSettingsMagento($entity);
-            $data = ['settings' => $signifydSettingsMagento];
-            $this->signifydAPI[$storeCode] = $this->signifydAPIFactory->create($data);
-        }
+    /**
+     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @return \Signifyd\Core\Api\GuaranteeApi
+     */
+    public function getSignifydGuaranteeApi(\Magento\Framework\Model\AbstractModel $entity = null)
+    {
+        return $this->getSignifydApi('guarantee', $entity);
+    }
 
-        return $this->signifydAPI[$storeCode];
+    /**
+     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @return \Signifyd\Core\Api\WebhooksApi
+     */
+    public function getSignifydWebhookApi(\Magento\Framework\Model\AbstractModel $entity = null)
+    {
+        return $this->getSignifydApi('webhook', $entity);
     }
 
     /**

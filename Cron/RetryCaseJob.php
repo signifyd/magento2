@@ -166,14 +166,14 @@ class RetryCaseJob
             $this->reInitStripe($case->getOrder());
 
             $caseModel = $this->purchaseHelper->processOrderData($case->getOrder());
-            $investigationId = $this->purchaseHelper->postCaseToSignifyd($caseModel, $case->getOrder());
+            $caseResponse = $this->purchaseHelper->postCaseToSignifyd($caseModel, $case->getOrder());
 
-            if (empty($investigationId) === false) {
+            if (is_object($caseResponse)) {
                 try {
                     $this->resourceConnection->getConnection()->beginTransaction();
                     $this->casedataResourceModel->loadForUpdate($case, $case->getId());
 
-                    $case->setCode($investigationId);
+                    $case->setCode($caseResponse->getCaseId());
                     $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
                     $case->setUpdated();
 

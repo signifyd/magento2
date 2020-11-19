@@ -7,6 +7,7 @@
 namespace Signifyd\Connect\Helper;
 
 use Braintree\Exception;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Module\ModuleListInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Address;
@@ -27,6 +28,12 @@ use Signifyd\Models\Recipient;
 use Signifyd\Models\UserAccount;
 use Signifyd\Connect\Model\PaymentVerificationFactory;
 use Magento\Framework\Registry;
+use Magento\Customer\Model\ResourceModel\CustomerRepository;
+use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
+use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
+use Signifyd\Connect\Model\CasedataFactory;
+use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+use Signifyd\Models\GuaranteeFactory as GuaranteeModelFactory;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
@@ -119,6 +126,11 @@ class PurchaseHelper
     protected $resourceConnection;
 
     /**
+     * @var GuaranteeModelFactory
+     */
+    protected $guaranteeModelFactory;
+
+    /**
      * PurchaseHelper constructor.
      * @param OrderResourceModel $orderResourceModel
      * @param RemoteAddress $remoteAddress
@@ -136,6 +148,7 @@ class PurchaseHelper
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param ResourceConnection $resourceConnection
+     * @param GuaranteeModelFactory $guaranteeModelFactory
      */
     public function __construct(
         OrderResourceModel $orderResourceModel,
@@ -153,7 +166,8 @@ class PurchaseHelper
         OrderHelper $orderHelper,
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
-        ResourceConnection $resourceConnection
+        ResourceConnection $resourceConnection,
+        GuaranteeModelFactory $guaranteeModelFactory
     ) {
         $this->orderResourceModel = $orderResourceModel;
         $this->remoteAddress = $remoteAddress;
@@ -171,6 +185,7 @@ class PurchaseHelper
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->resourceConnection = $resourceConnection;
+        $this->guaranteeModelFactory = $guaranteeModelFactory;
     }
 
     /**
@@ -235,7 +250,7 @@ class PurchaseHelper
 
     /**
      * @param Item $item
-     * @return Product
+     * @return array
      */
     protected function makeProduct(Item $item)
     {
@@ -247,20 +262,21 @@ class PurchaseHelper
             }
         }
 
-        $product = SignifydModel::Make(\Signifyd\Models\Product::class);
-        $product->itemId = $item->getSku();
-        $product->itemName = $item->getName();
-        $product->itemIsDigital = (bool) $item->getIsVirtual();
-        $product->itemPrice = $itemPrice;
-        $product->itemQuantity = (int)$item->getQtyOrdered();
-        $product->itemUrl = $item->getProduct()->getProductUrl();
-        $product->itemWeight = $item->getProduct()->getWeight();
+        $product = [];
+        $product['itemId'] = $item->getSku();
+        $product['itemName'] = $item->getName();
+        $product['itemIsDigital'] = (bool) $item->getIsVirtual();
+        $product['itemPrice'] = $itemPrice;
+        $product['itemQuantity'] = (int)$item->getQtyOrdered();
+        $product['itemUrl'] = $item->getProduct()->getProductUrl();
+        $product['itemWeight'] = $item->getProduct()->getWeight();
+
         return $product;
     }
 
     /**
      * @param $order Order
-     * @return Purchase
+     * @return array
      */
     protected function makePurchase(Order $order)
     {
@@ -268,66 +284,70 @@ class PurchaseHelper
 
         // Get all of the purchased products
         $items = $order->getAllItems();
-        $purchase = SignifydModel::Make(\Signifyd\Models\Purchase::class);
-        $purchase->avsResponseCode = $this->getAvsCode($order);
-        $purchase->cvvResponseCode = $this->getCvvCode($order);
+        $purchase = [];
+        $purchase['avsResponseCode'] = $this->getAvsCode($order);
+        $purchase['cvvResponseCode'] = $this->getCvvCode($order);
 
         if ($originStoreCode == 'admin') {
-            $purchase->orderChannel = "PHONE";
+            $purchase['orderChannel'] = "PHONE";
         } elseif (!empty($originStoreCode)) {
-            $purchase->orderChannel = "WEB";
+            $purchase['orderChannel'] = "WEB";
         }
 
-        $purchase->products = [];
+        $purchase['products'] = [];
 
         /** @var \Magento\Sales\Model\Order\Item $item */
         foreach ($items as $item) {
             $children = $item->getChildrenItems();
 
             if (is_array($children) == false || empty($children)) {
-                $purchase->products[] = $this->makeProduct($item);
+                $purchase['products'][] = $this->makeProduct($item);
             }
         }
 
-        $purchase->totalPrice = $order->getGrandTotal();
-        $purchase->currency = $order->getOrderCurrencyCode();
-        $purchase->orderId = $order->getIncrementId();
-        $purchase->paymentGateway = $order->getPayment()->getMethod();
-        $purchase->transactionId = $this->getTransactionId($order);
-        $purchase->createdAt = date('c', strtotime($order->getCreatedAt()));
-        $purchase->browserIpAddress = $this->getIPAddress($order);
+        $purchase['totalPrice'] = $order->getGrandTotal();
+        $purchase['currency'] = $order->getOrderCurrencyCode();
+        $purchase['orderId'] = $order->getIncrementId();
+        $purchase['paymentGateway'] = $order->getPayment()->getMethod();
+        $purchase['transactionId'] = $this->getTransactionId($order);
+        $purchase['createdAt'] = date('c', strtotime($order->getCreatedAt()));
+        $purchase['browserIpAddress'] = $this->getIPAddress($order);
 
         $couponCode = $order->getCouponCode();
-        if (!empty($couponCode)) {
-            $purchase->discountCodes = [
+
+        if (empty($couponCode) === false) {
+            $purchase['discountCodes'] = [
                 'amount' => abs($order->getDiscountAmount()),
                 'code' => $couponCode
             ];
         }
 
-        $purchase->shipments = $this->makeShipments($order);
+        $purchase['shipments'] = $this->makeShipments($order);
 
-        if (!empty($originStoreCode) &&
+        if (empty($originStoreCode) === false &&
             $originStoreCode != 'admin' &&
             $this->deviceHelper->isDeviceFingerprintEnabled()
         ) {
-            $purchase->orderSessionId = $this->deviceHelper->generateFingerprint($order->getQuoteId());
+            $purchase['orderSessionId ']= $this->deviceHelper->generateFingerprint($order->getQuoteId());
         }
 
         return $purchase;
     }
 
+    /**
+     * @param Order $order
+     * @return array
+     */
     protected function makeShipments(Order $order)
     {
         $shipments = [];
-        $shippingMethod = $order->getShippingMethod();
+        $shippingMethod = $order->getShippingMethod(true);
 
-        if (!empty($shippingMethod)) {
-            $shippingMethod = $order->getShippingMethod(true);
-            $shipment = SignifydModel::Make(\Signifyd\Models\Shipment::class);
-            $shipment->shipper = $shippingMethod->getCarrierCode();
-            $shipment->shippingPrice = floatval($order->getShippingAmount());
-            $shipment->shippingMethod = $shippingMethod->getMethod();
+        if (empty($shippingMethod) === false) {
+            $shipment = [];
+            $shipment['shipper'] = $shippingMethod->getCarrierCode();
+            $shipment['shippingPrice'] = floatval($order->getShippingAmount());
+            $shipment['shippingMethod'] = $shippingMethod->getMethod();
 
             $shipments[] = $shipment;
         }
@@ -337,51 +357,47 @@ class PurchaseHelper
 
     /**
      * @param $mageAddress Address
-     * @return SignifydAddress
+     * @return array
      */
     protected function formatSignifydAddress($mageAddress)
     {
-        $address = SignifydModel::Make(\Signifyd\Models\Address::class);
+        $address = [];
 
-        $address->streetAddress = $mageAddress->getStreetLine(1);
-        $address->unit = $mageAddress->getStreetLine(2);
-
-        $address->city = $mageAddress->getCity();
-
-        $address->provinceCode = $mageAddress->getRegionCode();
-        $address->postalCode = $mageAddress->getPostcode();
-        $address->countryCode = $mageAddress->getCountryId();
-
-        $address->latitude = null;
-        $address->longitude = null;
+        $address['streetAddress'] = $mageAddress->getStreetLine(1);
+        $address['unit'] = $mageAddress->getStreetLine(2);
+        $address['city'] = $mageAddress->getCity();
+        $address['provinceCode'] = $mageAddress->getRegionCode();
+        $address['postalCode'] = $mageAddress->getPostcode();
+        $address['countryCode'] = $mageAddress->getCountryId();
+        $address['latitude'] = null;
+        $address['longitude'] = null;
 
         return $address;
     }
 
     /**
      * @param $order Order
-     * @return Recipient|null
+     * @return array
      */
     protected function makeRecipient(Order $order)
     {
-        $recipient = SignifydModel::Make(\Signifyd\Models\Recipient::class);
-
+        $recipient = [];
         $address = $order->getShippingAddress();
 
         if ($address !== null) {
-            $recipient->fullName = $address->getName();
-            $recipient->confirmationEmail = $address->getEmail();
-            $recipient->confirmationPhone = $address->getTelephone();
-            $recipient->organization = $address->getCompany();
-            $recipient->deliveryAddress = $this->formatSignifydAddress($address);
+            $recipient['fullName'] = $address->getName();
+            $recipient['confirmationEmail'] = $address->getEmail();
+            $recipient['confirmationPhone'] = $address->getTelephone();
+            $recipient['organization'] = $address->getCompany();
+            $recipient['deliveryAddress'] = $this->formatSignifydAddress($address);
         }
 
         if (empty($recipient->fullName)) {
-            $recipient->fullName = $order->getCustomerName();
+            $recipient['fullName'] = $order->getCustomerName();
         }
 
-        if (empty($recipient->confirmationEmail)) {
-            $recipient->confirmationEmail = $order->getCustomerEmail();
+        if (empty($recipient['confirmationEmail'])) {
+            $recipient['confirmationEmail'] = $order->getCustomerEmail();
         }
 
         return $recipient;
@@ -389,63 +405,54 @@ class PurchaseHelper
 
     /**
      * @param $order Order
-     * @return Card|null
+     * @return array
      */
     protected function makeCardInfo(Order $order)
     {
-        $payment = $order->getPayment();
-
         $billingAddress = $order->getBillingAddress();
-        $card = SignifydModel::Make(\Signifyd\Models\Card::class);
-        $card->cardHolderName = $this->getCardholder($order);
-        $card->bin = $this->getBin($order);
-        $card->last4 = $this->getLast4($order);
-        $card->expiryMonth = $this->getExpMonth($order);
-        $card->expiryYear = $this->getExpYear($order);
+        $card = [];
+        $card['cardHolderName'] = $this->getCardholder($order);
+        $card['bin'] = $this->getBin($order);
+        $card['last4'] = $this->getLast4($order);
+        $card['expiryMonth'] = $this->getExpMonth($order);
+        $card['expiryYear'] = $this->getExpYear($order);
+        $card['billingAddress'] = $this->formatSignifydAddress($billingAddress);
 
-        $card->billingAddress = $this->formatSignifydAddress($billingAddress);
         return $card;
     }
 
     /** Construct a user account blob
      * @param $order Order
-     * @return UserAccount
+     * @return array
      */
     protected function makeUserAccount(Order $order)
     {
-        /* @var $user \Signifyd\Models\UserAccount */
-        $user = SignifydModel::Make(\Signifyd\Models\UserAccount::class);
-        $user->emailAddress = $order->getCustomerEmail();
-        $user->username = $order->getCustomerEmail();
-        $user->accountNumber = $order->getCustomerId();
-        $user->phone = $order->getBillingAddress()->getTelephone();
+        $user = [];
+        $user['emailAddress'] = $order->getCustomerEmail();
+        $user['username'] = $order->getCustomerEmail();
+        $user['accountNumber'] = $order->getCustomerId();
+        $user['phone'] = $order->getBillingAddress()->getTelephone();
+        $user['aggregateOrderCount'] = 0;
+        $user['aggregateOrderDollars'] = 0.0;
 
         /* @var $customer \Magento\Customer\Model\Customer */
         $customer = $this->customerFactory->create();
         $this->customerResourceModel->load($customer, $order->getCustomerId());
 
-        $this->logger->debug("Customer data: " . json_encode($customer), ['entity' => $order]);
-
         if ($customer !== null && !$customer->isEmpty()) {
-            $user->createdDate = date('c', strtotime($customer->getCreatedAt()));
+            $user['createdDate'] = date('c', strtotime($customer->getCreatedAt()));
+
+            /** @var $orders \Magento\Sales\Model\ResourceModel\Order\Collection */
+            $orderCollection = $this->orderCollectionFactory->create();
+            $orderCollection->addFieldToFilter('customer_id', $order->getCustomerId());
+            $orderCollection->load();
+
+            /** @var $orderCollection \Magento\Sales\Model\Order*/
+            foreach ($orderCollection as $o) {
+                $user['aggregateOrderCount']++;
+                $user['aggregateOrderDollars'] += floatval($o->getGrandTotal());
+            }
         }
-
-        /** @var $orders \Magento\Sales\Model\ResourceModel\Order\Collection */
-        $orders = $this->orderCollectionFactory->create();
-        $orders->addFieldToFilter('customer_id', $order->getCustomerId());
-        $orders->load();
-
-        $orderCount = 0;
-        $orderTotal = 0.0;
-
-        /** @var $o \Magento\Sales\Model\Order*/
-        foreach ($orders as $o) {
-            $orderCount++;
-            $orderTotal += floatval($o->getGrandTotal());
-        }
-
-        $user->aggregateOrderCount = $orderCount;
-        $user->aggregateOrderDollars = $orderTotal;
 
         return $user;
     }
@@ -453,16 +460,16 @@ class PurchaseHelper
     /**
      * Construct a new case object
      * @param $order Order
-     * @return CaseModel
+     * @return array
      */
     public function processOrderData($order)
     {
-        $case = SignifydModel::Make(\Signifyd\Models\CaseModel::class);
-        $case->card = $this->makeCardInfo($order);
-        $case->purchase = $this->makePurchase($order);
-        $case->recipient = $this->makeRecipient($order);
-        $case->userAccount = $this->makeUserAccount($order);
-        $case->clientVersion = $this->getVersions();
+        $case = [];
+        $case['card'] = $this->makeCardInfo($order);
+        $case['purchase'] = $this->makePurchase($order);
+        $case['recipient'] = $this->makeRecipient($order);
+        $case['userAccount'] = $this->makeUserAccount($order);
+        $case['clientVersion'] = $this->getVersions();
 
         /**
          * This registry entry it's used to collect data from some payment methods like Payflow Link
@@ -475,20 +482,24 @@ class PurchaseHelper
     }
 
     /**
-     * @param $caseModel
-     * @param Order $order
-     * @return bool
+     * @param $caseData
+     * @param $order
+     * @return \Signifyd\Core\Response\CaseResponse|bool
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Signifyd\Core\Exceptions\CaseModelException
+     * @throws \Signifyd\Core\Exceptions\InvalidClassException
+     * @throws \Signifyd\Core\Exceptions\LoggerException
      */
-    public function postCaseToSignifyd($caseModel, $order)
+    public function postCaseToSignifyd($caseData, $order)
     {
-        $investigationId = $this->configHelper->getSignifydApi($order)->createCase($caseModel);
+        $caseResponse = $this->configHelper->getSignifydCaseApi($order)->createCase($caseData);
 
-        if ($investigationId) {
-            $this->logger->debug("Case sent. Id is {$investigationId}", ['entity' => $order]);
-            $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: case created {$investigationId}");
-
-            return $investigationId;
+        if (empty($caseResponse->getCaseId()) === false) {
+            $this->logger->debug("Case sent. Id is {$caseResponse->getCaseId()}}", ['entity' => $order]);
+            $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: case created {$caseResponse->getCaseId()}");
+            return $caseResponse;
         } else {
+            $this->logger->error(serialize($caseResponse));
             $this->logger->error("Case failed to send.", ['entity' => $order]);
             $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: failed to create case");
 
@@ -533,8 +544,9 @@ class PurchaseHelper
         }
 
         $this->logger->debug('Cancelling case ' . $case->getId(), ['entity' => $order]);
-
-        $disposition = $this->configHelper->getSignifydApi($order)->cancelGuarantee($case->getCode());
+        $signifydGuarantee = $this->guaranteeModelFactory->create([['caseId' => $case->getCode()]]);
+        $guaranteeResponse = $this->configHelper->getSignifydGuaranteeApi($order)->cancelGuarantee($signifydGuarantee);
+        $disposition = $guaranteeResponse->getDisposition();
 
         $this->logger->debug("Cancel disposition result {$disposition}", ['entity' => $order]);
 

@@ -24,6 +24,10 @@
                 <log>1</log>
             </logs>
 
+            <gateway_integration>
+                <anet_creditcard>{"gateway":"\\Signifyd\\Models\\Payment\\Authorizenet","params":{"name":{"type":"path","path":"authorize_net/anet_core/login_id"},"transactionKey":{"type":"path","path":"authorize_net/anet_core/trans_key"}}}</anet_creditcard>
+            </gateway_integration>
+
             <payment>
                 <adyen_cc>
                     <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\AdyenCc\AvsEmsCodeMapper</signifyd_avs_ems_adapter>

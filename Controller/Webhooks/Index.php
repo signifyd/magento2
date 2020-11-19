@@ -207,8 +207,12 @@ class Index extends Action
             return;
         }
 
-        $signifydApi = $this->configHelper->getSignifydApi($case);
+        $signifydWebhookApi = $this->configHelper->getSignifydWebhookApi($case);
 
+        if ($signifydWebhookApi->validWebhookRequest($request, $hash, $topic)) {
+            /** @var \Signifyd\Connect\Model\Casedata $caseObj */
+            $caseObj = $this->objectManager->create(\Signifyd\Connect\Model\Casedata::class);
+            $caseObj->updateCase($caseData);
         if ($signifydApi->validWebhookRequest($request, $hash, $topic)) {
             $this->logger->info("Processing case {$case->getId()}");
 
