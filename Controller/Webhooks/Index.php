@@ -179,67 +179,57 @@ class Index extends Action
                 return;
         }
 
-        /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->casedataFactory->create();
-        $this->casedataResourceModel->load($case, $requestJson->orderId);
+        try {
+            $this->resourceConnection->getConnection()->beginTransaction();
 
-        if ($case->isEmpty()) {
-            $message = "Case {$requestJson->orderId} on request not found on Magento";
-            $this->getResponse()->appendBody($message);
-            $this->logger->debug("WEBHOOK: {$message}");
-            $this->getResponse()->setStatusCode(Http::STATUS_CODE_400);
-            return;
-        }
+            if (isset($requestJson->orderId) === false) {
+                $httpCode = Http::STATUS_CODE_200;
+                throw new \Exception("Invalid body, no 'orderId' field found on request");
+            }
 
-        if ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS) {
-            $message = "Case {$requestJson->orderId} it is not ready to be updated";
-            $this->getResponse()->appendBody($message);
-            $this->logger->debug("WEBHOOK: {$message}");
-            $this->getResponse()->setStatusCode(Http::STATUS_CODE_400);
-            return;
-        }
+            $httpCode = null;
+            /** @var $case \Signifyd\Connect\Model\Casedata */
+            $case = $this->casedataFactory->create();
+            $this->casedataResourceModel->loadForUpdate($case, $requestJson->orderId);
 
-        if ($this->configHelper->isEnabled($case) == false) {
-            $message = 'This plugin is not currently enabled';
-            $this->getResponse()->appendBody($message);
-            $this->logger->debug("WEBHOOK: {$message}");
-            $this->getResponse()->setStatusCode(Http::STATUS_CODE_400);
-            return;
-        }
+            if ($case->isEmpty()) {
+                $httpCode = Http::STATUS_CODE_400;
+                throw new \Exception("Case {$requestJson->orderId} on request not found on Magento");
+            }
 
-        if ($case->getMagentoStatus() == Casedata::COMPLETED_STATUS) {
-            $message = "Case {$requestJson->orderId} already completed, no action will be taken";
-            $this->getResponse()->appendBody($message);
-            $this->logger->debug("WEBHOOK: {$message}");
-            $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
-            return;
-        }
+            $signifydApi = $this->configHelper->getSignifydApi($case);
 
-        $signifydApi = $this->configHelper->getSignifydApi($case);
+            if ($signifydApi->validWebhookRequest($request, $hash, $topic) == false) {
+                $httpCode = Http::STATUS_CODE_403;
+                throw new \Exception("Invalid webhook request");
+            } elseif ($this->configHelper->isEnabled($case) == false) {
+                $httpCode = Http::STATUS_CODE_400;
+                throw new \Exception('This plugin is not currently enabled');
+            } elseif ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS) {
+                $httpCode = Http::STATUS_CODE_400;
+                throw new \Exception("Case {$requestJson->orderId} it is not ready to be updated");
+            } elseif ($case->getMagentoStatus() == Casedata::COMPLETED_STATUS) {
+                $httpCode = Http::STATUS_CODE_200;
+                throw new \Exception("Case {$requestJson->orderId} already completed, no action will be taken");
+            }
 
-        if ($signifydApi->validWebhookRequest($request, $hash, $topic)) {
             $this->logger->info("Processing case {$case->getId()}");
 
-            try {
-                $this->resourceConnection->getConnection()->beginTransaction();
-                $this->casedataResourceModel->loadForUpdate($case, $case->getId());
+            $case->updateCase($requestJson);
+            $case->updateOrder();
 
-                $case->updateCase($requestJson);
-                $case->updateOrder();
+            $this->casedataResourceModel->save($case);
+            $this->orderResourceModel->save($case->getOrder());
+            $this->resourceConnection->getConnection()->commit();
+        } catch (\Exception $e) {
+            $this->resourceConnection->getConnection()->rollBack();
 
-                $this->casedataResourceModel->save($case);
-                $this->orderResourceModel->save($case->getOrder());
-                $this->resourceConnection->getConnection()->commit();
-
-                $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
-            } catch (\Exception $e) {
-                $this->resourceConnection->getConnection()->rollBack();
-                $this->logger->error('Failed to save case data to database: ' . $e->getMessage());
-
-                $this->getResponse()->setStatusCode(Http::STATUS_CODE_403);
-            }
-        } else {
-            $this->getResponse()->setStatusCode(Http::STATUS_CODE_403);
+            $httpCode = empty($httpCode) ? 403 : $httpCode;
+            $this->getResponse()->appendBody($e->getMessage());
+            $this->logger->error("WEBHOOK: {$e->getMessage()}");
         }
+
+        $httpCode = empty($httpCode) ? 200 : $httpCode;
+        $this->getResponse()->setStatusCode($httpCode);
     }
 }
