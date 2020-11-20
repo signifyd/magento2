@@ -79,16 +79,6 @@ class Before implements ObserverInterface
                 return;
             }
 
-            // Saving store code to order, to know where the order is been created
-            if (empty($order->getData('origin_store_code')) && is_object($this->storeManager)) {
-                $isAdmin = ('adminhtml' === $this->appState->getAreaCode());
-                $storeCode = $this->storeManager->getStore($isAdmin ? 'admin' : true)->getCode();
-
-                if (!empty($storeCode)) {
-                    $order->setData('origin_store_code', $storeCode);
-                }
-            }
-
             // Fix for Magento bug https://github.com/magento/magento2/issues/7227
             // x_forwarded_for should be copied from quote, but quote does not have the field on database
             if (empty($order->getData('x_forwarded_for')) && is_object($this->request)) {
