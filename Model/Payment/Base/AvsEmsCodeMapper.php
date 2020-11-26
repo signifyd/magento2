@@ -52,6 +52,9 @@ class AvsEmsCodeMapper extends DataMapper
     {
         $avsStatus = $response->getAvs();
 
+        $message = 'Response AVS: ' . ($response->getAvs());
+        $this->logger->debug($message);
+
         return ($this->validate($avsStatus) ? $avsStatus : null);
     }
 }

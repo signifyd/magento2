@@ -179,7 +179,7 @@ class Purchase implements ObserverInterface
             }
 
             $orderData = $this->purchaseHelper->processOrderData($order);
-            $caseResponse = $this->helper->postCaseToSignifyd($orderData, $order);
+            $caseResponse = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
 
             // Initial hold order
             $this->holdOrder($order, $case);

@@ -7,7 +7,6 @@
 namespace Signifyd\Connect\Helper;
 
 use Braintree\Exception;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Module\ModuleListInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Address;
@@ -18,25 +17,12 @@ use Magento\Framework\App\ProductMetadata;
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\ResourceModel\Customer as CustomerResourceModel;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
-use Signifyd\Core\SignifydModel;
-use Signifyd\Models\Address as SignifydAddress;
-use Signifyd\Models\Card;
-use Signifyd\Models\CaseModel;
-use Signifyd\Models\Product;
-use Signifyd\Models\Purchase;
-use Signifyd\Models\Recipient;
-use Signifyd\Models\UserAccount;
 use Signifyd\Connect\Model\PaymentVerificationFactory;
 use Magento\Framework\Registry;
-use Magento\Customer\Model\ResourceModel\CustomerRepository;
-use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
-use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Signifyd\Models\GuaranteeFactory as GuaranteeModelFactory;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Framework\App\ResourceConnection;
 
 /**
@@ -495,7 +481,7 @@ class PurchaseHelper
         $caseResponse = $this->configHelper->getSignifydCaseApi($order)->createCase($caseData);
 
         if (empty($caseResponse->getCaseId()) === false) {
-            $this->logger->debug("Case sent. Id is {$caseResponse->getCaseId()}}", ['entity' => $order]);
+            $this->logger->debug("Case sent. Id is {$caseResponse->getCaseId()}", ['entity' => $order]);
             $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: case created {$caseResponse->getCaseId()}");
             return $caseResponse;
         } else {
@@ -640,6 +626,9 @@ class PurchaseHelper
         try {
             $paymentMethod = $order->getPayment()->getMethod();
             $cardholderAdapter = $this->paymentVerificationFactory->createPaymentCardholder($paymentMethod);
+
+            $this->logger->debug('Getting card holder using ' . get_class($cardholderAdapter), ['entity' => $order]);
+
             $cardholder = $cardholderAdapter->getData($order);
 
             if (empty($cardholder)) {

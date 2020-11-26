@@ -16,6 +16,10 @@ class CardholderMapper extends DataMapper
     {
         $cardholder = $order->getPayment()->getCcOwner();
         $cardholder = $cardholder === null ? '' : $cardholder;
+
+        $message = 'Card holder found on base mapper: ' . $cardholder;
+        $this->logger->debug($message, ['entity' => $order]);
+
         return $cardholder;
     }
 
@@ -27,6 +31,9 @@ class CardholderMapper extends DataMapper
     {
         $cardholder = $response->getCardholder();
 
-        return empty($cardholder) ? '' : null;
+        $message = 'Card holder: ' . $cardholder;
+        $this->logger->debug($message);
+
+        return empty($cardholder) ? '' : $cardholder;
     }
 }

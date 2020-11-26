@@ -200,7 +200,7 @@ class RetryCaseJob
             $this->reInitStripe($case->getOrder());
 
             try {
-                $response = $this->configHelper->getSignifydApi($case)->getCase($case->getCode());
+                $response = $this->configHelper->getSignifydCaseApi($case)->getCase($case->getCode());
 
                 $this->resourceConnection->getConnection()->beginTransaction();
                 $this->casedataResourceModel->loadForUpdate($case, $case->getId());
