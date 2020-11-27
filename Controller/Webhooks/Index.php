@@ -215,7 +215,17 @@ class Index extends Action
 
             $this->logger->info("Processing case {$case->getId()}");
 
+            $currentCaseHash = sha1(implode(',', $case->getData()));
             $case->updateCase($requestJson);
+            $newCaseHash = sha1(implode(',', $case->getData()));
+
+            if ($currentCaseHash == $newCaseHash) {
+                $httpCode = Http::STATUS_CODE_200;
+                throw new \Exception(
+                    "Case {$requestJson->orderId} already update with this data, no action will be taken"
+                );
+            }
+
             $case->updateOrder();
 
             $this->casedataResourceModel->save($case);
@@ -232,4 +242,6 @@ class Index extends Action
         $httpCode = empty($httpCode) ? 200 : $httpCode;
         $this->getResponse()->setStatusCode($httpCode);
     }
+
+
 }
