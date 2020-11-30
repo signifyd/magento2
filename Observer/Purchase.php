@@ -6,9 +6,11 @@
 
 namespace Signifyd\Connect\Observer;
 
+use Magento\Framework\App\State as AppState;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order;
+use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
@@ -16,6 +18,7 @@ use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -68,6 +71,16 @@ class Purchase implements ObserverInterface
     protected $ownEventsMethods = ['authorizenet_directpost'];
 
     /**
+     * @var StoreManagerInterface
+     */
+    protected $storeManager;
+
+    /**
+     * @var AppState
+     */
+    protected $appState;
+
+    /**
      * Purchase constructor.
      * @param Logger $logger
      * @param PurchaseHelper $purchaseHelper
@@ -75,6 +88,9 @@ class Purchase implements ObserverInterface
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
+     * @param OrderFactory $orderFactory
+     * @param StoreManagerInterface $storeManager
+     * @param AppState $appState
      */
     public function __construct(
         Logger $logger,
@@ -82,7 +98,10 @@ class Purchase implements ObserverInterface
         ConfigHelper $configHelper,
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
-        OrderResourceModel $orderResourceModel
+        OrderResourceModel $orderResourceModel,
+        OrderFactory $orderFactory,
+        StoreManagerInterface $storeManager,
+        AppState $appState
     ) {
         $this->logger = $logger;
         $this->purchaseHelper = $purchaseHelper;
@@ -90,6 +109,9 @@ class Purchase implements ObserverInterface
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
+        $this->orderFactory = $orderFactory;
+        $this->storeManager = $storeManager;
+        $this->appState = $appState;
     }
 
     /**
@@ -157,6 +179,16 @@ class Purchase implements ObserverInterface
             $case->setUpdated();
             $case->setEntriesText("");
 
+            // Saving store code to order, to know where the order is been created
+            if (empty($case->getData('origin_store_code')) && is_object($this->storeManager)) {
+                $isAdmin = ('adminhtml' === $this->appState->getAreaCode());
+                $storeCode = $this->storeManager->getStore($isAdmin ? 'admin' : true)->getCode();
+
+                if (!empty($storeCode)) {
+                    $case->setData('origin_store_code', $storeCode);
+                }
+            }
+
             // Stop case sending if order has an async payment method
             if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig())) {
                 $case->setMagentoStatus(Casedata::ASYNC_WAIT);
@@ -177,6 +209,8 @@ class Purchase implements ObserverInterface
 
                 return;
             }
+
+            $order->setData('origin_store_code', $case->getData('origin_store_code'));
 
             $orderData = $this->purchaseHelper->processOrderData($order);
             $caseResponse = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);

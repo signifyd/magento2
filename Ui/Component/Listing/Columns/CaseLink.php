@@ -68,35 +68,41 @@ class CaseLink extends Column
     {
         if (isset($dataSource['data']['items'])) {
             $name = $this->getData('name');
+
             foreach ($dataSource['data']['items'] as &$item) {
-                // Scores should be whole numbers
-                if (is_numeric($item[$name])) {
-                    $item[$name] = (int) $item[$name];
-                } else {
-                    /** @var \Signifyd\Connect\Model\Casedata $case */
-                    $case = $this->casedataFactory->create();
-                    $this->casedataResourceModel->load($case, $item['increment_id']);
-                    $entries = $case->getEntriesText();
+                /** @var \Signifyd\Connect\Model\Casedata $case */
+                $case = $this->casedataFactory->create();
+                $this->casedataResourceModel->load($case, $item['increment_id']);
 
-                    if (!empty($entries)) {
-                        try {
-                            $entries = $this->serializer->unserialize($entries);
-                        } catch (\InvalidArgumentException $e) {
-                            $entries = [];
-                        }
+                switch ($name) {
+                    case "signifyd_score":
+                        $item[$name] = $case->getScore();
+                        break;
 
-                        if (is_array($entries) &&
-                            isset($entries['testInvestigation']) &&
-                            $entries['testInvestigation'] == true
-                        ) {
-                            $item[$name] = "TEST: {$item[$name]}";
+                    case "signifyd_guarantee":
+                        $item[$name] = $case->getGuarantee();
+                        $entries = $case->getEntriesText();
+
+                        if (!empty($entries)) {
+                            try {
+                                $entries = $this->serializer->unserialize($entries);
+                            } catch (\InvalidArgumentException $e) {
+                                $entries = [];
+                            }
+
+                            if (is_array($entries) &&
+                                isset($entries['testInvestigation']) &&
+                                $entries['testInvestigation'] == true
+                            ) {
+                                $item[$name] = "TEST: {$item[$name]}";
+                            }
                         }
-                    }
+                        break;
                 }
 
                 // The data we display in the grid should link to the case on the Signifyd site
-                if (isset($item['signifyd_code']) && $item['signifyd_code'] != '') {
-                    $url = "https://www.signifyd.com/cases/" . $item['signifyd_code'];
+                if (empty($case->getCode()) === false) {
+                    $url = "https://www.signifyd.com/cases/" . $case->getCode();
                     $item[$name] = "<a href=\"$url\" target=\"_blank\">$item[$name]</a>";
                 }
             }

@@ -129,6 +129,7 @@ class RetryCaseJob
                 ['entity' => $case]
             );
 
+            $case->getOrder()->setData('origin_store_code', $case->getData('origin_store_code'));
             $caseModel = $this->purchaseHelper->processOrderData($case->getOrder());
             $avsCode = $caseModel->getPurchase()->getAvsResponseCode();
             $cvvCode = $caseModel->getPurchase()->getCvvResponseCode();
@@ -164,7 +165,7 @@ class RetryCaseJob
             );
 
             $this->reInitStripe($case->getOrder());
-
+            $case->getOrder()->setData('origin_store_code', $case->getData('origin_store_code'));
             $caseModel = $this->purchaseHelper->processOrderData($case->getOrder());
             $caseResponse = $this->purchaseHelper->postCaseToSignifyd($caseModel, $case->getOrder());
 

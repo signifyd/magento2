@@ -542,8 +542,6 @@ class PurchaseHelper
                 $this->casedataResourceModel->loadForUpdate($case, $case->getId());
 
                 $case->setData('guarantee', $disposition);
-                $order->setSignifydGuarantee($disposition);
-                $order->addCommentToStatusHistory("Signifyd: guarantee canceled");
 
                 $this->casedataResourceModel->save($case);
                 $this->orderResourceModel->save($case->getOrder());

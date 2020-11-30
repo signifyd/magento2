@@ -167,7 +167,6 @@ class Casedata extends AbstractModel
 
             if (isset($response->score) && $this->getScore() != $response->score) {
                 $this->setScore(floor($response->score));
-                $order->setSignifydScore(floor($response->score));
             }
 
             if (isset($response->status) && $this->getSignifydStatus() != $response->status) {
@@ -176,12 +175,10 @@ class Casedata extends AbstractModel
 
             if (isset($response->guaranteeDisposition) && $this->getGuarantee() != $response->guaranteeDisposition) {
                 $this->setGuarantee($response->guaranteeDisposition);
-                $order->setSignifydGuarantee($response->guaranteeDisposition);
             }
 
             if (isset($response->caseId) && empty($response->caseId) == false) {
                 $this->setCode($response->caseId);
-                $order->setSignifydCode($response->caseId);
             }
 
             if (isset($response->testInvestigation)) {
