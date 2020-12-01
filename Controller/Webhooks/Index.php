@@ -213,7 +213,7 @@ class Index extends Action
                 throw new \Exception("Case {$requestJson->orderId} already completed, no action will be taken");
             }
 
-            $this->logger->info("Processing case {$case->getId()}");
+            $this->logger->info("WEBHOOK: Processing case {$case->getId()}");
 
             $currentCaseHash = sha1(implode(',', $case->getData()));
             $case->updateCase($requestJson);

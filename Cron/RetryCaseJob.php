@@ -118,14 +118,14 @@ class RetryCaseJob
      */
     public function execute()
     {
-        $this->logger->debug("Main retry method called");
+        $this->logger->debug("CRON: Main retry method called");
 
         $asyncWaitingCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::ASYNC_WAIT);
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($asyncWaitingCases as $case) {
             $this->logger->debug(
-                "Signifyd: preparing for send case no: {$case->getOrderIncrement()}",
+                "CRON: preparing for send case no: {$case->getOrderIncrement()}",
                 ['entity' => $case]
             );
 
@@ -146,7 +146,7 @@ class RetryCaseJob
                     $this->resourceConnection->getConnection()->commit();
                 } catch (\Exception $e) {
                     $this->resourceConnection->getConnection()->rollBack();
-                    $this->logger->error('Failed to save case data to database: ' . $e->getMessage());
+                    $this->logger->error('CRON: Failed to save case data to database: ' . $e->getMessage());
                 }
             }
         }
@@ -159,30 +159,30 @@ class RetryCaseJob
         /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($waitingCases as $case) {
             $this->logger->debug(
-                "Signifyd: preparing for send case no: {$case['order_increment']}",
+                "CRON: preparing for send case no: {$case['order_increment']}",
                 ['entity' => $case]
             );
 
             $this->reInitStripe($case->getOrder());
 
-            $caseModel = $this->purchaseHelper->processOrderData($case->getOrder());
-            $investigationId = $this->purchaseHelper->postCaseToSignifyd($caseModel, $case->getOrder());
+            try {
+                $this->resourceConnection->getConnection()->beginTransaction();
+                $this->casedataResourceModel->loadForUpdate($case, $case->getId());
 
-            if (empty($investigationId) === false) {
-                try {
-                    $this->resourceConnection->getConnection()->beginTransaction();
-                    $this->casedataResourceModel->loadForUpdate($case, $case->getId());
+                $caseModel = $this->purchaseHelper->processOrderData($case->getOrder());
+                $investigationId = $this->purchaseHelper->postCaseToSignifyd($caseModel, $case->getOrder());
 
+                if (empty($investigationId) === false) {
                     $case->setCode($investigationId);
                     $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
                     $case->setUpdated();
-
                     $this->casedataResourceModel->save($case);
-                    $this->resourceConnection->getConnection()->commit();
-                } catch (\Exception $e) {
-                    $this->resourceConnection->getConnection()->rollBack();
-                    $this->logger->error('Failed to save case data to database: ' . $e->getMessage());
                 }
+
+                $this->resourceConnection->getConnection()->commit();
+            } catch (\Exception $e) {
+                $this->resourceConnection->getConnection()->rollBack();
+                $this->logger->error('CRON: Failed to save case data to database: ' . $e->getMessage());
             }
         }
 
@@ -193,7 +193,7 @@ class RetryCaseJob
 
         foreach ($inReviewCases as $case) {
             $this->logger->debug(
-                "Signifyd: preparing for review case no: {$case['order_increment']}",
+                "CRON: preparing for review case no: {$case['order_increment']}",
                 ['entity' => $case]
             );
 
@@ -205,34 +205,17 @@ class RetryCaseJob
                 $this->resourceConnection->getConnection()->beginTransaction();
                 $this->casedataResourceModel->loadForUpdate($case, $case->getId());
 
+                $currentCaseHash = sha1(implode(',', $case->getData()));
                 $case->updateCase($response);
-                $case->updateOrder();
+                $newCaseHash = sha1(implode(',', $case->getData()));
 
-                $this->casedataResourceModel->save($case);
-                $this->orderResourceModel->save($case->getOrder());
-                $this->resourceConnection->getConnection()->commit();
-            } catch (\Exception $e) {
-                $this->resourceConnection->getConnection()->rollBack();
-                $this->logger->error('Failed to save case data to database: ' . $e->getMessage());
-            }
-        }
-
-        /**
-         * Getting all the cases that need processing after the response was received
-         */
-        $inProcessingCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::PROCESSING_RESPONSE_STATUS);
-
-        foreach ($inProcessingCases as $case) {
-            $this->logger->debug(
-                "Signifyd: preparing for process case no: {$case['order_increment']}",
-                ['entity' => $case]
-            );
-
-            $this->reInitStripe($case->getOrder());
-
-            try {
-                $this->resourceConnection->getConnection()->beginTransaction();
-                $this->casedataResourceModel->loadForUpdate($case, $case->getId());
+                if ($currentCaseHash == $newCaseHash) {
+                    $this->resourceConnection->getConnection()->rollBack();
+                    $this->logger->info(
+                        "CRON: Case {$case->getId()} already update with this data, no action will be taken"
+                    );
+                    continue;
+                }
 
                 $case->updateOrder();
 
@@ -241,11 +224,11 @@ class RetryCaseJob
                 $this->resourceConnection->getConnection()->commit();
             } catch (\Exception $e) {
                 $this->resourceConnection->getConnection()->rollBack();
-                $this->logger->error('Failed to save case data to database: ' . $e->getMessage());
+                $this->logger->error('CRON: Failed to save case data to database: ' . $e->getMessage());
             }
         }
 
-        $this->logger->debug("Main retry method ended");
+        $this->logger->debug("CRON: Main retry method ended");
     }
 
     /**

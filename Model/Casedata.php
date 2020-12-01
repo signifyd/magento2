@@ -31,9 +31,6 @@ class Casedata extends AbstractModel
     /* The status for a case when the first response from Signifyd is received */
     const IN_REVIEW_STATUS              = "in_review";
 
-    /* The status for a case when the case is processing the response */
-    const PROCESSING_RESPONSE_STATUS    = "processing_response";
-
     /* The status for a case that is completed */
     const COMPLETED_STATUS              = "completed";
 
