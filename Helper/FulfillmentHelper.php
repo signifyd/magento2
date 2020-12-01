@@ -116,34 +116,21 @@ class FulfillmentHelper
             if ($fulfillment->getId()) {
                 $this->logger->debug("Fulfillment for shipment {$shipmentIncrementId} already sent");
                 return false;
-            } else {
-                $fulfillmentData = $this->generateFulfillmentData($shipment);
-
-                if ($fulfillmentData == false) {
-                    $this->logger->debug("Fulfillment for shipment {$shipmentIncrementId} is not ready to be sent");
-                    return false;
-                }
-
-                $fulfillment = $this->prepareFulfillmentToDatabase($fulfillmentData);
             }
 
-            $fulfillmentBulkResponse = $this->configHelper->getSignifydCaseApi($order)->addFulfillment($fulfillmentData);
+            $fulfillmentData = $this->generateFulfillmentData($shipment);
 
-            if ($fulfillmentBulkResponse->isError()) {
-                $message = "Signifyd: Fullfilment failed to send";
-            } else {
-                $message = "Signifyd: Fullfilment sent";
-
-                $fulfillment->setMagentoStatus(Fulfillment::COMPLETED_STATUS);
-                $this->fulfillmentResourceModel->save($fulfillment);
+            if ($fulfillmentData == false) {
+                $this->logger->debug("Fulfillment for shipment {$shipmentIncrementId} is not ready to be sent");
+                return false;
             }
+
+            $fulfillment = $this->prepareFulfillmentToDatabase($fulfillmentData);
+            $this->fulfillmentResourceModel->save($fulfillment);
         } catch (\Exception $e) {
             $this->logger->debug("Fulfillment error: {$e->getMessage()}");
             return false;
         }
-
-        $this->logger->debug($message);
-        $this->orderHelper->addCommentToStatusHistory($order, $message);
 
         return true;
     }
