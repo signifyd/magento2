@@ -88,7 +88,6 @@ class Purchase implements ObserverInterface
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
-     * @param OrderFactory $orderFactory
      * @param StoreManagerInterface $storeManager
      * @param AppState $appState
      */
@@ -99,7 +98,6 @@ class Purchase implements ObserverInterface
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
-        OrderFactory $orderFactory,
         StoreManagerInterface $storeManager,
         AppState $appState
     ) {
@@ -109,7 +107,6 @@ class Purchase implements ObserverInterface
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
-        $this->orderFactory = $orderFactory;
         $this->storeManager = $storeManager;
         $this->appState = $appState;
     }
