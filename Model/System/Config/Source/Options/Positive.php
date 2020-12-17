@@ -46,11 +46,11 @@ class Positive implements ArrayInterface
             ],
             [
                 'value' => 'unhold',
-                'label' => 'Update status to processing'
+                'label' => 'Unhold order'
             ],
             [
                 'value' => 'capture',
-                'label' => 'Capture payment and update order status'
+                'label' => 'Create invoice'
             ]
         ];
 
