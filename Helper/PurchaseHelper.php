@@ -251,7 +251,7 @@ class PurchaseHelper
      * @param Order $order
      * @return mixed
      */
-    protected function getIPAddress(Order $order)
+    public function getIPAddress(Order $order)
     {
         if ($order->getRemoteIp()) {
             if ($order->getXForwardedFor()) {
@@ -269,7 +269,7 @@ class PurchaseHelper
      * @param $ip
      * @return mixed
      */
-    protected function filterIp($ipString)
+    public function filterIp($ipString)
     {
         $matches = [];
 
@@ -296,7 +296,7 @@ class PurchaseHelper
      * @param Item $item
      * @return array
      */
-    protected function makeProduct(Item $item)
+    public function makeProduct(Item $item)
     {
         $product = $item->getProduct();
         $productImage = $product->getImage();
@@ -379,7 +379,7 @@ class PurchaseHelper
      * @param $order Order
      * @return array
      */
-    protected function makePurchase(Order $order)
+    public function makePurchase(Order $order)
     {
         $originStoreCode = $order->getData('origin_store_code');
 
@@ -435,7 +435,7 @@ class PurchaseHelper
      * @param Order $order
      * @return array
      */
-    protected function makeShipments(Order $order)
+    public function makeShipments(Order $order)
     {
         $shipments = [];
         $shippingMethod = $order->getShippingMethod(true);
@@ -452,7 +452,7 @@ class PurchaseHelper
         return $shipments;
     }
 
-    protected function makeShipper($shippingMethod)
+    public function makeShipper($shippingMethod)
     {
         $shippingCarrier = $shippingMethod->getCarrierCode();
         $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/shipper_config');
@@ -467,7 +467,7 @@ class PurchaseHelper
         return false;
     }
 
-    protected function makeshippingMethod($shippingMethod)
+    public function makeshippingMethod($shippingMethod)
     {
         $shippingMethodCode = $shippingMethod->getMethod();
         $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/shippingMethod_config');
@@ -486,7 +486,7 @@ class PurchaseHelper
      * @param $mageAddress Address
      * @return array
      */
-    protected function formatSignifydAddress($mageAddress)
+    public function formatSignifydAddress($mageAddress)
     {
         $address = [];
 
@@ -504,7 +504,7 @@ class PurchaseHelper
      * @param $order Order
      * @return array
      */
-    protected function makeRecipient(Order $order)
+    public function makeRecipient(Order $order)
     {
         $recipients = [];
         $recipient = [];
@@ -531,7 +531,7 @@ class PurchaseHelper
         return $recipients;
     }
 
-    protected function makeTransactions(Order $order)
+    public function makeTransactions(Order $order)
     {
         $lastTransaction = $order->getPayment()->getLastTransId();
         $transactionsFromOrder = $this->transactionCollectionFactory->create()
@@ -567,7 +567,7 @@ class PurchaseHelper
         return $transactions;
     }
 
-    protected function makePaymentMethod(Order $order)
+    public function makePaymentMethod(Order $order)
     {
         $paymentMethod = $order->getPayment()->getMethod();
         $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/payment_methods_config');
@@ -586,7 +586,7 @@ class PurchaseHelper
      * @param $order Order
      * @return array
      */
-    protected function makecheckoutPaymentDetails(Order $order)
+    public function makecheckoutPaymentDetails(Order $order)
     {
         $billingAddress = $order->getBillingAddress();
         $checkoutPaymentDetails = [];
@@ -604,7 +604,7 @@ class PurchaseHelper
      * @param $order Order
      * @return array
      */
-    protected function makeUserAccount(Order $order)
+    public function makeUserAccount(Order $order)
     {
         $user = [];
         $user['email'] = $order->getCustomerEmail();
@@ -768,7 +768,7 @@ class PurchaseHelper
      * @param Order $order
      * @return string
      */
-    protected function getAvsCode(Order $order)
+    public function getAvsCode(Order $order)
     {
         try {
             $avsAdapter = $this->paymentVerificationFactory->createPaymentAvs($order->getPayment()->getMethod());
@@ -795,7 +795,7 @@ class PurchaseHelper
      * @param Order $order
      * @return string
      */
-    protected function getCvvCode(Order $order)
+    public function getCvvCode(Order $order)
     {
         try {
             $cvvAdapter = $this->paymentVerificationFactory->createPaymentCvv($order->getPayment()->getMethod());
@@ -822,7 +822,7 @@ class PurchaseHelper
      * @param Order $order
      * @return string
      */
-    protected function getCardholder(Order $order)
+    public function getCardholder(Order $order)
     {
         try {
             $paymentMethod = $order->getPayment()->getMethod();
@@ -855,7 +855,7 @@ class PurchaseHelper
      * @param Order $order
      * @return string|null
      */
-    protected function getLast4(Order $order)
+    public function getLast4(Order $order)
     {
         try {
             $last4Adapter = $this->paymentVerificationFactory->createPaymentLast4($order->getPayment()->getMethod());
@@ -882,7 +882,7 @@ class PurchaseHelper
      * @param Order $order
      * @return int|null
      */
-    protected function getExpMonth(Order $order)
+    public function getExpMonth(Order $order)
     {
         try {
             $monthAdapter = $this->paymentVerificationFactory->createPaymentExpMonth($order->getPayment()->getMethod());
@@ -910,7 +910,7 @@ class PurchaseHelper
      * @param Order $order
      * @return int|null
      */
-    protected function getExpYear(Order $order)
+    public function getExpYear(Order $order)
     {
         try {
             $yearAdapter = $this->paymentVerificationFactory->createPaymentExpYear($order->getPayment()->getMethod());
@@ -943,7 +943,7 @@ class PurchaseHelper
      * @param Order $order
      * @return int|null
      */
-    protected function getBin(Order $order)
+    public function getBin(Order $order)
     {
         try {
             $binAdapter = $this->paymentVerificationFactory->createPaymentBin($order->getPayment()->getMethod());
@@ -976,7 +976,7 @@ class PurchaseHelper
      * @param Order $order
      * @return int|null
      */
-    protected function getTransactionId(Order $order)
+    public function getTransactionId(Order $order)
     {
         try {
             $paymentMethod = $order->getPayment()->getMethod();
