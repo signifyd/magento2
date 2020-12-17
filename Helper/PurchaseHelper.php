@@ -442,14 +442,44 @@ class PurchaseHelper
 
         if (empty($shippingMethod) === false) {
             $shipment = [];
-            $shipment['shipper'] = $shippingMethod->getCarrierCode();
+            $shipment['shipper'] = $this->makeShipper($shippingMethod);
             $shipment['shippingPrice'] = floatval($order->getShippingAmount()) + floatval($order->getShippingTaxAmount());
-            $shipment['shippingMethod'] = $shippingMethod->getMethod();
+            $shipment['shippingMethod'] = $this->makeshippingMethod($shippingMethod);
 
             $shipments[] = $shipment;
         }
 
         return $shipments;
+    }
+
+    protected function makeShipper($shippingMethod)
+    {
+        $shippingCarrier = $shippingMethod->getCarrierCode();
+        $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/shipper_config');
+        $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
+
+        foreach ($allowMethods as $i => $allowMethod) {
+            if (in_array($shippingCarrier, $allowMethod)) {
+                return $i;
+            }
+        }
+
+        return false;
+    }
+
+    protected function makeshippingMethod($shippingMethod)
+    {
+        $shippingMethodCode = $shippingMethod->getMethod();
+        $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/shippingMethod_config');
+        $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
+
+        foreach ($allowMethods as $i => $allowMethod) {
+            if (in_array($shippingMethodCode, $allowMethod)) {
+                return $i;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -539,9 +569,8 @@ class PurchaseHelper
 
     protected function makePaymentMethod(Order $order)
     {
-        $storeId = $order->getStoreId();
         $paymentMethod = $order->getPayment()->getMethod();
-        $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/config_payment_methods', ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $storeId);
+        $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/payment_methods_config');
         $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
 
         foreach ($allowMethods as $i => $allowMethod) {
