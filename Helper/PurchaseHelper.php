@@ -242,8 +242,10 @@ class PurchaseHelper
         $itemPrice = floatval(number_format($item->getPrice(), 0, '.', ''));
 
         if ($itemPrice <= 0) {
-            if ($item->getParentItem()->getProductType() === 'configurable') {
-                $itemPrice = $item->getParentItem()->getPrice();
+            if ($item->getParentItem()) {
+                if ($item->getParentItem()->getProductType() === 'configurable') {
+                    $itemPrice = $item->getParentItem()->getPrice();
+                }
             }
         }
 
