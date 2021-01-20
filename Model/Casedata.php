@@ -254,7 +254,7 @@ class Casedata extends AbstractModel
 
                     try {
                         $order->unhold();
-                        $this->orderResourceModel->save();
+                        $this->orderResourceModel->save($order);
 
                         $completeCase = true;
 
