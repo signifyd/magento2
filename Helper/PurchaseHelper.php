@@ -633,14 +633,14 @@ class PurchaseHelper
             $cardholderAdapter = $this->paymentVerificationFactory->createPaymentCardholder($paymentMethod);
             $cardholder = $cardholderAdapter->getData($order);
 
-            if (empty($cardholder)) {
+            if (empty($cardholder) || !mb_check_encoding($cardholder, 'UTF-8') || strpos($cardholder, '?') !== false) {
                 $firstname = $order->getBillingAddress()->getFirstname();
                 $lastname = $order->getBillingAddress()->getLastname();
                 $cardholder = trim($firstname) . ' ' . trim($lastname);
             }
 
             $cardholder = strtoupper($cardholder);
-            $cardholder = preg_replace('/[^A-Z ]/', '', $cardholder);
+
             $cardholder = preg_replace('/  +/', ' ', $cardholder);
 
             return $cardholder;
