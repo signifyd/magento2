@@ -12,7 +12,7 @@ define([
             me._super();
 
             if (jQuery('.checkout-onepage-success').length > 0) {
-                customerData.reload('signifyd-fingerprint');
+                customerData.reload(['signifyd-fingerprint']);
 
             } else {
                 me.data = customerData.get('signifyd-fingerprint');
