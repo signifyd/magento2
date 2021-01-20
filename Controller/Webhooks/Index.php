@@ -180,8 +180,6 @@ class Index extends Action
         }
 
         try {
-            $this->resourceConnection->getConnection()->beginTransaction();
-
             if (isset($requestJson->orderId) === false) {
                 $httpCode = Http::STATUS_CODE_200;
                 throw new \Exception("Invalid body, no 'orderId' field found on request");
@@ -204,7 +202,7 @@ class Index extends Action
                 throw new \Exception("Invalid webhook request");
             } elseif ($this->configHelper->isEnabled($case) == false) {
                 $httpCode = Http::STATUS_CODE_400;
-                throw new \Exception('This plugin is not currently enabled');
+                throw new \Exception('Signifyd plugin it is not enabled');
             } elseif ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS) {
                 $httpCode = Http::STATUS_CODE_400;
                 throw new \Exception("Case {$requestJson->orderId} it is not ready to be updated");
@@ -229,10 +227,11 @@ class Index extends Action
             $case->updateOrder();
 
             $this->casedataResourceModel->save($case);
-            $this->orderResourceModel->save($case->getOrder());
-            $this->resourceConnection->getConnection()->commit();
         } catch (\Exception $e) {
-            $this->resourceConnection->getConnection()->rollBack();
+            // Triggering case save to unlock case
+            if ($case instanceof \Signifyd\Connect\Model\ResourceModel\Casedata) {
+                $this->casedataResourceModel->save($case);
+            }
 
             $httpCode = empty($httpCode) ? 403 : $httpCode;
             $this->getResponse()->appendBody($e->getMessage());
@@ -242,6 +241,4 @@ class Index extends Action
         $httpCode = empty($httpCode) ? 200 : $httpCode;
         $this->getResponse()->setStatusCode($httpCode);
     }
-
-
 }

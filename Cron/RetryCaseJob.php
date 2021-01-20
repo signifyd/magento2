@@ -136,16 +136,13 @@ class RetryCaseJob
 
             if ($retries >= 5 || empty($avsCode) == false && empty($cvvCode) == false) {
                 try {
-                    $this->resourceConnection->getConnection()->beginTransaction();
                     $this->casedataResourceModel->loadForUpdate($case, $case->getId());
 
                     $case->setMagentoStatus(Casedata::WAITING_SUBMISSION_STATUS);
                     $case->setUpdated();
 
                     $this->casedataResourceModel->save($case);
-                    $this->resourceConnection->getConnection()->commit();
                 } catch (\Exception $e) {
-                    $this->resourceConnection->getConnection()->rollBack();
                     $this->logger->error('CRON: Failed to save case data to database: ' . $e->getMessage());
                 }
             }
@@ -166,7 +163,6 @@ class RetryCaseJob
             $this->reInitStripe($case->getOrder());
 
             try {
-                $this->resourceConnection->getConnection()->beginTransaction();
                 $this->casedataResourceModel->loadForUpdate($case, $case->getId());
 
                 $caseModel = $this->purchaseHelper->processOrderData($case->getOrder());
@@ -178,10 +174,7 @@ class RetryCaseJob
                     $case->setUpdated();
                     $this->casedataResourceModel->save($case);
                 }
-
-                $this->resourceConnection->getConnection()->commit();
             } catch (\Exception $e) {
-                $this->resourceConnection->getConnection()->rollBack();
                 $this->logger->error('CRON: Failed to save case data to database: ' . $e->getMessage());
             }
         }
@@ -202,7 +195,6 @@ class RetryCaseJob
             try {
                 $response = $this->configHelper->getSignifydApi($case)->getCase($case->getCode());
 
-                $this->resourceConnection->getConnection()->beginTransaction();
                 $this->casedataResourceModel->loadForUpdate($case, $case->getId());
 
                 $currentCaseHash = sha1(implode(',', $case->getData()));
@@ -210,20 +202,25 @@ class RetryCaseJob
                 $newCaseHash = sha1(implode(',', $case->getData()));
 
                 if ($currentCaseHash == $newCaseHash) {
-                    $this->resourceConnection->getConnection()->rollBack();
                     $this->logger->info(
                         "CRON: Case {$case->getId()} already update with this data, no action will be taken"
                     );
+
+                    // Triggering case save to unlock case
+                    $this->casedataResourceModel->save($case);
+
                     continue;
                 }
 
                 $case->updateOrder();
 
                 $this->casedataResourceModel->save($case);
-                $this->orderResourceModel->save($case->getOrder());
-                $this->resourceConnection->getConnection()->commit();
             } catch (\Exception $e) {
-                $this->resourceConnection->getConnection()->rollBack();
+                // Triggering case save to unlock case
+                if ($case instanceof \Signifyd\Connect\Model\ResourceModel\Casedata) {
+                    $this->casedataResourceModel->save($case);
+                }
+
                 $this->logger->error('CRON: Failed to save case data to database: ' . $e->getMessage());
             }
         }

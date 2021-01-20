@@ -85,29 +85,28 @@ class Unhold
         }
 
         try {
-            /** @var $case \Signifyd\Connect\Model\Casedata */
-            $case = $this->casedataFactory->create();
-
-            $this->resourceConnection->getConnection()->beginTransaction();
-            $this->casedataResourceModel->loadForUpdate($case, $case->getId());
-
             /** @var \Magento\Sales\Model\Order $order */
             $order = $this->orderRepository->get($orderId);
-
-            if ($case->isHoldReleased() === false) {
-                $case->setEntries('hold_released', 1);
-                $this->casedataResourceModel->save($case);
-            }
+            /** @var $case \Signifyd\Connect\Model\Casedata */
+            $case = $this->casedataFactory->create();
 
             $this->orderHelper->addCommentToStatusHistory(
                 $order,
                 "Signifyd: order status updated by {$this->authSession->getUser()->getUserName()}"
             );
 
-            $this->orderRepository->save($case->getOrder());
-            $this->resourceConnection->getConnection()->commit();
+            $this->casedataResourceModel->loadForUpdate($case, $order->getIncrementId(), null, 2);
+
+            if ($case->isHoldReleased() === false) {
+                $case->setEntries('hold_released', 1);
+            }
+
+            $this->casedataResourceModel->save($case);
         } catch (\Exception $e) {
-            $this->resourceConnection->getConnection()->rollBack();
+            // Triggering case save to unlock case
+            if ($case instanceof \Signifyd\Connect\Model\ResourceModel\Casedata) {
+                $this->casedataResourceModel->save($case);
+            }
         }
 
         return $result;
