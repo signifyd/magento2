@@ -239,7 +239,7 @@ class PurchaseHelper
      */
     protected function makeProduct(Item $item)
     {
-        $itemPrice = floatval(number_format($item->getPrice(), 0, '.', ''));
+        $itemPrice = floatval(number_format($item->getPriceInclTax(), 2, '.', ''));
 
         if ($itemPrice <= 0) {
             if ($item->getParentItem()) {
@@ -328,7 +328,7 @@ class PurchaseHelper
             $shippingMethod = $order->getShippingMethod(true);
             $shipment = SignifydModel::Make(\Signifyd\Models\Shipment::class);
             $shipment->shipper = $shippingMethod->getCarrierCode();
-            $shipment->shippingPrice = floatval($order->getShippingAmount());
+            $shipment->shippingPrice = floatval($order->getShippingAmount()) + floatval($order->getShippingTaxAmount());
             $shipment->shippingMethod = $shippingMethod->getMethod();
 
             $shipments[] = $shipment;
