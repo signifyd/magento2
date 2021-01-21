@@ -7,6 +7,7 @@ namespace Signifyd\Connect\Controller\Webhooks;
 
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Response\Http;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Signifyd\Connect\Logger\Logger;
@@ -182,7 +183,7 @@ class Index extends Action
         try {
             if (isset($requestJson->orderId) === false) {
                 $httpCode = Http::STATUS_CODE_200;
-                throw new \Exception("Invalid body, no 'orderId' field found on request");
+                throw new LocalizedException(__("Invalid body, no 'orderId' field found on request"));
             }
 
             $httpCode = null;
@@ -192,23 +193,25 @@ class Index extends Action
 
             if ($case->isEmpty()) {
                 $httpCode = Http::STATUS_CODE_400;
-                throw new \Exception("Case {$requestJson->orderId} on request not found on Magento");
+                throw new LocalizedException(__("Case {$requestJson->orderId} on request not found on Magento"));
             }
 
             $signifydApi = $this->configHelper->getSignifydApi($case);
 
             if ($signifydApi->validWebhookRequest($request, $hash, $topic) == false) {
                 $httpCode = Http::STATUS_CODE_403;
-                throw new \Exception("Invalid webhook request");
+                throw new LocalizedException(__("Invalid webhook request"));
             } elseif ($this->configHelper->isEnabled($case) == false) {
                 $httpCode = Http::STATUS_CODE_400;
-                throw new \Exception('Signifyd plugin it is not enabled');
+                throw new LocalizedException(__('Signifyd plugin it is not enabled'));
             } elseif ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS) {
                 $httpCode = Http::STATUS_CODE_400;
-                throw new \Exception("Case {$requestJson->orderId} it is not ready to be updated");
+                throw new LocalizedException(__("Case {$requestJson->orderId} it is not ready to be updated"));
             } elseif ($case->getMagentoStatus() == Casedata::COMPLETED_STATUS) {
                 $httpCode = Http::STATUS_CODE_200;
-                throw new \Exception("Case {$requestJson->orderId} already completed, no action will be taken");
+                throw new LocalizedException(
+                    __("Case {$requestJson->orderId} already completed, no action will be taken")
+                );
             }
 
             $this->logger->info("WEBHOOK: Processing case {$case->getId()}");
@@ -219,8 +222,8 @@ class Index extends Action
 
             if ($currentCaseHash == $newCaseHash) {
                 $httpCode = Http::STATUS_CODE_200;
-                throw new \Exception(
-                    "Case {$requestJson->orderId} already update with this data, no action will be taken"
+                throw new LocalizedException(
+                    __("Case {$requestJson->orderId} already update with this data, no action will be taken")
                 );
             }
 
