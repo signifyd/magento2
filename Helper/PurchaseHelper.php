@@ -470,7 +470,7 @@ class PurchaseHelper
     public function makeshippingMethod($shippingMethod)
     {
         $shippingMethodCode = $shippingMethod->getMethod();
-        $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/shippingMethod_config');
+        $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/shipping_method_config');
         $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
 
         foreach ($allowMethods as $i => $allowMethod) {
