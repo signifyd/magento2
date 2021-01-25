@@ -20,6 +20,7 @@ use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\App\ResourceConnection;
+use Magento\Store\Model\App\Emulation;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
@@ -67,6 +68,11 @@ class Index extends Action
     protected $resourceConnection;
 
     /**
+     * @var Emulation
+     */
+    protected $emulation;
+
+    /**
      * Index constructor.
      * @param Context $context
      * @param DateTime $dateTime
@@ -79,6 +85,7 @@ class Index extends Action
      * @param OrderResourceModel $orderResourceModel
      * @param JsonSerializer $jsonSerializer
      * @param ResourceConnection $resourceConnection
+     * @param Emulation $emulation
      * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function __construct(
@@ -92,7 +99,8 @@ class Index extends Action
         CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
         JsonSerializer $jsonSerializer,
-        ResourceConnection $resourceConnection
+        ResourceConnection $resourceConnection,
+        Emulation $emulation
     ) {
         parent::__construct($context);
 
@@ -104,6 +112,7 @@ class Index extends Action
         $this->orderResourceModel = $orderResourceModel;
         $this->jsonSerializer = $jsonSerializer;
         $this->resourceConnection = $resourceConnection;
+        $this->emulation = $emulation;
 
         // Compatibility with Magento 2.3+ which required form_key on every request
         // Magento expects class to implement \Magento\Framework\App\CsrfAwareActionInterface but this causes
@@ -212,6 +221,8 @@ class Index extends Action
         if ($signifydApi->validWebhookRequest($request, $hash, $topic)) {
             $this->logger->info("Processing case {$case->getId()}");
 
+            $this->emulation->startEnvironmentEmulation(0,'adminhtml');
+
             try {
                 $this->resourceConnection->getConnection()->beginTransaction();
                 $this->casedataResourceModel->loadForUpdate($case, $case->getId());
@@ -230,6 +241,8 @@ class Index extends Action
 
                 $this->getResponse()->setStatusCode(Http::STATUS_CODE_403);
             }
+
+            $this->emulation->stopEnvironmentEmulation();
         } else {
             $this->getResponse()->setStatusCode(Http::STATUS_CODE_403);
         }
