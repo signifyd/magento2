@@ -16,6 +16,8 @@ use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+use Magento\Framework\Stdlib\DateTime\DateTime;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -68,6 +70,16 @@ class Purchase implements ObserverInterface
     protected $ownEventsMethods = ['authorizenet_directpost'];
 
     /**
+     * @var DateTime
+     */
+    protected $dateTime;
+
+    /**
+     * @var ScopeConfigInterface
+     */
+    protected $scopeConfigInterface;
+
+    /**
      * Purchase constructor.
      * @param Logger $logger
      * @param PurchaseHelper $purchaseHelper
@@ -75,6 +87,8 @@ class Purchase implements ObserverInterface
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
+     * @param DateTime $dateTime
+     * @param ScopeConfigInterface $scopeConfigInterface
      */
     public function __construct(
         Logger $logger,
@@ -82,7 +96,9 @@ class Purchase implements ObserverInterface
         ConfigHelper $configHelper,
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
-        OrderResourceModel $orderResourceModel
+        OrderResourceModel $orderResourceModel,
+        DateTime $dateTime,
+        ScopeConfigInterface $scopeConfigInterface
     ) {
         $this->logger = $logger;
         $this->purchaseHelper = $purchaseHelper;
@@ -90,6 +106,8 @@ class Purchase implements ObserverInterface
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
+        $this->dateTime = $dateTime;
+        $this->scopeConfigInterface = $scopeConfigInterface;
     }
 
     /**
@@ -134,6 +152,11 @@ class Purchase implements ObserverInterface
             if ($this->isRestricted($paymentMethod, $state, 'create')) {
                 $message = 'Case creation for order ' . $incrementId . ' with state ' . $state . ' is restricted';
                 $this->logger->debug($message, ['entity' => $order]);
+                return;
+            }
+
+            if ($this->isIgnored($order)) {
+                $this->logger->debug("Order {$incrementId} ignored");
                 return;
             }
 
@@ -251,6 +274,35 @@ class Purchase implements ObserverInterface
         }
 
         return $this->isStateRestricted($state, $action);
+    }
+
+    /**
+     * Check if order is ignored based on installation date
+     *
+     * If there is no record of the installation date on database order will not be ignored
+     *
+     * @param Order $order
+     * @return bool
+     */
+    public function isIgnored(Order $order)
+    {
+        $installationDateConfig = $this->scopeConfigInterface->getValue('signifyd_connect/general/installation_date');
+
+        if (empty($installationDateConfig)) {
+            return false;
+        }
+
+        $installationDate = $this->dateTime->gmtTimestamp($installationDateConfig);
+        $createdAtDate = $this->dateTime->gmtTimestamp($order->getCreatedAt());
+
+        if ($createdAtDate < $installationDate) {
+            $this->logger->info("Installation date: {$installationDate}");
+            $this->logger->info("Created at date: {$createdAtDate}");
+
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

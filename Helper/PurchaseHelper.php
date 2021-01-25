@@ -240,7 +240,7 @@ class PurchaseHelper
      */
     protected function makeProduct(Item $item)
     {
-        $itemPrice = floatval(number_format($item->getPrice(), 0, '.', ''));
+        $itemPrice = floatval(number_format($item->getPriceInclTax(), 2, '.', ''));
 
         if ($itemPrice <= 0) {
             if ($item->getParentItem()) {
@@ -507,7 +507,7 @@ class PurchaseHelper
         $case = $this->casedataFactory->create();
         $this->casedataResourceModel->load($case, $order->getIncrementId());
 
-        if ($case->isEmpty()) {
+        if ($case->isEmpty() || empty($case->getCode())) {
             $this->logger->debug(
                 'Guarantee cancel skipped: case not found for order ' . $order->getIncrementId(),
                 ['entity' => $order]
@@ -517,7 +517,7 @@ class PurchaseHelper
 
         $guarantee = $case->getData('guarantee');
 
-        if (empty($guarantee) || in_array($guarantee, ['DECLINED', 'N/A'])) {
+        if (empty($guarantee) || in_array($guarantee, ['DECLINED'])) {
             $this->logger->debug("Guarantee cancel skipped: current guarantee is {$guarantee}", ['entity' => $order]);
             return false;
         }
@@ -540,18 +540,19 @@ class PurchaseHelper
 
         if ($disposition == 'CANCELED') {
             try {
-                $this->resourceConnection->getConnection()->beginTransaction();
-                $this->casedataResourceModel->loadForUpdate($case, $case->getId());
-
-                $case->setData('guarantee', $disposition);
+                $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: guarantee canceled");
                 $order->setSignifydGuarantee($disposition);
-                $order->addCommentToStatusHistory("Signifyd: guarantee canceled");
-
-                $this->casedataResourceModel->save($case);
                 $this->orderResourceModel->save($case->getOrder());
-                $this->resourceConnection->getConnection()->commit();
+
+                $this->casedataResourceModel->loadForUpdate($case, $case->getId(), null, 2);
+                $case->setData('guarantee', $disposition);
+                $this->casedataResourceModel->save($case);
             } catch (\Exception $e) {
-                $this->resourceConnection->getConnection()->rollBack();
+                // Triggering case save to unlock case
+                if ($case instanceof \Signifyd\Connect\Model\ResourceModel\Casedata) {
+                    $this->casedataResourceModel->save($case);
+                }
+
                 $this->logger->error('Failed to save case data to database: ' . $e->getMessage());
             }
 
@@ -633,14 +634,14 @@ class PurchaseHelper
 
             $cardholder = $cardholderAdapter->getData($order);
 
-            if (empty($cardholder)) {
+            if (empty($cardholder) || !mb_check_encoding($cardholder, 'UTF-8') || strpos($cardholder, '?') !== false) {
                 $firstname = $order->getBillingAddress()->getFirstname();
                 $lastname = $order->getBillingAddress()->getLastname();
                 $cardholder = trim($firstname) . ' ' . trim($lastname);
             }
 
             $cardholder = strtoupper($cardholder);
-            $cardholder = preg_replace('/[^A-Z ]/', '', $cardholder);
+
             $cardholder = preg_replace('/  +/', ' ', $cardholder);
 
             return $cardholder;
