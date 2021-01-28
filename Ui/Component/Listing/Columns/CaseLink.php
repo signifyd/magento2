@@ -72,7 +72,7 @@ class CaseLink extends Column
             foreach ($dataSource['data']['items'] as &$item) {
                 /** @var \Signifyd\Connect\Model\Casedata $case */
                 $case = $this->casedataFactory->create();
-                $this->casedataResourceModel->load($case, $item['increment_id']);
+                $this->casedataResourceModel->load($case, $item['entity_id'], 'order_id');
 
                 switch ($name) {
                     case "signifyd_score":

@@ -137,7 +137,7 @@ class RetryCaseJob
 
             if ($retries >= 5 || empty($avsCode) == false && empty($cvvCode) == false) {
                 try {
-                    $this->casedataResourceModel->loadForUpdate($case, $case->getId());
+                    $this->casedataResourceModel->loadForUpdate($case, $case->getData('code'), 'code');
 
                     $case->setMagentoStatus(Casedata::WAITING_SUBMISSION_STATUS);
                     $case->setUpdated();
@@ -164,7 +164,7 @@ class RetryCaseJob
             $this->reInitStripe($case->getOrder());
 
             try {
-                $this->casedataResourceModel->loadForUpdate($case, $case->getId());
+                $this->casedataResourceModel->loadForUpdate($case, $case->getData('code'), 'code');
 
                 $caseModel = $this->purchaseHelper->processOrderData($case->getOrder());
                 $investigationId = $this->purchaseHelper->postCaseToSignifyd($caseModel, $case->getOrder());
@@ -194,9 +194,9 @@ class RetryCaseJob
             $this->reInitStripe($case->getOrder());
 
             try {
-                $response = $this->configHelper->getSignifydCaseApi($case)->getCase($case->getCode());
+                $response = $this->configHelper->getSignifydCaseApi($case)->getCase($case->getData('code'));
 
-                $this->casedataResourceModel->loadForUpdate($case, $case->getId());
+                $this->casedataResourceModel->loadForUpdate($case, $case->getData('code'), 'code');
 
                 $currentCaseHash = sha1(implode(',', $case->getData()));
                 $case->updateCase($response);

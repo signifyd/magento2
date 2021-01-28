@@ -141,12 +141,12 @@ class Casedata extends AbstractModel
 
     public function getOrder($forceLoad = false)
     {
-        if (isset($this->order) === false || $forceLoad) {
-            $incrementId = $this->getOrderIncrement();
+        if (isset($this->order) == false) {
+            $orderId = $this->getData('order_id');
 
-            if (empty($incrementId) == false) {
+            if (empty($orderId) == false) {
                 $this->order = $this->orderFactory->create();
-                $this->orderResourceModel->load($this->order, $incrementId, 'increment_id');
+                $this->orderResourceModel->load($this->order, $orderId);
             }
         }
 

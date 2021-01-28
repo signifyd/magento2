@@ -189,7 +189,7 @@ class Index extends Action
             $httpCode = null;
             /** @var $case \Signifyd\Connect\Model\Casedata */
             $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->loadForUpdate($case, $requestJson->orderId);
+            $this->casedataResourceModel->loadForUpdate($case, $requestJson->caseId, 'code');
 
             if ($case->isEmpty()) {
                 $httpCode = Http::STATUS_CODE_400;

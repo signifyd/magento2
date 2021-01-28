@@ -42,7 +42,7 @@ class View
         if ($buttonId == 'order_unhold') {
             /** @var $case \Signifyd\Connect\Model\Casedata */
             $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $subject->getOrder()->getIncrementId());
+            $this->casedataResourceModel->load($case, $subject->getOrder()->getId(), 'order_id');
 
             if (!$case->isEmpty()) {
                 $guarantee = $case->getData('guarantee');

@@ -505,7 +505,7 @@ class PurchaseHelper
 
         /** @var $case \Signifyd\Connect\Model\Casedata */
         $case = $this->casedataFactory->create();
-        $this->casedataResourceModel->load($case, $order->getIncrementId());
+        $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
 
         if ($case->isEmpty() || empty($case->getCode())) {
             $this->logger->debug(
@@ -531,7 +531,7 @@ class PurchaseHelper
             }
         }
 
-        $this->logger->debug('Cancelling case ' . $case->getId(), ['entity' => $order]);
+        $this->logger->debug('Cancelling case ' . $case->getData('order_id'), ['entity' => $order]);
         $signifydGuarantee = $this->guaranteeModelFactory->create([['caseId' => $case->getCode()]]);
         $guaranteeResponse = $this->configHelper->getSignifydGuaranteeApi($order)->cancelGuarantee($signifydGuarantee);
         $disposition = $guaranteeResponse->getDisposition();

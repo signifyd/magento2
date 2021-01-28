@@ -162,19 +162,20 @@ class Purchase implements ObserverInterface
 
             /** @var $case \Signifyd\Connect\Model\Casedata */
             $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $order->getIncrementId());
+            $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
 
             // Check if case already exists for this order
             if ($case->isEmpty() == false) {
                 return;
             }
 
-            $message = "Creating case for order {$incrementId}, state {$state}, payment method {$paymentMethod}";
+            $message = "Creating case for order {$incrementId} ({$order->getId()}), state {$state}, payment method {$paymentMethod}";
             $this->logger->debug($message, ['entity' => $order]);
 
             /** @var $case \Signifyd\Connect\Model\Casedata */
             $case = $this->casedataFactory->create();
-            $case->setId($order->getIncrementId());
+            $case->setData('order_increment', $order->getIncrementId());
+            $case->setData('order_id', $order->getId());
             $case->setSignifydStatus("PENDING");
             $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
             $case->setUpdated();

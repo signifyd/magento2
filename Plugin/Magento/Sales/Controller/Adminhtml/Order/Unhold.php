@@ -95,7 +95,7 @@ class Unhold
                 "Signifyd: order status updated by {$this->authSession->getUser()->getUserName()}"
             );
 
-            $this->casedataResourceModel->loadForUpdate($case, $order->getIncrementId(), null, 2);
+            $this->casedataResourceModel->loadForUpdate($case, $order->getId(), 'order_id', 2);
 
             if ($case->isHoldReleased() === false) {
                 $case->setEntries('hold_released', 1);

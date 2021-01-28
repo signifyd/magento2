@@ -1,0 +1,47 @@
+{
+    "signifyd_connect_case": {
+        "column": {
+            "code": true,
+            "order_increment": true,
+            "signifyd_status": true,
+            "score": true,
+            "guarantee": true,
+            "entries_text": true,
+            "created": true,
+            "updated": true,
+            "magento_status": true,
+            "retries": true,
+            "origin_store_code": true,
+            "order_id": true
+        },
+        "index": {
+            "SIGNIFYD_CONNECT_CASE_MAGENTO_STATUS": true
+        },
+        "constraint": {
+            "SIGNIFYD_CONNECT_CASE_ORDER_ID_SALES_ORDER_ENTITY_ID": true,
+            "PRIMARY": true
+        }
+    },
+    "signifyd_connect_fulfillment": {
+        "column": {
+            "id": true,
+            "order_id": true,
+            "created_at": true,
+            "delivery_email": true,
+            "fulfillment_status": true,
+            "tracking_numbers": true,
+            "tracking_urls": true,
+            "products": true,
+            "shipment_status": true,
+            "delivery_address": true,
+            "recipient_name": true,
+            "confirmation_name": true,
+            "confirmation_phone": true,
+            "shipping_carrier": true,
+            "magento_status": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    }
+}

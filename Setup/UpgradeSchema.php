@@ -11,6 +11,7 @@ use Magento\Framework\Setup\SchemaSetupInterface;
 use Magento\Framework\DB\Ddl\Table;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
+use Signifyd\Connect\Logger\Install;
 
 /**
  * @codeCoverageIgnore
@@ -28,16 +29,24 @@ class UpgradeSchema implements UpgradeSchemaInterface
     protected $scopeConfig;
 
     /**
+     * @var Install
+     */
+    protected $logger;
+
+    /**
      * UpgradeSchema constructor.
      * @param WriterInterface $configWriter
      * @param ScopeConfigInterface $scopeConfig
+     * @param Install $logger
      */
     public function __construct(
         WriterInterface $configWriter,
-        ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig,
+        Install $logger
     ) {
         $this->configWriter = $configWriter;
         $this->scopeConfig = $scopeConfig;
+        $this->logger = $logger;
     }
 
     /**
@@ -70,6 +79,23 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 'default' => null,
                 'comment' => 'Row lock start timestamp'
             ]);
+        }
+
+        if (version_compare($context->getVersion(), '4.0.0') >= 0) {
+            $signifydConnectCase = $setup->getTable('signifyd_connect_case');
+            $salesOrder = $setup->getTable('sales_order');
+
+            try {
+                $setup->getConnection()->query("UPDATE ". $signifydConnectCase ." JOIN " . $salesOrder . " ON ". $signifydConnectCase .".order_increment = " . $salesOrder . ".increment_id SET ". $signifydConnectCase .".order_id = " . $salesOrder . ".entity_id WHERE ". $signifydConnectCase .".magento_status='complete'");
+            } catch(\Exception $e) {
+                $this->logger->debug('Update order_id on magento status complete failed');
+            }
+
+            try {
+                $setup->getConnection()->query("UPDATE ". $signifydConnectCase ." JOIN " . $salesOrder . " ON ". $signifydConnectCase .".order_increment = " . $salesOrder . ".increment_id SET ". $signifydConnectCase .".order_id = " . $salesOrder . ".entity_id WHERE ". $signifydConnectCase .".magento_status<>'complete'");
+            } catch(\Exception $e) {
+                $this->logger->debug('Update order_id on magento status different from complete failed');
+            }
         }
 
         $setup->endSetup();

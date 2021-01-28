@@ -21,7 +21,7 @@ class ConfigHelper
     protected $scopeConfigInterface;
 
     /**
-     * Associative array of order_increment_id => store_code
+     * Associative array of order_id => store_code
      * @var array
      */
     protected $storeCodes = [];
@@ -104,21 +104,21 @@ class ConfigHelper
     public function getStoreCode(\Magento\Framework\Model\AbstractModel $entity = null, $returnNullString = false)
     {
         if ($entity instanceof \Signifyd\Connect\Model\Casedata && $entity->isEmpty() == false) {
-            $incrementId = $entity->getOrderIncrement();
+            $orderId = $entity->getOrderId();
         } elseif ($entity instanceof \Magento\Sales\Model\Order && $entity->isEmpty() == false) {
-            $incrementId = $entity->getIncrementId();
+            $orderId = $entity->getId();
         }
 
-        if (isset($incrementId)) {
-            if (isset($this->storeCodes[$incrementId])) {
-                return $this->storeCodes[$incrementId];
+        if (isset($orderId)) {
+            if (isset($this->storeCodes[$orderId])) {
+                return $this->storeCodes[$orderId];
             } else {
                 $order = $entity instanceof \Signifyd\Connect\Model\Casedata ? $entity->getOrder() : $entity;
 
                 if ($order instanceof \Magento\Sales\Model\Order && $order->isEmpty() == false) {
                     $store = $this->storeManager->getStore($order->getStoreId());
-                    $this->storeCodes[$incrementId] = $store->getCode();
-                    return $this->storeCodes[$incrementId];
+                    $this->storeCodes[$orderId] = $store->getCode();
+                    return $this->storeCodes[$orderId];
                 }
             }
         }
