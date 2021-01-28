@@ -31,9 +31,6 @@ class Casedata extends AbstractModel
     /* The status for a case when the first response from Signifyd is received */
     const IN_REVIEW_STATUS              = "in_review";
 
-    /* The status for a case when the case is processing the response */
-    const PROCESSING_RESPONSE_STATUS    = "processing_response";
-
     /* The status for a case that is completed */
     const COMPLETED_STATUS              = "completed";
 
@@ -142,9 +139,9 @@ class Casedata extends AbstractModel
         $this->_init(\Signifyd\Connect\Model\ResourceModel\Casedata::class);
     }
 
-    public function getOrder()
+    public function getOrder($forceLoad = false)
     {
-        if (isset($this->order) == false) {
+        if (isset($this->order) === false || $forceLoad) {
             $incrementId = $this->getOrderIncrement();
 
             if (empty($incrementId) == false) {
@@ -163,7 +160,8 @@ class Casedata extends AbstractModel
     public function updateCase($response)
     {
         try {
-            $order = $this->getOrder();
+            $order = $this->getOrder(true);
+            $currentCaseHash = sha1(implode(',', $this->getData()));
 
             if (isset($response->score) && $this->getScore() != $response->score) {
                 $this->setScore(floor($response->score));
@@ -183,6 +181,12 @@ class Casedata extends AbstractModel
 
             if (isset($response->testInvestigation)) {
                 $this->setEntries('testInvestigation', $response->testInvestigation);
+            }
+
+            $newCaseHash = sha1(implode(',', $this->getData()));
+
+            if ($currentCaseHash != $newCaseHash) {
+                $this->orderResourceModel->save($order);
             }
         } catch (\Exception $e) {
             $this->logger->critical($e->__toString(), ['entity' => $this]);
@@ -206,7 +210,7 @@ class Casedata extends AbstractModel
             ['entity' => $this]
         );
 
-        $order = $this->getOrder();
+        $order = $this->getOrder(true);
         $completeCase = false;
 
         if (in_array($order->getState(), [Order::STATE_CANCELED, Order::STATE_COMPLETE, Order::STATE_CLOSED])) {
@@ -218,24 +222,29 @@ class Casedata extends AbstractModel
                 if ($order->canHold()) {
                     try {
                         $order->hold();
-
+                        $this->orderResourceModel->save($order);
                         $completeCase = true;
-
-                        $order->addCommentToStatusHistory("Signifyd: {$orderAction["reason"]}");
+                        $this->orderHelper->addCommentToStatusHistory(
+                            $order,
+                            "Signifyd: {$orderAction["reason"]}"
+                        );
                     } catch (\Exception $e) {
                         $this->logger->debug($e->__toString(), ['entity' => $order]);
 
                         $orderAction['action'] = false;
 
                         $message = "Signifyd: order cannot be updated to on hold, {$e->getMessage()}";
-                        $order->addCommentToStatusHistory($message);
+                        $this->orderHelper->addCommentToStatusHistory($order, $message);
                     }
                 } else {
                     $reason = $this->orderHelper->getCannotHoldReason($order);
                     $message = "Order {$order->getIncrementId()} can not be held because {$reason}";
                     $this->logger->debug($message, ['entity' => $order]);
                     $orderAction['action'] = false;
-                    $order->addStatusHistoryComment("Signifyd: order cannot be updated to on hold, {$reason}");
+                    $this->orderHelper->addCommentToStatusHistory(
+                        $order,
+                        "Signifyd: order cannot be updated to on hold, {$reason}"
+                    );
 
                     if ($order->getState() == Order::STATE_HOLDED) {
                         $completeCase = true;
@@ -246,18 +255,26 @@ class Casedata extends AbstractModel
             case "unhold":
                 if ($order->canUnhold()) {
                     $this->logger->debug('Unhold order action', ['entity' => $order]);
+
                     try {
                         $order->unhold();
+                        $this->orderResourceModel->save($order);
 
                         $completeCase = true;
 
-                        $order->addStatusHistoryComment("Signifyd: order status updated, {$orderAction["reason"]}");
+                        $this->orderHelper->addCommentToStatusHistory(
+                            $order,
+                            "Signifyd: order status updated, {$orderAction["reason"]}"
+                        );
                     } catch (\Exception $e) {
                         $this->logger->debug($e->__toString(), ['entity' => $order]);
 
                         $orderAction['action'] = false;
 
-                        $order->addStatusHistoryComment("Signifyd: order status cannot be updated, {$e->getMessage()}");
+                        $this->orderHelper->addCommentToStatusHistory(
+                            $order,
+                            "Signifyd: order status cannot be updated, {$e->getMessage()}"
+                        );
                     }
                 } else {
                     $reason = $this->orderHelper->getCannotUnholdReason($order);
@@ -266,7 +283,11 @@ class Casedata extends AbstractModel
                         "can not be removed from hold because {$reason}. " .
                         "Case status: {$this->getSignifydStatus()}";
                     $this->logger->debug($message, ['entity' => $order]);
-                    $order->addStatusHistoryComment("Signifyd: order status cannot be updated, {$reason}");
+
+                    $this->orderHelper->addCommentToStatusHistory(
+                        $order,
+                        "Signifyd: order status cannot be updated, {$reason}"
+                    );
                     $orderAction['action'] = false;
 
                     if ($reason == "order is not holded") {
@@ -278,36 +299,50 @@ class Casedata extends AbstractModel
             case "cancel":
                 if ($order->canUnhold()) {
                     $order = $order->unhold();
+                    $this->orderResourceModel->save($order);
                 }
 
                 if ($order->canCancel()) {
                     try {
                         $order->cancel();
+                        $this->orderResourceModel->save($order);
 
                         $completeCase = true;
 
-                        $order->addStatusHistoryComment("Signifyd: order canceled, {$orderAction["reason"]}");
+                        $this->orderHelper->addCommentToStatusHistory(
+                            $order,
+                            "Signifyd: order canceled, {$orderAction["reason"]}"
+                        );
                     } catch (\Exception $e) {
                         $this->logger->debug($e->__toString(), ['entity' => $order]);
 
                         $orderAction['action'] = false;
 
-                        $order->addStatusHistoryComment("Signifyd: order cannot be canceled, {$e->getMessage()}");
+                        $this->orderHelper->addCommentToStatusHistory(
+                            $order,
+                            "Signifyd: order cannot be canceled, {$e->getMessage()}"
+                        );
                     }
                 } else {
                     $reason = $this->orderHelper->getCannotCancelReason($order);
                     $message = "Order {$order->getIncrementId()} cannot be canceled because {$reason}";
                     $this->logger->debug($message, ['entity' => $order]);
                     $orderAction['action'] = false;
-                    $order->addStatusHistoryComment("Signifyd: order cannot be canceled, {$reason}");
+                    $this->orderHelper->addCommentToStatusHistory(
+                        $order,
+                        "Signifyd: order cannot be canceled, {$reason}"
+                    );
 
                     if ($reason == "all order items are invoiced") {
                         $completeCase = true;
                     }
                 }
 
+                $order = $this->getOrder(true);
+
                 if ($orderAction['action'] == false && $order->canHold()) {
                     $order->hold();
+                    $this->orderResourceModel->save($order);
                 }
                 break;
 
@@ -315,7 +350,10 @@ class Casedata extends AbstractModel
                 try {
                     if ($order->canUnhold()) {
                         $order->unhold();
+                        $this->orderResourceModel->save($order);
                     }
+
+                    $order = $this->getOrder(true);
 
                     if ($order->canInvoice()) {
                         /** @var \Magento\Sales\Model\Order\Invoice $invoice */
@@ -330,9 +368,11 @@ class Casedata extends AbstractModel
                         $order->setCustomerNoteNotify(true);
                         $order->setIsInProcess(true);
 
+                        $this->orderResourceModel->save($order);
                         $this->invoiceResourceModel->save($invoice);
 
-                        $order->addCommentToStatusHistory(
+                        $this->orderHelper->addCommentToStatusHistory(
+                            $order,
                             "Signifyd: create order invoice: {$invoice->getIncrementId()}"
                         );
 
@@ -355,7 +395,10 @@ class Casedata extends AbstractModel
                         $message = "Order {$order->getIncrementId()} can not be invoiced because {$reason}";
                         $this->logger->debug($message, ['entity' => $order]);
                         $orderAction['action'] = false;
-                        $order->addCommentToStatusHistory("Signifyd: unable to create invoice: {$reason}");
+                        $this->orderHelper->addCommentToStatusHistory(
+                            $order,
+                            "Signifyd: unable to create invoice: {$reason}"
+                        );
 
                         if ($reason == "no items can be invoiced") {
                             $completeCase = true;
@@ -363,20 +406,26 @@ class Casedata extends AbstractModel
 
                         if ($order->canHold()) {
                             $order->hold();
+                            $this->orderResourceModel->save($order);
                         }
                     }
                 } catch (\Exception $e) {
                     $this->logger->debug('Exception creating invoice: ' . $e->__toString(), ['entity' => $order]);
 
+                    $order = $this->getOrder(true);
+
                     if ($order->canHold()) {
                         $order->hold();
+                        $this->orderResourceModel->save($order);
                     }
 
-                    $order->addCommentToStatusHistory("Signifyd: unable to create invoice: {$e->getMessage()}");
+                    $this->orderHelper->addCommentToStatusHistory(
+                        $order,
+                        "Signifyd: unable to create invoice: {$e->getMessage()}"
+                    );
 
                     $orderAction['action'] = false;
                 }
-
                 break;
 
             // Do nothing, but do not complete the case on Magento side

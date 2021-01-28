@@ -63,6 +63,15 @@ class UpgradeSchema implements UpgradeSchemaInterface
             }
         }
 
+        if (version_compare($context->getVersion(), '3.7.6') < 0) {
+            $setup->getConnection()->addColumn($setup->getTable('signifyd_connect_case'), 'lock_start', [
+                'type' => Table::TYPE_INTEGER,
+                'nullable' => true,
+                'default' => null,
+                'comment' => 'Row lock start timestamp'
+            ]);
+        }
+
         $setup->endSetup();
     }
 }
