@@ -69,7 +69,19 @@ Restrict orders with specific order states (not status) from being sent to Signi
 
 Restrict orders with specific payment methods from being sent to Signifyd.
 
-[Restrict orders by payment methods](docs/RESTRICT-PAYMENTS.md) 
+[Restrict orders by payment methods](docs/RESTRICT-PAYMENTS.md)
+
+### Add shipping carriers/methods mappings
+
+Map custom shipping carriers and methods from Magento to Signifyd.
+
+[Shipping carrier/method mapping](docs/SHIPPING-MAPPING.md)
+
+### Add shipping payment methods mappings
+
+Map custom payment methods from Magento to Signifyd.
+
+[Shipping carrier/method mapping](docs/PAYMENT-MAPPING.md)
 
 ### Pass custom payment data using payment gateways APIs
 

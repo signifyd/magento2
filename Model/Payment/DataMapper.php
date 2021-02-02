@@ -139,7 +139,7 @@ abstract class DataMapper implements PaymentVerificationInterface
         if (is_array($gatewayIntegrationSettings)) {
             $paymentGateway = $this->paymentGatewayFactory->get($gatewayIntegrationSettings);
             /** @var \Signifyd\Models\Payment\Response\ResponseInterface $response */
-            $response = $paymentGateway->fetchData($this->getTransactionId($order));
+            $response = $paymentGateway->fetchData($this->getTransactionId($order), $order->getIncrementId());
 
             if ($response instanceof \Signifyd\Models\Payment\Response\ResponseInterface) {
                 $data = $this->getPaymentDataFromGatewayResponse($response);
