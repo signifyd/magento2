@@ -86,4 +86,12 @@ class CaseInfo extends Template
     {
         return floor($this->getCaseEntity()->getData('score'));
     }
+
+    /**
+     * @return array|mixed|null
+     */
+    public function getCheckpointActionReason()
+    {
+        return $this->getCaseEntity()->getData('checkpoint_action_reason');
+    }
 }

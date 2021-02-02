@@ -181,9 +181,9 @@ class Index extends Action
         }
 
         try {
-            if (isset($requestJson->orderId) === false) {
+            if (isset($requestJson->caseId) === false) {
                 $httpCode = Http::STATUS_CODE_200;
-                throw new LocalizedException(__("Invalid body, no 'orderId' field found on request"));
+                throw new LocalizedException(__("Invalid body, no 'caseId' field found on request"));
             }
 
             $httpCode = null;
@@ -193,7 +193,7 @@ class Index extends Action
 
             if ($case->isEmpty()) {
                 $httpCode = Http::STATUS_CODE_400;
-                throw new LocalizedException(__("Case {$requestJson->orderId} on request not found on Magento"));
+                throw new LocalizedException(__("Case {$requestJson->caseId} on request not found on Magento"));
             }
 
             $signifydWebhookApi = $this->configHelper->getSignifydWebhookApi($case);
@@ -206,11 +206,11 @@ class Index extends Action
                 throw new LocalizedException(__('Signifyd plugin it is not enabled'));
             } elseif ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS) {
                 $httpCode = Http::STATUS_CODE_400;
-                throw new LocalizedException(__("Case {$requestJson->orderId} it is not ready to be updated"));
+                throw new LocalizedException(__("Case {$requestJson->caseId} it is not ready to be updated"));
             } elseif ($case->getMagentoStatus() == Casedata::COMPLETED_STATUS) {
                 $httpCode = Http::STATUS_CODE_200;
                 throw new LocalizedException(
-                    __("Case {$requestJson->orderId} already completed, no action will be taken")
+                    __("Case {$requestJson->caseId} already completed, no action will be taken")
                 );
             }
 
@@ -223,7 +223,7 @@ class Index extends Action
             if ($currentCaseHash == $newCaseHash) {
                 $httpCode = Http::STATUS_CODE_200;
                 throw new LocalizedException(
-                    __("Case {$requestJson->orderId} already update with this data, no action will be taken")
+                    __("Case {$requestJson->caseId} already update with this data, no action will be taken")
                 );
             }
 

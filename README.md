@@ -46,7 +46,7 @@ DELETE FROM setup_module WHERE module='Signifyd_Connect';
 You can also delete all Signifyd extension data using this guide, [install troubleshooting doc](docs/INSTALL-TROUBLESHOOT.md#purge-all-signifyd-data).
 
 ## Configure
-View our Magento 2 product manual to learn how to [configure the extension](https://www.signifyd.com/resources/manual/magento-v2-1/)
+View our Magento 2 product manual to learn how to [configure the extension](https://community.signifyd.com/support/s/article/magento-2-extension-install-guide)
 
 ## Logs
 

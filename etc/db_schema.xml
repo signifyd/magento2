@@ -11,6 +11,7 @@
         <column name="score" nullable="true" precision="10" scale="0" xsi:type="float"/>
         <column length="64" name="guarantee" nullable="false" default="N/A" xsi:type="varchar"/>
         <column name="entries_text" nullable="false" xsi:type="text"/>
+        <column name="checkpoint_action_reason" nullable="false" xsi:type="text"/>
         <column name="created" nullable="true" xsi:type="timestamp"/>
         <column name="updated" nullable="true" xsi:type="timestamp"/>
         <column length="255" name="magento_status" default="waiting_submission" nullable="false" xsi:type="varchar"/>

@@ -95,7 +95,7 @@ class Register extends Action
 
             $webhooksApiCreate = $this->webhooksApiFactory->create(['args' => $args]);
             $webHookGuaranteeCompletion = $this->webhookFactory->create();
-            $webHookGuaranteeCompletion->setEvent('GUARANTEE_COMPLETION');
+            $webHookGuaranteeCompletion->setEvent('DECISION_MADE');
             $webHookGuaranteeCompletion->setUrl($url);
             $webhooksToCreate = [$webHookGuaranteeCompletion];
             $webhooksApiCreate->createWebhooks($webhooksToCreate);

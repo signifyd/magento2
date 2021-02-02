@@ -175,6 +175,15 @@ class Casedata extends AbstractModel
                 $this->setGuarantee($response->guaranteeDisposition);
             }
 
+            if (isset($response->checkpointAction) && $this->getGuarantee() != $response->checkpointAction) {
+                $this->setGuarantee($response->checkpointAction);
+            }
+
+            if (isset($response->checkpointActionReason) &&
+                $this->getCheckpointActionReason() != $response->checkpointActionReason) {
+                $this->setCheckpointActionReason($response->checkpointActionReason);
+            }
+
             if (isset($response->caseId) && empty($response->caseId) == false) {
                 $this->setCode($response->caseId);
             }
@@ -458,10 +467,12 @@ class Casedata extends AbstractModel
     public function handleGuaranteeChange()
     {
         switch ($this->getGuarantee()) {
+            case "REJECT":
             case "DECLINED":
                 $result = ["action" => $this->getNegativeAction(), "reason" => "guarantee declined"];
                 break;
 
+            case 'ACCEPT':
             case "APPROVED":
                 $result = ["action" => $this->getPositiveAction(), "reason" => "guarantee approved"];
                 break;

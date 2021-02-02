@@ -98,6 +98,10 @@ class CaseLink extends Column
                             }
                         }
                         break;
+
+                    case "checkpoint_action_reason":
+                        $item[$name] = $case->getCheckpointActionReason();
+                        break;
                 }
 
                 // The data we display in the grid should link to the case on the Signifyd site
