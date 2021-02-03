@@ -57,9 +57,9 @@ class Webhook extends Field
 
         if (empty($website) == false) {
             $value = ['website' => $website];
-        }elseif (empty($store) == false) {
+        } elseif (empty($store) == false) {
             $value = ['store' => $store];
-        }else {
+        } else {
             $value = [];
         }
 

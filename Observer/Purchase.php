@@ -18,6 +18,8 @@ use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\App\State as AppState;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -80,6 +82,16 @@ class Purchase implements ObserverInterface
     protected $scopeConfigInterface;
 
     /**
+     * @var StoreManagerInterface
+     */
+    protected $storeManager;
+
+    /**
+     * @var AppState
+     */
+    protected $appState;
+
+    /**
      * Purchase constructor.
      * @param Logger $logger
      * @param PurchaseHelper $purchaseHelper
@@ -89,6 +101,8 @@ class Purchase implements ObserverInterface
      * @param OrderResourceModel $orderResourceModel
      * @param DateTime $dateTime
      * @param ScopeConfigInterface $scopeConfigInterface
+     * @param StoreManagerInterface $storeManager
+     * @param AppState $appState
      */
     public function __construct(
         Logger $logger,
@@ -98,7 +112,9 @@ class Purchase implements ObserverInterface
         CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
         DateTime $dateTime,
-        ScopeConfigInterface $scopeConfigInterface
+        ScopeConfigInterface $scopeConfigInterface,
+        StoreManagerInterface $storeManager,
+        AppState $appState
     ) {
         $this->logger = $logger;
         $this->purchaseHelper = $purchaseHelper;
@@ -108,6 +124,8 @@ class Purchase implements ObserverInterface
         $this->orderResourceModel = $orderResourceModel;
         $this->dateTime = $dateTime;
         $this->scopeConfigInterface = $scopeConfigInterface;
+        $this->storeManager = $storeManager;
+        $this->appState = $appState;
     }
 
     /**
@@ -180,6 +198,14 @@ class Purchase implements ObserverInterface
             $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
             $case->setUpdated();
             $case->setEntriesText("");
+
+            if (is_object($this->storeManager)) {
+                $isAdmin = ('adminhtml' === $this->appState->getAreaCode());
+                $storeCode = $this->storeManager->getStore($isAdmin ? 'admin' : true)->getCode();
+                if (!empty($storeCode)) {
+                    $case->setData('origin_store_code', $storeCode);
+                }
+            }
 
             // Stop case sending if order has an async payment method
             if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig())) {

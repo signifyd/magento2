@@ -8,6 +8,7 @@
         </constraint>
         <column length="255" name="order_increment" nullable="false" xsi:type="varchar"/>
         <column length="255" name="signifyd_status" default="PENDING" nullable="false" xsi:type="varchar"/>
+        <column length="32" name="origin_store_code" default="NULL" nullable="true" xsi:type="varchar"/>
         <column name="score" nullable="true" precision="10" scale="0" xsi:type="float"/>
         <column length="64" name="guarantee" nullable="false" default="N/A" xsi:type="varchar"/>
         <column name="entries_text" nullable="false" xsi:type="text"/>

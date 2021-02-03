@@ -45,13 +45,13 @@ class Register extends Action
      * @param WebhookFactory $webhookFactory
      */
     public function __construct(
-    Action\Context $context,
-    ScopeConfigInterface $scopeConfig,
-    WebhookLink $webhookLink,
-    WebhooksApiFactory $webhooksApiFactory,
-    \Magento\Store\Model\StoreManagerInterface $storeManager,
-    WebhookFactory $webhookFactory
-    ){
+        Action\Context $context,
+        ScopeConfigInterface $scopeConfig,
+        WebhookLink $webhookLink,
+        WebhooksApiFactory $webhooksApiFactory,
+        \Magento\Store\Model\StoreManagerInterface $storeManager,
+        WebhookFactory $webhookFactory
+    ) {
         parent::__construct($context);
         $this->scopeConfig = $scopeConfig;
         $this->webhookLink = $webhookLink;
@@ -66,7 +66,7 @@ class Register extends Action
             $websiteId = $this->_request->getParam('website');
             $storeId = $this->_request->getParam('store');
 
-            if(empty($websiteId) == false) {
+            if (empty($websiteId) == false) {
                 $scopeType = 'stores';
                 $scopeCode = $this->storeManager->getWebsite($websiteId)->getDefaultStore()->getId();
             } elseif (empty($storeId) == false) {
