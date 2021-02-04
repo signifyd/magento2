@@ -10,7 +10,6 @@ use Magento\Sales\Model\Order;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
-use Signifyd\Connect\Helper\PurchaseHelper;
 
 class Before implements ObserverInterface
 {

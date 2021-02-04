@@ -88,17 +88,28 @@ class Register extends Action
              */
             $bulkResponseGet = $webhooksApiGet->getWebhooks();
 
+            $decisionMadeIsSet = false;
+
             foreach ($bulkResponseGet->getObjects() as $webhook) {
                 $webhooksApiCancel = $this->webhooksApiFactory->create(['args' => $args]);
-                $webhooksApiCancel->deleteWebhook($webhook);
+
+                if ($webhook->eventType === 'DECISION_MADE') {
+                    $decisionMadeIsSet = true;
+                }
+
+                if ($webhook->eventType === 'GUARANTEE_COMPLETION') {
+                    $webhooksApiCancel->deleteWebhook($webhook);
+                }
             }
 
-            $webhooksApiCreate = $this->webhooksApiFactory->create(['args' => $args]);
-            $webHookGuaranteeCompletion = $this->webhookFactory->create();
-            $webHookGuaranteeCompletion->setEvent('DECISION_MADE');
-            $webHookGuaranteeCompletion->setUrl($url);
-            $webhooksToCreate = [$webHookGuaranteeCompletion];
-            $webhooksApiCreate->createWebhooks($webhooksToCreate);
+            if ($decisionMadeIsSet === false) {
+                $webhooksApiCreate = $this->webhooksApiFactory->create(['args' => $args]);
+                $webHookGuaranteeCompletion = $this->webhookFactory->create();
+                $webHookGuaranteeCompletion->setEvent('DECISION_MADE');
+                $webHookGuaranteeCompletion->setUrl($url);
+                $webhooksToCreate = [$webHookGuaranteeCompletion];
+                $webhooksApiCreate->createWebhooks($webhooksToCreate);
+            }
         } catch (\Exception $e) {
             $this->messageManager->addErrorMessage(__('There was a problem registering the webooks: ' . $e->getMessege()));
         }

@@ -148,6 +148,35 @@ class Purchase implements ObserverInterface
                 return;
             }
 
+            $incrementId = $order->getIncrementId();
+
+            if ($this->isIgnored($order)) {
+                $this->logger->debug("Order {$incrementId} ignored");
+                return;
+            }
+
+            /** @var $case \Signifyd\Connect\Model\Casedata */
+            $case = $this->casedataFactory->create();
+            $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
+
+            if ($case->isEmpty()) {
+                $case->setData('magento_status', Casedata::NEW);
+                $case->setData('order_increment', $order->getIncrementId());
+                $case->setData('order_id', $order->getId());
+
+                if (is_object($this->storeManager)) {
+                    $isAdmin = ('adminhtml' === $this->appState->getAreaCode());
+                    $storeCode = $this->storeManager->getStore($isAdmin ? 'admin' : true)->getCode();
+                    if (!empty($storeCode)) {
+                        $case->setData('origin_store_code', $storeCode);
+                    }
+                }
+
+                $this->casedataResourceModel->save($case);
+            } elseif ($case->getData('magento_status') != Casedata::NEW) {
+                return;
+            }
+
             // Check if a payment is available for this order yet
             if ($order->getState() == \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT) {
                 return;
@@ -155,7 +184,6 @@ class Purchase implements ObserverInterface
 
             $paymentMethod = $order->getPayment()->getMethod();
             $state = $order->getState();
-            $incrementId = $order->getIncrementId();
 
             $checkOwnEventsMethodsEvent = $observer->getEvent()->getCheckOwnEventsMethods();
 
@@ -173,39 +201,13 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            if ($this->isIgnored($order)) {
-                $this->logger->debug("Order {$incrementId} ignored");
-                return;
-            }
-
-            /** @var $case \Signifyd\Connect\Model\Casedata */
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
-
-            // Check if case already exists for this order
-            if ($case->isEmpty() == false) {
-                return;
-            }
-
             $message = "Creating case for order {$incrementId} ({$order->getId()}), state {$state}, payment method {$paymentMethod}";
             $this->logger->debug($message, ['entity' => $order]);
 
-            /** @var $case \Signifyd\Connect\Model\Casedata */
-            $case = $this->casedataFactory->create();
-            $case->setData('order_increment', $order->getIncrementId());
-            $case->setData('order_id', $order->getId());
             $case->setSignifydStatus("PENDING");
             $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
             $case->setUpdated();
             $case->setEntriesText("");
-
-            if (is_object($this->storeManager)) {
-                $isAdmin = ('adminhtml' === $this->appState->getAreaCode());
-                $storeCode = $this->storeManager->getStore($isAdmin ? 'admin' : true)->getCode();
-                if (!empty($storeCode)) {
-                    $case->setData('origin_store_code', $storeCode);
-                }
-            }
 
             // Stop case sending if order has an async payment method
             if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig())) {

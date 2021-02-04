@@ -26,16 +26,19 @@ use Magento\Sales\Model\ResourceModel\Order\Invoice as InvoiceResourceModel;
 class Casedata extends AbstractModel
 {
     /* The status when a case is created */
-    const WAITING_SUBMISSION_STATUS     = "waiting_submission";
+    const WAITING_SUBMISSION_STATUS = "waiting_submission";
 
     /* The status for a case when the first response from Signifyd is received */
-    const IN_REVIEW_STATUS              = "in_review";
+    const IN_REVIEW_STATUS = "in_review";
 
     /* The status for a case that is completed */
-    const COMPLETED_STATUS              = "completed";
+    const COMPLETED_STATUS = "completed";
 
     /* The status for a case that is awiting async payment methods to finish */
-    const ASYNC_WAIT                    = "async_wait";
+    const ASYNC_WAIT = "async_wait";
+
+    /* The status for new case */
+    const NEW = "new";
 
     /**
      * @var ConfigHelper

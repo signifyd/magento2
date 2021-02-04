@@ -29,7 +29,7 @@
 
             <gateway_integration>
                 <anet_creditcard>{"gateway":"\\Signifyd\\Models\\Payment\\Authorizenet","params":{"name":{"type":"path","path":"authorize_net/anet_core/login_id"},"transactionKey":{"type":"path","path":"authorize_net/anet_core/trans_key"}}}</anet_creditcard>
-                <braintree>{"gateway":"\\Signifyd\\Models\\Payment\\Braintree","params":{"publicKeySandbox":{"type":"path","path":"payment/braintree/sandbox_public_key"},"privateKeySandbox":{"type":"path","path":"payment/braintree/sandbox_private_key"},"publicKey":{"type":"path","path":"payment/braintree/public_key"},"privateKey":{"type":"path","path":"payment/braintree/private_key"}}}</braintree>
+                <braintree>{"gateway":"\\Signifyd\\Models\\Payment\\Braintree","params":{"publicKeySandbox":{"type":"path","path":"payment/braintree/sandbox_public_key"},"privateKeySandbox":{"type":"path","path":"payment/braintree/sandbox_private_key"},"publicKey":{"type":"path","path":"payment/braintree/public_key"},"privateKey":{"type":"path","path":"payment/braintree/private_key"},"environment":{"type":"path","path":"payment/braintree/environment"}}}</braintree>
             </gateway_integration>
 
             <payment>
