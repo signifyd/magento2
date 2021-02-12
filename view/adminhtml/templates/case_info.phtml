@@ -15,7 +15,7 @@ if ($block->getCaseEntity()->isEmpty()) {
 ?>
 <section class="admin__page-section order-case-info">
     <div class="admin__page-section-title">
-        <span class="title"><?= $block->escapeHtml(__('Fraud Protection Information')) ?></span>
+        <span class="title"><?= $block->escapeHtml(__('Signifyd Fraud Protection')) ?></span>
     </div>
     <div class="admin__page-section-content">
         <div class="admin__page-section-item case-information">
@@ -23,13 +23,20 @@ if ($block->getCaseEntity()->isEmpty()) {
                 <table class="admin__table-secondary order-case-table">
                     <tbody>
                     <tr>
-                        <th class="col-guarantee-disposition"><?= $block->escapeHtml(__('Signifyd Guarantee Decision')) ?></th>
+                        <th class="col-guarantee-disposition"><?= $block->escapeHtml(__('Guarantee Decision')) ?></th>
                         <td class="col-guarantee-disposition"><?= $block->escapeHtml($block->getCaseGuaranteeDisposition()) ?></td>
                     </tr>
                     <tr>
-                        <th class="col-guarantee-disposition"><?= $block->escapeHtml(__('Signifyd Score')) ?></th>
+                        <th class="col-guarantee-disposition"><?= $block->escapeHtml(__('Score')) ?></th>
                         <td class="col-guarantee-disposition"><?= $block->escapeHtml($block->getCaseScore()) ?></td>
                     </tr>
+                    <?php $reason = $block->getCheckpointActionReason(); ?>
+                    <?php if (empty($reason) === false): ?>
+                    <tr>
+                        <th class="col-guarantee-disposition"><?= $block->escapeHtml(__('Action Reason')) ?></th>
+                        <td class="col-guarantee-disposition"><?= $block->escapeHtml($reason) ?></td>
+                    </tr>
+                    <?php endif; ?>
                     </tbody>
                 </table>
             </div>

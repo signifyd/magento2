@@ -54,7 +54,7 @@ class CaseInfo extends Template
         if ($this->caseEntity->isEmpty()) {
             $order = $this->getOrder();
             if (!$order->isEmpty()) {
-                $this->caseEntity = $this->caseEntity->load($order->getIncrementId());
+                $this->caseEntity = $this->caseEntity->load($order->getId(), 'order_id');
             }
         }
 
@@ -85,5 +85,13 @@ class CaseInfo extends Template
     public function getCaseScore()
     {
         return floor($this->getCaseEntity()->getData('score'));
+    }
+
+    /**
+     * @return array|mixed|null
+     */
+    public function getCheckpointActionReason()
+    {
+        return $this->getCaseEntity()->getData('checkpoint_action_reason');
     }
 }

@@ -10,7 +10,6 @@ use Magento\Sales\Model\Order;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
-use Signifyd\Connect\Helper\PurchaseHelper;
 
 class Before implements ObserverInterface
 {
@@ -77,16 +76,6 @@ class Before implements ObserverInterface
 
             if ($this->configHelper->isEnabled($order) == false) {
                 return;
-            }
-
-            // Saving store code to order, to know where the order is been created
-            if (empty($order->getData('origin_store_code')) && is_object($this->storeManager)) {
-                $isAdmin = ('adminhtml' === $this->appState->getAreaCode());
-                $storeCode = $this->storeManager->getStore($isAdmin ? 'admin' : true)->getCode();
-
-                if (!empty($storeCode)) {
-                    $order->setData('origin_store_code', $storeCode);
-                }
             }
 
             // Fix for Magento bug https://github.com/magento/magento2/issues/7227

@@ -46,7 +46,7 @@ DELETE FROM setup_module WHERE module='Signifyd_Connect';
 You can also delete all Signifyd extension data using this guide, [install troubleshooting doc](docs/INSTALL-TROUBLESHOOT.md#purge-all-signifyd-data).
 
 ## Configure
-View our Magento 2 product manual to learn how to [configure the extension](https://www.signifyd.com/resources/manual/magento-v2-1/)
+View our Magento 2 product manual to learn how to [configure the extension](https://community.signifyd.com/support/s/article/magento-2-extension-install-guide)
 
 ## Logs
 
@@ -69,9 +69,27 @@ Restrict orders with specific order states (not status) from being sent to Signi
 
 Restrict orders with specific payment methods from being sent to Signifyd.
 
-[Restrict orders by payment methods](docs/RESTRICT-PAYMENTS.md) 
+[Restrict orders by payment methods](docs/RESTRICT-PAYMENTS.md)
 
-### Pass custom payment data using payment helpers
+### Add shipping carriers/methods mappings
+
+Map custom shipping carriers and methods from Magento to Signifyd.
+
+[Shipping carrier/method mapping](docs/SHIPPING-MAPPING.md)
+
+### Add shipping payment methods mappings
+
+Map custom payment methods from Magento to Signifyd.
+
+[Shipping carrier/method mapping](docs/PAYMENT-MAPPING.md)
+
+### Pass custom payment data using payment gateways APIs
+
+The Signifyd extension will use external class to collect payment data (avsResponseCode, cvvResponseCode, cardBin, cardLast4, cardExpiryMonth and cardExpiryYear) from payment gateway APIs when submitting an order for guarantee. If these fields are missing from submitted orders you can pass these fields by using existing gateways APIs integrations on our SDK or building your own. 
+
+[Payment gateways](docs/PAYMENT-DETAILS-GATEWAY.md)
+
+### Pass custom payment data using payment mappers
 
 The Signifyd extension will try to collect payment data (avsResponseCode, cvvResponseCode, cardBin, cardLast4, cardExpiryMonth and cardExpiryYear) from Magento when submitting an order for guarantee. If these fields are missing from submitted orders you can pass these fields by using the extension's mappers. 
 

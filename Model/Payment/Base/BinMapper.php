@@ -28,4 +28,15 @@ class BinMapper extends DataMapper
 
         return $bin;
     }
+
+    /**
+     * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
+     * @return string
+     */
+    public function getPaymentDataFromGatewayResponse(\Signifyd\Models\Payment\Response\ResponseInterface $response)
+    {
+        $bin = $response->getBin();
+
+        return ((empty($bin) || strlen($bin)) != 6 ? '' : $bin);
+    }
 }

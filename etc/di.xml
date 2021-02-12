@@ -1,15 +1,5 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-    <virtualType name="Magento\Sales\Model\ResourceModel\Order\Grid" type="Magento\Sales\Model\ResourceModel\Grid">
-        <arguments>
-            <argument name="columns" xsi:type="array">
-                <item name="signifyd_guarantee" xsi:type="string">sales_order.signifyd_guarantee</item>
-                <item name="signifyd_code" xsi:type="string">sales_order.signifyd_code</item>
-                <item name="signifyd_score" xsi:type="string">sales_order.signifyd_score</item>
-            </argument>
-        </arguments>
-    </virtualType>
-
     <!-- Loggers -->
     <type name="Signifyd\Connect\Logger\Handler">
         <arguments>
@@ -100,5 +90,9 @@
 
     <type name="Magento\GiftCard\Model\AccountGenerator">
         <plugin name="Signifyd_Connect_Plugin_Magento_GiftCard_Model_AccountGenerator" type="\Signifyd\Connect\Plugin\Magento\GiftCard\Model\AccountGenerator" />
+    </type>
+
+    <type name="Magento\Sales\Model\ResourceModel\Order\Grid\Collection">
+        <plugin name="Signifyd_Connect_Plugin_Magento_Sales_Model_ResourceModel_Order_Grid" type="\Signifyd\Connect\Plugin\Magento\Sales\Model\ResourceModel\Order\Grid\Collection" />
     </type>
 </config>

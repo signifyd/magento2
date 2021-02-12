@@ -16,9 +16,10 @@ use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
-use Magento\Sales\Model\OrderFactory;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\App\State as AppState;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -56,11 +57,6 @@ class Purchase implements ObserverInterface
     protected $orderResourceModel;
 
     /**
-     * @var OrderFactory
-     */
-    protected $orderFactory;
-
-    /**
      * Methods that should wait e-mail sent to hold order
      * @var array
      */
@@ -86,6 +82,16 @@ class Purchase implements ObserverInterface
     protected $scopeConfigInterface;
 
     /**
+     * @var StoreManagerInterface
+     */
+    protected $storeManager;
+
+    /**
+     * @var AppState
+     */
+    protected $appState;
+
+    /**
      * Purchase constructor.
      * @param Logger $logger
      * @param PurchaseHelper $purchaseHelper
@@ -93,9 +99,10 @@ class Purchase implements ObserverInterface
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
-     * @param OrderFactory $orderFactory
      * @param DateTime $dateTime
      * @param ScopeConfigInterface $scopeConfigInterface
+     * @param StoreManagerInterface $storeManager
+     * @param AppState $appState
      */
     public function __construct(
         Logger $logger,
@@ -104,9 +111,10 @@ class Purchase implements ObserverInterface
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
-        OrderFactory $orderFactory,
         DateTime $dateTime,
-        ScopeConfigInterface $scopeConfigInterface
+        ScopeConfigInterface $scopeConfigInterface,
+        StoreManagerInterface $storeManager,
+        AppState $appState
     ) {
         $this->logger = $logger;
         $this->purchaseHelper = $purchaseHelper;
@@ -114,9 +122,10 @@ class Purchase implements ObserverInterface
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
-        $this->orderFactory = $orderFactory;
         $this->dateTime = $dateTime;
         $this->scopeConfigInterface = $scopeConfigInterface;
+        $this->storeManager = $storeManager;
+        $this->appState = $appState;
     }
 
     /**
@@ -139,6 +148,35 @@ class Purchase implements ObserverInterface
                 return;
             }
 
+            $incrementId = $order->getIncrementId();
+
+            if ($this->isIgnored($order)) {
+                $this->logger->debug("Order {$incrementId} ignored");
+                return;
+            }
+
+            /** @var $case \Signifyd\Connect\Model\Casedata */
+            $case = $this->casedataFactory->create();
+            $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
+
+            if ($case->isEmpty()) {
+                $case->setData('magento_status', Casedata::NEW);
+                $case->setData('order_increment', $order->getIncrementId());
+                $case->setData('order_id', $order->getId());
+
+                if (is_object($this->storeManager)) {
+                    $isAdmin = ('adminhtml' === $this->appState->getAreaCode());
+                    $storeCode = $this->storeManager->getStore($isAdmin ? 'admin' : true)->getCode();
+                    if (!empty($storeCode)) {
+                        $case->setData('origin_store_code', $storeCode);
+                    }
+                }
+
+                $this->casedataResourceModel->save($case);
+            } elseif ($case->getData('magento_status') != Casedata::NEW) {
+                return;
+            }
+
             // Check if a payment is available for this order yet
             if ($order->getState() == \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT) {
                 return;
@@ -146,7 +184,6 @@ class Purchase implements ObserverInterface
 
             $paymentMethod = $order->getPayment()->getMethod();
             $state = $order->getState();
-            $incrementId = $order->getIncrementId();
 
             $checkOwnEventsMethodsEvent = $observer->getEvent()->getCheckOwnEventsMethods();
 
@@ -164,26 +201,9 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            if ($this->isIgnored($order)) {
-                $this->logger->debug("Order {$incrementId} ignored");
-                return;
-            }
-
-            /** @var $case \Signifyd\Connect\Model\Casedata */
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $order->getIncrementId());
-
-            // Check if case already exists for this order
-            if ($case->isEmpty() == false) {
-                return;
-            }
-
-            $message = "Creating case for order {$incrementId}, state {$state}, payment method {$paymentMethod}";
+            $message = "Creating case for order {$incrementId} ({$order->getId()}), state {$state}, payment method {$paymentMethod}";
             $this->logger->debug($message, ['entity' => $order]);
 
-            /** @var $case \Signifyd\Connect\Model\Casedata */
-            $case = $this->casedataFactory->create();
-            $case->setId($order->getIncrementId());
             $case->setSignifydStatus("PENDING");
             $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
             $case->setUpdated();
@@ -210,14 +230,16 @@ class Purchase implements ObserverInterface
                 return;
             }
 
+            $order->setData('origin_store_code', $case->getData('origin_store_code'));
+
             $orderData = $this->purchaseHelper->processOrderData($order);
-            $investigationId = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
+            $caseResponse = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
 
             // Initial hold order
             $this->holdOrder($order, $case);
 
-            if ($investigationId) {
-                $case->setCode($investigationId);
+            if (is_object($caseResponse)) {
+                $case->setCode($caseResponse->getCaseId());
                 $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
                 $case->setUpdated();
             }

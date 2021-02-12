@@ -21,4 +21,15 @@ class Last4Mapper extends DataMapper
 
         return $last4;
     }
+
+    /**
+     * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
+     * @return string
+     */
+    public function getPaymentDataFromGatewayResponse(\Signifyd\Models\Payment\Response\ResponseInterface $response)
+    {
+        $last4 = $response->getLast4();
+
+        return ((empty($last4) || strlen($last4) != 4) ? '' : $last4);
+    }
 }

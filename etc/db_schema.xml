@@ -1,0 +1,46 @@
+<?xml version="1.0" ?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+	<table comment="signifyd_connect_case Table" engine="innodb" name="signifyd_connect_case" resource="default">
+        <constraint referenceId="PRIMARY" disabled="true" xsi:type="primary"/>
+        <column length="255" name="order_increment" nullable="false" xsi:type="varchar"/>
+        <constraint referenceId="PRIMARY_ORDER_INCREMENT" xsi:type="primary">
+            <column name="order_increment"/>
+        </constraint>
+        <column length="255" name="code" nullable="false" xsi:type="varchar"/>
+        <column length="255" name="signifyd_status" default="PENDING" nullable="false" xsi:type="varchar"/>
+        <column length="32" name="origin_store_code" default="NULL" nullable="true" xsi:type="varchar"/>
+        <column name="score" nullable="true" precision="10" scale="0" xsi:type="float"/>
+        <column length="64" name="guarantee" nullable="false" default="N/A" xsi:type="varchar"/>
+        <column name="entries_text" nullable="false" xsi:type="text"/>
+        <column name="checkpoint_action_reason" nullable="false" xsi:type="text"/>
+        <column name="created" nullable="true" xsi:type="timestamp"/>
+        <column name="updated" nullable="true" xsi:type="timestamp"/>
+        <column length="255" name="magento_status" default="waiting_submission" nullable="false" xsi:type="varchar"/>
+        <column identity="false" name="retries" padding="11" nullable="false" default="0" xsi:type="int"/>
+        <column identity="false" name="order_id" padding="10" nullable="false" unsigned="true" xsi:type="int"/>
+        <constraint xsi:type="foreign" referenceId="SIGNIFYD_ORDER_ID" table="signifyd_connect_case" column="order_id" referenceTable="sales_order" referenceColumn="entity_id" onDelete="NO ACTION"/>
+        <index referenceId="INDEX_MAGENTO_STATUS" indexType="btree">
+            <column name="magento_status"/>
+        </index>
+	</table>
+    <table comment="signifyd_connect_fulfillment Table" engine="innodb" name="signifyd_connect_fulfillment" resource="default">
+        <column length="50" name="id" nullable="false" xsi:type="varchar"/>
+        <constraint referenceId="PRIMARY" xsi:type="primary">
+            <column name="id"/>
+        </constraint>
+        <column length="32" name="order_id" nullable="false" xsi:type="varchar"/>
+        <column length="30" name="created_at" nullable="false" xsi:type="varchar"/>
+        <column length="255" name="delivery_email" nullable="true" xsi:type="varchar"/>
+        <column length="30" name="fulfillment_status" nullable="false" xsi:type="varchar"/>
+        <column length="255" name="tracking_numbers" nullable="true" xsi:type="varchar"/>
+        <column name="tracking_urls" nullable="true" xsi:type="text"/>
+        <column name="products" nullable="true" xsi:type="text"/>
+        <column length="30" name="shipment_status" nullable="true" xsi:type="varchar"/>
+        <column name="delivery_address" nullable="true" xsi:type="text"/>
+        <column length="255" name="recipient_name" nullable="true" xsi:type="varchar"/>
+        <column length="255" name="confirmation_name" nullable="true" xsi:type="varchar"/>
+        <column length="50" name="confirmation_phone" nullable="true" xsi:type="varchar"/>
+        <column length="255" name="shipping_carrier" nullable="true" xsi:type="varchar"/>
+        <column length="50" name="magento_status" default="waiting_submission" nullable="false" xsi:type="varchar"/>
+    </table>
+</schema>

@@ -26,16 +26,19 @@ use Magento\Sales\Model\ResourceModel\Order\Invoice as InvoiceResourceModel;
 class Casedata extends AbstractModel
 {
     /* The status when a case is created */
-    const WAITING_SUBMISSION_STATUS     = "waiting_submission";
+    const WAITING_SUBMISSION_STATUS = "waiting_submission";
 
     /* The status for a case when the first response from Signifyd is received */
-    const IN_REVIEW_STATUS              = "in_review";
+    const IN_REVIEW_STATUS = "in_review";
 
     /* The status for a case that is completed */
-    const COMPLETED_STATUS              = "completed";
+    const COMPLETED_STATUS = "completed";
 
     /* The status for a case that is awiting async payment methods to finish */
-    const ASYNC_WAIT                    = "async_wait";
+    const ASYNC_WAIT = "async_wait";
+
+    /* The status for new case */
+    const NEW = "new";
 
     /**
      * @var ConfigHelper
@@ -141,12 +144,12 @@ class Casedata extends AbstractModel
 
     public function getOrder($forceLoad = false)
     {
-        if (isset($this->order) === false || $forceLoad) {
-            $incrementId = $this->getOrderIncrement();
+        if (isset($this->order) == false) {
+            $orderId = $this->getData('order_id');
 
-            if (empty($incrementId) == false) {
+            if (empty($orderId) == false) {
                 $this->order = $this->orderFactory->create();
-                $this->orderResourceModel->load($this->order, $incrementId, 'increment_id');
+                $this->orderResourceModel->load($this->order, $orderId);
             }
         }
 
@@ -165,7 +168,6 @@ class Casedata extends AbstractModel
 
             if (isset($response->score) && $this->getScore() != $response->score) {
                 $this->setScore(floor($response->score));
-                $order->setSignifydScore(floor($response->score));
             }
 
             if (isset($response->status) && $this->getSignifydStatus() != $response->status) {
@@ -174,12 +176,19 @@ class Casedata extends AbstractModel
 
             if (isset($response->guaranteeDisposition) && $this->getGuarantee() != $response->guaranteeDisposition) {
                 $this->setGuarantee($response->guaranteeDisposition);
-                $order->setSignifydGuarantee($response->guaranteeDisposition);
+            }
+
+            if (isset($response->checkpointAction) && $this->getGuarantee() != $response->checkpointAction) {
+                $this->setGuarantee($response->checkpointAction);
+            }
+
+            if (isset($response->checkpointActionReason) &&
+                $this->getCheckpointActionReason() != $response->checkpointActionReason) {
+                $this->setCheckpointActionReason($response->checkpointActionReason);
             }
 
             if (isset($response->caseId) && empty($response->caseId) == false) {
                 $this->setCode($response->caseId);
-                $order->setSignifydCode($response->caseId);
             }
 
             if (isset($response->testInvestigation)) {
@@ -461,10 +470,12 @@ class Casedata extends AbstractModel
     public function handleGuaranteeChange()
     {
         switch ($this->getGuarantee()) {
+            case "REJECT":
             case "DECLINED":
                 $result = ["action" => $this->getNegativeAction(), "reason" => "guarantee declined"];
                 break;
 
+            case 'ACCEPT':
             case "APPROVED":
                 $result = ["action" => $this->getPositiveAction(), "reason" => "guarantee approved"];
                 break;

@@ -43,4 +43,18 @@ class AvsEmsCodeMapper extends DataMapper
     {
         return in_array($response, $this->validAvsResponseCodes);
     }
+
+    /**
+     * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
+     * @return string
+     */
+    public function getPaymentDataFromGatewayResponse(\Signifyd\Models\Payment\Response\ResponseInterface $response)
+    {
+        $avsStatus = $response->getAvs();
+
+        $message = 'Response AVS: ' . ($response->getAvs());
+        $this->logger->debug($message);
+
+        return ($this->validate($avsStatus) ? $avsStatus : null);
+    }
 }
