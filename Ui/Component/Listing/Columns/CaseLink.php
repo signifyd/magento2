@@ -80,7 +80,15 @@ class CaseLink extends Column
                         break;
 
                     case "signifyd_guarantee":
-                        $item[$name] = $case->getGuarantee();
+                        if ($case->getGuarantee() == "ACCEPT"){
+                            $labelGuarantee = 'APPROVED';
+                        } elseif ($case->getGuarantee() == "REJECT"){
+                            $labelGuarantee = 'DECLINED';
+                        } else {
+                            $labelGuarantee = $case->getGuarantee();
+                        }
+
+                        $item[$name] = $labelGuarantee;
                         $entries = $case->getEntriesText();
 
                         if (!empty($entries)) {

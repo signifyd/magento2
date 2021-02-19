@@ -200,4 +200,9 @@ class ConfigHelper
 
         return $this->getConfigData('signifyd/general/enabled', $entity, true);
     }
+
+    public function isScoreOnly()
+    {
+        return (bool) $this->scopeConfigInterface->getValue('signifyd/general/score_only');
+    }
 }

@@ -170,6 +170,13 @@ class Casedata extends AbstractModel
                 $this->setScore(floor($response->score));
             }
 
+            $isScoreOnly = $this->configHelper->isScoreOnly();
+            $caseScore = $this->getData('score');
+
+            if (isset($caseScore) && $isScoreOnly) {
+                $this->setMagentoStatus(Casedata::COMPLETED_STATUS);
+            }
+
             if (isset($response->status) && $this->getSignifydStatus() != $response->status) {
                 $this->setSignifydStatus($response->status);
             }

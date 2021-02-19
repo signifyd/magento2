@@ -76,7 +76,15 @@ class CaseInfo extends Template
      */
     public function getCaseGuaranteeDisposition()
     {
-        return $this->getCaseEntity()->getData('guarantee');
+        if ($this->getCaseEntity()->getData('guarantee') == "ACCEPT"){
+            $labelGuarantee = 'APPROVED';
+        } elseif ($this->getCaseEntity()->getData('guarantee') == "REJECT"){
+            $labelGuarantee = 'DECLINED';
+        } else {
+            $labelGuarantee = $this->getCaseEntity()->getData('guarantee');
+        }
+
+        return $labelGuarantee;
     }
 
     /**
