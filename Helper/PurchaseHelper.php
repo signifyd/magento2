@@ -659,6 +659,7 @@ class PurchaseHelper
         $case['recipients'] = $this->makeRecipient($order);
         $case['transactions'] = $this->makeTransactions($order);
         $case['userAccount'] = $this->makeUserAccount($order);
+        $case['clientVersion'] = $this->makeVersions();
 
         /**
          * This registry entry it's used to collect data from some payment methods like Payflow Link
@@ -668,6 +669,17 @@ class PurchaseHelper
         $this->registry->unregister('signifyd_payment_data');
 
         return $case;
+    }
+
+    public function makeVersions()
+    {
+        $version = [];
+        $version['storePlatformVersion'] = $this->productMetadata->getVersion();
+        $version['signifydClientApp'] = 'Magento 2';
+        $version['storePlatform'] = 'Magento 2';
+        $version['signifydClientAppVersion'] = (string)($this->moduleList->getOne('Signifyd_Connect')['setup_version']);
+
+        return $version;
     }
 
     /**
