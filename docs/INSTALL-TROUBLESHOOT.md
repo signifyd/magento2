@@ -146,9 +146,9 @@ ALTER TABLE sales_order_grid DROP COLUMN signifyd_code;
 DELETE FROM setup_module WHERE module='Signifyd_Connect';
 ```
 
-## Purge all Signifyd data
+## Lock timeout
 
-By default, signifyd has a 20 seconds lock timeout for editing cases in the database. To edit this value run the command below on your database:
+Signifyd extension use an internal lock on row level on case table to avoid race condition conflicts. The default lock timeout it is 20 seconds. If it’s needed to change this value, run below command with the desired custom value.
 
 ```
 INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/lock_timeout', INSERT-LOCK-TIMEOUT);
