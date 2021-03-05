@@ -42,5 +42,7 @@
         <column length="50" name="confirmation_phone" nullable="true" xsi:type="varchar"/>
         <column length="255" name="shipping_carrier" nullable="true" xsi:type="varchar"/>
         <column length="50" name="magento_status" default="waiting_submission" nullable="false" xsi:type="varchar"/>
+        <column identity="false" name="retries" padding="11" nullable="false" default="0" xsi:type="int"/>
+        <column name="inserted_at" nullable="true" default="CURRENT_TIMESTAMP" xsi:type="datetime"/>
     </table>
 </schema>
