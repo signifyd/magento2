@@ -6,6 +6,7 @@
 
 namespace Signifyd\Connect\Model\ResourceModel;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
 use Magento\Framework\Exception\StateException;
 
@@ -20,11 +21,21 @@ class Casedata extends AbstractDb
     protected $loadForUpdate = false;
 
     /**
-     * Total seconds which a case can stay locked
-     *
-     * @var int
+     * @var ScopeConfigInterface $scopeConfigInterface
      */
-    protected $maxLockTime = 20;
+    protected $scopeConfigInterface;
+
+    /**
+     * Casedata constructor.
+     * @param ScopeConfigInterface $scopeConfigInterface
+     */
+    public function __construct(
+    ScopeConfigInterface $scopeConfigInterface,
+    \Magento\Framework\Model\ResourceModel\Db\Context $context
+    )    {
+        parent::__construct($context, $connectionName = null);
+        $this->scopeConfigInterface = $scopeConfigInterface;
+    }
 
     /**
      * Initialize connection and define main table
@@ -107,10 +118,12 @@ class Casedata extends AbstractDb
     {
         $lockStart = $case->getLockStart();
 
+        $lockTimeout = $this->scopeConfigInterface->getValue('signifyd/general/lock_timeout');
+
         if (empty($lockStart) === false) {
             $lockedTime = time() - $lockStart;
 
-            if ($lockedTime <= $this->maxLockTime) {
+            if ($lockedTime <= $lockTimeout) {
                 return true;
             }
         }

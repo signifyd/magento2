@@ -376,6 +376,17 @@ class PurchaseHelper
     }
 
     /**
+     * customerSubmitForGuaranteeIndicator field it is part of enterprise APIs
+     * and this method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function getCustomerSubmitForGuaranteeIndicator()
+    {
+        return null;
+    }
+
+    /**
      * @param $order Order
      * @return array
      */
@@ -660,6 +671,7 @@ class PurchaseHelper
         $case['transactions'] = $this->makeTransactions($order);
         $case['userAccount'] = $this->makeUserAccount($order);
         $case['clientVersion'] = $this->makeVersions();
+        $case['customerSubmitForGuaranteeIndicator'] = $this->getCustomerSubmitForGuaranteeIndicator();
 
         /**
          * This registry entry it's used to collect data from some payment methods like Payflow Link

@@ -146,6 +146,32 @@ ALTER TABLE sales_order_grid DROP COLUMN signifyd_code;
 DELETE FROM setup_module WHERE module='Signifyd_Connect';
 ```
 
+## Purge all Signifyd data
+
+By default, signifyd has a 20 seconds lock timeout for editing cases in the database. To edit this value run the command below on your database:
+
+```
+INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/lock_timeout', INSERT-LOCK-TIMEOUT);
+```
+
+To modify an existing lock timeout, use the command below:
+
+```
+UPDATE core_config_data SET value=INSERT-LOCK-TIMEOUT WHERE path='signifyd/general/lock_timeout';
+```
+
+To use the extension default lock timeout, use the command below:
+
+```
+DELETE FROM core_config_data WHERE path='signifyd/general/lock_timeout';
+```
+
+To check the current custom lock timeout, run the command below:
+
+```
+SELECT * FROM core_config_data WHERE path LIKE 'signifyd/general/lock_timeout%';
+```
+
 ## All of the steps were followed but some error prevented the extension from installing succesfully
 
 Check for any log errors on the web server (e.g. Apache, NGINX) and on PHP logs. Also check for errors on MAGENTO_ROOT/var/log on files system.log, exception.log and signifyd_connect.log. If you are still stuck you can [contact our support team](https://community.signifyd.com/support/s/)

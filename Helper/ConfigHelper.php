@@ -12,6 +12,7 @@ use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Core\Api\CaseApiFactory;
 use Signifyd\Core\Api\GuaranteeApiFactory;
 use Signifyd\Core\Api\WebhooksApiFactory;
+use Magento\Framework\Filesystem\DirectoryList;
 
 class ConfigHelper
 {
@@ -54,25 +55,33 @@ class ConfigHelper
     protected $webhooksApiFactory;
 
     /**
+     * @var DirectoryList
+     */
+    protected $directory;
+
+    /**
      * ConfigHelper constructor.
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param StoreManagerInterface $storeManager
      * @param CaseApiFactory $caseApiFactory
      * @param GuaranteeApiFactory $guaranteeApiFactory
      * @param WebhooksApiFactory $webhooksApiFactory
+     * @param DirectoryList $directory
      */
     public function __construct(
         ScopeConfigInterface $scopeConfigInterface,
         StoreManagerInterface $storeManager,
         CaseApiFactory $caseApiFactory,
         GuaranteeApiFactory $guaranteeApiFactory,
-        WebhooksApiFactory $webhooksApiFactory
+        WebhooksApiFactory $webhooksApiFactory,
+        DirectoryList $directory
     ) {
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->storeManager = $storeManager;
         $this->caseApiFactory = $caseApiFactory;
         $this->guaranteeApiFactory = $guaranteeApiFactory;
         $this->webhooksApiFactory = $webhooksApiFactory;
+        $this->directory = $directory;
     }
 
     /**
@@ -139,7 +148,10 @@ class ConfigHelper
         if (isset($this->signifydAPI[$apiId]) === false ||
             is_object($this->signifydAPI[$apiId]) === false) {
             $apiKey = $this->getConfigData('signifyd/general/key', $entity);
-            $args = ['apiKey' => $apiKey];
+            $args = [
+                'apiKey' => $apiKey,
+                'logLocation' => $this->directory->getPath('log')
+            ];
 
             switch ($type) {
                 case 'case':
