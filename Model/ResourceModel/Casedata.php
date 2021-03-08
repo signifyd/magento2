@@ -30,9 +30,9 @@ class Casedata extends AbstractDb
      * @param ScopeConfigInterface $scopeConfigInterface
      */
     public function __construct(
-    ScopeConfigInterface $scopeConfigInterface,
-    \Magento\Framework\Model\ResourceModel\Db\Context $context
-    )    {
+        ScopeConfigInterface $scopeConfigInterface,
+        \Magento\Framework\Model\ResourceModel\Db\Context $context
+    ) {
         parent::__construct($context, $connectionName = null);
         $this->scopeConfigInterface = $scopeConfigInterface;
     }

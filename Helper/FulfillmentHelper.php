@@ -103,14 +103,18 @@ class FulfillmentHelper
         $caseCode = $case instanceof \Signifyd\Connect\Model\Casedata ? $case->getCode() : null;
 
         if (empty($caseCode)) {
-            $this->logger->info("Fulfillment will not proceed because no case has been found: {$orderIncrementId} ({$orderId})");
+            $this->logger->info(
+                "Fulfillment will not proceed because no case has been found: {$orderIncrementId} ({$orderId})"
+            );
             return false;
         }
 
         try {
             $shipmentIncrementId = $shipment->getIncrementId();
 
-            $this->logger->debug("Fulfillment for case order  {$orderIncrementId} ({$orderId}), shipment {$shipmentIncrementId}");
+            $this->logger->debug(
+                "Fulfillment for case order  {$orderIncrementId} ({$orderId}), shipment {$shipmentIncrementId}"
+            );
 
             $fulfillment = $this->getFulfillmentFromDatabase($shipmentIncrementId);
 

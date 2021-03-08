@@ -80,31 +80,7 @@ class CaseLink extends Column
                         break;
 
                     case "signifyd_guarantee":
-                        if ($case->getGuarantee() == "ACCEPT"){
-                            $labelGuarantee = 'APPROVED';
-                        } elseif ($case->getGuarantee() == "REJECT"){
-                            $labelGuarantee = 'DECLINED';
-                        } else {
-                            $labelGuarantee = $case->getGuarantee();
-                        }
-
-                        $item[$name] = $labelGuarantee;
-                        $entries = $case->getEntriesText();
-
-                        if (!empty($entries)) {
-                            try {
-                                $entries = $this->serializer->unserialize($entries);
-                            } catch (\InvalidArgumentException $e) {
-                                $entries = [];
-                            }
-
-                            if (is_array($entries) &&
-                                isset($entries['testInvestigation']) &&
-                                $entries['testInvestigation'] == true
-                            ) {
-                                $item[$name] = "TEST: {$item[$name]}";
-                            }
-                        }
+                        $item[$name] = $this->getNameSignifydGuarantee($case, $name);
                         break;
 
                     case "checkpoint_action_reason":
@@ -119,6 +95,43 @@ class CaseLink extends Column
                 }
             }
         }
+
         return $dataSource;
+    }
+
+    /**
+     * @param $case
+     * @param $name
+     * @return string
+     */
+    public function getNameSignifydGuarantee($case, $name)
+    {
+        if ($case->getGuarantee() == "ACCEPT") {
+            $labelGuarantee = 'APPROVED';
+        } elseif ($case->getGuarantee() == "REJECT") {
+            $labelGuarantee = 'DECLINED';
+        } else {
+            $labelGuarantee = $case->getGuarantee();
+        }
+
+        $item[$name] = $labelGuarantee;
+        $entries = $case->getEntriesText();
+
+        if (!empty($entries)) {
+            try {
+                $entries = $this->serializer->unserialize($entries);
+            } catch (\InvalidArgumentException $e) {
+                $entries = [];
+            }
+
+            if (is_array($entries) &&
+                isset($entries['testInvestigation']) &&
+                $entries['testInvestigation'] == true
+            ) {
+                $item[$name] = "TEST: {$item[$name]}";
+            }
+        }
+
+        return $item[$name];
     }
 }

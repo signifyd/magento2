@@ -201,7 +201,8 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            $message = "Creating case for order {$incrementId} ({$order->getId()}), state {$state}, payment method {$paymentMethod}";
+            $message = "Creating case for order {$incrementId} ({$order->getId()}),
+            state {$state}, payment method {$paymentMethod}";
             $this->logger->debug($message, ['entity' => $order]);
 
             $case->setSignifydStatus("PENDING");

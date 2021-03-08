@@ -73,17 +73,16 @@ class RetryFulfillmentJob
      * @param JsonSerializer $jsonSerializer
      */
     public function __construct(
-    FulfillmentCollectionFactory $fulfillmentCollectionFactory,
-    ConfigHelper $configHelper,
-    FulfillmentResourceModel $fulfillmentResourceModel,
-    Logger $logger,
-    OrderHelper $orderHelper,
-    RetryFulfillment $fulfillmentRetryObj,
-    OrderResourceModel $orderResourceModel,
-    OrderFactory $orderFactory,
-    JsonSerializer $jsonSerializer
-    )
-    {
+        FulfillmentCollectionFactory $fulfillmentCollectionFactory,
+        ConfigHelper $configHelper,
+        FulfillmentResourceModel $fulfillmentResourceModel,
+        Logger $logger,
+        OrderHelper $orderHelper,
+        RetryFulfillment $fulfillmentRetryObj,
+        OrderResourceModel $orderResourceModel,
+        OrderFactory $orderFactory,
+        JsonSerializer $jsonSerializer
+    ) {
         $this->fulfillmentCollectionFactory = $fulfillmentCollectionFactory;
         $this->configHelper = $configHelper;
         $this->fulfillmentResourceModel = $fulfillmentResourceModel;
@@ -109,9 +108,10 @@ class RetryFulfillmentJob
         foreach ($fulfillments as $fulfillment) {
             $orderId = $fulfillment->getOrderId();
             $order = $this->orderFactory->create();
-            $this->orderResourceModel->load($order, $orderId , 'increment_id');
+            $this->orderResourceModel->load($order, $orderId, 'increment_id');
             $fulfillmentData = $this->generateFulfillmentData($fulfillment);
-            $fulfillmentBulkResponse = $this->configHelper->getSignifydCaseApi($order)->addFulfillment($fulfillmentData);
+            $fulfillmentBulkResponse = $this->configHelper
+                ->getSignifydCaseApi($order)->addFulfillment($fulfillmentData);
 
             if ($fulfillmentBulkResponse->isError()) {
                 $message = "CRON: Fullfilment failed to send";

@@ -144,7 +144,8 @@ abstract class DataMapper implements PaymentVerificationInterface
             if ($response instanceof \Signifyd\Models\Payment\Response\ResponseInterface) {
                 $data = $this->getPaymentDataFromGatewayResponse($response);
 
-                $this->logger->info('Data found on payment gateway: ' . (empty($data) ? 'false' : 'true'), ['entity' => $order]);
+                $this->logger->info('Data found on payment gateway: ' .
+                    (empty($data) ? 'false' : 'true'), ['entity' => $order]);
             }
         }
 
@@ -172,7 +173,7 @@ abstract class DataMapper implements PaymentVerificationInterface
             try {
                 /** @var stdClass $gatewayIntegrationSettings */
                 $gatewayIntegrationSettings = $this->jsonSerializer->unserialize($gatewayIntegrationSettings);
-                $this->logger->info(serialize($gatewayIntegrationSettings));
+                $this->logger->info($this->jsonSerializer->serialize($gatewayIntegrationSettings));
             } catch (\InvalidArgumentException $e) {
                 $this->logger->error(
                     "Invalid gateway integration settings found to {$paymentMethod}: {$e->getMessage()}"

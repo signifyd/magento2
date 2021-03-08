@@ -302,7 +302,8 @@ class PurchaseHelper
         $productImage = $product->getImage();
 
         if (isset($productImage)) {
-            $productImageUrl = $this->storeManagerInterface->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) . 'catalog/product' . $productImage;
+            $productImageUrl = $this->storeManagerInterface->getStore()
+                    ->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) . 'catalog/product' . $productImage;
         } else {
             $productImageUrl = null;
         }
@@ -454,7 +455,8 @@ class PurchaseHelper
         if (empty($shippingMethod) === false) {
             $shipment = [];
             $shipment['shipper'] = $this->makeShipper($shippingMethod);
-            $shipment['shippingPrice'] = floatval($order->getShippingAmount()) + floatval($order->getShippingTaxAmount());
+            $shipment['shippingPrice'] = floatval($order->getShippingAmount()) +
+                floatval($order->getShippingTaxAmount());
             $shipment['shippingMethod'] = $this->makeshippingMethod($shippingMethod);
 
             $shipments[] = $shipment;
@@ -709,10 +711,13 @@ class PurchaseHelper
 
         if (empty($caseResponse->getCaseId()) === false) {
             $this->logger->debug("Case sent. Id is {$caseResponse->getCaseId()}", ['entity' => $order]);
-            $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: case created {$caseResponse->getCaseId()}");
+            $this->orderHelper->addCommentToStatusHistory(
+                $order,
+                "Signifyd: case created {$caseResponse->getCaseId()}"
+            );
             return $caseResponse;
         } else {
-            $this->logger->error(serialize($caseResponse));
+            $this->logger->error($this->jsonSerializer->serialize($caseResponse));
             $this->logger->error("Case failed to send.", ['entity' => $order]);
             $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: failed to create case");
 

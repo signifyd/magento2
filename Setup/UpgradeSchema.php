@@ -86,13 +86,19 @@ class UpgradeSchema implements UpgradeSchemaInterface
             $salesOrder = $setup->getTable('sales_order');
 
             try {
-                $setup->getConnection()->query("UPDATE ". $signifydConnectCase ." JOIN " . $salesOrder . " ON ". $signifydConnectCase .".order_increment = " . $salesOrder . ".increment_id SET ". $signifydConnectCase .".order_id = " . $salesOrder . ".entity_id WHERE ". $signifydConnectCase .".magento_status='complete'");
+                $setup->getConnection()->query("UPDATE ". $signifydConnectCase ." JOIN " . $salesOrder . " ON " .
+                    $signifydConnectCase .".order_increment = " . $salesOrder . ".increment_id SET " .
+                    $signifydConnectCase .".order_id = " . $salesOrder . ".entity_id WHERE " .
+                    $signifydConnectCase . ".magento_status='complete'");
             } catch (\Exception $e) {
                 $this->logger->debug('Update order_id on magento status complete failed');
             }
 
             try {
-                $setup->getConnection()->query("UPDATE ". $signifydConnectCase ." JOIN " . $salesOrder . " ON ". $signifydConnectCase .".order_increment = " . $salesOrder . ".increment_id SET ". $signifydConnectCase .".order_id = " . $salesOrder . ".entity_id WHERE ". $signifydConnectCase .".magento_status<>'complete'");
+                $setup->getConnection()->query("UPDATE ". $signifydConnectCase ." JOIN " . $salesOrder . " ON " .
+                    $signifydConnectCase .".order_increment = " . $salesOrder . ".increment_id SET ".
+                    $signifydConnectCase .".order_id = " . $salesOrder . ".entity_id WHERE ".
+                    $signifydConnectCase . ".magento_status<>'complete'");
             } catch (\Exception $e) {
                 $this->logger->debug('Update order_id on magento status different from complete failed');
             }
