@@ -372,6 +372,7 @@ class PurchaseHelper
         $product['itemImage'] = $productImageUrl;
         $product['itemCategory'] = $mainCategoryName;
         $product['itemSubCategory'] = $subCategoryName;
+        $product['sellerAccountNumber'] = $this->getSellerAccountNumber();
 
         return $product;
     }
@@ -383,6 +384,94 @@ class PurchaseHelper
      * @return null
      */
     public function getCustomerSubmitForGuaranteeIndicator()
+    {
+        return null;
+    }
+
+    /**
+     * customerOrderRecommendation field it is part of enterprise APIs
+     * and this method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function getCustomerOrderRecommendation()
+    {
+        return null;
+    }
+
+    /**
+     * deviceFingerprints field it is part of enterprise APIs
+     * and this method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function getDeviceFingerprints()
+    {
+        return null;
+    }
+
+    /**
+     * sellerAccountNumber field it is part of enterprise APIs
+     * and this method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function getSellerAccountNumber()
+    {
+        return null;
+    }
+
+    /**
+     * isDeliverable field it is part of enterprise APIs
+     * and this method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function getIsDeliverable()
+    {
+        return null;
+    }
+
+    /**
+     * isReceivingMail field it is part of enterprise APIs
+     * and this method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function getIsReceivingMail()
+    {
+        return null;
+    }
+
+    /**
+     * type field it is part of enterprise APIs
+     * and this method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function getType()
+    {
+        return null;
+    }
+
+    /**
+     * deliveryPoint field it is part of enterprise APIs
+     * and this method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function getDeliveryPoint()
+    {
+        return null;
+    }
+
+    /**
+     * rating field it is part of enterprise APIs
+     * and this method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function getRating()
     {
         return null;
     }
@@ -509,6 +598,10 @@ class PurchaseHelper
         $address['provinceCode'] = $mageAddress->getRegionCode();
         $address['postalCode'] = $mageAddress->getPostcode();
         $address['countryCode'] = $mageAddress->getCountryId();
+        $address['isDeliverable'] = $this->getIsDeliverable();
+        $address['isReceivingMail'] = $this->getIsReceivingMail();
+        $address['type'] = $this->getType();
+        $address['deliveryPoint'] = $this->getDeliveryPoint();
 
         return $address;
     }
@@ -624,6 +717,7 @@ class PurchaseHelper
         $user['username'] = $order->getCustomerEmail();
         $user['accountNumber'] = $order->getCustomerId();
         $user['phone'] = $order->getBillingAddress()->getTelephone();
+        $user['rating'] = $this->getRating();
         $user['aggregateOrderCount'] = 0;
         $user['aggregateOrderDollars'] = 0.0;
 
@@ -674,6 +768,8 @@ class PurchaseHelper
         $case['userAccount'] = $this->makeUserAccount($order);
         $case['clientVersion'] = $this->makeVersions();
         $case['customerSubmitForGuaranteeIndicator'] = $this->getCustomerSubmitForGuaranteeIndicator();
+        $case['customerOrderRecommendation'] = $this->getCustomerOrderRecommendation();
+        $case['deviceFingerprints'] = $this->getDeviceFingerprints();
 
         /**
          * This registry entry it's used to collect data from some payment methods like Payflow Link
