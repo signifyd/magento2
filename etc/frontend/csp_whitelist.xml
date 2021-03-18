@@ -16,14 +16,10 @@
         <policy id="frame-src">
             <values>
                 <value id="signifyd-online-metrix" type="host">https://*.online-metrix.net</value>
-            </values>
-        </policy>
-        <policy id="connect-src">
-            <values>
                 <value id="signifyd-imgs" type="host">https://imgs.signifyd.com</value>
             </values>
         </policy>
-        <policy id="frame-src">
+        <policy id="connect-src">
             <values>
                 <value id="signifyd-imgs" type="host">https://imgs.signifyd.com</value>
             </values>
