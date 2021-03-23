@@ -144,7 +144,7 @@ class Casedata extends AbstractModel
 
     public function getOrder($forceLoad = false)
     {
-        if (isset($this->order) == false) {
+        if (isset($this->order) === false || $forceLoad) {
             $orderId = $this->getData('order_id');
 
             if (empty($orderId) == false) {
@@ -163,9 +163,6 @@ class Casedata extends AbstractModel
     public function updateCase($response)
     {
         try {
-            $order = $this->getOrder(true);
-            $currentCaseHash = sha1(implode(',', $this->getData()));
-
             if (isset($response->score) && $this->getScore() != $response->score) {
                 $this->setScore(floor($response->score));
             }
@@ -200,12 +197,6 @@ class Casedata extends AbstractModel
 
             if (isset($response->testInvestigation)) {
                 $this->setEntries('testInvestigation', $response->testInvestigation);
-            }
-
-            $newCaseHash = sha1(implode(',', $this->getData()));
-
-            if ($currentCaseHash != $newCaseHash) {
-                $this->orderResourceModel->save($order);
             }
         } catch (\Exception $e) {
             $this->logger->critical($e->__toString(), ['entity' => $this]);
