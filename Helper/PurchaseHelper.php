@@ -762,7 +762,8 @@ class PurchaseHelper
         }
 
         $this->logger->debug('Cancelling case ' . $case->getData('order_id'), ['entity' => $order]);
-        $signifydGuarantee = $this->guaranteeModelFactory->create([['caseId' => $case->getCode()]]);
+        $signifydGuarantee = $this->guaranteeModelFactory->create();
+        $signifydGuarantee->setCaseId($case->getCode());
         $guaranteeResponse = $this->configHelper->getSignifydGuaranteeApi($order)->cancelGuarantee($signifydGuarantee);
         $disposition = $guaranteeResponse->getDisposition();
 
