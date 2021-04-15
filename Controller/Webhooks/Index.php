@@ -212,6 +212,11 @@ class Index extends Action
                 throw new LocalizedException(
                     __("Case {$requestJson->caseId} already completed, no action will be taken")
                 );
+            } elseif ($case->getMagentoStatus() == Casedata::PRE_AUTH) {
+                $httpCode = Http::STATUS_CODE_200;
+                throw new LocalizedException(
+                    __("Case {$requestJson->caseId} already completed by synchronous response, no action will be taken")
+                );
             }
 
             $this->logger->info("WEBHOOK: Processing case {$case->getId()}");
