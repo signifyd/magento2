@@ -14,6 +14,7 @@ use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\CasedataFactory;
+use Signifyd\Connect\Model\ResourceModel\Casedata\CollectionFactory as CasedataCollectionFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Framework\Stdlib\DateTime\DateTime;
@@ -92,6 +93,11 @@ class Purchase implements ObserverInterface
     protected $appState;
 
     /**
+     * @var CasedataCollectionFactory
+     */
+    protected $casedataCollectionFactory;
+
+    /**
      * Purchase constructor.
      * @param Logger $logger
      * @param PurchaseHelper $purchaseHelper
@@ -103,6 +109,7 @@ class Purchase implements ObserverInterface
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param StoreManagerInterface $storeManager
      * @param AppState $appState
+     * @param CasedataCollectionFactory $casedataCollectionFactory
      */
     public function __construct(
         Logger $logger,
@@ -114,7 +121,8 @@ class Purchase implements ObserverInterface
         DateTime $dateTime,
         ScopeConfigInterface $scopeConfigInterface,
         StoreManagerInterface $storeManager,
-        AppState $appState
+        AppState $appState,
+        CasedataCollectionFactory $casedataCollectionFactory
     ) {
         $this->logger = $logger;
         $this->purchaseHelper = $purchaseHelper;
@@ -126,6 +134,7 @@ class Purchase implements ObserverInterface
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->storeManager = $storeManager;
         $this->appState = $appState;
+        $this->casedataCollectionFactory = $casedataCollectionFactory;
     }
 
     /**
@@ -139,6 +148,22 @@ class Purchase implements ObserverInterface
 
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();
+
+            /** @var \Signifyd\Connect\Model\ResourceModel\Casedata\Collection $casesFromQuotes */
+            $casesFromQuotes = $this->casedataCollectionFactory->create();
+            $casesFromQuotes->addFieldToFilter('quote_id', ['eq' => $order->getQuoteId()]);
+            $casesFromQuote = $casesFromQuotes->getFirstItem();
+
+            if (!empty($casesFromQuote->getData())) {
+                /** @var $case \Signifyd\Connect\Model\Casedata */
+                $casesFromQuoteLoaded = $this->casedataFactory->create();
+                $this->casedataResourceModel->load($casesFromQuoteLoaded, $casesFromQuote->getCode(), 'code');
+                $casesFromQuoteLoaded->setData('magento_status', Casedata::COMPLETED_STATUS);
+                $casesFromQuoteLoaded->setData('order_increment', $order->getIncrementId());
+                $casesFromQuoteLoaded->setData('order_id', $order->getId());
+                $this->casedataResourceModel->save($casesFromQuoteLoaded);
+                return;
+            }
 
             if (!is_object($order)) {
                 return;

@@ -7,6 +7,7 @@
 namespace Signifyd\Connect\Model\ResourceModel;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
 use Magento\Framework\Exception\StateException;
 
@@ -42,8 +43,7 @@ class Casedata extends AbstractDb
      */
     protected function _construct()
     {
-        $this->_init('signifyd_connect_case', 'order_increment');
-        $this->_isPkAutoIncrement = false;
+        $this->_init('signifyd_connect_case', 'entity_id');
     }
 
     /**

@@ -40,6 +40,9 @@ class Casedata extends AbstractModel
     /* The status for new case */
     const NEW = "new";
 
+    /* Synchronous response */
+    const PRE_AUTH = "pre_auth";
+
     /**
      * @var ConfigHelper
      */
