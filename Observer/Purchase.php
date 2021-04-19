@@ -180,6 +180,14 @@ class Purchase implements ObserverInterface
                 return;
             }
 
+            $paymentMethod = $order->getPayment()->getMethod();
+
+            if ($this->isPaymentRestricted($paymentMethod)) {
+                $message = 'Case creation for order ' . $incrementId . ' with payment ' . $paymentMethod . ' is restricted';
+                $this->logger->debug($message, ['entity' => $order]);
+                return;
+            }
+
             /** @var $case \Signifyd\Connect\Model\Casedata */
             $case = $this->casedataFactory->create();
             $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
@@ -207,7 +215,6 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            $paymentMethod = $order->getPayment()->getMethod();
             $state = $order->getState();
 
             $checkOwnEventsMethodsEvent = $observer->getEvent()->getCheckOwnEventsMethods();
@@ -220,7 +227,7 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            if ($this->isRestricted($paymentMethod, $state, 'create')) {
+            if ($this->isStateRestricted($state, 'create')) {
                 $message = 'Case creation for order ' . $incrementId . ' with state ' . $state . ' is restricted';
                 $this->logger->debug($message, ['entity' => $order]);
                 return;
@@ -318,19 +325,15 @@ class Purchase implements ObserverInterface
      * @param null $state
      * @return bool
      */
-    public function isRestricted($paymentMethodCode, $state, $action = 'default')
+    public function isPaymentRestricted($paymentMethodCode)
     {
-        if (empty($state)) {
-            return true;
-        }
-
         $restrictedPaymentMethods = $this->getRestrictedPaymentMethodsConfig();
 
         if (in_array($paymentMethodCode, $restrictedPaymentMethods)) {
             return true;
         }
 
-        return $this->isStateRestricted($state, $action);
+        return false;
     }
 
     /**
@@ -371,6 +374,10 @@ class Purchase implements ObserverInterface
      */
     public function isStateRestricted($state, $action = 'default')
     {
+        if (empty($state)) {
+            return true;
+        }
+
         $restrictedStates = $this->configHelper->getConfigData("signifyd/general/restrict_states_{$action}");
         $restrictedStates = explode(',', $restrictedStates);
         $restrictedStates = array_map('trim', $restrictedStates);
