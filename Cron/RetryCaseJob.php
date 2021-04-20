@@ -18,6 +18,7 @@ use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
 use Magento\Framework\App\ResourceConnection;
+use Magento\Store\Model\App\Emulation;
 
 class RetryCaseJob
 {
@@ -77,6 +78,11 @@ class RetryCaseJob
     protected $stripeConfig;
 
     /**
+     * @var Emulation
+     */
+    protected $emulation;
+
+    /**
      * RetryCaseJob constructor.
      * @param ObjectManagerInterface $objectManager
      * @param PurchaseHelper $purchaseHelper
@@ -88,6 +94,7 @@ class RetryCaseJob
      * @param CasedataResourceModel $casedataResourceModel
      * @param CasedataFactory $casedataFactory
      * @param ResourceConnection $resourceConnection
+     * @param Emulation $emulation
      */
     public function __construct(
         ObjectManagerInterface $objectManager,
@@ -99,7 +106,8 @@ class RetryCaseJob
         OrderFactory $orderFactory,
         CasedataResourceModel $casedataResourceModel,
         CasedataFactory $casedataFactory,
-        ResourceConnection $resourceConnection
+        ResourceConnection $resourceConnection,
+        Emulation $emulation
     ) {
         $this->objectManager = $objectManager;
         $this->purchaseHelper = $purchaseHelper;
@@ -111,6 +119,7 @@ class RetryCaseJob
         $this->casedataResourceModel = $casedataResourceModel;
         $this->casedataFactory = $casedataFactory;
         $this->resourceConnection = $resourceConnection;
+        $this->emulation = $emulation;
     }
 
     /**
@@ -118,6 +127,7 @@ class RetryCaseJob
      */
     public function execute()
     {
+        $this->emulation->startEnvironmentEmulation(0, 'adminhtml');
         $this->logger->debug("CRON: Main retry method called");
 
         $asyncWaitingCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::ASYNC_WAIT);
@@ -227,6 +237,7 @@ class RetryCaseJob
         }
 
         $this->logger->debug("CRON: Main retry method ended");
+        $this->emulation->stopEnvironmentEmulation();
     }
 
     /**

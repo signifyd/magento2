@@ -61,23 +61,21 @@ class Order implements ObserverInterface
                 $state = $order->getState();
                 $currentState = $order->getOrigData('state');
 
-                if ($state <> $currentState) {
-                    $incrementId = $order->getIncrementId();
+                $incrementId = $order->getIncrementId();
 
-                    $this->logger->debug("Order {$incrementId} state change from {$currentState} to {$state}");
-                    $this->logger->debug("Request URL: {$this->url->getCurrentUrl()}");
+                $this->logger->debug("Order {$incrementId} state change from {$currentState} to {$state}");
+                $this->logger->debug("Request URL: {$this->url->getCurrentUrl()}");
 
-                    list($debugBacktraceLog, $nonMagentoModules) = $this->getDebugBacktrace();
+                list($debugBacktraceLog, $nonMagentoModules) = $this->getDebugBacktrace();
 
-                    if (empty($nonMagentoModules) == false) {
-                        $nonMagentoModulesList = implode(', ', array_keys($nonMagentoModules));
-                        $this->logger->debug("WARNING: non Magento modules found on backtrace: " .
-                            $nonMagentoModulesList);
-                    }
-
-                    $debugBacktraceLog = implode("\n", $debugBacktraceLog);
-                    $this->logger->debug("Backtrace: \n{$debugBacktraceLog}\n\n");
+                if (empty($nonMagentoModules) == false) {
+                    $nonMagentoModulesList = implode(', ', array_keys($nonMagentoModules));
+                    $this->logger->debug("WARNING: non Magento modules found on backtrace: " .
+                        $nonMagentoModulesList);
                 }
+
+                $debugBacktraceLog = implode("\n", $debugBacktraceLog);
+                $this->logger->debug("Backtrace: \n{$debugBacktraceLog}\n\n");
             }
         } catch (\Exception $e) {
             $this->logger->debug("State debug failed: " . $e->getMessage());

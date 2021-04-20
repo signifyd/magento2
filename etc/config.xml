@@ -23,6 +23,8 @@
             <advanced>
                 <guarantee_negative_action>nothing</guarantee_negative_action>
                 <guarantee_positive_action>nothing</guarantee_positive_action>
+                <policy_name>POST_AUTH</policy_name>
+                <policy_pre_auth_reject_message>Your order cannot be processed, please contact our support team</policy_pre_auth_reject_message>
             </advanced>
             <logs>
                 <log>1</log>

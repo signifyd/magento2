@@ -2,6 +2,7 @@
 
 namespace Signifyd\Connect\Helper;
 
+use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\Fulfillment;
 use Signifyd\Connect\Model\FulfillmentFactory;
@@ -54,6 +55,11 @@ class FulfillmentHelper
     protected $orderHelper;
 
     /**
+     * @var PurchaseHelper
+     */
+    protected $purchaseHelper;
+
+    /**
      * FulfillmentHelper constructor.
      * @param CasedataFactory $casedataFactory
      * @param FulfillmentFactory $fulfillmentFactory
@@ -63,6 +69,7 @@ class FulfillmentHelper
      * @param ConfigHelper $configHelper
      * @param SerializerInterface $serializer
      * @param OrderHelper $orderHelper
+     * @param PurchaseHelper $purchaseHelper
      */
     public function __construct(
         CasedataFactory $casedataFactory,
@@ -72,7 +79,8 @@ class FulfillmentHelper
         Logger $logger,
         ConfigHelper $configHelper,
         SerializerInterface $serializer,
-        OrderHelper $orderHelper
+        OrderHelper $orderHelper,
+        PurchaseHelper $purchaseHelper
     ) {
         $this->casedataFactory = $casedataFactory;
         $this->fulfillmentFactory = $fulfillmentFactory;
@@ -84,6 +92,7 @@ class FulfillmentHelper
         $this->configHelper = $configHelper;
         $this->serializer = $serializer;
         $this->orderHelper = $orderHelper;
+        $this->purchaseHelper = $purchaseHelper;
     }
 
     public function postFulfillmentToSignifyd(\Magento\Sales\Model\Order\Shipment $shipment)
@@ -217,7 +226,8 @@ class FulfillmentHelper
         $fulfillment['recipientName'] = $shipment->getShippingAddress()->getName();
         $fulfillment['confirmationName'] = null;
         $fulfillment['confirmationPhone'] = null;
-        $fulfillment['shippingCarrier'] = $shipment->getOrder()->getShippingMethod();
+        $fulfillment['shippingCarrier'] = $this->purchaseHelper
+            ->makeShipper($shipment->getOrder()->getShippingMethod());
 
         return $fulfillment;
     }
