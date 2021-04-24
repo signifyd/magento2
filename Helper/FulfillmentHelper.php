@@ -227,7 +227,7 @@ class FulfillmentHelper
         $fulfillment['confirmationName'] = null;
         $fulfillment['confirmationPhone'] = null;
         $fulfillment['shippingCarrier'] = $this->purchaseHelper
-            ->makeShipper($shipment->getOrder()->getShippingMethod());
+            ->makeShipper($shipment->getOrder()->getShippingMethod(true));
 
         return $fulfillment;
     }
