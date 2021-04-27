@@ -761,6 +761,11 @@ class PurchaseHelper
     {
         if (is_string($shippingMethod)) {
             $shippingMethodArray = explode('_', $shippingMethod);
+
+            if (count($shippingMethodArray) < 2) {
+                return false;
+            }
+
             $shippingCarrier = $shippingMethodArray[0];
         } else {
             $shippingCarrier = $shippingMethod->getCarrierCode();
@@ -782,6 +787,11 @@ class PurchaseHelper
     {
         if (is_string($shippingMethod)) {
             $shippingMethodArray = explode('_', $shippingMethod);
+
+            if (count($shippingMethodArray) < 2) {
+                return false;
+            }
+
             $shippingMethodCode = $shippingMethodArray[1];
         } else {
             $shippingMethodCode = $shippingMethod->getMethod();
