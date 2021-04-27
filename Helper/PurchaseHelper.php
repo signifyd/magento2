@@ -759,7 +759,13 @@ class PurchaseHelper
 
     public function makeShipper($shippingMethod)
     {
-        $shippingCarrier = $shippingMethod->getCarrierCode();
+        if (is_string($shippingMethod)) {
+            $shippingMethodArray = explode('_', $shippingMethod);
+            $shippingCarrier = $shippingMethodArray[0];
+        } else {
+            $shippingCarrier = $shippingMethod->getCarrierCode();
+        }
+
         $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/shipper_config');
         $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
 
@@ -774,7 +780,13 @@ class PurchaseHelper
 
     public function makeshippingMethod($shippingMethod)
     {
-        $shippingMethodCode = $shippingMethod->getMethod();
+        if (is_string($shippingMethod)) {
+            $shippingMethodArray = explode('_', $shippingMethod);
+            $shippingMethodCode = $shippingMethodArray[1];
+        } else {
+            $shippingMethodCode = $shippingMethod->getMethod();
+        }
+
         $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/shipping_method_config');
         $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
 
