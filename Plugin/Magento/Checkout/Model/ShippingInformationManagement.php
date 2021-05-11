@@ -4,6 +4,7 @@ namespace Signifyd\Connect\Plugin\Magento\Checkout\Model;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Store\Model\ScopeInterface;
+use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -69,6 +70,11 @@ class ShippingInformationManagement
     protected $casedataResourceModel;
 
     /**
+     * @var ConfigHelper
+     */
+    protected $configHelper;
+
+    /**
      * ShippingInformationManagement constructor.
      * @param Logger $logger
      * @param PurchaseHelper $purchaseHelper
@@ -80,6 +86,7 @@ class ShippingInformationManagement
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
+     * @param ConfigHelper $configHelper
      */
     public function __construct(
         Logger $logger,
@@ -91,7 +98,8 @@ class ShippingInformationManagement
         ResponseInterface $responseInterface,
         ScopeConfigInterface $scopeConfigInterface,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel
+        CasedataResourceModel $casedataResourceModel,
+        ConfigHelper $configHelper
     ){
         $this->logger = $logger;
         $this->purchaseHelper = $purchaseHelper;
@@ -103,43 +111,49 @@ class ShippingInformationManagement
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
+        $this->configHelper = $configHelper;
     }
 
     public function afterSaveAddressInformation($subject, $result, $cartId, $addressInformation)
     {
-        $this->logger->info("policy validation");
+        if ($this->configHelper->isEnabled()) {
+            $this->logger->info("policy validation");
 
-        /** @var \Magento\Quote\Model\Quote $quote */
-        $quote = $this->quoteRepository->getActive($cartId);
-        $policyName = $this->purchaseHelper->getPolicyName($quote->getStoreId());
-        $policyRejectMessage = $this->scopeConfigInterface->getValue(
-            'signifyd/advanced/policy_pre_auth_reject_message', ScopeInterface::SCOPE_STORES, $quote->getStoreId()
-        );
+            /** @var \Magento\Quote\Model\Quote $quote */
+            $quote = $this->quoteRepository->getActive($cartId);
+            $policyName = $this->purchaseHelper->getPolicyName($quote->getStoreId());
+            $policyRejectMessage = $this->scopeConfigInterface->getValue(
+                'signifyd/advanced/policy_pre_auth_reject_message', ScopeInterface::SCOPE_STORES, $quote->getStoreId()
+            );
 
-        if ($policyName == 'PRE_AUTH') {
-            $this->logger->info("Creating case for quote {$quote->getId()}");
-            $case = $this->purchaseHelper->processQuoteData($quote);
-            $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($case, $quote);
+            if ($policyName == 'PRE_AUTH') {
+                $this->logger->info("Creating case for quote {$quote->getId()}");
+                $case = $this->purchaseHelper->processQuoteData($quote);
+                $checkoutToken = $case['purchase']['checkoutToken'];
+                $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($case, $quote);
 
-            if (isset($caseResponse->recommendedAction) && $caseResponse->recommendedAction == 'ACCEPT') {
-                /** @var $case \Signifyd\Connect\Model\Casedata */
-                $case = $this->casedataFactory->create();
-                $case->setSignifydStatus($caseResponse->status);
-                $case->setCode($caseResponse->caseId);
-                $case->setScore(floor($caseResponse->score));
-                $case->setGuarantee($caseResponse->recommendedAction);
-                $case->setEntriesText("");
-                $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
-                $case->setUpdated();
-                $case->setMagentoStatus(Casedata::PRE_AUTH);
-                $case->setQuoteId($quote->getId());
+                if (isset($caseResponse->recommendedAction) && $caseResponse->recommendedAction == 'ACCEPT') {
+                    /** @var $case \Signifyd\Connect\Model\Casedata */
+                    $case = $this->casedataFactory->create();
+                    $case->setSignifydStatus($caseResponse->status);
+                    $case->setCode($caseResponse->caseId);
+                    $case->setScore(floor($caseResponse->score));
+                    $case->setGuarantee($caseResponse->recommendedAction);
+                    $case->setEntriesText("");
+                    $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
+                    $case->setUpdated();
+                    $case->setMagentoStatus(Casedata::PRE_AUTH);
+                    $case->setQuoteId($quote->getId());
+                    $case->setCheckoutToken($checkoutToken);
+                    $case->setPolicyName(Casedata::PRE_AUTH);
 
-                $this->casedataResourceModel->save($case);
+                    $this->casedataResourceModel->save($case);
 
-                return $result;
+                    return $result;
+                }
+
+                throw new LocalizedException(__($policyRejectMessage));
             }
-
-            throw new LocalizedException(__($policyRejectMessage));
         }
 
         return $result;

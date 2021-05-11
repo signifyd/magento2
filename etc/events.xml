@@ -6,6 +6,7 @@
     <event name="sales_order_save_commit_after">
         <observer name="onPurchase" instance="Signifyd\Connect\Observer\Purchase" />
         <observer name="signifydDebugLogs" instance="Signifyd\Connect\Observer\Debug\Order" />
+        <observer name="signifydDebugLogs" instance="Signifyd\Connect\Observer\Api\Transaction" />
     </event>
 
     <event name="sales_order_save_before">

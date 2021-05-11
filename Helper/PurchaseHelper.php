@@ -401,17 +401,6 @@ class PurchaseHelper
     }
 
     /**
-     * getCheckoutToken method should be extended/intercepted by plugin to add value to it.
-     * A unique id for a particular checkout.
-     *
-     * @return null
-     */
-    public function getCheckoutToken()
-    {
-        return null;
-    }
-
-    /**
      * getReceivedBy method should be extended/intercepted by plugin to add value to it.
      * If the order was was placed on-behalf of a customer service or sales agent, his or her name.
      *
@@ -709,7 +698,6 @@ class PurchaseHelper
         $purchase['totalPrice'] = $order->getGrandTotal();
         $purchase['currency'] = $order->getOrderCurrencyCode();
         $purchase['orderId'] = $order->getIncrementId();
-        $purchase['checkoutToken'] = $this->getCheckoutToken();
         $purchase['receivedBy'] = $this->getReceivedBy();
         $purchase['createdAt'] = date('c', strtotime($order->getCreatedAt()));
         $purchase['browserIpAddress'] = $this->getIPAddress($order);
@@ -988,6 +976,7 @@ class PurchaseHelper
         $case['decisionRequest'] = $this->getDecisionRequest();
         $case['sellers'] = $this->getSellers();
         $case['tags'] = $this->getTags();
+        $case['purchase']['checkoutToken'] = sha1($this->jsonSerializer->serialize($case));
 
         /**
          * This registry entry it's used to collect data from some payment methods like Payflow Link
@@ -1363,6 +1352,7 @@ class PurchaseHelper
         $case['deviceFingerprints'] = $this->getDeviceFingerprints();
         $case['policy'] = $this->makePolicy($quote->getStoreId());
         $case['decisionRequest'] = $this->getDecisionRequest();
+        $case['purchase']['checkoutToken'] = sha1($this->jsonSerializer->serialize($case));
 
         /**
          * This registry entry it's used to collect data from some payment methods like Payflow Link
@@ -1424,7 +1414,6 @@ class PurchaseHelper
         $purchase['totalPrice'] = $quote->getGrandTotal();
         $purchase['currency'] = $quote->getQuoteCurrencyCode();
         $purchase['orderId'] = $reservedOrderId;
-        $purchase['checkoutToken'] = $this->getCheckoutToken();
         $purchase['receivedBy'] = $this->getReceivedBy();
         $purchase['createdAt'] = date('c', strtotime($quote->getCreatedAt()));
         $purchase['browserIpAddress'] = $this->filterIp($this->remoteAddress->getRemoteAddress());
@@ -1611,6 +1600,22 @@ class PurchaseHelper
             $this->logger->error("Case failed to send.", ['entity' => $quote]);
             $this->orderHelper->addCommentToStatusHistory($quote, "Signifyd: failed to create case");
 
+            return false;
+        }
+    }
+
+    public function postTransactionToSignifyd($transactionData, $order)
+    {
+        $caseResponse = $this->configHelper->getSignifydCaseApi($order)->createTransaction($transactionData);
+        $tokenSent = $transactionData['checkoutToken'];
+        $tokenReceived = $caseResponse->getCheckoutToken();
+
+        if ($tokenSent === $tokenReceived) {
+            $this->logger->debug("Transaction sent. Token is {$caseResponse->getCheckoutToken()}");
+            return $caseResponse;
+        } else {
+            $this->logger->error($this->jsonSerializer->serialize($caseResponse));
+            $this->logger->error("Transaction failed to send. Sent token ({$tokenSent}) is different from received ({$tokenReceived})");
             return false;
         }
     }
