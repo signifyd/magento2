@@ -201,6 +201,12 @@ class Casedata extends AbstractModel
             if (isset($response->testInvestigation)) {
                 $this->setEntries('testInvestigation', $response->testInvestigation);
             }
+
+            $failEntry = $this->getEntries('fail');
+
+            if (isset($failEntry)) {
+                $this->unsetEntries('fail');
+            }
         } catch (\Exception $e) {
             $this->logger->critical($e->__toString(), ['entity' => $this]);
             return false;
@@ -243,6 +249,7 @@ class Casedata extends AbstractModel
                         );
                     } catch (\Exception $e) {
                         $this->logger->debug($e->__toString(), ['entity' => $order]);
+                        $this->setEntries('fail', 1);
 
                         $orderAction['action'] = false;
 
@@ -281,6 +288,7 @@ class Casedata extends AbstractModel
                         );
                     } catch (\Exception $e) {
                         $this->logger->debug($e->__toString(), ['entity' => $order]);
+                        $this->setEntries('fail', 1);
 
                         $orderAction['action'] = false;
 
@@ -328,6 +336,7 @@ class Casedata extends AbstractModel
                         );
                     } catch (\Exception $e) {
                         $this->logger->debug($e->__toString(), ['entity' => $order]);
+                        $this->setEntries('fail', 1);
 
                         $orderAction['action'] = false;
 
@@ -424,6 +433,7 @@ class Casedata extends AbstractModel
                     }
                 } catch (\Exception $e) {
                     $this->logger->debug('Exception creating invoice: ' . $e->__toString(), ['entity' => $order]);
+                    $this->setEntries('fail', 1);
 
                     $order = $this->getOrder(true);
 
@@ -531,6 +541,34 @@ class Casedata extends AbstractModel
         }
 
         $entries = $this->serializer->serialize($entries);
+        $this->setData('entries_text', $entries);
+
+        return $this;
+    }
+
+    public function unsetEntries($index)
+    {
+        $entries = $this->getData('entries_text');
+
+        if (!empty($entries)) {
+            try {
+                $entries = $this->serializer->unserialize($entries);
+            } catch (\InvalidArgumentException $e) {
+                $entries = [];
+            }
+        }
+
+        if (!is_array($entries)) {
+            return $this;
+        }
+
+        if (!empty($index)) {
+            if (isset($entries[$index])) {
+                unset($entries[$index]);
+            }
+        }
+
+        $entries = empty($entries) ? "" : $this->serializer->serialize($entries);
         $this->setData('entries_text', $entries);
 
         return $this;
