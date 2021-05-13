@@ -39,4 +39,8 @@
     <event name="sales_order_shipment_track_save_before">
         <observer name="onSaveShipmentTrack" instance="Signifyd\Connect\Observer\Fulfillment" />
     </event>
+
+    <event name="cron_job_run">
+        <observer name="onCronJobRun" instance="Signifyd\Connect\Observer\CronJob" />
+    </event>
 </config>
