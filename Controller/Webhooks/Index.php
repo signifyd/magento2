@@ -175,6 +175,15 @@ class Index extends Action
             return;
         }
 
+        if (isset($requestJson->caseId) === false) {
+            $httpCode = Http::STATUS_CODE_200;
+            throw new LocalizedException(__("Invalid body, no 'caseId' field found on request"));
+        }
+
+        /** @var $case \Signifyd\Connect\Model\Casedata */
+        $case = $this->casedataFactory->create();
+        $this->casedataResourceModel->loadForUpdate($case, $requestJson->caseId, 'code');
+
         switch ($topic) {
             case 'cases/test':
                 // Test is only verifying that the endpoint is reachable. So we just complete here
@@ -192,15 +201,7 @@ class Index extends Action
         $this->emulation->startEnvironmentEmulation(0,'adminhtml');
 
         try {
-            if (isset($requestJson->caseId) === false) {
-                $httpCode = Http::STATUS_CODE_200;
-                throw new LocalizedException(__("Invalid body, no 'caseId' field found on request"));
-            }
-
             $httpCode = null;
-            /** @var $case \Signifyd\Connect\Model\Casedata */
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->loadForUpdate($case, $requestJson->caseId, 'code');
 
             if ($case->isEmpty()) {
                 $httpCode = Http::STATUS_CODE_400;
@@ -218,7 +219,7 @@ class Index extends Action
             } elseif ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS) {
                 $httpCode = Http::STATUS_CODE_400;
                 throw new LocalizedException(__("Case {$requestJson->caseId} it is not ready to be updated"));
-            } elseif ($case->getMagentoStatus() == Casedata::COMPLETED_STATUS) {
+            } elseif ($case->getMagentoStatus() == Casedata::COMPLETED_STATUS && $topic != 'cases/review') {
                 $httpCode = Http::STATUS_CODE_200;
                 throw new LocalizedException(
                     __("Case {$requestJson->caseId} already completed, no action will be taken")
@@ -231,6 +232,8 @@ class Index extends Action
             }
 
             $this->logger->info("WEBHOOK: Processing case {$case->getId()}");
+
+            $this->emulation->startEnvironmentEmulation(0,'adminhtml');
 
             $currentCaseHash = sha1(implode(',', $case->getData()));
             $case->updateCase($requestJson);

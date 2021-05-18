@@ -217,4 +217,9 @@ class ConfigHelper
     {
         return (bool) $this->scopeConfigInterface->getValue('signifyd/general/score_only');
     }
+
+    public function getGuaranteesReviewedAction()
+    {
+        return $this->scopeConfigInterface->getValue('signifyd/advanced/guarantees_reviewed_action');
+    }
 }
