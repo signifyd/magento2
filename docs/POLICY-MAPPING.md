@@ -6,7 +6,7 @@ By default the extension will automatically use asynchronous response (POST_AUTH
 
 ### Setting synchronous response
 
-To set synchronous response run command below on your databse:
+To set synchronous response run command below on your database:
 
 ```sql
 INSERT INTO core_config_data (path, value) VALUES ('signifyd/advanced/policy_name', 'PRE_AUTH');
@@ -29,3 +29,36 @@ SELECT * FROM core_config_data WHERE path = 'signifyd/advanced/policy_namess';
 ```
 
 If no records are found, the extension will automatically use asynchronous response.
+
+## Policy decline message
+
+By default, whenever the synchronous policy is configured, if the Signifyd response is negative, the extension will display the following error message on checkout:
+```
+Your order cannot be processed, please contact our support team
+```
+
+### Setting custom decline message
+
+To set custom message run command below on your database:
+
+```sql
+INSERT INTO core_config_data (path, value) VALUES ('signifyd/advanced/policy_pre_auth_reject_message', 'CUSTOM-MESSAGE');
+```
+
+### Setting default decline message
+
+To revert back to the extension's default message, just delete it from the database:
+
+```sql
+DELETE FROM core_config_data WHERE path = 'signifyd/advanced/policy_pre_auth_reject_message';
+```
+
+### Check decline message
+
+To check the current message, run the command below on your database:
+
+```sql
+SELECT * FROM core_config_data WHERE path = 'signifyd/advanced/policy_pre_auth_reject_message';
+```
+
+If no records are found, the extension will automatically use default message.
