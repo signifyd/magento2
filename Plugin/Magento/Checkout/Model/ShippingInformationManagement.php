@@ -121,9 +121,14 @@ class ShippingInformationManagement
 
             /** @var \Magento\Quote\Model\Quote $quote */
             $quote = $this->quoteRepository->getActive($cartId);
-            $policyName = $this->purchaseHelper->getPolicyName($quote->getStoreId());
+            $policyName = $this->purchaseHelper->getPolicyName(
+                ScopeInterface::SCOPE_STORES,
+                $quote->getStoreId()
+            );
             $policyRejectMessage = $this->scopeConfigInterface->getValue(
-                'signifyd/advanced/policy_pre_auth_reject_message', ScopeInterface::SCOPE_STORES, $quote->getStoreId()
+                'signifyd/advanced/policy_pre_auth_reject_message',
+                ScopeInterface::SCOPE_STORES,
+                $quote->getStoreId()
             );
 
             if ($policyName == 'PRE_AUTH') {
@@ -132,7 +137,10 @@ class ShippingInformationManagement
                 $checkoutToken = $case['purchase']['checkoutToken'];
                 $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($case, $quote);
 
-                if (isset($caseResponse->recommendedAction) && $caseResponse->recommendedAction == 'ACCEPT') {
+                if (
+                    isset($caseResponse->recommendedAction) &&
+                    ($caseResponse->recommendedAction == 'ACCEPT' || $caseResponse->recommendedAction == 'REJECT')
+                ) {
                     /** @var $case \Signifyd\Connect\Model\Casedata */
                     $case = $this->casedataFactory->create();
                     $case->setSignifydStatus($caseResponse->status);
@@ -149,7 +157,9 @@ class ShippingInformationManagement
 
                     $this->casedataResourceModel->save($case);
 
-                    return $result;
+                    if ($caseResponse->recommendedAction == 'ACCEPT') {
+                        return $result;
+                    }
                 }
 
                 throw new LocalizedException(__($policyRejectMessage));

@@ -972,7 +972,7 @@ class PurchaseHelper
         $case['customerSubmitForGuaranteeIndicator'] = $this->getCustomerSubmitForGuaranteeIndicator();
         $case['customerOrderRecommendation'] = $this->getCustomerOrderRecommendation();
         $case['deviceFingerprints'] = $this->getDeviceFingerprints();
-        $case['policy'] = $this->makePolicy($order->getStoreId());
+        $case['policy'] = $this->makePolicy(ScopeInterface::SCOPE_STORES, $order->getStoreId());
         $case['decisionRequest'] = $this->getDecisionRequest();
         $case['sellers'] = $this->getSellers();
         $case['tags'] = $this->getTags();
@@ -1350,7 +1350,7 @@ class PurchaseHelper
         $case['customerSubmitForGuaranteeIndicator'] = $this->getCustomerSubmitForGuaranteeIndicator();
         $case['customerOrderRecommendation'] = $this->getCustomerOrderRecommendation();
         $case['deviceFingerprints'] = $this->getDeviceFingerprints();
-        $case['policy'] = $this->makePolicy($quote->getStoreId());
+        $case['policy'] = $this->makePolicy(ScopeInterface::SCOPE_STORES, $quote->getStoreId());
         $case['decisionRequest'] = $this->getDecisionRequest();
         $case['purchase']['checkoutToken'] = sha1($this->jsonSerializer->serialize($case));
 
@@ -1364,20 +1364,20 @@ class PurchaseHelper
         return $case;
     }
 
-    public function makePolicy($storeId)
+    public function makePolicy($scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
     {
         $policy = [];
-        $policyName = $this->getPolicyName($storeId);
+        $policyName = $this->getPolicyName($scopeType, $scopeCode);
 
         $policy['name'] = $policyName;
 
         return $policy;
     }
 
-    public function getPolicyName($storeId)
+    public function getPolicyName($scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
     {
         return $this->scopeConfigInterface->getValue(
-            'signifyd/advanced/policy_name', ScopeInterface::SCOPE_STORES, $storeId
+            'signifyd/advanced/policy_name', $scopeType, $scopeCode
         );
     }
 
