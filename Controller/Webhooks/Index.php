@@ -189,7 +189,7 @@ class Index extends Action
                 return;
         }
 
-        $this->emulation->startEnvironmentEmulation(0,'adminhtml');
+        $this->emulation->startEnvironmentEmulation(0, 'adminhtml');
 
         try {
             if (isset($requestJson->caseId) === false) {

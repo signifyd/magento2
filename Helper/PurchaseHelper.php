@@ -1409,7 +1409,9 @@ class PurchaseHelper
     public function getPolicyName($storeId)
     {
         return $this->scopeConfigInterface->getValue(
-            'signifyd/advanced/policy_name', ScopeInterface::SCOPE_STORES, $storeId
+            'signifyd/advanced/policy_name',
+            ScopeInterface::SCOPE_STORES,
+            $storeId
         );
     }
 
@@ -1451,8 +1453,7 @@ class PurchaseHelper
         $purchase['createdAt'] = date('c', strtotime($quote->getCreatedAt()));
         $purchase['browserIpAddress'] = $this->filterIp($this->remoteAddress->getRemoteAddress());
 
-        if ($this->deviceHelper->isDeviceFingerprintEnabled())
-        {
+        if ($this->deviceHelper->isDeviceFingerprintEnabled()) {
             $purchase['orderSessionId'] = $this->deviceHelper->generateFingerprint($quote->getId());
         }
 
