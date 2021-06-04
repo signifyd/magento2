@@ -260,6 +260,7 @@ class Casedata extends AbstractModel
                     $reason = $this->orderHelper->getCannotHoldReason($order);
                     $message = "Order {$order->getIncrementId()} can not be held because {$reason}";
                     $this->logger->debug($message, ['entity' => $order]);
+                    $this->setEntries('fail', 1);
                     $orderAction['action'] = false;
                     $this->orderHelper->addCommentToStatusHistory(
                         $order,
@@ -304,6 +305,7 @@ class Casedata extends AbstractModel
                         "can not be removed from hold because {$reason}. " .
                         "Case status: {$this->getSignifydStatus()}";
                     $this->logger->debug($message, ['entity' => $order]);
+                    $this->setEntries('fail', 1);
 
                     $this->orderHelper->addCommentToStatusHistory(
                         $order,
@@ -349,6 +351,7 @@ class Casedata extends AbstractModel
                     $reason = $this->orderHelper->getCannotCancelReason($order);
                     $message = "Order {$order->getIncrementId()} cannot be canceled because {$reason}";
                     $this->logger->debug($message, ['entity' => $order]);
+                    $this->setEntries('fail', 1);
                     $orderAction['action'] = false;
                     $this->orderHelper->addCommentToStatusHistory(
                         $order,
@@ -416,6 +419,7 @@ class Casedata extends AbstractModel
                         $reason = $this->orderHelper->getCannotInvoiceReason($order);
                         $message = "Order {$order->getIncrementId()} can not be invoiced because {$reason}";
                         $this->logger->debug($message, ['entity' => $order]);
+                        $this->setEntries('fail', 1);
                         $orderAction['action'] = false;
                         $this->orderHelper->addCommentToStatusHistory(
                             $order,
