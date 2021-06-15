@@ -182,11 +182,14 @@ class Index extends Action
                 return;
 
             case 'cases/creation':
-                $message = 'Case creation will not be processed by Magento';
-                $this->getResponse()->appendBody($message);
-                $this->logger->debug("WEBHOOK: {$message}");
-                $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
-                return;
+                if ($this->configHelper->isScoreOnly() === false) {
+                    $message = 'Case creation will not be processed by Magento';
+                    $this->getResponse()->appendBody($message);
+                    $this->logger->debug("WEBHOOK: {$message}");
+                    $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
+                    return;
+                }
+                break;
         }
 
         $this->emulation->startEnvironmentEmulation(0,'adminhtml');
