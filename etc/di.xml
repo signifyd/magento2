@@ -99,4 +99,6 @@
     <type name="Magento\Checkout\Model\ShippingInformationManagement">
         <plugin name="Signifyd_Connect_Plugin_Magento_Checkout_Model_ShippingInformationManagement" type="\Signifyd\Connect\Plugin\Magento\Checkout\Model\ShippingInformationManagement" />
     </type>
+
+    <preference for="Magento\Sales\Model\ResourceModel\Order\Grid\Collection" type="Signifyd\Connect\Model\ResourceModel\Order\Grid\Collection" />
 </config>
