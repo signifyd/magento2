@@ -149,8 +149,6 @@ class PreAuth implements ObserverInterface
             $checkoutPaymentDetails = [];
             $data = $this->requestHttp->getContent();
             $dataArray = $this->jsonSerializer->unserialize($data);
-            $positiveAction = $this->configHelper->getConfigData('signifyd/advanced/guarantee_positive_action');
-            $transactionType = $positiveAction == 'capture' ? 'SALE' : 'AUTHORIZATION';
 
             if (
                 isset($dataArray['paymentMethod']) &&
@@ -160,10 +158,6 @@ class PreAuth implements ObserverInterface
             ) {
                 $checkoutPaymentDetails['cardBin'] = $dataArray['paymentMethod']['additional_data']['signifyd-bin'];
                 $checkoutPaymentDetails['cardLast4'] = $dataArray['paymentMethod']['additional_data']['signifyd-lastFour'];
-                $checkoutPaymentDetails['type'] = $transactionType;
-                $checkoutPaymentDetails['gatewayStatusCode'] = 'SUCCESS';
-                $checkoutPaymentDetails['currency'] = $quote->getBaseCurrencyCode();
-                $checkoutPaymentDetails['amount'] = $quote->getGrandTotal();
             }
 
             $this->logger->info("Creating case for quote {$quote->getId()}");

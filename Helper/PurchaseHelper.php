@@ -1368,15 +1368,17 @@ class PurchaseHelper
             isset($checkoutPaymentDetails['cardBin']) &&
             isset($checkoutPaymentDetails['cardLast4'])
         ) {
+            $positiveAction = $this->configHelper->getConfigData('signifyd/advanced/guarantee_positive_action');
+            $transactionType = $positiveAction == 'capture' ? 'SALE' : 'AUTHORIZATION';
+
             $transactionCheckoutPaymentDetails = [];
             $transaction = [];
             $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardBin'] = $checkoutPaymentDetails['cardBin'];
             $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardLast4'] = $checkoutPaymentDetails['cardLast4'];
-
-            $transactionCheckoutPaymentDetails['type'] = $checkoutPaymentDetails['type'];
-            $transactionCheckoutPaymentDetails['gatewayStatusCode'] = $checkoutPaymentDetails['gatewayStatusCode'];
-            $transactionCheckoutPaymentDetails['currency'] = $checkoutPaymentDetails['currency'];
-            $transactionCheckoutPaymentDetails['amount'] = $checkoutPaymentDetails['amount'];
+            $transactionCheckoutPaymentDetails['type'] = $transactionType;
+            $transactionCheckoutPaymentDetails['gatewayStatusCode'] = 'SUCCESS';
+            $transactionCheckoutPaymentDetails['currency'] = $quote->getBaseCurrencyCode();
+            $transactionCheckoutPaymentDetails['amount'] = $quote->getGrandTotal();
             $transaction[] = $transactionCheckoutPaymentDetails;
             $case['transactions'] = $transaction;
         }
