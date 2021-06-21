@@ -1350,7 +1350,7 @@ class PurchaseHelper
      * @param $quote Order
      * @return array
      */
-    public function processQuoteData(Quote $quote)
+    public function processQuoteData(Quote $quote, $checkoutPaymentDetails = null)
     {
         $case = [];
 
@@ -1363,6 +1363,23 @@ class PurchaseHelper
         $case['deviceFingerprints'] = $this->getDeviceFingerprints();
         $case['policy'] = $this->makePolicy($quote->getStoreId());
         $case['decisionRequest'] = $this->getDecisionRequest();
+
+        if (is_array($checkoutPaymentDetails) &&
+            isset($checkoutPaymentDetails['cardBin']) &&
+            isset($checkoutPaymentDetails['cardLast4'])
+        ) {
+            $transactionCheckoutPaymentDetails = [];
+            $transaction = [];
+            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardBin'] = $checkoutPaymentDetails['cardBin'];
+            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardLast4'] = $checkoutPaymentDetails['cardLast4'];
+
+            $transactionCheckoutPaymentDetails['type'] = $checkoutPaymentDetails['type'];
+            $transactionCheckoutPaymentDetails['gatewayStatusCode'] = $checkoutPaymentDetails['gatewayStatusCode'];
+            $transactionCheckoutPaymentDetails['currency'] = $checkoutPaymentDetails['currency'];
+            $transactionCheckoutPaymentDetails['amount'] = $checkoutPaymentDetails['amount'];
+            $transaction[] = $transactionCheckoutPaymentDetails;
+            $case['transactions'] = $transaction;
+        }
 
         /**
          * This registry entry it's used to collect data from some payment methods like Payflow Link

@@ -95,8 +95,4 @@
     <type name="Magento\Sales\Model\ResourceModel\Order\Grid\Collection">
         <plugin name="Signifyd_Connect_Plugin_Magento_Sales_Model_ResourceModel_Order_Grid" type="\Signifyd\Connect\Plugin\Magento\Sales\Model\ResourceModel\Order\Grid\Collection" />
     </type>
-
-    <type name="Magento\Checkout\Model\ShippingInformationManagement">
-        <plugin name="Signifyd_Connect_Plugin_Magento_Checkout_Model_ShippingInformationManagement" type="\Signifyd\Connect\Plugin\Magento\Checkout\Model\ShippingInformationManagement" />
-    </type>
 </config>
