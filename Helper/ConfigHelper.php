@@ -217,4 +217,9 @@ class ConfigHelper
     {
         return (bool) $this->scopeConfigInterface->getValue('signifyd/general/score_only');
     }
+
+    public function getDecisionRequest()
+    {
+        return $this->scopeConfigInterface->getValue('signifyd/general/decision_request');
+    }
 }

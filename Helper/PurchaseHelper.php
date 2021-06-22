@@ -400,7 +400,24 @@ class PurchaseHelper
         if ($this->configHelper->isScoreOnly()) {
             $decisionRequest['paymentFraud'] = 'SCORE';
         } else {
-            $decisionRequest['paymentFraud'] = 'GUARANTEE';
+            $configDecision = $this->configHelper->getDecisionRequest();
+
+            switch ($configDecision) {
+                case 'GUARANTEE':
+                    $decisionRequest['paymentFraud'] = 'GUARANTEE';
+                    break;
+
+                case 'SCORE':
+                    $decisionRequest['paymentFraud'] = 'SCORE';
+                    break;
+
+                case 'DECISION':
+                    $decisionRequest['paymentFraud'] = 'DECISION';
+                    break;
+
+                default:
+                    $decisionRequest['paymentFraud'] = 'GUARANTEE';
+            }
         }
 
         return $decisionRequest;
