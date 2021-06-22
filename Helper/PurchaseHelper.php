@@ -396,7 +396,13 @@ class PurchaseHelper
     public function getDecisionRequest()
     {
         $decisionRequest = [];
-        $decisionRequest['paymentFraud'] = 'GUARANTEE';
+
+        if ($this->configHelper->isScoreOnly()) {
+            $decisionRequest['paymentFraud'] = 'SCORE';
+        } else {
+            $decisionRequest['paymentFraud'] = 'GUARANTEE';
+        }
+
         return $decisionRequest;
     }
 

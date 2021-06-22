@@ -182,11 +182,14 @@ class Index extends Action
                 return;
 
             case 'cases/creation':
-                $message = 'Case creation will not be processed by Magento';
-                $this->getResponse()->appendBody($message);
-                $this->logger->debug("WEBHOOK: {$message}");
-                $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
-                return;
+                if ($this->configHelper->isScoreOnly() === false) {
+                    $message = 'Case creation will not be processed by Magento';
+                    $this->getResponse()->appendBody($message);
+                    $this->logger->debug("WEBHOOK: {$message}");
+                    $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
+                    return;
+                }
+                break;
         }
 
         $this->emulation->startEnvironmentEmulation(0,'adminhtml');
@@ -218,7 +221,7 @@ class Index extends Action
             } elseif ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS) {
                 $httpCode = Http::STATUS_CODE_400;
                 throw new LocalizedException(__("Case {$requestJson->caseId} it is not ready to be updated"));
-            } elseif ($case->getMagentoStatus() == Casedata::COMPLETED_STATUS) {
+            } elseif ($case->getMagentoStatus() == Casedata::COMPLETED_STATUS && $this->configHelper->isScoreOnly() === false) {
                 $httpCode = Http::STATUS_CODE_200;
                 throw new LocalizedException(
                     __("Case {$requestJson->caseId} already completed, no action will be taken")
