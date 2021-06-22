@@ -5,9 +5,9 @@ define(function () {
          *
          * @param {Column} elem
          */
-        placeOrder: function (key) {
-            this.additionalData['signifyd-bin'] = this.paymentPayload.details.bin;
-            this.additionalData['signifyd-lastFour'] = this.paymentPayload.details.lastFour;
+        handleNonce: function (data) {
+            this.additionalData['signifyd-bin'] = data.details.bin;
+            this.additionalData['signifyd-lastFour'] = data.details.lastFour;
 
             this._super();
         }
