@@ -43,6 +43,9 @@ class Casedata extends AbstractModel
     /* Synchronous response */
     const PRE_AUTH = "pre_auth";
 
+    /* Asynchronous response */
+    const POST_AUTH = "post_auth";
+
     /**
      * @var ConfigHelper
      */
