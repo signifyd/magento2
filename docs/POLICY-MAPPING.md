@@ -17,7 +17,7 @@ INSERT INTO core_config_data (path, value) VALUES ('signifyd/advanced/policy_nam
 To revert back to the extension's default policy, just delete it from the database:
 
 ```sql
-DELETE FROM core_config_data WHERE path = 'signifyd/advanced/policy_names';
+DELETE FROM core_config_data WHERE path = 'signifyd/advanced/policy_name';
 ```
 
 ### Check policy
@@ -25,7 +25,7 @@ DELETE FROM core_config_data WHERE path = 'signifyd/advanced/policy_names';
 To check the current policy, run the command below on your database:
 
 ```sql
-SELECT * FROM core_config_data WHERE path = 'signifyd/advanced/policy_namess';
+SELECT * FROM core_config_data WHERE path = 'signifyd/advanced/policy_name';
 ```
 
 If no records are found, the extension will automatically use asynchronous response.

@@ -67,6 +67,15 @@ class Transaction implements ObserverInterface
                 /** @var $order \Magento\Sales\Model\Order */
                 $order = $observer->getEvent()->getOrder();
 
+                $paymentMethod = $order->getPayment()->getMethod();
+
+                if ($this->configHelper->isPaymentRestricted($paymentMethod)) {
+                    $message = 'Case creation for order ' . $order->getIncrementId() . ' with payment ' .
+                        $paymentMethod . ' is restricted';
+                    $this->logger->debug($message, ['entity' => $order]);
+                    return;
+                }
+
                 /** @var $case \Signifyd\Connect\Model\Casedata */
                 $case = $this->casedataFactory->create();
                 $this->casedataResourceModel->load($case, $order->getId(), 'order_id');

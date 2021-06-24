@@ -185,7 +185,7 @@ class Purchase implements ObserverInterface
 
             $paymentMethod = $order->getPayment()->getMethod();
 
-            if ($this->isPaymentRestricted($paymentMethod)) {
+            if ($this->configHelper->isPaymentRestricted($paymentMethod)) {
                 $message = 'Case creation for order ' . $incrementId . ' with payment ' . $paymentMethod . ' is restricted';
                 $this->logger->debug($message, ['entity' => $order]);
                 return;
@@ -308,38 +308,6 @@ class Purchase implements ObserverInterface
         $asyncPaymentMethods = array_map('trim', $asyncPaymentMethods);
 
         return $asyncPaymentMethods;
-    }
-
-    /**
-     * Get restricted payment methods from store configs
-     *
-     * @return array|mixed
-     */
-    public function getRestrictedPaymentMethodsConfig()
-    {
-        $restrictedPaymentMethods = $this->configHelper->getConfigData('signifyd/general/restrict_payment_methods');
-        $restrictedPaymentMethods = explode(',', $restrictedPaymentMethods);
-        $restrictedPaymentMethods = array_map('trim', $restrictedPaymentMethods);
-
-        return $restrictedPaymentMethods;
-    }
-
-    /**
-     * Check if there is any restrictions by payment method or state
-     *
-     * @param $method
-     * @param null $state
-     * @return bool
-     */
-    public function isPaymentRestricted($paymentMethodCode)
-    {
-        $restrictedPaymentMethods = $this->getRestrictedPaymentMethodsConfig();
-
-        if (in_array($paymentMethodCode, $restrictedPaymentMethods)) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
