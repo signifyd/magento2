@@ -95,4 +95,6 @@
     <type name="Magento\Sales\Model\ResourceModel\Order\Grid\Collection">
         <plugin name="Signifyd_Connect_Plugin_Magento_Sales_Model_ResourceModel_Order_Grid" type="\Signifyd\Connect\Plugin\Magento\Sales\Model\ResourceModel\Order\Grid\Collection" />
     </type>
+
+    <preference for="Magento\Sales\Model\ResourceModel\Order\Grid\Collection" type="Signifyd\Connect\Model\ResourceModel\Order\Grid\Collection" />
 </config>
