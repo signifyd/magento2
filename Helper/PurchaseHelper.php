@@ -1100,10 +1100,19 @@ class PurchaseHelper
                 $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: guarantee canceled");
                 $order->setSignifydGuarantee($disposition);
                 $this->orderResourceModel->save($case->getOrder());
+                $isCaseLocked = $this->casedataResourceModel->isCaseLocked($case);
 
-                $this->casedataResourceModel->loadForUpdate($case, $case->getId(), null, 2);
+                // Some other process already locked the case, will not load or save
+                if ($isCaseLocked === false) {
+                    $this->casedataResourceModel->loadForUpdate($case, $case->getId(), null, 2);
+                }
+
                 $case->setData('guarantee', $disposition);
-                $this->casedataResourceModel->save($case);
+
+                // Some other process already locked the case, will not load or save
+                if ($isCaseLocked === false) {
+                    $this->casedataResourceModel->save($case);
+                }
             } catch (\Exception $e) {
                 // Triggering case save to unlock case
                 if ($case instanceof \Signifyd\Connect\Model\ResourceModel\Casedata) {

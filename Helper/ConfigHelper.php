@@ -222,4 +222,9 @@ class ConfigHelper
     {
         return $this->scopeConfigInterface->getValue('signifyd/general/decision_request');
     }
+
+    public function getGuaranteesReviewedAction()
+    {
+        return $this->scopeConfigInterface->getValue('signifyd/advanced/guarantees_reviewed_action');
+    }
 }

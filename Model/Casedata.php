@@ -6,6 +6,8 @@
 
 namespace Signifyd\Connect\Model;
 
+use Magento\Sales\Model\Order\CreditmemoFactory;
+use Magento\Sales\Model\Service\CreditmemoService;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Magento\Framework\Model\AbstractModel;
 use Magento\Framework\Model\Context;
@@ -97,6 +99,16 @@ class Casedata extends AbstractModel
     protected $invoiceResourceModel;
 
     /**
+     * @var CreditmemoFactory
+     */
+    protected $creditmemoFactory;
+
+    /**
+     * @var CreditmemoService
+     */
+    protected $creditmemoService;
+
+    /**
      * Casedata constructor.
      * @param Context $context
      * @param Registry $registry
@@ -110,6 +122,8 @@ class Casedata extends AbstractModel
      * @param SerializerInterface $serializer
      * @param OrderHelper $orderHelper
      * @param InvoiceResourceModel $invoiceResourceModel
+     * @param CreditmemoFactory $creditmemoFactory
+     * @param CreditmemoService $creditmemoService
      */
     public function __construct(
         Context $context,
@@ -122,7 +136,9 @@ class Casedata extends AbstractModel
         Logger $logger,
         SerializerInterface $serializer,
         OrderHelper $orderHelper,
-        InvoiceResourceModel $invoiceResourceModel
+        InvoiceResourceModel $invoiceResourceModel,
+        CreditmemoFactory $creditmemoFactory,
+        CreditmemoService $creditmemoService
     ) {
         $this->configHelper = $configHelper;
         $this->invoiceService = $invoiceService;
@@ -133,6 +149,8 @@ class Casedata extends AbstractModel
         $this->serializer = $serializer;
         $this->orderHelper = $orderHelper;
         $this->invoiceResourceModel = $invoiceResourceModel;
+        $this->creditmemoFactory = $creditmemoFactory;
+        $this->creditmemoService = $creditmemoService;
 
         parent::__construct($context, $registry);
     }
@@ -235,6 +253,14 @@ class Casedata extends AbstractModel
 
         switch ($orderAction["action"]) {
             case "hold":
+                if ($orderAction["reason"] == 'approved guarantees reviewed to declined') {
+                    $message = "Signifyd: case reviewed " .
+                        "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
+                        "to {$this->getData('guarantee')} ({$this->getData('score')})";
+
+                    $this->orderHelper->addCommentToStatusHistory($order, $message);
+                }
+
                 if ($order->canHold()) {
                     try {
                         $order->hold();
@@ -444,6 +470,35 @@ class Casedata extends AbstractModel
                 }
                 break;
 
+            case 'refund':
+                $message = "Signifyd: case reviewed " .
+                    "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
+                    "to {$this->getData('guarantee')} ({$this->getData('score')})";
+
+                $this->orderHelper->addCommentToStatusHistory($order, $message);
+
+                try {
+                    $invoices = $order->getInvoiceCollection();
+
+                    foreach ($invoices as $invoice) {
+                        $creditmemo = $this->creditmemoFactory->createByOrder($order);
+                        $creditmemo->setInvoice($invoice);
+                        $this->creditmemoService->refund($creditmemo);
+                        $this->logger->debug(
+                            'Credit memo was created for order: ' . $order->getIncrementId(),
+                            ['entity' => $order]
+                        );
+                    }
+                } catch (\Exception $e) {
+                    if ($order->canHold()) {
+                        $order->hold();
+                        $this->orderResourceModel->save($order);
+                    }
+
+                    $this->logger->debug("Creditmemo Not Created: ". $e->getMessage());
+                }
+                break;
+
             // Do nothing, but do not complete the case on Magento side
             // This action should be used when something is processing on Signifyd end and extension should wait
             // E.g.: Signifyd returns guarantee disposition PENDING because case it is on manual review
@@ -456,6 +511,22 @@ class Casedata extends AbstractModel
             case 'nothing':
                 $orderAction['action'] = false;
                 $completeCase = true;
+
+                switch ($orderAction['reason']){
+                    case 'declined guarantees reviewed to approved':
+                        $message = "Signifyd: case reviewed on Signifyd from declined to approved. Old score: " .
+                        "{$this->getOrigData('score')}, new score: {$this->getData('score')}";
+                        $this->orderHelper->addCommentToStatusHistory($order, $message);
+                        break;
+
+                    case 'approved guarantees reviewed to declined':
+                        $message = "Signifyd: case reviewed " .
+                            "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
+                            "to {$this->getData('guarantee')} ({$this->getData('score')})";
+                        $this->orderHelper->addCommentToStatusHistory($order, $message);
+                        break;
+                }
+
                 break;
         }
 
@@ -473,6 +544,48 @@ class Casedata extends AbstractModel
      */
     public function handleGuaranteeChange()
     {
+        $requestGuarantee = $this->getOrigData('guarantee');
+        $caseGuarantee = $this->getData('guarantee');
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = $this->getOrder(true);
+
+        // Reviewed Cases
+        if (
+            ($requestGuarantee == 'ACCEPT' || $requestGuarantee == 'APPROVED') &&
+            $requestGuarantee != $caseGuarantee
+        ) {
+            $guaranteeReviewedAction = $this->configHelper->getGuaranteesReviewedAction();
+
+            switch ($guaranteeReviewedAction) {
+                case 'refund':
+                    $shipments = $order->getShipmentsCollection()->getData();
+                    $invoices = $order->getInvoiceCollection()->getData();
+
+                    if (empty($shipments) && !empty($invoices)) {
+                        $result =  ["action" => 'refund', "reason" => 'approved guarantees reviewed to declined'];
+                    } else {
+                        $result = ["action" => 'nothing', "reason" => 'approved guarantees reviewed to declined'];
+                    }
+                    break;
+
+                case 'nothing':
+                    $result = ["action" => 'nothing', "reason" => 'approved guarantees reviewed to declined'];
+                    break;
+
+                case 'hold':
+                    $result = ["action" => 'hold', "reason" => 'approved guarantees reviewed to declined'];
+                    break;
+            }
+
+            return $result;
+        } elseif (
+            ($requestGuarantee == 'REJECT' || $requestGuarantee == 'DECLINED') &&
+            $requestGuarantee != $caseGuarantee &&
+            $order->getState() === Order::STATE_CANCELED
+        ) {
+            return ["action" => 'nothing', "reason" => 'declined guarantees reviewed to approved'];
+        }
+
         switch ($this->getGuarantee()) {
             case "REJECT":
             case "DECLINED":

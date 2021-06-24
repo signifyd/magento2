@@ -50,6 +50,11 @@
                     <comment>Select what action should be taken in Magento when an order is declined for guarantee.</comment>
                     <source_model>Signifyd\Connect\Model\System\Config\Source\Options\Negative</source_model>
                 </field>
+                <field id="guarantees_reviewed_action" translate="label comment" type="select" sortOrder="37" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Reviewed Guarantees</label>
+                    <comment>Select what action should be taken in Magento when an approved guarantees reviewed to declined.</comment>
+                    <source_model>Signifyd\Connect\Model\System\Config\Source\Options\Reviewed</source_model>
+                </field>
             </group>
             <group id="webhook" translate="label comment" type="text" sortOrder="450" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Webhook Url</label>
