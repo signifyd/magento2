@@ -97,4 +97,10 @@
     </type>
 
     <preference for="Magento\Sales\Model\ResourceModel\Order\Grid\Collection" type="Signifyd\Connect\Model\ResourceModel\Order\Grid\Collection" />
+
+    <type name="Magento\Reports\Model\ResourceModel\Quote\Collection">
+        <plugin name="Signifyd_Connect_Plugin_Magento_Reports_Model_ResourceModel_Quote_Collection" type="\Signifyd\Connect\Plugin\Magento\Reports\Model\ResourceModel\Quote\Collection" />
+    </type>
+
+    <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
 </config>
