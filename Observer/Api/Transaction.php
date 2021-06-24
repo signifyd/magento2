@@ -47,12 +47,12 @@ class Transaction implements ObserverInterface
      * @param ConfigHelper $configHelper
      */
     public function __construct(
-    Logger $logger,
-    PurchaseHelper $purchaseHelper,
-    CasedataFactory $casedataFactory,
-    CasedataResourceModel $casedataResourceModel,
-    ConfigHelper $configHelper
-    ){
+        Logger $logger,
+        PurchaseHelper $purchaseHelper,
+        CasedataFactory $casedataFactory,
+        CasedataResourceModel $casedataResourceModel,
+        ConfigHelper $configHelper
+    ) {
         $this->logger = $logger;
         $this->purchaseHelper = $purchaseHelper;
         $this->casedataFactory = $casedataFactory;

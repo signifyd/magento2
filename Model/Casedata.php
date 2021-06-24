@@ -512,7 +512,7 @@ class Casedata extends AbstractModel
                 $orderAction['action'] = false;
                 $completeCase = true;
 
-                switch ($orderAction['reason']){
+                switch ($orderAction['reason']) {
                     case 'declined guarantees reviewed to approved':
                         $message = "Signifyd: case reviewed on Signifyd from declined to approved. Old score: " .
                         "{$this->getOrigData('score')}, new score: {$this->getData('score')}";
@@ -550,8 +550,7 @@ class Casedata extends AbstractModel
         $order = $this->getOrder(true);
 
         // Reviewed Cases
-        if (
-            ($requestGuarantee == 'ACCEPT' || $requestGuarantee == 'APPROVED') &&
+        if (($requestGuarantee == 'ACCEPT' || $requestGuarantee == 'APPROVED') &&
             $requestGuarantee != $caseGuarantee
         ) {
             $guaranteeReviewedAction = $this->configHelper->getGuaranteesReviewedAction();
@@ -578,8 +577,7 @@ class Casedata extends AbstractModel
             }
 
             return $result;
-        } elseif (
-            ($requestGuarantee == 'REJECT' || $requestGuarantee == 'DECLINED') &&
+        } elseif (($requestGuarantee == 'REJECT' || $requestGuarantee == 'DECLINED') &&
             $requestGuarantee != $caseGuarantee &&
             $order->getState() === Order::STATE_CANCELED
         ) {

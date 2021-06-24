@@ -201,7 +201,7 @@ class Index extends Action
                 break;
         }
 
-        $this->emulation->startEnvironmentEmulation(0,'adminhtml');
+        $this->emulation->startEnvironmentEmulation(0, 'adminhtml');
 
         try {
             $httpCode = null;
@@ -222,8 +222,7 @@ class Index extends Action
             } elseif ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS) {
                 $httpCode = Http::STATUS_CODE_400;
                 throw new LocalizedException(__("Case {$requestJson->caseId} it is not ready to be updated"));
-            } elseif (
-                $case->getMagentoStatus() == Casedata::COMPLETED_STATUS &&
+            } elseif ($case->getMagentoStatus() == Casedata::COMPLETED_STATUS &&
                 $this->configHelper->isScoreOnly() === false &&
                 $topic != 'cases/review'
             ) {
@@ -240,7 +239,7 @@ class Index extends Action
 
             $this->logger->info("WEBHOOK: Processing case {$case->getId()}");
 
-            $this->emulation->startEnvironmentEmulation(0,'adminhtml');
+            $this->emulation->startEnvironmentEmulation(0, 'adminhtml');
 
             $currentCaseHash = sha1(implode(',', $case->getData()));
             $case->updateCase($requestJson);

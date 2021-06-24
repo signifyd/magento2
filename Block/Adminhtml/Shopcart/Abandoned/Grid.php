@@ -26,7 +26,7 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
         \Magento\Reports\Model\ResourceModel\Quote\CollectionFactory $quotesFactory,
         PurchaseHelper $purchaseHelper,
         array $data = []
-    ){
+    ) {
         $this->purchaseHelper = $purchaseHelper;
         parent::__construct($context, $backendHelper, $quotesFactory, $data);
     }

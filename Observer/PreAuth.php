@@ -118,7 +118,7 @@ class PreAuth implements ObserverInterface
         RequestHttp $requestHttp,
         JsonSerializer $jsonSerializer,
         ConfigHelper $configHelper
-    ){
+    ) {
         $this->logger = $logger;
         $this->purchaseHelper = $purchaseHelper;
         $this->quoteRepository = $quoteRepository;
@@ -142,7 +142,9 @@ class PreAuth implements ObserverInterface
         $quote = $observer->getEvent()->getQuote();
         $policyName = $this->purchaseHelper->getPolicyName($quote->getStoreId());
         $policyRejectMessage = $this->scopeConfigInterface->getValue(
-            'signifyd/advanced/policy_pre_auth_reject_message', ScopeInterface::SCOPE_STORES, $quote->getStoreId()
+            'signifyd/advanced/policy_pre_auth_reject_message',
+            ScopeInterface::SCOPE_STORES,
+            $quote->getStoreId()
         );
 
         if ($policyName == 'PRE_AUTH') {
@@ -150,14 +152,14 @@ class PreAuth implements ObserverInterface
             $data = $this->requestHttp->getContent();
             $dataArray = $this->jsonSerializer->unserialize($data);
 
-            if (
-                isset($dataArray['paymentMethod']) &&
+            if (isset($dataArray['paymentMethod']) &&
                 isset($dataArray['paymentMethod']['additional_data']) &&
                 isset($dataArray['paymentMethod']['additional_data']['signifyd-bin']) &&
                 isset($dataArray['paymentMethod']['additional_data']['signifyd-lastFour'])
             ) {
                 $checkoutPaymentDetails['cardBin'] = $dataArray['paymentMethod']['additional_data']['signifyd-bin'];
-                $checkoutPaymentDetails['cardLast4'] = $dataArray['paymentMethod']['additional_data']['signifyd-lastFour'];
+                $checkoutPaymentDetails['cardLast4'] =
+                    $dataArray['paymentMethod']['additional_data']['signifyd-lastFour'];
             }
 
             $this->logger->info("Creating case for quote {$quote->getId()}");

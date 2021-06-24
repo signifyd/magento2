@@ -6,7 +6,7 @@ use Magento\Backend\Block\Widget\Grid\Column\Renderer\AbstractRenderer;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
 
-Class SignifydGuarantee extends AbstractRenderer
+class SignifydGuarantee extends AbstractRenderer
 {
     /**
      * @var CasedataResourceModel
@@ -26,10 +26,10 @@ Class SignifydGuarantee extends AbstractRenderer
      * @param array $data
      */
     public function __construct(
-    CasedataResourceModel $casedataResourceModel,
-    CasedataFactory $casedataFactory,
-    \Magento\Backend\Block\Context $context,
-    array $data = []
+        CasedataResourceModel $casedataResourceModel,
+        CasedataFactory $casedataFactory,
+        \Magento\Backend\Block\Context $context,
+        array $data = []
     ) {
         $this->casedataResourceModel = $casedataResourceModel;
         $this->casedataFactory = $casedataFactory;

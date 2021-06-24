@@ -155,8 +155,11 @@ class Purchase implements ObserverInterface
 
             if ($casesFromQuotes->count() > 0 &&
                 $casesFromQuotes->getFirstItem()->getMagentoStatus() != 'completed'
-            ){
-                $this->logger->info("Completing case for order {$order->getIncrementId()} ({$order->getId()})  because it is a pre auth case");
+            ) {
+                $this->logger->info(
+                    "Completing case for order {$order->getIncrementId()} ({$order->getId()}) " .
+                    "because it is a pre auth case"
+                );
                 $casesFromQuote = $casesFromQuotes->getFirstItem();
                 /** @var $case \Signifyd\Connect\Model\Casedata */
                 $casesFromQuoteLoaded = $this->casedataFactory->create();
@@ -186,7 +189,8 @@ class Purchase implements ObserverInterface
             $paymentMethod = $order->getPayment()->getMethod();
 
             if ($this->configHelper->isPaymentRestricted($paymentMethod)) {
-                $message = 'Case creation for order ' . $incrementId . ' with payment ' . $paymentMethod . ' is restricted';
+                $message = 'Case creation for order ' . $incrementId .
+                    ' with payment ' . $paymentMethod . ' is restricted';
                 $this->logger->debug($message, ['entity' => $order]);
                 return;
             }

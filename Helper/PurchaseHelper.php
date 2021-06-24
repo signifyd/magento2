@@ -1395,8 +1395,10 @@ class PurchaseHelper
 
             $transactionCheckoutPaymentDetails = [];
             $transaction = [];
-            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardBin'] = $checkoutPaymentDetails['cardBin'];
-            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardLast4'] = $checkoutPaymentDetails['cardLast4'];
+            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardBin'] =
+                $checkoutPaymentDetails['cardBin'];
+            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardLast4'] =
+                $checkoutPaymentDetails['cardLast4'];
             $transactionCheckoutPaymentDetails['type'] = $transactionType;
             $transactionCheckoutPaymentDetails['gatewayStatusCode'] = 'SUCCESS';
             $transactionCheckoutPaymentDetails['currency'] = $quote->getBaseCurrencyCode();
@@ -1428,7 +1430,9 @@ class PurchaseHelper
     public function getPolicyName($scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
     {
         return $this->scopeConfigInterface->getValue(
-            'signifyd/advanced/policy_name', $scopeType, $scopeCode
+            'signifyd/advanced/policy_name',
+            $scopeType,
+            $scopeCode
         );
     }
 
@@ -1469,8 +1473,7 @@ class PurchaseHelper
         $purchase['createdAt'] = date('c', strtotime($quote->getCreatedAt()));
         $purchase['browserIpAddress'] = $this->filterIp($this->remoteAddress->getRemoteAddress());
 
-        if ($this->deviceHelper->isDeviceFingerprintEnabled())
-        {
+        if ($this->deviceHelper->isDeviceFingerprintEnabled()) {
             $purchase['orderSessionId'] = $this->deviceHelper->generateFingerprint($quote->getId());
         }
 
@@ -1666,7 +1669,9 @@ class PurchaseHelper
             return $caseResponse;
         } else {
             $this->logger->error($this->jsonSerializer->serialize($caseResponse));
-            $this->logger->error("Transaction failed to send. Sent token ({$tokenSent}) is different from received ({$tokenReceived})");
+            $this->logger->error(
+                "Transaction failed to send. Sent token ({$tokenSent}) is different from received ({$tokenReceived})"
+            );
             return false;
         }
     }
