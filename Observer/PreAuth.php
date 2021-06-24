@@ -140,7 +140,12 @@ class PreAuth implements ObserverInterface
 
         /** @var \Magento\Quote\Model\Quote $quote */
         $quote = $observer->getEvent()->getQuote();
-        $policyName = $this->purchaseHelper->getPolicyName($quote->getStoreId());
+
+        $policyName = $this->purchaseHelper->getPolicyName(
+            $quote->getStore()->getScopeType(),
+            $quote->getStoreId()
+        );
+
         $policyRejectMessage = $this->scopeConfigInterface->getValue(
             'signifyd/advanced/policy_pre_auth_reject_message',
             ScopeInterface::SCOPE_STORES,
@@ -180,9 +185,9 @@ class PreAuth implements ObserverInterface
                 $case->setQuoteId($quote->getId());
 
                 $this->casedataResourceModel->save($case);
+            } else {
+                throw new LocalizedException(__($policyRejectMessage));
             }
-
-            throw new LocalizedException(__($policyRejectMessage));
         }
     }
 }
