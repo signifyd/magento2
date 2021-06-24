@@ -222,6 +222,12 @@ class Casedata extends AbstractModel
             if (isset($response->testInvestigation)) {
                 $this->setEntries('testInvestigation', $response->testInvestigation);
             }
+
+            $failEntry = $this->getEntries('fail');
+
+            if (isset($failEntry)) {
+                $this->unsetEntries('fail');
+            }
         } catch (\Exception $e) {
             $this->logger->critical($e->__toString(), ['entity' => $this]);
             return false;
@@ -251,6 +257,17 @@ class Casedata extends AbstractModel
             $orderAction["action"] = 'nothing';
         }
 
+        // When Async e-mail sending it is enabled, do not process the order until the e-mail is sent
+        $isAsyncEmailEnabled = $this->configHelper->getConfigData('sales_email/general/async_sending', $order, true);
+
+        if ($isAsyncEmailEnabled && $order->getData('send_email') == 1 && empty($order->getEmailSent())) {
+            $this->setEntries('fail', 1);
+            $orderAction['action'] = false;
+
+            $message = "Will not process order {$order->getIncrementId()} because async e-mail has not been sent";
+            $this->logger->debug($message);
+        }
+
         switch ($orderAction["action"]) {
             case "hold":
                 if ($orderAction["reason"] == 'approved guarantees reviewed to declined') {
@@ -272,6 +289,7 @@ class Casedata extends AbstractModel
                         );
                     } catch (\Exception $e) {
                         $this->logger->debug($e->__toString(), ['entity' => $order]);
+                        $this->setEntries('fail', 1);
 
                         $orderAction['action'] = false;
 
@@ -282,6 +300,7 @@ class Casedata extends AbstractModel
                     $reason = $this->orderHelper->getCannotHoldReason($order);
                     $message = "Order {$order->getIncrementId()} can not be held because {$reason}";
                     $this->logger->debug($message, ['entity' => $order]);
+                    $this->setEntries('fail', 1);
                     $orderAction['action'] = false;
                     $this->orderHelper->addCommentToStatusHistory(
                         $order,
@@ -310,6 +329,7 @@ class Casedata extends AbstractModel
                         );
                     } catch (\Exception $e) {
                         $this->logger->debug($e->__toString(), ['entity' => $order]);
+                        $this->setEntries('fail', 1);
 
                         $orderAction['action'] = false;
 
@@ -325,6 +345,7 @@ class Casedata extends AbstractModel
                         "can not be removed from hold because {$reason}. " .
                         "Case status: {$this->getSignifydStatus()}";
                     $this->logger->debug($message, ['entity' => $order]);
+                    $this->setEntries('fail', 1);
 
                     $this->orderHelper->addCommentToStatusHistory(
                         $order,
@@ -357,6 +378,7 @@ class Casedata extends AbstractModel
                         );
                     } catch (\Exception $e) {
                         $this->logger->debug($e->__toString(), ['entity' => $order]);
+                        $this->setEntries('fail', 1);
 
                         $orderAction['action'] = false;
 
@@ -369,6 +391,7 @@ class Casedata extends AbstractModel
                     $reason = $this->orderHelper->getCannotCancelReason($order);
                     $message = "Order {$order->getIncrementId()} cannot be canceled because {$reason}";
                     $this->logger->debug($message, ['entity' => $order]);
+                    $this->setEntries('fail', 1);
                     $orderAction['action'] = false;
                     $this->orderHelper->addCommentToStatusHistory(
                         $order,
@@ -436,6 +459,7 @@ class Casedata extends AbstractModel
                         $reason = $this->orderHelper->getCannotInvoiceReason($order);
                         $message = "Order {$order->getIncrementId()} can not be invoiced because {$reason}";
                         $this->logger->debug($message, ['entity' => $order]);
+                        $this->setEntries('fail', 1);
                         $orderAction['action'] = false;
                         $this->orderHelper->addCommentToStatusHistory(
                             $order,
@@ -453,6 +477,7 @@ class Casedata extends AbstractModel
                     }
                 } catch (\Exception $e) {
                     $this->logger->debug('Exception creating invoice: ' . $e->__toString(), ['entity' => $order]);
+                    $this->setEntries('fail', 1);
 
                     $order = $this->getOrder(true);
 
@@ -645,6 +670,34 @@ class Casedata extends AbstractModel
         }
 
         $entries = $this->serializer->serialize($entries);
+        $this->setData('entries_text', $entries);
+
+        return $this;
+    }
+
+    public function unsetEntries($index)
+    {
+        $entries = $this->getData('entries_text');
+
+        if (!empty($entries)) {
+            try {
+                $entries = $this->serializer->unserialize($entries);
+            } catch (\InvalidArgumentException $e) {
+                $entries = [];
+            }
+        }
+
+        if (!is_array($entries)) {
+            return $this;
+        }
+
+        if (!empty($index)) {
+            if (isset($entries[$index])) {
+                unset($entries[$index]);
+            }
+        }
+
+        $entries = empty($entries) ? "" : $this->serializer->serialize($entries);
         $this->setData('entries_text', $entries);
 
         return $this;
