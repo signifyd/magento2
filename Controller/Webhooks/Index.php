@@ -224,8 +224,8 @@ class Index extends Action
                 throw new LocalizedException(__("Case {$requestJson->caseId} it is not ready to be updated"));
             } elseif (
                 $case->getMagentoStatus() == Casedata::COMPLETED_STATUS &&
-            $this->configHelper->isScoreOnly() === false &&
-            $topic != 'cases/review'
+                $this->configHelper->isScoreOnly() === false &&
+                $topic != 'cases/review'
             ) {
                 $httpCode = Http::STATUS_CODE_200;
                 throw new LocalizedException(
