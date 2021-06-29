@@ -759,7 +759,18 @@ class PurchaseHelper
 
     public function makeShipper($shippingMethod)
     {
-        $shippingCarrier = $shippingMethod->getCarrierCode();
+        if (is_string($shippingMethod)) {
+            $shippingMethodArray = explode('_', $shippingMethod);
+
+            if (count($shippingMethodArray) < 2) {
+                return false;
+            }
+
+            $shippingCarrier = $shippingMethodArray[0];
+        } else {
+            $shippingCarrier = $shippingMethod->getCarrierCode();
+        }
+
         $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/shipper_config');
         $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
 
@@ -774,7 +785,18 @@ class PurchaseHelper
 
     public function makeshippingMethod($shippingMethod)
     {
-        $shippingMethodCode = $shippingMethod->getMethod();
+        if (is_string($shippingMethod)) {
+            $shippingMethodArray = explode('_', $shippingMethod);
+
+            if (count($shippingMethodArray) < 2) {
+                return false;
+            }
+
+            $shippingMethodCode = $shippingMethodArray[1];
+        } else {
+            $shippingMethodCode = $shippingMethod->getMethod();
+        }
+
         $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/shipping_method_config');
         $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
 
@@ -1387,7 +1409,9 @@ class PurchaseHelper
     public function getPolicyName($storeId)
     {
         return $this->scopeConfigInterface->getValue(
-            'signifyd/advanced/policy_name', ScopeInterface::SCOPE_STORES, $storeId
+            'signifyd/advanced/policy_name',
+            ScopeInterface::SCOPE_STORES,
+            $storeId
         );
     }
 
@@ -1429,8 +1453,7 @@ class PurchaseHelper
         $purchase['createdAt'] = date('c', strtotime($quote->getCreatedAt()));
         $purchase['browserIpAddress'] = $this->filterIp($this->remoteAddress->getRemoteAddress());
 
-        if ($this->deviceHelper->isDeviceFingerprintEnabled())
-        {
+        if ($this->deviceHelper->isDeviceFingerprintEnabled()) {
             $purchase['orderSessionId'] = $this->deviceHelper->generateFingerprint($quote->getId());
         }
 

@@ -92,7 +92,7 @@ class ShippingInformationManagement
         ScopeConfigInterface $scopeConfigInterface,
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel
-    ){
+    ) {
         $this->logger = $logger;
         $this->purchaseHelper = $purchaseHelper;
         $this->quoteRepository = $quoteRepository;
@@ -113,7 +113,9 @@ class ShippingInformationManagement
         $quote = $this->quoteRepository->getActive($cartId);
         $policyName = $this->purchaseHelper->getPolicyName($quote->getStoreId());
         $policyRejectMessage = $this->scopeConfigInterface->getValue(
-            'signifyd/advanced/policy_pre_auth_reject_message', ScopeInterface::SCOPE_STORES, $quote->getStoreId()
+            'signifyd/advanced/policy_pre_auth_reject_message',
+            ScopeInterface::SCOPE_STORES,
+            $quote->getStoreId()
         );
 
         if ($policyName == 'PRE_AUTH') {
