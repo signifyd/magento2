@@ -1,4 +1,4 @@
-# Policy mapping
+# Decision Request
 
 Signifyd has a mapping for the decision request. By default, the extension will automatically use guarantee decision (GUARANTEE), but it is possible to set other decision.
 

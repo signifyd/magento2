@@ -154,6 +154,7 @@ class PreAuth implements ObserverInterface
 
         if ($policyName == 'PRE_AUTH') {
             $checkoutPaymentDetails = [];
+            $paymentMethod = null;
             $data = $this->requestHttp->getContent();
             $dataArray = $this->jsonSerializer->unserialize($data);
 
@@ -167,8 +168,14 @@ class PreAuth implements ObserverInterface
                     $dataArray['paymentMethod']['additional_data']['signifyd-lastFour'];
             }
 
+            if (isset($dataArray['paymentMethod']) &&
+                isset($dataArray['paymentMethod']['method'])
+            ) {
+                $paymentMethod = $dataArray['paymentMethod']['method'];
+            }
+
             $this->logger->info("Creating case for quote {$quote->getId()}");
-            $case = $this->purchaseHelper->processQuoteData($quote, $checkoutPaymentDetails);
+            $case = $this->purchaseHelper->processQuoteData($quote, $checkoutPaymentDetails, $paymentMethod);
             $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($case, $quote);
 
             if (

@@ -75,18 +75,6 @@ class Transaction implements ObserverInterface
                     $this->logger->debug($message, ['entity' => $order]);
                     return;
                 }
-
-                /** @var $case \Signifyd\Connect\Model\Casedata */
-                $case = $this->casedataFactory->create();
-                $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
-
-                if ($case->isEmpty() == false && $case->getPolicyName() == Casedata::PRE_AUTH) {
-                    $this->logger->info('Sending pre_auth transaction to signifyd');
-                    $transaction = [];
-                    $transaction['transactions'] = $this->purchaseHelper->makeTransactions($order);
-                    $transaction['checkoutToken'] = $case->getCheckoutToken();
-                    $this->purchaseHelper->postTransactionToSignifyd($transaction, $order);
-                }
             } catch (\Exception $e) {
                 $this->logger->debug($e->getMessage());
             }

@@ -878,7 +878,7 @@ class PurchaseHelper
         $lastTransaction['amount'] = $order->getGrandTotal();
         $lastTransaction['gateway'] = $order->getPayment()->getMethod();
         $lastTransaction['createdAt'] = date('c', strtotime($transactionFromOrder->getData('created_at')));
-        $lastTransaction['paymentMethod'] = $this->makePaymentMethod($order);
+        $lastTransaction['paymentMethod'] = $this->makePaymentMethod($order->getPayment()->getMethod());
         $lastTransaction['type'] = $transactionType;
         $lastTransaction['gatewayStatusCode'] = 'SUCCESS';
         $lastTransaction['gatewayStatusMessage'] = $this->getGatewayStatusMessage();
@@ -896,9 +896,8 @@ class PurchaseHelper
         return $transactions;
     }
 
-    public function makePaymentMethod(Order $order)
+    public function makePaymentMethod($paymentMethod)
     {
-        $paymentMethod = $order->getPayment()->getMethod();
         $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/payment_methods_config');
         $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
 
@@ -1371,7 +1370,7 @@ class PurchaseHelper
      * @param $quote Order
      * @return array
      */
-    public function processQuoteData(Quote $quote, $checkoutPaymentDetails = null)
+    public function processQuoteData(Quote $quote, $checkoutPaymentDetails = null, $paymentMethod = null)
     {
         $case = [];
 
@@ -1386,26 +1385,36 @@ class PurchaseHelper
         $case['decisionRequest'] = $this->getDecisionRequest();
         $case['purchase']['checkoutToken'] = sha1($this->jsonSerializer->serialize($case));
 
-        if (is_array($checkoutPaymentDetails) &&
+        $positiveAction = $this->configHelper->getConfigData('signifyd/advanced/guarantee_positive_action');
+        $transactionType = $positiveAction == 'capture' ? 'SALE' : 'AUTHORIZATION';
+        $billingAddres = $quote->getBillingAddress();
+        $transactionCheckoutPaymentDetails = [];
+        $transaction = [];
+        $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['billingAddress'] =
+            $this->formatSignifydAddress($billingAddres);
+        $transactionCheckoutPaymentDetails['currency'] = $quote->getBaseCurrencyCode();
+        $transactionCheckoutPaymentDetails['amount'] = $quote->getGrandTotal();
+        $transactionCheckoutPaymentDetails['type'] = $transactionType;
+        $transactionCheckoutPaymentDetails['gatewayStatusCode'] = 'PENDING';
+
+        if (isset($paymentMethod)) {
+            $transactionCheckoutPaymentDetails['paymentMethod'] = $this->makePaymentMethod($paymentMethod);
+            $transactionCheckoutPaymentDetails['gateway'] = $paymentMethod;
+        }
+
+        if (
+            is_array($checkoutPaymentDetails) &&
             isset($checkoutPaymentDetails['cardBin']) &&
             isset($checkoutPaymentDetails['cardLast4'])
         ) {
-            $positiveAction = $this->configHelper->getConfigData('signifyd/advanced/guarantee_positive_action');
-            $transactionType = $positiveAction == 'capture' ? 'SALE' : 'AUTHORIZATION';
-
-            $transactionCheckoutPaymentDetails = [];
-            $transaction = [];
             $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardBin'] =
                 $checkoutPaymentDetails['cardBin'];
             $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardLast4'] =
                 $checkoutPaymentDetails['cardLast4'];
-            $transactionCheckoutPaymentDetails['type'] = $transactionType;
-            $transactionCheckoutPaymentDetails['gatewayStatusCode'] = 'SUCCESS';
-            $transactionCheckoutPaymentDetails['currency'] = $quote->getBaseCurrencyCode();
-            $transactionCheckoutPaymentDetails['amount'] = $quote->getGrandTotal();
-            $transaction[] = $transactionCheckoutPaymentDetails;
-            $case['transactions'] = $transaction;
         }
+
+        $transaction[] = $transactionCheckoutPaymentDetails;
+        $case['transactions'] = $transaction;
 
         /**
          * This registry entry it's used to collect data from some payment methods like Payflow Link
@@ -1573,7 +1582,8 @@ class PurchaseHelper
     {
         $recipients = [];
         $recipient = [];
-        $address = $quote->getShippingAddress();
+        $address = $quote->getShippingAddress()->getCity() !== null ?
+            $quote->getShippingAddress() : $quote->getBillingAddress();
 
         if ($address !== null) {
             $recipient['fullName'] = $address->getName();
