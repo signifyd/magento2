@@ -175,8 +175,8 @@ class PreAuth implements ObserverInterface
             }
 
             $this->logger->info("Creating case for quote {$quote->getId()}");
-            $case = $this->purchaseHelper->processQuoteData($quote, $checkoutPaymentDetails, $paymentMethod);
-            $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($case, $quote);
+            $caseFromQuote = $this->purchaseHelper->processQuoteData($quote, $checkoutPaymentDetails, $paymentMethod);
+            $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
 
             if (
                 isset($caseResponse->recommendedAction) &&
@@ -192,6 +192,8 @@ class PreAuth implements ObserverInterface
                 $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
                 $case->setUpdated();
                 $case->setMagentoStatus(Casedata::PRE_AUTH);
+                $case->setPolicyName(Casedata::PRE_AUTH);
+                $case->setCheckoutToken($caseFromQuote['purchase']['checkoutToken']);
                 $case->setQuoteId($quote->getId());
 
                 $this->casedataResourceModel->save($case);
