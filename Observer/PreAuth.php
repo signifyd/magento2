@@ -171,7 +171,10 @@ class PreAuth implements ObserverInterface
             $case = $this->purchaseHelper->processQuoteData($quote, $checkoutPaymentDetails);
             $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($case, $quote);
 
-            if (isset($caseResponse->recommendedAction) && $caseResponse->recommendedAction == 'ACCEPT') {
+            if (
+                isset($caseResponse->recommendedAction) &&
+                ($caseResponse->recommendedAction == 'ACCEPT' || $caseResponse->recommendedAction == 'REJECT')
+            ) {
                 /** @var $case \Signifyd\Connect\Model\Casedata */
                 $case = $this->casedataFactory->create();
                 $case->setSignifydStatus($caseResponse->status);
@@ -185,7 +188,9 @@ class PreAuth implements ObserverInterface
                 $case->setQuoteId($quote->getId());
 
                 $this->casedataResourceModel->save($case);
-            } else {
+            }
+
+            if ($caseResponse->recommendedAction == 'REJECT') {
                 throw new LocalizedException(__($policyRejectMessage));
             }
         }
