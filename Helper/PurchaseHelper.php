@@ -1675,7 +1675,7 @@ class PurchaseHelper
         $tokenReceived = $caseResponse->getCheckoutToken();
 
         if ($tokenSent === $tokenReceived) {
-            $this->logger->debug("Transaction sent. Token is {$caseResponse->getCheckoutToken()}");
+            $this->logger->debug("Transaction sent to order {$order->getIncrementId()}. Token is {$caseResponse->getCheckoutToken()}");
             return $caseResponse;
         } else {
             $this->logger->error($this->jsonSerializer->serialize($caseResponse));

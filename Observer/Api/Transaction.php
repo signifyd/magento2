@@ -81,7 +81,7 @@ class Transaction implements ObserverInterface
                 $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
 
                 if ($case->isEmpty() == false && $case->getPolicyName() == Casedata::PRE_AUTH) {
-                    $this->logger->info('Sending pre_auth transaction to signifyd');
+                    $this->logger->info("Sending pre_auth transaction to Signifyd for order {$case->getOrderIncrement()}");
                     $transaction = [];
                     $transaction['transactions'] = $this->purchaseHelper->makeTransactions($order);
                     $transaction['checkoutToken'] = $case->getCheckoutToken();
