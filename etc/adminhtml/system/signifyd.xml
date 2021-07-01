@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
+    <section id="signifyd" translate="label" type="text" sortOrder="300" showInDefault="1" showInWebsite="1" showInStore="1">
+        <label>Signifyd</label>
+        <tab>service</tab>
+        <resource>Magento_Integration::config_signifyd</resource>
+
+        <include path="Signifyd_Connect::system/signifyd/advanced.xml"/>
+        <include path="Signifyd_Connect::system/signifyd/general.xml"/>
+        <include path="Signifyd_Connect::system/signifyd/hint.xml"/>
+        <include path="Signifyd_Connect::system/signifyd/logs.xml"/>
+        <include path="Signifyd_Connect::system/signifyd/webhook.xml"/>
+    </section>
+</include>

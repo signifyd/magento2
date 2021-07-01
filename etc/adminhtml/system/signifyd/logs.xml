@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
+    <group id="logs" translate="label" type="text" sortOrder="500" showInDefault="1" showInWebsite="1" showInStore="1">
+        <label>Enable Logging</label>
+        <field id="log" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Log Options</label>
+            <comment>Enables logging of errors related to the plugin for debugging and troubleshooting issues.</comment>
+            <source_model>Signifyd\Connect\Model\System\Config\Source\Options\Loglevel</source_model>
+        </field>
+        <field id="version" translate="label comment" type="text" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Version</label>
+            <frontend_model>Signifyd\Connect\Block\Adminhtml\System\Config\Field\Version</frontend_model>
+            <comment>The version number of the Signifyd extension.</comment>
+        </field>
+    </group>
+</include>

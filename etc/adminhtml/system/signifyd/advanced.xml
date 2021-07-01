@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
+    <group id="advanced" translate="label comment" type="text" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
+        <label><![CDATA[Order Workflow
+                    <p style="font-size: 12px;font-weight: normal;">Enabling any of the order workflows below will place all newly created orders "on-hold" until Signifyd has reviewed the order.</p>]]></label>
+        <field id="guarantee_positive_action" translate="label comment" type="select" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Approved Guarantees</label>
+            <comment>Select what action should be taken in Magento when an order is approved for guarantee.</comment>
+            <source_model>Signifyd\Connect\Model\System\Config\Source\Options\Positive</source_model>
+        </field>
+        <field id="guarantee_negative_action" translate="label comment" type="select" sortOrder="37" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Declined Guarantees</label>
+            <comment>Select what action should be taken in Magento when an order is declined for guarantee.</comment>
+            <source_model>Signifyd\Connect\Model\System\Config\Source\Options\Negative</source_model>
+        </field>
+        <field id="guarantees_reviewed_action" translate="label comment" type="select" sortOrder="37" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Reviewed Guarantees</label>
+            <comment>Select what action should be taken in Magento when an approved guarantees reviewed to declined.</comment>
+            <source_model>Signifyd\Connect\Model\System\Config\Source\Options\Reviewed</source_model>
+        </field>
+    </group>
+</include>

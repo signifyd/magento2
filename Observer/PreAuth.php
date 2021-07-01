@@ -184,6 +184,7 @@ class PreAuth implements ObserverInterface
             ) {
                 /** @var $case \Signifyd\Connect\Model\Casedata */
                 $case = $this->casedataFactory->create();
+                $this->casedataResourceModel->load($case, $quote->getId(), 'quote_id');
                 $case->setSignifydStatus($caseResponse->status);
                 $case->setCode($caseResponse->caseId);
                 $case->setScore(floor($caseResponse->score));
