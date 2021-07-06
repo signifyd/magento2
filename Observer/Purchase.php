@@ -152,9 +152,15 @@ class Purchase implements ObserverInterface
             /** @var \Signifyd\Connect\Model\ResourceModel\Casedata\Collection $casesFromQuotes */
             $casesFromQuotes = $this->casedataCollectionFactory->create();
             $casesFromQuotes->addFieldToFilter('quote_id', ['eq' => $order->getQuoteId()]);
-            $casesFromQuote = $casesFromQuotes->getFirstItem();
 
-            if (!empty($casesFromQuote->getData())) {
+            if ($casesFromQuotes->count() > 0 &&
+                $casesFromQuotes->getFirstItem()->getMagentoStatus() != 'completed'
+            ) {
+                $this->logger->info(
+                    "Completing case for order {$order->getIncrementId()} ({$order->getId()}) " .
+                    "because it is a pre auth case"
+                );
+                $casesFromQuote = $casesFromQuotes->getFirstItem();
                 /** @var $case \Signifyd\Connect\Model\Casedata */
                 $casesFromQuoteLoaded = $this->casedataFactory->create();
                 $this->casedataResourceModel->load($casesFromQuoteLoaded, $casesFromQuote->getCode(), 'code');
@@ -182,8 +188,9 @@ class Purchase implements ObserverInterface
 
             $paymentMethod = $order->getPayment()->getMethod();
 
-            if ($this->isPaymentRestricted($paymentMethod)) {
-                $message = 'Case creation for order ' . $incrementId . ' with payment ' . $paymentMethod . ' is restricted';
+            if ($this->configHelper->isPaymentRestricted($paymentMethod)) {
+                $message = 'Case creation for order ' . $incrementId .
+                    ' with payment ' . $paymentMethod . ' is restricted';
                 $this->logger->debug($message, ['entity' => $order]);
                 return;
             }
@@ -196,6 +203,7 @@ class Purchase implements ObserverInterface
                 $case->setData('magento_status', Casedata::NEW);
                 $case->setData('order_increment', $order->getIncrementId());
                 $case->setData('order_id', $order->getId());
+                $case->setData('policy_name', Casedata::POST_AUTH);
 
                 if (is_object($this->storeManager)) {
                     $isAdmin = ('adminhtml' === $this->appState->getAreaCode());
@@ -266,6 +274,7 @@ class Purchase implements ObserverInterface
             $order->setData('origin_store_code', $case->getData('origin_store_code'));
 
             $orderData = $this->purchaseHelper->processOrderData($order);
+            $checkoutToken = $orderData['purchase']['checkoutToken'];
             $caseResponse = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
 
             // Initial hold order
@@ -275,6 +284,7 @@ class Purchase implements ObserverInterface
                 $case->setCode($caseResponse->getCaseId());
                 $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
                 $case->setUpdated();
+                $case->setCheckoutToken($checkoutToken);
             }
 
             $this->casedataResourceModel->save($case);
@@ -302,38 +312,6 @@ class Purchase implements ObserverInterface
         $asyncPaymentMethods = array_map('trim', $asyncPaymentMethods);
 
         return $asyncPaymentMethods;
-    }
-
-    /**
-     * Get restricted payment methods from store configs
-     *
-     * @return array|mixed
-     */
-    public function getRestrictedPaymentMethodsConfig()
-    {
-        $restrictedPaymentMethods = $this->configHelper->getConfigData('signifyd/general/restrict_payment_methods');
-        $restrictedPaymentMethods = explode(',', $restrictedPaymentMethods);
-        $restrictedPaymentMethods = array_map('trim', $restrictedPaymentMethods);
-
-        return $restrictedPaymentMethods;
-    }
-
-    /**
-     * Check if there is any restrictions by payment method or state
-     *
-     * @param $method
-     * @param null $state
-     * @return bool
-     */
-    public function isPaymentRestricted($paymentMethodCode)
-    {
-        $restrictedPaymentMethods = $this->getRestrictedPaymentMethodsConfig();
-
-        if (in_array($paymentMethodCode, $restrictedPaymentMethods)) {
-            return true;
-        }
-
-        return false;
     }
 
     /**

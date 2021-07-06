@@ -217,4 +217,46 @@ class ConfigHelper
     {
         return (bool) $this->scopeConfigInterface->getValue('signifyd/general/score_only');
     }
+
+    public function getDecisionRequest()
+    {
+        return $this->scopeConfigInterface->getValue('signifyd/general/decision_request');
+    }
+
+    public function getGuaranteesReviewedAction()
+    {
+        return $this->scopeConfigInterface->getValue('signifyd/advanced/guarantees_reviewed_action');
+    }
+
+    /**
+     * Get restricted payment methods from store configs
+     *
+     * @return array|mixed
+     */
+    public function getRestrictedPaymentMethodsConfig()
+    {
+        $restrictedPaymentMethods = $this->getConfigData('signifyd/general/restrict_payment_methods');
+        $restrictedPaymentMethods = explode(',', $restrictedPaymentMethods);
+        $restrictedPaymentMethods = array_map('trim', $restrictedPaymentMethods);
+
+        return $restrictedPaymentMethods;
+    }
+
+    /**
+     * Check if there is any restrictions by payment method or state
+     *
+     * @param $method
+     * @param null $state
+     * @return bool
+     */
+    public function isPaymentRestricted($paymentMethodCode)
+    {
+        $restrictedPaymentMethods = $this->getRestrictedPaymentMethodsConfig();
+
+        if (in_array($paymentMethodCode, $restrictedPaymentMethods)) {
+            return true;
+        }
+
+        return false;
+    }
 }

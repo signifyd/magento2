@@ -51,9 +51,9 @@ class OrderHelper
             $completeCase = true;
         }
 
-        if (in_array($order->getState(), $notHoldableStates)) {
+        if ($order->getActionFlag(Order::ACTION_FLAG_HOLD) === false) {
             $reason = "order is on {$order->getState()} state";
-        } elseif ($order->getActionFlag(Order::ACTION_FLAG_HOLD) === false) {
+        } elseif (in_array($order->getState(), $notHoldableStates)) {
             $reason = "order action flag is set to do not hold";
         } else {
             $reason = "unknown reason";

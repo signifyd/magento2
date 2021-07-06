@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
+    <group id="hint" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+        <label><![CDATA[
+                    <svg width="130px" height="32px" version="1.1" id="signifyd-logo" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 625.1 150.4" xml:space="preserve"><style>.brandmark{fill:#00A3E0}.wordmark{fill:#003057}</style><path class="wordmark" d="M196.7 97.5l16.5-9.5c3 6.9 8.1 11.6 17.5 11.6 9.1 0 11.3-3.6 11.3-6.8 0-5.1-4.8-7.2-17.3-10.6-12.4-3.5-24.6-9.4-24.6-25.4 0-16.1 13.6-25.4 28-25.4 13.7 0 24.5 6.6 30.5 18.9l-16.1 9.4c-2.9-6-6.8-9.7-14.4-9.7-6 0-8.9 3-8.9 6.3 0 3.8 2 6.4 15 10.4 12.6 3.8 26.8 8.2 26.8 25.9 0 16.1-12.9 25.7-31 25.7-17.4-.2-28.6-8.5-33.3-20.8zM265.3 42c0-5.8 4.9-10.7 10.7-10.7 5.8 0 10.7 4.9 10.7 10.7s-4.9 10.7-10.7 10.7c-5.8 0-10.7-4.8-10.7-10.7zM267.1 58H285v59.7h-17.9zM355.2 58v56.7c0 20-15.6 28.5-31.5 28.5-12.4 0-22.8-4.7-28.3-14.4l15.3-8.8c2.3 4.2 5.7 7.5 13.6 7.5 8.4 0 13.5-4.3 13.5-12.8v-5.5c-3.9 4.9-9.7 7.8-17.4 7.8-16.9 0-29.4-13.8-29.4-30.3s12.4-30.3 29.4-30.3c7.8 0 13.5 2.9 17.4 7.8V58h17.4zm-17.4 28.6c0-8.2-6-13.8-14.4-13.8-8.5 0-14.4 5.6-14.4 13.8 0 8.2 6 13.8 14.4 13.8 8.4.1 14.4-5.5 14.4-13.8zM421.8 81v36.6h-17.9v-34c0-7.4-4.7-10.9-10.4-10.9-6.6 0-11.1 3.8-11.1 12.3v32.6h-17.9V58h17.9v5.6c3.2-4.4 9.2-7.3 17.1-7.3 12 0 22.3 8.6 22.3 24.7zM429.3 42c0-5.8 4.9-10.7 10.7-10.7 5.8 0 10.7 4.9 10.7 10.7s-4.9 10.7-10.7 10.7c-5.8 0-10.7-4.8-10.7-10.7zm1.8 16H449v59.7h-17.9V58zM482.2 58h11.6v17.2h-11.6v42.5h-17.9V75.2h-8V58h8c0-16.7 9.2-26.7 29-25.5v17.2c-6.7-.7-11.1 1.4-11.1 8.3zM561.8 58l-20.4 57.9c-6.7 19-17.3 26.5-34 25.7v-16.7c8.4 0 12.3-2.6 14.9-9.9l-23.7-57h19.7l13.2 36.5L542.7 58h19.1zM624.6 34.1v83.5h-17.9V112c-3.9 4.5-9.8 7.3-17.8 7.3-15.6 0-28.5-13.7-28.5-31.5s12.9-31.5 28.5-31.5c8 0 13.8 2.7 17.8 7.3V34.1h17.9zm-17.9 53.7c0-8.9-6-14.6-14.2-14.6s-14.2 5.6-14.2 14.6 6 14.6 14.2 14.6c8.3 0 14.2-5.6 14.2-14.6z"></path><path class="brandmark" d="M170.9 73.4l-41-70.9c-.1-.1-.2-.2-.2-.4l-.1-.1c0-.1-.1-.1-.1-.1l-.1-.1-.1-.1c-.1 0-.1-.1-.2-.1s-.1-.1-.2-.1c-.5-.4-.7-.5-.9-.5-.2-.1-.4-.1-.7-.2h-.2H86 45c-1.3 0-2.4.7-3.1 1.8L1 73.4v.1s0 .1-.1.1v.1s0 .1-.1.1V76.3s0 .1.1.1c0 0 0 .1.1.1 0 0 0 .1.1.1l20.1 35.2c0 .1.1.2.1.3L42 147.5c.6 1.1 1.8 1.8 3.1 1.8h81.8c1.3 0 2.4-.7 3.1-1.8v-.1l20.5-35.4 20.4-35c.6-1.1.6-2.5 0-3.6zm-66.6 33.7H71.6L88 78.7h32.7l-16.4 28.4zM49.1 75.2l16.4-28.3 16.4 28.3-16.4 28.3-16.4-28.3zM88 71.6L71.6 43.3h32.8l16.4 28.3H88zm16.4-35.4H71.6L88 7.9h32.8l-16.4 28.3zM47 7.9h32.7l-17.3 30-.1.1-19.4 33.6H10.2L47 7.9zm-4.1 70.9l16.4 28.3H26.4L10.2 78.8h32.7zm4.1 63.7l-16.5-28.3h73.8l16.4 28.3H47zm79.8-3.5l-16.4-28.3 16.4-28.3 16.4 28.3-16.4 28.3zm20.5-35.5l-36.8-63.8 16.3-28.3 36.8 63.8-16.3 28.3z"></path></svg>
+                    <p>
+                        <a></a>For setup instructions view our <a href="https://www.signifyd.com/resources/manual/magento2-v3-configure/" target="_blank" >user guide</a>. If you have questions or need assistance, please <a href="https://community.signifyd.com/support/s/contactsupport" target="_blank">contact support</a>.
+                    </p>
+                    <style>
+                        #row_signifyd_hint_test {
+                            display: none;
+                        }
+                        #signifyd_hint {
+                            display: none!important;
+                        }
+                    </style>
+                ]]></label>
+        <!-- Dont remove dummy field, it is necessary to show this group -->
+        <field id="dummy" translate="label comment" type="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+        </field>
+    </group>
+</include>

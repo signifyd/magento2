@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
+    <section id="fraud_protection">
+        <group id="signifyd">
+            <group id="config">
+                <field id="active">
+                    <backend_model>Signifyd\Connect\Model\System\Config\Backend\Enabled</backend_model>
+                </field>
+            </group>
+        </group>
+    </section>
+</include>

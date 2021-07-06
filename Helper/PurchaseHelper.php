@@ -396,19 +396,17 @@ class PurchaseHelper
     public function getDecisionRequest()
     {
         $decisionRequest = [];
-        $decisionRequest['paymentFraud'] = 'GUARANTEE';
-        return $decisionRequest;
-    }
 
-    /**
-     * getCheckoutToken method should be extended/intercepted by plugin to add value to it.
-     * A unique id for a particular checkout.
-     *
-     * @return null
-     */
-    public function getCheckoutToken()
-    {
-        return null;
+        if ($this->configHelper->isScoreOnly()) {
+            $decisionRequest['paymentFraud'] = 'SCORE';
+        } else {
+            $configDecision = $this->configHelper->getDecisionRequest();
+            $allowedDecisions = ['GUARANTEE', 'SCORE', 'DECISION'];
+            $decisionRequest['paymentFraud'] = in_array($configDecision, $allowedDecisions) ?
+                $configDecision : 'GUARANTEE';
+        }
+
+        return $decisionRequest;
     }
 
     /**
@@ -709,7 +707,6 @@ class PurchaseHelper
         $purchase['totalPrice'] = $order->getGrandTotal();
         $purchase['currency'] = $order->getOrderCurrencyCode();
         $purchase['orderId'] = $order->getIncrementId();
-        $purchase['checkoutToken'] = $this->getCheckoutToken();
         $purchase['receivedBy'] = $this->getReceivedBy();
         $purchase['createdAt'] = date('c', strtotime($order->getCreatedAt()));
         $purchase['browserIpAddress'] = $this->getIPAddress($order);
@@ -889,7 +886,7 @@ class PurchaseHelper
         $lastTransaction['amount'] = $order->getGrandTotal();
         $lastTransaction['gateway'] = $order->getPayment()->getMethod();
         $lastTransaction['createdAt'] = date('c', strtotime($transactionFromOrder->getData('created_at')));
-        $lastTransaction['paymentMethod'] = $this->makePaymentMethod($order);
+        $lastTransaction['paymentMethod'] = $this->makePaymentMethod($order->getPayment()->getMethod());
         $lastTransaction['type'] = $transactionType;
         $lastTransaction['gatewayStatusCode'] = 'SUCCESS';
         $lastTransaction['gatewayStatusMessage'] = $this->getGatewayStatusMessage();
@@ -907,9 +904,8 @@ class PurchaseHelper
         return $transactions;
     }
 
-    public function makePaymentMethod(Order $order)
+    public function makePaymentMethod($paymentMethod)
     {
-        $paymentMethod = $order->getPayment()->getMethod();
         $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/payment_methods_config');
         $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
 
@@ -1006,10 +1002,11 @@ class PurchaseHelper
         $case['customerSubmitForGuaranteeIndicator'] = $this->getCustomerSubmitForGuaranteeIndicator();
         $case['customerOrderRecommendation'] = $this->getCustomerOrderRecommendation();
         $case['deviceFingerprints'] = $this->getDeviceFingerprints();
-        $case['policy'] = $this->makePolicy($order->getStoreId());
+        $case['policy'] = $this->makePolicy(ScopeInterface::SCOPE_STORES, $order->getStoreId());
         $case['decisionRequest'] = $this->getDecisionRequest();
         $case['sellers'] = $this->getSellers();
         $case['tags'] = $this->getTags();
+        $case['purchase']['checkoutToken'] = sha1($this->jsonSerializer->serialize($case));
 
         /**
          * This registry entry it's used to collect data from some payment methods like Payflow Link
@@ -1110,10 +1107,19 @@ class PurchaseHelper
                 $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: guarantee canceled");
                 $order->setSignifydGuarantee($disposition);
                 $this->orderResourceModel->save($case->getOrder());
+                $isCaseLocked = $this->casedataResourceModel->isCaseLocked($case);
 
-                $this->casedataResourceModel->loadForUpdate($case, $case->getId(), null, 2);
+                // Some other process already locked the case, will not load or save
+                if ($isCaseLocked === false) {
+                    $this->casedataResourceModel->loadForUpdate($case, $case->getId(), null, 2);
+                }
+
                 $case->setData('guarantee', $disposition);
-                $this->casedataResourceModel->save($case);
+
+                // Some other process already locked the case, will not load or save
+                if ($isCaseLocked === false) {
+                    $this->casedataResourceModel->save($case);
+                }
             } catch (\Exception $e) {
                 // Triggering case save to unlock case
                 if ($case instanceof \Signifyd\Connect\Model\ResourceModel\Casedata) {
@@ -1372,7 +1378,7 @@ class PurchaseHelper
      * @param $quote Order
      * @return array
      */
-    public function processQuoteData(Quote $quote)
+    public function processQuoteData(Quote $quote, $checkoutPaymentDetails = null, $paymentMethod = null)
     {
         $case = [];
 
@@ -1383,8 +1389,40 @@ class PurchaseHelper
         $case['customerSubmitForGuaranteeIndicator'] = $this->getCustomerSubmitForGuaranteeIndicator();
         $case['customerOrderRecommendation'] = $this->getCustomerOrderRecommendation();
         $case['deviceFingerprints'] = $this->getDeviceFingerprints();
-        $case['policy'] = $this->makePolicy($quote->getStoreId());
+        $case['policy'] = $this->makePolicy(ScopeInterface::SCOPE_STORES, $quote->getStoreId());
         $case['decisionRequest'] = $this->getDecisionRequest();
+        $case['purchase']['checkoutToken'] = sha1($this->jsonSerializer->serialize($case));
+
+        $positiveAction = $this->configHelper->getConfigData('signifyd/advanced/guarantee_positive_action');
+        $transactionType = $positiveAction == 'capture' ? 'SALE' : 'AUTHORIZATION';
+        $billingAddres = $quote->getBillingAddress();
+        $transactionCheckoutPaymentDetails = [];
+        $transaction = [];
+        $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['billingAddress'] =
+            $this->formatSignifydAddress($billingAddres);
+        $transactionCheckoutPaymentDetails['currency'] = $quote->getBaseCurrencyCode();
+        $transactionCheckoutPaymentDetails['amount'] = $quote->getGrandTotal();
+        $transactionCheckoutPaymentDetails['type'] = $transactionType;
+        $transactionCheckoutPaymentDetails['gatewayStatusCode'] = 'PENDING';
+
+        if (isset($paymentMethod)) {
+            $transactionCheckoutPaymentDetails['paymentMethod'] = $this->makePaymentMethod($paymentMethod);
+            $transactionCheckoutPaymentDetails['gateway'] = $paymentMethod;
+        }
+
+        if (
+            is_array($checkoutPaymentDetails) &&
+            isset($checkoutPaymentDetails['cardBin']) &&
+            isset($checkoutPaymentDetails['cardLast4'])
+        ) {
+            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardBin'] =
+                $checkoutPaymentDetails['cardBin'];
+            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardLast4'] =
+                $checkoutPaymentDetails['cardLast4'];
+        }
+
+        $transaction[] = $transactionCheckoutPaymentDetails;
+        $case['transactions'] = $transaction;
 
         /**
          * This registry entry it's used to collect data from some payment methods like Payflow Link
@@ -1396,22 +1434,22 @@ class PurchaseHelper
         return $case;
     }
 
-    public function makePolicy($storeId)
+    public function makePolicy($scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
     {
         $policy = [];
-        $policyName = $this->getPolicyName($storeId);
+        $policyName = $this->getPolicyName($scopeType, $scopeCode);
 
         $policy['name'] = $policyName;
 
         return $policy;
     }
 
-    public function getPolicyName($storeId)
+    public function getPolicyName($scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
     {
         return $this->scopeConfigInterface->getValue(
             'signifyd/advanced/policy_name',
-            ScopeInterface::SCOPE_STORES,
-            $storeId
+            $scopeType,
+            $scopeCode
         );
     }
 
@@ -1448,7 +1486,6 @@ class PurchaseHelper
         $purchase['totalPrice'] = $quote->getGrandTotal();
         $purchase['currency'] = $quote->getQuoteCurrencyCode();
         $purchase['orderId'] = $reservedOrderId;
-        $purchase['checkoutToken'] = $this->getCheckoutToken();
         $purchase['receivedBy'] = $this->getReceivedBy();
         $purchase['createdAt'] = date('c', strtotime($quote->getCreatedAt()));
         $purchase['browserIpAddress'] = $this->filterIp($this->remoteAddress->getRemoteAddress());
@@ -1553,7 +1590,8 @@ class PurchaseHelper
     {
         $recipients = [];
         $recipient = [];
-        $address = $quote->getShippingAddress();
+        $address = $quote->getShippingAddress()->getCity() !== null ?
+            $quote->getShippingAddress() : $quote->getBillingAddress();
 
         if ($address !== null) {
             $recipient['fullName'] = $address->getName();
@@ -1634,6 +1672,24 @@ class PurchaseHelper
             $this->logger->error("Case failed to send.", ['entity' => $quote]);
             $this->orderHelper->addCommentToStatusHistory($quote, "Signifyd: failed to create case");
 
+            return false;
+        }
+    }
+
+    public function postTransactionToSignifyd($transactionData, $order)
+    {
+        $caseResponse = $this->configHelper->getSignifydCaseApi($order)->createTransaction($transactionData);
+        $tokenSent = $transactionData['checkoutToken'];
+        $tokenReceived = $caseResponse->getCheckoutToken();
+
+        if ($tokenSent === $tokenReceived) {
+            $this->logger->debug("Transaction sent to order {$order->getIncrementId()}. Token is {$caseResponse->getCheckoutToken()}");
+            return $caseResponse;
+        } else {
+            $this->logger->error($this->jsonSerializer->serialize($caseResponse));
+            $this->logger->error(
+                "Transaction failed to send. Sent token ({$tokenSent}) is different from received ({$tokenReceived})"
+            );
             return false;
         }
     }
