@@ -259,8 +259,11 @@ class Casedata extends AbstractModel
 
         // When Async e-mail sending it is enabled, do not process the order until the e-mail is sent
         $isAsyncEmailEnabled = $this->configHelper->getConfigData('sales_email/general/async_sending', $order, true);
+        $sendEmail = $order->getData('send_email');
+        $emailSent = $order->getData('email_sent');
+        $this->logger->debug("Async e-mail: {$isAsyncEmailEnabled}, send: {$sendEmail}, sent: {$emailSent}");
 
-        if ($isAsyncEmailEnabled && $order->getData('send_email') == 1 && empty($order->getEmailSent())) {
+        if ($isAsyncEmailEnabled && $sendEmail && empty($emailSent)) {
             $this->setEntries('fail', 1);
             $orderAction['action'] = false;
 
