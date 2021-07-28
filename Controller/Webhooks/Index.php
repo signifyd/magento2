@@ -182,7 +182,13 @@ class Index extends Action
 
         /** @var $case \Signifyd\Connect\Model\Casedata */
         $case = $this->casedataFactory->create();
-        $this->casedataResourceModel->loadForUpdate($case, $requestJson->caseId, 'code');
+
+        try {
+            $this->casedataResourceModel->loadForUpdate($case, $requestJson->caseId, 'code');
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
+            return;
+        }
 
         switch ($topic) {
             case 'cases/test':

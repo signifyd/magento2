@@ -1122,7 +1122,7 @@ class PurchaseHelper
                 }
             } catch (\Exception $e) {
                 // Triggering case save to unlock case
-                if ($case instanceof \Signifyd\Connect\Model\ResourceModel\Casedata) {
+                if ($case instanceof \Signifyd\Connect\Model\Casedata) {
                     $this->casedataResourceModel->save($case);
                 }
 
