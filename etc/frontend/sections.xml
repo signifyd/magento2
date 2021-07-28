@@ -17,11 +17,11 @@
         <section name="signifyd-fingerprint"/>
     </action>
 
-    <action name="customer/account/loginPost">
+    <action name="customer/account/login-post">
         <section name="signifyd-fingerprint"/>
     </action>
 
-    <action name="customer/account/createPost">
+    <action name="customer/account/create-post">
         <section name="signifyd-fingerprint"/>
     </action>
 
@@ -33,7 +33,7 @@
         <section name="signifyd-fingerprint"/>
     </action>
 
-    <action name="checkout/onepage/saveOrder">
+    <action name="checkout/onepage/save-order">
         <section name="signifyd-fingerprint"/>
     </action>
 
