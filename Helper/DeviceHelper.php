@@ -47,9 +47,9 @@ class DeviceHelper
      * @param $quoteId
      * @return string
      */
-    public function generateFingerprint($quoteId)
+    public function generateFingerprint($quoteId, $storeId = null)
     {
-        $baseUrl = $this->storeManager->getStore()->getBaseUrl();
+        $baseUrl = $this->storeManager->getStore($storeId)->getBaseUrl();
         return 'M2' . base64_encode($baseUrl) . $quoteId;
     }
 }

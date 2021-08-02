@@ -1,9 +1,0 @@
-<?php /** @var \Signifyd\Connect\Block\Device $block */ ?>
-<?php if ($block->isEnabled()): ?>
-    <script
-        async
-        type="text/javascript"
-        id="sig-api"
-        data-order-session-id="<?= $block->escapeHtmlAttr($block->getDeviceFingerprint()); ?>"
-        src="https://cdn-scripts.signifyd.com/api/script-tag.js"></script>
-<?php endif; ?>

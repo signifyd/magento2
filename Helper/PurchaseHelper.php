@@ -726,7 +726,8 @@ class PurchaseHelper
             $originStoreCode != 'admin' &&
             $this->deviceHelper->isDeviceFingerprintEnabled()
         ) {
-            $purchase['orderSessionId'] = $this->deviceHelper->generateFingerprint($order->getQuoteId());
+            $purchase['orderSessionId'] =
+                $this->deviceHelper->generateFingerprint($order->getQuoteId(), $order->getStoreId());
         }
 
         return $purchase;
@@ -1491,7 +1492,8 @@ class PurchaseHelper
         $purchase['browserIpAddress'] = $this->filterIp($this->remoteAddress->getRemoteAddress());
 
         if ($this->deviceHelper->isDeviceFingerprintEnabled()) {
-            $purchase['orderSessionId'] = $this->deviceHelper->generateFingerprint($quote->getId());
+            $purchase['orderSessionId'] =
+                $this->deviceHelper->generateFingerprint($quote->getId(), $quote->getStoreId());
         }
 
         return $purchase;
