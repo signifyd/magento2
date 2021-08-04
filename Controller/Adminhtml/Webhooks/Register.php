@@ -112,7 +112,9 @@ class Register extends Action
             }
         } catch (\Exception $e) {
             $this->messageManager->addErrorMessage(
-                __('There was a problem registering the webooks: ' . $e->getMessege())
+                $exceptionMessage = method_exists($e, 'getMessege') ? $e->getMessege() : '';
+                
+                __('There was a problem registering the webooks: ' . $exceptionMessage)
             );
         }
 
