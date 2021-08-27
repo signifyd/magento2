@@ -310,14 +310,7 @@ class PurchaseHelper
     public function makeProduct(Item $item)
     {
         $product = $item->getProduct();
-        $productImage = $product->getImage();
-
-        if (isset($productImage)) {
-            $productImageUrl = $this->storeManagerInterface->getStore()
-                    ->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) . 'catalog/product' . $productImage;
-        } else {
-            $productImageUrl = null;
-        }
+        $productImageUrl = $this->getProductImage($product);
 
         $productCategorysId = $product->getCategoryIds();
         $categoryCollection = $this->categoryCollectionFactory->create()
@@ -386,6 +379,20 @@ class PurchaseHelper
         $product['sellerAccountNumber'] = $this->getSellerAccountNumber();
 
         return $product;
+    }
+
+    public function getProductImage($product)
+    {
+        $productImage = $product->getImage();
+
+        if (isset($productImage)) {
+            $productImageUrl = $this->storeManagerInterface->getStore()
+                    ->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) . 'catalog/product' . $productImage;
+        } else {
+            $productImageUrl = null;
+        }
+
+        return $productImageUrl;
     }
 
     /**
@@ -1504,14 +1511,7 @@ class PurchaseHelper
     public function makeProductFromQuote(\Magento\Quote\Model\Quote\Item $item)
     {
         $product = $item->getProduct();
-        $productImage = $product->getImage();
-
-        if (isset($productImage)) {
-            $productImageUrl = $this->storeManagerInterface->getStore()
-                    ->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) . 'catalog/product' . $productImage;
-        } else {
-            $productImageUrl = null;
-        }
+        $productImageUrl = $this->getProductImage($product);
 
         $productCategorysId = $product->getCategoryIds();
         $categoryCollection = $this->categoryCollectionFactory->create()

@@ -116,23 +116,46 @@ class ConfigHelper
             $orderId = $entity->getOrderId();
         } elseif ($entity instanceof \Magento\Sales\Model\Order && $entity->isEmpty() == false) {
             $orderId = $entity->getId();
+        } elseif ($entity instanceof \Magento\Quote\Model\Quote && $entity->isEmpty() == false) {
+            return $this->getStoreIdFromQuote($entity);
         }
 
         if (isset($orderId)) {
-            if (isset($this->storeCodes[$orderId])) {
-                return $this->storeCodes[$orderId];
+            if (isset($this->storeCodes['order_' . $orderId])) {
+                return $this->storeCodes['order_' . $orderId];
             } else {
                 $order = $entity instanceof \Signifyd\Connect\Model\Casedata ? $entity->getOrder() : $entity;
 
                 if ($order instanceof \Magento\Sales\Model\Order && $order->isEmpty() == false) {
                     $store = $this->storeManager->getStore($order->getStoreId());
-                    $this->storeCodes[$orderId] = $store->getCode();
-                    return $this->storeCodes[$orderId];
+                    $this->storeCodes['order_' . $orderId] = $store->getCode();
+                    return $this->storeCodes['order_' . $orderId];
                 }
             }
         }
 
         return $returnNullString ? '__null_signifyd_store__' : null;
+    }
+
+    public function getStoreIdFromQuote(\Magento\Quote\Model\Quote $entity)
+    {
+        $quoteId = $entity->getId();
+
+        if (isset($quoteId)) {
+            if (isset($this->storeCodes['quote_' . $quoteId])) {
+                return $this->storeCodes['quote_' . $quoteId];
+            } else {
+                $order = $entity instanceof \Signifyd\Connect\Model\Casedata ? $entity->getOrder() : $entity;
+
+                if ($order instanceof \Magento\Sales\Model\Order && $order->isEmpty() == false) {
+                    $store = $this->storeManager->getStore($order->getStoreId());
+                    $this->storeCodes['quote_' . $quoteId] = $store->getCode();
+                    return $this->storeCodes['quote_' . $quoteId];
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

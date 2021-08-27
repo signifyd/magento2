@@ -6,6 +6,9 @@ var config = {
             },
             'PayPal_Braintree/js/view/payment/method-renderer/cc-form': {
                 'Signifyd_Connect/js/model/paypal-braintree-cc-mixin': true
+            },
+            'Adyen_Payment/js/view/payment/method-renderer/adyen-cc-method': {
+                'Signifyd_Connect/js/model/adyen-cc-method-mixin': true
             }
         }
     }
