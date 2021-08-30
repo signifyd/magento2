@@ -8,6 +8,7 @@ namespace Signifyd\Connect\Observer\Debug;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Registry;
 use Magento\Framework\UrlInterface;
 use Signifyd\Connect\Logger\Debugger;
 use Signifyd\Connect\Helper\ConfigHelper;
@@ -33,19 +34,27 @@ class Order implements ObserverInterface
     protected $url;
 
     /**
+     * @var Registry
+     */
+    protected $registry;
+
+    /**
      * Order constructor.
      * @param Debugger $logger
      * @param ConfigHelper $configHelper
      * @param UrlInterface $url
+     * @param Registry $registry
      */
     public function __construct(
         Debugger $logger,
         ConfigHelper $configHelper,
-        UrlInterface $url
+        UrlInterface $url,
+        Registry $registry
     ) {
         $this->logger = $logger;
         $this->configHelper = $configHelper;
         $this->url = $url;
+        $this->registry = $registry;
     }
 
     public function execute(Observer $observer)
@@ -60,8 +69,14 @@ class Order implements ObserverInterface
             if ($log == 2) {
                 $state = $order->getState();
                 $currentState = $order->getOrigData('state');
-
                 $incrementId = $order->getIncrementId();
+
+                $cronJob = $this->registry->registry('signifyd_cron_job_run');
+
+                if (isset($cronJob)) {
+                    $this->logger->debug("cron job current process: {$cronJob}");
+                    $this->registry->unregister('signifyd_cron_job_run');
+                }
 
                 $this->logger->debug("Order {$incrementId} state change from {$currentState} to {$state}");
                 $this->logger->debug("Request URL: {$this->url->getCurrentUrl()}");

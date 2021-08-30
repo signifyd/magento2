@@ -22,7 +22,7 @@ class Casedata extends AbstractDb
     protected $loadForUpdate = false;
 
     /**
-     * @var ScopeConfigInterface $scopeConfigInterface
+     * @var ScopeConfigInterface
      */
     protected $scopeConfigInterface;
 
