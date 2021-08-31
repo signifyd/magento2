@@ -6,6 +6,7 @@
 
 namespace Signifyd\Connect\Model;
 
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\Order\CreditmemoFactory;
 use Magento\Sales\Model\Service\CreditmemoService;
 use Signifyd\Connect\Helper\ConfigHelper;
@@ -327,6 +328,7 @@ class Casedata extends AbstractModel
 
                             $message = "Signifyd: order cannot be updated to on hold, {$e->getMessage()}";
                             $this->orderHelper->addCommentToStatusHistory($order, $message);
+                            throw new LocalizedException(__($e->getMessage()));
                         }
                     } else {
                         $reason = $this->orderHelper->getCannotHoldReason($order);
@@ -368,6 +370,7 @@ class Casedata extends AbstractModel
                                 $order,
                                 "Signifyd: order status cannot be updated, {$e->getMessage()}"
                             );
+                            throw new LocalizedException(__($e->getMessage()));
                         }
                     } else {
                         $reason = $this->orderHelper->getCannotUnholdReason($order);
@@ -416,6 +419,7 @@ class Casedata extends AbstractModel
                                 $order,
                                 "Signifyd: order cannot be canceled, {$e->getMessage()}"
                             );
+                            throw new LocalizedException(__($e->getMessage()));
                         }
                     } else {
                         $reason = $this->orderHelper->getCannotCancelReason($order);
@@ -483,6 +487,7 @@ class Casedata extends AbstractModel
                             } catch (\Exception $e) {
                                 $message = 'Failed to send the invoice email: ' . $e->getMessage();
                                 $this->logger->debug($message, ['entity' => $order]);
+                                throw new LocalizedException(__($e->getMessage()));
                             }
 
                             $completeCase = true;

@@ -75,7 +75,6 @@ class Order implements ObserverInterface
 
                 if (isset($cronJob)) {
                     $this->logger->debug("cron job current process: {$cronJob}");
-                    $this->registry->unregister('signifyd_cron_job_run');
                 }
 
                 $this->logger->debug("Order {$incrementId} state change from {$currentState} to {$state}");
