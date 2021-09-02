@@ -111,9 +111,8 @@ class Register extends Action
                 $webhooksApiCreate->createWebhooks($webhooksToCreate);
             }
         } catch (\Exception $e) {
+            $exceptionMessage = method_exists($e, 'getMessege') ? $e->getMessege() : '';
             $this->messageManager->addErrorMessage(
-                $exceptionMessage = method_exists($e, 'getMessege') ? $e->getMessege() : '';
-                
                 __('There was a problem registering the webooks: ' . $exceptionMessage)
             );
         }

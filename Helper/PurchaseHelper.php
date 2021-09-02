@@ -1002,7 +1002,7 @@ class PurchaseHelper
         $case['customerSubmitForGuaranteeIndicator'] = $this->getCustomerSubmitForGuaranteeIndicator();
         $case['customerOrderRecommendation'] = $this->getCustomerOrderRecommendation();
         $case['deviceFingerprints'] = $this->getDeviceFingerprints();
-        $case['policy'] = $this->makePolicy(ScopeInterface::SCOPE_STORES, $order->getStoreId());
+        $case['policy'] = $this->makePolicy($order, ScopeInterface::SCOPE_STORES, $order->getStoreId());
         $case['decisionRequest'] = $this->getDecisionRequest();
         $case['sellers'] = $this->getSellers();
         $case['tags'] = $this->getTags();
@@ -1389,7 +1389,7 @@ class PurchaseHelper
         $case['customerSubmitForGuaranteeIndicator'] = $this->getCustomerSubmitForGuaranteeIndicator();
         $case['customerOrderRecommendation'] = $this->getCustomerOrderRecommendation();
         $case['deviceFingerprints'] = $this->getDeviceFingerprints();
-        $case['policy'] = $this->makePolicy(ScopeInterface::SCOPE_STORES, $quote->getStoreId());
+        $case['policy'] = $this->makePolicy($quote, ScopeInterface::SCOPE_STORES, $quote->getStoreId());
         $case['decisionRequest'] = $this->getDecisionRequest();
         $case['purchase']['checkoutToken'] = sha1($this->jsonSerializer->serialize($case));
 
@@ -1434,12 +1434,15 @@ class PurchaseHelper
         return $case;
     }
 
-    public function makePolicy($scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
+    public function makePolicy($entity, $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
     {
         $policy = [];
         $policyName = $this->getPolicyName($scopeType, $scopeCode);
+        $paymentMethod = $entity->getPayment()->getMethod();
+        $isPreAuth = $this->getIsPreAuth($policyName, $paymentMethod);
+        $policyLabel = $isPreAuth ? 'PRE_AUTH' : 'POST_AUTH';
 
-        $policy['name'] = $policyName;
+        $policy['name'] = $policyLabel;
 
         return $policy;
     }
@@ -1692,5 +1695,35 @@ class PurchaseHelper
             );
             return false;
         }
+    }
+
+    public function getIsPreAuth($policyName, $paymentMethod)
+    {
+        if (isset($paymentMethod) === false) {
+            return false;
+        }
+
+        if ($this->configHelper->isPaymentRestricted($paymentMethod)) {
+            return false;
+        }
+
+        $isJson = $this->isJson($policyName);
+
+        if ($isJson) {
+            $configPolicy = $this->jsonSerializer->unserialize($policyName);
+
+            if (isset($configPolicy['PRE_AUTH']) === false || is_array($configPolicy['PRE_AUTH']) === false) {
+               return false;
+            }
+
+            return in_array($paymentMethod, $configPolicy['PRE_AUTH']);
+        } else {
+            return ($policyName == 'PRE_AUTH');
+        }
+    }
+
+    function isJson($string) {
+        json_decode($string);
+        return json_last_error() === JSON_ERROR_NONE;
     }
 }
