@@ -360,7 +360,13 @@ class FulfillmentHelper
      */
     public function getItemUrl(\Magento\Sales\Model\Order\Shipment\Item $item)
     {
-        return $item->getOrderItem()->getProduct()->getUrlInStore();
+        $product = $item->getOrderItem()->getProduct();
+
+        if (isset($product)) {
+            return $product->getUrlInStore();
+        }
+
+        return null;
     }
 
     /**
@@ -371,6 +377,10 @@ class FulfillmentHelper
     {
         /** @var \Magento\Catalog\Model\Product $product */
         $product = $item->getOrderItem()->getProduct();
+
+        if (isset($product) === false) {
+            return null;
+        }
 
         try {
             $imageUrl = $product->getImage();
