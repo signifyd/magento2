@@ -94,3 +94,10 @@ The Signifyd extension will use external class to collect payment data (avsRespo
 The Signifyd extension will try to collect payment data (avsResponseCode, cvvResponseCode, cardBin, cardLast4, cardExpiryMonth and cardExpiryYear) from Magento when submitting an order for guarantee. If these fields are missing from submitted orders you can pass these fields by using the extension's mappers. 
 
 [Payment mappers](docs/PAYMENT-DETAILS.md)
+
+### Pass payment details - pre auth policy
+
+On the pre auth policy, Signifyd cases are created before the payment being submitted to the payment gateway. So, AVS code, CVV code and transaction ID are not available at all at this moment. But it is desirable to try to collect most of these information: bin, last4, expiry month and expiry year.
+In order to do that, it's needed to use some JavaScript code to collect most information as possible.
+
+[Pass payment details](docs/PASS-PAYMENT-PRE-AUTH.md)

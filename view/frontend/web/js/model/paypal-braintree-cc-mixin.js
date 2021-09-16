@@ -12,8 +12,8 @@ define(function () {
                 typeof data.details.bin !== 'undefined' &&
                 typeof data.details.lastFour !== 'undefined'
             ) {
-                this.additionalData['signifyd-bin'] = data.details.bin;
-                this.additionalData['signifyd-lastFour'] = data.details.lastFour;
+                this.additionalData['cardBin'] = data.details.bin;
+                this.additionalData['cardLast4'] = data.details.lastFour;
             }
 
             this._super();

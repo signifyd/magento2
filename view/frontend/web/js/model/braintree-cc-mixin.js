@@ -12,8 +12,8 @@ define(function () {
                 typeof this.paymentPayload.details.bin !== 'undefined' &&
                 typeof this.paymentPayload.details.lastFour !== 'undefined'
             ) {
-                this.additionalData['signifyd-bin'] = this.paymentPayload.details.bin;
-                this.additionalData['signifyd-lastFour'] = this.paymentPayload.details.lastFour;
+                this.additionalData['cardBin'] = this.paymentPayload.details.bin;
+                this.additionalData['cardLast4'] = this.paymentPayload.details.lastFour;
             }
 
             this._super();

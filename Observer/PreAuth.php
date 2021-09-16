@@ -159,13 +159,19 @@ class PreAuth implements ObserverInterface
             $dataArray = $this->jsonSerializer->unserialize($data);
 
             if (isset($dataArray['paymentMethod']) &&
-                isset($dataArray['paymentMethod']['additional_data']) &&
-                isset($dataArray['paymentMethod']['additional_data']['signifyd-bin']) &&
-                isset($dataArray['paymentMethod']['additional_data']['signifyd-lastFour'])
+                isset($dataArray['paymentMethod']['additional_data'])
             ) {
-                $checkoutPaymentDetails['cardBin'] = $dataArray['paymentMethod']['additional_data']['signifyd-bin'];
+                $checkoutPaymentDetails['cardBin'] =
+                    $dataArray['paymentMethod']['additional_data']['cardBin'] ?? null;
+
                 $checkoutPaymentDetails['cardLast4'] =
-                    $dataArray['paymentMethod']['additional_data']['signifyd-lastFour'];
+                    $dataArray['paymentMethod']['additional_data']['cardLast4'] ?? null;
+
+                $checkoutPaymentDetails['cardExpiryMonth'] =
+                    $dataArray['paymentMethod']['additional_data']['cardExpiryMonth'] ?? null;
+
+                $checkoutPaymentDetails['cardExpiryYear'] =
+                    $dataArray['paymentMethod']['additional_data']['cardExpiryYear'] ?? null;
             }
 
             if (isset($dataArray['paymentMethod']) &&

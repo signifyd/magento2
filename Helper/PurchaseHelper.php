@@ -1411,14 +1411,16 @@ class PurchaseHelper
         }
 
         if (
-            is_array($checkoutPaymentDetails) &&
-            isset($checkoutPaymentDetails['cardBin']) &&
-            isset($checkoutPaymentDetails['cardLast4'])
+            is_array($checkoutPaymentDetails)
         ) {
             $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardBin'] =
                 $checkoutPaymentDetails['cardBin'];
             $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardLast4'] =
                 $checkoutPaymentDetails['cardLast4'];
+            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardExpiryMonth'] =
+                $checkoutPaymentDetails['cardExpiryMonth'];
+            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardExpiryYear'] =
+                $checkoutPaymentDetails['cardExpiryYear'];
         }
 
         $transaction[] = $transactionCheckoutPaymentDetails;
