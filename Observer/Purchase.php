@@ -146,8 +146,18 @@ class Purchase implements ObserverInterface
         try {
             $this->logger->info('Processing Signifyd event ' . $observer->getEvent()->getName());
 
+
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();
+            $storeId = $order->getStoreId();
+
+            $enabledConfig = $this->scopeConfigInterface->getValue(
+                'signifyd/general/enabled',
+                \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+                $storeId
+            );
+
+            $isPassive = $enabledConfig == 'passive';
 
             /** @var \Signifyd\Connect\Model\ResourceModel\Casedata\Collection $casesFromQuotes */
             $casesFromQuotes = $this->casedataCollectionFactory->create();
@@ -216,6 +226,8 @@ class Purchase implements ObserverInterface
                 $this->casedataResourceModel->save($case);
             } elseif ($case->getData('magento_status') != Casedata::NEW) {
                 return;
+            } elseif ($case->isEmpty() === false && $isPassive) {
+                return;
             }
 
             // Check if a payment is available for this order yet
@@ -262,8 +274,7 @@ class Purchase implements ObserverInterface
                     );
 
                     // Initial hold order
-                    $this->holdOrder($order, $case);
-                    $this->orderResourceModel->save($order);
+                    $this->holdOrder($order, $case, $isPassive);
                 } catch (\Exception $ex) {
                     $this->logger->error($ex->__toString());
                 }
@@ -278,7 +289,7 @@ class Purchase implements ObserverInterface
             $caseResponse = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
 
             // Initial hold order
-            $this->holdOrder($order, $case);
+            $this->holdOrder($order, $case, $isPassive);
 
             if (is_object($caseResponse)) {
                 $case->setCode($caseResponse->getCaseId());
@@ -288,7 +299,10 @@ class Purchase implements ObserverInterface
             }
 
             $this->casedataResourceModel->save($case);
-            $this->orderResourceModel->save($order);
+
+            if ($isPassive === false) {
+                $this->orderResourceModel->save($order);
+            }
         } catch (\Exception $ex) {
             $context = [];
 
@@ -376,7 +390,7 @@ class Purchase implements ObserverInterface
      * @param $order
      * @return bool
      */
-    public function holdOrder(\Magento\Sales\Model\Order $order, \Signifyd\Connect\Model\Casedata $case)
+    public function holdOrder(\Magento\Sales\Model\Order $order, \Signifyd\Connect\Model\Casedata $case, $isPassive = false)
     {
         $positiveAction = $case->getPositiveAction();
         $negativeAction = $case->getNegativeAction();
@@ -416,8 +430,12 @@ class Purchase implements ObserverInterface
                 ['entity' => $order]
             );
 
-            $order->hold();
+            if ($isPassive === false) {
+                $order->hold();
+            }
+
             $order->addCommentToStatusHistory("Signifyd: after order place");
+            $this->orderResourceModel->save($order);
         }
 
         return true;
