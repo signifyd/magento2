@@ -156,17 +156,21 @@ class Purchase implements ObserverInterface
             if ($casesFromQuotes->count() > 0 &&
                 $casesFromQuotes->getFirstItem()->getMagentoStatus() != 'completed'
             ) {
-                $this->logger->info(
-                    "Completing case for order {$order->getIncrementId()} ({$order->getId()}) " .
-                    "because it is a pre auth case"
-                );
                 $casesFromQuote = $casesFromQuotes->getFirstItem();
                 /** @var $case \Signifyd\Connect\Model\Casedata */
                 $casesFromQuoteLoaded = $this->casedataFactory->create();
                 $this->casedataResourceModel->load($casesFromQuoteLoaded, $casesFromQuote->getCode(), 'code');
-                $casesFromQuoteLoaded->setData('magento_status', Casedata::COMPLETED_STATUS);
                 $casesFromQuoteLoaded->setData('order_increment', $order->getIncrementId());
                 $casesFromQuoteLoaded->setData('order_id', $order->getId());
+
+                if ($casesFromQuoteLoaded->getData('magento_status') == Casedata::PRE_AUTH) {
+                    $this->logger->info(
+                        "Completing case for order {$order->getIncrementId()} ({$order->getId()}) " .
+                        "because it is a pre auth case"
+                    );
+                    $casesFromQuoteLoaded->setData('magento_status', Casedata::COMPLETED_STATUS);
+                }
+
                 $this->casedataResourceModel->save($casesFromQuoteLoaded);
                 return;
             }

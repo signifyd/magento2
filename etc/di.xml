@@ -96,11 +96,22 @@
         <plugin name="Signifyd_Connect_Plugin_Magento_Sales_Model_ResourceModel_Order_Grid" type="\Signifyd\Connect\Plugin\Magento\Sales\Model\ResourceModel\Order\Grid\Collection" />
     </type>
 
-    <preference for="Magento\Sales\Model\ResourceModel\Order\Grid\Collection" type="Signifyd\Connect\Model\ResourceModel\Order\Grid\Collection" />
-
     <type name="Magento\Reports\Model\ResourceModel\Quote\Collection">
         <plugin name="Signifyd_Connect_Plugin_Magento_Reports_Model_ResourceModel_Quote_Collection" type="\Signifyd\Connect\Plugin\Magento\Reports\Model\ResourceModel\Quote\Collection" />
     </type>
+
+    <type name="Adyen\Payment\Helper\Data">
+        <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Helper_Data" type="\Signifyd\Connect\Plugin\Adyen\Payment\Helper\Data" />
+    </type>
+    <type name="Adyen\Payment\Gateway\Request\CheckoutDataBuilder">
+        <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Gateway_Request_CheckoutDataBuilder" type="\Signifyd\Connect\Plugin\Adyen\Payment\Gateway\Request\CheckoutDataBuilder" />
+    </type>
+    <type name="Adyen\Payment\Gateway\Response\CheckoutPaymentsDetailsHandler">
+        <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Gateway_Response_CheckoutPaymentsDetailsHandler" type="\Signifyd\Connect\Plugin\Adyen\Payment\Gateway\Response\CheckoutPaymentsDetailsHandler" />
+    </type>
+
+    <!-- Preferences -->
+    <preference for="Magento\Sales\Model\ResourceModel\Order\Grid\Collection" type="Signifyd\Connect\Model\ResourceModel\Order\Grid\Collection" />
 
     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
 </config>
