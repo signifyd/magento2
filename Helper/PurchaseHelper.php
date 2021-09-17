@@ -428,6 +428,29 @@ class PurchaseHelper
     }
 
     /**
+     * getHolderTaxId method should be extended/intercepted by plugin to add value to it.
+     * The unique taxpayer identifier for the account holder. Due to legal restrictions,
+     * the only values currently accepted here are Brazilian CPF numbers. All other values provided will be rejected.
+     *
+     * @return null
+     */
+    public function getHolderTaxId()
+    {
+        return null;
+    }
+
+    /**
+     * getHolderTaxCountry method should be extended/intercepted by plugin to add value to it.
+     * The country that issued the holderTaxId. Due to legal restrictions, the only value currently accepted here is BR.
+     *
+     * @return null
+     */
+    public function getHolderTaxCountry()
+    {
+        return null;
+    }
+
+    /**
      * getParentTransactionId method should be extended/intercepted by plugin to add value to it.
      * If there was a previous transaction for the payment like a partial AUTHORIZATION or SALE,
      * the parent id should include the originating transaction id.
@@ -949,13 +972,15 @@ class PurchaseHelper
         $billingAddress = $order->getBillingAddress();
         $checkoutPaymentDetails = [];
         $checkoutPaymentDetails['holderName'] = $this->getCardholder($order);
+        $checkoutPaymentDetails['holderTaxId'] = $this->getHolderTaxId();
+        $checkoutPaymentDetails['holderTaxCountry'] = $this->getHolderTaxCountry();
         $checkoutPaymentDetails['cardBin'] = $this->getBin($order);
         $checkoutPaymentDetails['cardLast4'] = $this->getLast4($order);
         $checkoutPaymentDetails['cardExpiryMonth'] = $this->getExpMonth($order);
         $checkoutPaymentDetails['cardExpiryYear'] = $this->getExpYear($order);
-        $checkoutPaymentDetails['billingAddress'] = $this->formatSignifydAddress($billingAddress);
         $checkoutPaymentDetails['bankAccountNumber'] = $this->getBankAccountNumber();
         $checkoutPaymentDetails['bankRoutingNumber'] = $this->getBankRoutingNumber();
+        $checkoutPaymentDetails['billingAddress'] = $this->formatSignifydAddress($billingAddress);
 
         return $checkoutPaymentDetails;
     }
