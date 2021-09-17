@@ -7,6 +7,7 @@
 On the pre auth policy, Signifyd cases are created before the payment being submitted to the payment gateway. So, AVS code, CVV code and transaction ID are not available at all at this moment. But it is desirable to try to collect most of these information:
 
 - Bin: credit card first 6 digits
+- Holder name: The full name of the account holder as provided during checkout.
 - Last4: credit card last 4 digits
 - Expiry month
 - Expiry year
@@ -36,6 +37,7 @@ The extension is prepared to receive these values through the request with the f
 "paymentMethod": {
      "additional_data": {
        "cardBin": "411111",
+       "holderName": "J. Smith",
        "cardLast4": "1111",
        "cardExpiryMonth": "09",
        "cardExpiryYear": "2030"

@@ -1422,6 +1422,8 @@ class PurchaseHelper
         ) {
             $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardBin'] =
                 $checkoutPaymentDetails['cardBin'];
+            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['holderName'] =
+                $checkoutPaymentDetails['holderName'];
             $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardLast4'] =
                 $checkoutPaymentDetails['cardLast4'];
             $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardExpiryMonth'] =

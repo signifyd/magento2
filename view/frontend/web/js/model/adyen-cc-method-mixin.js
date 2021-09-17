@@ -1,6 +1,7 @@
 define(function () {
     'use strict';
     var binValue;
+    var cardLast4;
     var mixin = {
         /**
          *
@@ -27,6 +28,11 @@ define(function () {
                 onBinValue: function (binData) {
                     if (binData.binValue.length == 6) {
                         binValue = binData.binValue;
+                    }
+                },
+                onFieldValid: function (onFieldValid) {
+                    if (onFieldValid.fieldType === 'encryptedCardNumber') {
+                        cardLast4 = onFieldValid.endDigits;
                     }
                 },
                 // Keep onBrand as is until checkout component supports installments
@@ -71,7 +77,8 @@ define(function () {
         },
         getData: function (key) {
             var returnInformation = this._super();
-            returnInformation.additional_data.bin = binValue;
+            returnInformation.additional_data.cardBin = binValue;
+            returnInformation.additional_data.cardLast4 = cardLast4;
             return returnInformation;
         }
     };

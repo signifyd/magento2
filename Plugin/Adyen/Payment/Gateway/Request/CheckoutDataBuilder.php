@@ -161,9 +161,9 @@ class CheckoutDataBuilder
         if (
             isset($magentoRequest['paymentMethod']) &&
             isset($magentoRequest['paymentMethod']['additional_data']) &&
-            isset($magentoRequest['paymentMethod']['additional_data']['bin'])
+            isset($magentoRequest['paymentMethod']['additional_data']['cardBin'])
         ) {
-            $request['body']['additionalData']['bin'] = $magentoRequest['paymentMethod']['additional_data']['bin'];
+            $request['body']['additionalData']['bin'] = $magentoRequest['paymentMethod']['additional_data']['cardBin'];
         }
 
         $request['body']['additionalData']['teamId'] = $teamId;

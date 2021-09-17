@@ -164,6 +164,9 @@ class PreAuth implements ObserverInterface
                 $checkoutPaymentDetails['cardBin'] =
                     $dataArray['paymentMethod']['additional_data']['cardBin'] ?? null;
 
+                $checkoutPaymentDetails['holderName'] =
+                    $dataArray['paymentMethod']['additional_data']['holderName'] ?? null;
+
                 $checkoutPaymentDetails['cardLast4'] =
                     $dataArray['paymentMethod']['additional_data']['cardLast4'] ?? null;
 
