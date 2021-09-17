@@ -523,18 +523,20 @@ class Casedata extends AbstractModel
                             $this->logger->debug($message, ['entity' => $order]);
                             $this->setEntries('fail', 1);
                             $orderAction['action'] = false;
-                            $this->orderHelper->addCommentToStatusHistory(
-                                $order,
-                                "Signifyd: unable to create invoice: {$reason}"
-                            );
 
                             if ($reason == "no items can be invoiced") {
                                 $completeCase = true;
-                            }
-
-                            if ($order->canHold() && $isPassive === false) {
+                                $this->orderHelper->addCommentToStatusHistory(
+                                    $order,
+                                    "Signifyd: invoice not created, {$reason}"
+                                );
+                            } elseif ($order->canHold() && $isPassive === false) {
                                 $order->hold();
                                 $this->orderResourceModel->save($order);
+                                $this->orderHelper->addCommentToStatusHistory(
+                                    $order,
+                                    "Signifyd: unable to create invoice: {$reason}"
+                                );
                             }
                         }
                     } catch (\Exception $e) {
