@@ -843,6 +843,7 @@ class PurchaseHelper
     {
         $recipients = [];
         $recipient = [];
+        $recipientGc = [];
         $address = $order->getShippingAddress();
 
         if ($address !== null) {
@@ -859,6 +860,19 @@ class PurchaseHelper
 
         if (empty($recipient['confirmationEmail'])) {
             $recipient['confirmationEmail'] = $order->getCustomerEmail();
+        }
+
+        if (empty($recipient['confirmationPhone'])) {
+            $recipient['confirmationPhone'] = $order->getBillingAddress()->getTelephone();
+        }
+
+        foreach ($order->getItems() as $item) {
+            if ($item->getProductType() == 'giftcard') {
+                $recipientGc['fullName'] = $item->getProductOptions()['giftcard_recipient_name'];
+                $recipientGc['confirmationEmail'] = $item->getProductOptions()['giftcard_recipient_email'];
+
+                $recipients[] = $recipientGc;
+            }
         }
 
         $recipients[] = $recipient;
