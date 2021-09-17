@@ -2,6 +2,7 @@
 
 namespace Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned;
 
+use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Store\Model\ScopeInterface;
 use Signifyd\Connect\Helper\PurchaseHelper;
 
@@ -13,11 +14,17 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
     protected $purchaseHelper;
 
     /**
+     * @var JsonSerializer
+     */
+    protected $jsonSerializer;
+
+    /**
      * Grid constructor.
      * @param \Magento\Backend\Block\Template\Context $context
      * @param \Magento\Backend\Helper\Data $backendHelper
      * @param \Magento\Reports\Model\ResourceModel\Quote\CollectionFactory $quotesFactory
      * @param PurchaseHelper $purchaseHelper
+     * @param JsonSerializer $jsonSerializer
      * @param array $data
      */
     public function __construct(
@@ -25,9 +32,11 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
         \Magento\Backend\Helper\Data $backendHelper,
         \Magento\Reports\Model\ResourceModel\Quote\CollectionFactory $quotesFactory,
         PurchaseHelper $purchaseHelper,
+        JsonSerializer $jsonSerializer,
         array $data = []
     ) {
         $this->purchaseHelper = $purchaseHelper;
+        $this->jsonSerializer = $jsonSerializer;
         parent::__construct($context, $backendHelper, $quotesFactory, $data);
     }
 
@@ -48,7 +57,9 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
             $policyName = $this->purchaseHelper->getPolicyName();
         }
 
-        if ($policyName == 'PRE_AUTH') {
+        $configPolicy = $this->jsonSerializer->unserialize($policyName);
+
+        if (isset($configPolicy['PRE_AUTH'])) {
             $this->addColumn(
                 'signifyd_guarantee',
                 [

@@ -4,20 +4,37 @@ Signifyd has a mapping for the response type that should be applied to the case:
 
 By default the extension will automatically use asynchronous response (POST_AUTH), but it is possible to set synchronous response (PRE_AUTH).
 
-### Setting synchronous response
+### Setting global synchronous response
 
-To set synchronous response run command below on your database:
+If the setting has a string as "PRE_AUTH" then the extension will assume this as the only policy for all cases.
+
+To set global synchronous response run command below on your database:
 
 ```sql
 INSERT INTO core_config_data (path, value) VALUES ('signifyd/advanced/policy_name', 'PRE_AUTH');
 ```
 
-### Setting asynchronous response
+### Setting global asynchronous response
 
 To revert back to the extension's default policy, just delete it from the database:
 
 ```sql
 DELETE FROM core_config_data WHERE path = 'signifyd/advanced/policy_name';
+```
+
+### Setting policy per payment method
+
+It is possible to select a different policy per payment method.
+
+If the setting stores a JSON, then it will map each payment method listed on JSON to the corresponding policy. Any payment methods not mapped will fallback to the POST_AUTH policy. Here it is an example of how the final JSON could look like:
+
+```
+{"PRE_AUTH": ["braintree", "paypal_braintree"], "POST_AUTH": ["checkmo"]}
+```
+To set policy per payment method run command below on your database:
+
+```sql
+INSERT INTO core_config_data (path, value) VALUES ('signifyd/advanced/policy_name', 'INSERT-JSON-MAPPING');
 ```
 
 ### Check policy
