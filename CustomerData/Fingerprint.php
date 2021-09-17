@@ -6,6 +6,7 @@ use Magento\Customer\CustomerData\SectionSourceInterface;
 use Magento\Framework\DataObject;
 use Magento\Checkout\Model\Session;
 use Signifyd\Connect\Helper\DeviceHelper;
+use Magento\Store\Model\StoreManagerInterface;
 
 class Fingerprint extends DataObject implements SectionSourceInterface
 {
@@ -20,14 +21,24 @@ class Fingerprint extends DataObject implements SectionSourceInterface
     protected $quoteId;
 
     /**
+     * @var StoreManagerInterface
+     */
+    protected $storeManagerInterface;
+
+    /**
      * FingerprintSection constructor.
      * @param Session $session
      * @param DeviceHelper $deviceHelper
+     * @param StoreManagerInterface $storeManagerInterface
      */
-    public function __construct(Session $session, DeviceHelper $deviceHelper)
-    {
+    public function __construct(
+    Session $session,
+    DeviceHelper $deviceHelper,
+    StoreManagerInterface $storeManagerInterface
+    ) {
         $this->quoteId = $session->getQuoteId();
         $this->deviceHelper = $deviceHelper;
+        $this->storeManagerInterface = $storeManagerInterface;
     }
 
     /**
@@ -35,7 +46,8 @@ class Fingerprint extends DataObject implements SectionSourceInterface
      */
     public function getDeviceFingerprint()
     {
-        return $this->deviceHelper->generateFingerprint($this->getQuoteId());
+        $storeId = $this->storeManagerInterface->getStore()->getId();
+        return $this->deviceHelper->generateFingerprint($this->getQuoteId(), $storeId);
     }
 
     /**
