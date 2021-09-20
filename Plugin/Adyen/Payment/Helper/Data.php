@@ -58,7 +58,7 @@ class Data
             'stores', $this->storeId
         );
 
-        $isEnable = $this->scopeConfig->isSetFlag('signifyd/general/enabled', 'stores', $this->storeId);
+        $isEnable = $this->scopeConfig->isSetFlag('signifyd/proxy/adyen_enable', 'stores', $this->storeId);
 
         if ($adyenProxyEnabled && $isEnable) {
             $environment = $subject->isDemoMode($this->storeId) ? \Adyen\Environment::TEST : \Adyen\Environment::LIVE;
