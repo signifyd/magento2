@@ -29,6 +29,9 @@
         <index referenceId="INDEX_ORDER_ID" indexType="btree">
             <column name="order_id"/>
         </index>
+        <index referenceId="INDEX_CODE" indexType="btree">
+            <column name="code"/>
+        </index>
 	</table>
     <table comment="signifyd_connect_fulfillment Table" engine="innodb" name="signifyd_connect_fulfillment" resource="default">
         <column length="50" name="id" nullable="false" xsi:type="varchar"/>

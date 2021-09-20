@@ -184,7 +184,7 @@ class Index extends Action
         $case = $this->casedataFactory->create();
 
         try {
-            $this->casedataResourceModel->loadForUpdate($case, $requestJson->caseId, 'code');
+            $this->casedataResourceModel->loadForUpdate($case, (string) $requestJson->caseId, 'code');
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
             return;
