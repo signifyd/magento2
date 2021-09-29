@@ -32,9 +32,9 @@ class Fingerprint extends DataObject implements SectionSourceInterface
      * @param StoreManagerInterface $storeManagerInterface
      */
     public function __construct(
-    Session $session,
-    DeviceHelper $deviceHelper,
-    StoreManagerInterface $storeManagerInterface
+        Session $session,
+        DeviceHelper $deviceHelper,
+        StoreManagerInterface $storeManagerInterface
     ) {
         $this->quoteId = $session->getQuoteId();
         $this->deviceHelper = $deviceHelper;

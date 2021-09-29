@@ -149,7 +149,8 @@ class CheckoutDataBuilder
 
         $adyenProxyEnabled = $this->scopeConfig->isSetFlag(
             'signifyd/proxy/adyen_enable',
-            'stores', $quote->getStoreId()
+            'stores',
+            $quote->getStoreId()
         );
 
         if ($adyenProxyEnabled === false) {
@@ -167,8 +168,7 @@ class CheckoutDataBuilder
 
         $teamId = $this->getTeamId($quote);
 
-        if (
-            isset($magentoRequest['paymentMethod']) &&
+        if (isset($magentoRequest['paymentMethod']) &&
             isset($magentoRequest['paymentMethod']['additional_data']) &&
             isset($magentoRequest['paymentMethod']['additional_data']['cardBin'])
         ) {
@@ -203,16 +203,14 @@ class CheckoutDataBuilder
                 if (is_array($children) == false || empty($children)) {
                     $itemPrice = floatval(number_format($item->getPriceInclTax(), 2, '.', ''));
 
-                    if ($itemPrice <= 0) {
-                        if ($item->getParentItem()) {
-                            if ($item->getParentItem()->getProductType() === 'configurable') {
-                                $itemPrice = floatval(number_format(
-                                    $item->getParentItem()->getPriceInclTax(),
-                                    2,
-                                    '.',
-                                    ''
-                                ));
-                            }
+                    if ($itemPrice <= 0 && $item->getParentItem()) {
+                        if ($item->getParentItem()->getProductType() === 'configurable') {
+                            $itemPrice = floatval(number_format(
+                                $item->getParentItem()->getPriceInclTax(),
+                                2,
+                                '.',
+                                ''
+                            ));
                         }
                     }
 

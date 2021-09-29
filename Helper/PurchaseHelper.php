@@ -1457,8 +1457,7 @@ class PurchaseHelper
             $transactionCheckoutPaymentDetails['gateway'] = $paymentMethod;
         }
 
-        if (
-            is_array($checkoutPaymentDetails) && empty($checkoutPaymentDetails) === false
+        if (is_array($checkoutPaymentDetails) && empty($checkoutPaymentDetails) === false
         ) {
             $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardBin'] =
                 $checkoutPaymentDetails['cardBin'];
@@ -1731,7 +1730,8 @@ class PurchaseHelper
         $tokenReceived = $caseResponse->getCheckoutToken();
 
         if ($tokenSent === $tokenReceived) {
-            $this->logger->debug("Transaction sent to order {$order->getIncrementId()}. Token is {$caseResponse->getCheckoutToken()}");
+            $this->logger->debug("Transaction sent to order {$order->getIncrementId()}.
+                Token is {$caseResponse->getCheckoutToken()}");
             return $caseResponse;
         } else {
             $this->logger->error($this->jsonSerializer->serialize($caseResponse));
@@ -1758,7 +1758,7 @@ class PurchaseHelper
             $configPolicy = $this->jsonSerializer->unserialize($policyName);
 
             if (isset($configPolicy['PRE_AUTH']) === false || is_array($configPolicy['PRE_AUTH']) === false) {
-               return false;
+                return false;
             }
 
             return in_array($paymentMethod, $configPolicy['PRE_AUTH']);
@@ -1767,7 +1767,8 @@ class PurchaseHelper
         }
     }
 
-    function isJson($string) {
+    public function isJson($string)
+    {
         json_decode($string);
         return json_last_error() === JSON_ERROR_NONE;
     }

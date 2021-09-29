@@ -291,7 +291,11 @@ class Casedata extends AbstractModel
             }
 
             // When Async e-mail sending it is enabled, do not process the order until the e-mail is sent
-            $isAsyncEmailEnabled = $this->configHelper->getConfigData('sales_email/general/async_sending', $order, true);
+            $isAsyncEmailEnabled = $this->configHelper->getConfigData(
+                'sales_email/general/async_sending',
+                $order,
+                true
+            );
 
             if ($isAsyncEmailEnabled && $order->getData('send_email') == 1 && empty($order->getEmailSent())) {
                 $this->setEntries('fail', 1);
@@ -345,7 +349,7 @@ class Casedata extends AbstractModel
                             );
                         } catch (\Exception $e) {
                             $this->logger->debug($e->__toString(), ['entity' => $order]);
-                        $this->setEntries('fail', 1);
+                            $this->setEntries('fail', 1);
 
                             $orderAction['action'] = false;
 
@@ -507,12 +511,7 @@ class Casedata extends AbstractModel
                             );
 
                             // Send invoice email
-                            try {
-                                $this->invoiceSender->send($invoice);
-                            } catch (\Exception $e) {
-                                $message = 'Failed to send the invoice email: ' . $e->getMessage();
-                                $this->logger->debug($message, ['entity' => $order]);
-                            }
+                            $this->sendInvoice($invoice, $order);
 
                             $completeCase = true;
                         } else {
@@ -526,14 +525,8 @@ class Casedata extends AbstractModel
                                 "Signifyd: unable to create invoice: {$reason}"
                             );
 
-                            if ($reason == "no items can be invoiced") {
-                                $completeCase = true;
-                            }
-
-                            if ($order->canHold()) {
-                                $order->hold();
-                                $this->orderResourceModel->save($order);
-                            }
+                            $completeCase = $this->validateReason($reason);
+                            $this->holdOrder($order);
                         }
                     } catch (\Exception $e) {
                         $this->logger->debug('Exception creating invoice: ' . $e->__toString(), ['entity' => $order]);
@@ -541,10 +534,7 @@ class Casedata extends AbstractModel
 
                         $order = $this->getOrder(true);
 
-                        if ($order->canHold()) {
-                            $order->hold();
-                            $this->orderResourceModel->save($order);
-                        }
+                        $this->holdOrder($order);
 
                         $this->orderHelper->addCommentToStatusHistory(
                             $order,
@@ -575,10 +565,7 @@ class Casedata extends AbstractModel
                             );
                         }
                     } catch (\Exception $e) {
-                        if ($order->canHold()) {
-                            $order->hold();
-                            $this->orderResourceModel->save($order);
-                        }
+                        $this->holdOrder($order);
 
                         $this->logger->debug("Creditmemo Not Created: ". $e->getMessage());
                     }
@@ -596,22 +583,7 @@ class Casedata extends AbstractModel
                 case 'nothing':
                     $orderAction['action'] = false;
                     $completeCase = true;
-
-                    switch ($orderAction['reason']) {
-                        case 'declined guarantees reviewed to approved':
-                            $message = "Signifyd: case reviewed on Signifyd from declined to approved. Old score: " .
-                            "{$this->getOrigData('score')}, new score: {$this->getData('score')}";
-                            $this->orderHelper->addCommentToStatusHistory($order, $message);
-                            break;
-
-                        case 'approved guarantees reviewed to declined':
-                            $message = "Signifyd: case reviewed " .
-                                "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
-                                "to {$this->getData('guarantee')} ({$this->getData('score')})";
-                            $this->orderHelper->addCommentToStatusHistory($order, $message);
-                            break;
-                    }
-
+                    $this->addReviewedMessage($orderAction['reason'], $order);
                     break;
             }
 
@@ -815,5 +787,50 @@ class Casedata extends AbstractModel
         $this->setRetries(0);
 
         return parent::setUpdated($updated);
+    }
+
+    public function sendInvoice($invoice, $order)
+    {
+        try {
+            $this->invoiceSender->send($invoice);
+        } catch (\Exception $e) {
+            $message = 'Failed to send the invoice email: ' . $e->getMessage();
+            $this->logger->debug($message, ['entity' => $order]);
+        }
+    }
+
+    public function validateReason($reason)
+    {
+        if ($reason == "no items can be invoiced") {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function holdOrder($order)
+    {
+        if ($order->canHold()) {
+            $order->hold();
+            $this->orderResourceModel->save($order);
+        }
+    }
+
+    public function addReviewedMessage($reason, $order)
+    {
+        switch ($reason) {
+            case 'declined guarantees reviewed to approved':
+                $message = "Signifyd: case reviewed on Signifyd from declined to approved. Old score: " .
+                    "{$this->getOrigData('score')}, new score: {$this->getData('score')}";
+                $this->orderHelper->addCommentToStatusHistory($order, $message);
+                break;
+
+            case 'approved guarantees reviewed to declined':
+                $message = "Signifyd: case reviewed " .
+                    "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
+                    "to {$this->getData('guarantee')} ({$this->getData('score')})";
+                $this->orderHelper->addCommentToStatusHistory($order, $message);
+                break;
+        }
     }
 }

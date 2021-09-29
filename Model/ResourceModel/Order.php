@@ -2,13 +2,12 @@
 
 namespace Signifyd\Connect\Model\ResourceModel;
 
-Class Order extends \Magento\Sales\Model\ResourceModel\Order
+class Order extends \Magento\Sales\Model\ResourceModel\Order
 {
     /**
      * @var bool
      */
     protected $loadForUpdate = false;
-
 
     public function loadForUpdate(\Magento\Framework\Model\AbstractModel $object, $value, $field = null)
     {

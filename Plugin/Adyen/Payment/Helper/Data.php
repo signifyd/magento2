@@ -55,7 +55,8 @@ class Data
     {
         $adyenProxyEnabled = $this->scopeConfig->isSetFlag(
             'signifyd/proxy/adyen_enable',
-            'stores', $this->storeId
+            'stores',
+            $this->storeId
         );
 
         if ($adyenProxyEnabled) {
