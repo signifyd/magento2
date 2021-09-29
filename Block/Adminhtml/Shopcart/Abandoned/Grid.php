@@ -57,9 +57,9 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
             $policyName = $this->purchaseHelper->getPolicyName();
         }
 
-        $configPolicy = $this->jsonSerializer->unserialize($policyName);
+        $isPreAuthInUse = $this->purchaseHelper->getIsPreAuthInUse($policyName);
 
-        if (isset($configPolicy['PRE_AUTH'])) {
+        if ($isPreAuthInUse) {
             $this->addColumn(
                 'signifyd_guarantee',
                 [

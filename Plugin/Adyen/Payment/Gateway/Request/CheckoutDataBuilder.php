@@ -147,6 +147,15 @@ class CheckoutDataBuilder
             return $request;
         }
 
+        $adyenProxyEnabled = $this->scopeConfig->isSetFlag(
+            'signifyd/proxy/adyen_enable',
+            'stores', $quote->getStoreId()
+        );
+
+        if ($adyenProxyEnabled === false) {
+            return $request;
+        }
+
         $taxAmount = $quote->getShippingAddress()->isEmpty() ?
             $quote->getBillingAddress()->getTaxAmount() :
             $quote->getShippingAddress()->getTaxAmount();
@@ -168,7 +177,7 @@ class CheckoutDataBuilder
 
         $request['body']['additionalData']['teamId'] = $teamId;
         $request['body']['additionalData']['checkoutAttemptId'] = uniqid();
-        $request['body']['additionalData']['enhancedSchemeData.dutyAmount'] = $taxAmount;
+        $request['body']['additionalData']['enhancedSchemeData.dutyAmount'] = $this->processAmount($taxAmount);
         $request['body']['additionalData']['riskdata.basket.item0.receiverEmail'] = $quote->getCustomer()->getEmail();
 
         if ($discountAmount) {
@@ -210,7 +219,7 @@ class CheckoutDataBuilder
                     $product = $this->productRepositoryInterface->getById($item->getProduct()->getId());
                     $productImageUrl = $this->purchaseHelper->getProductImage($product);
 
-                    $request['body']['lineItems'][$i]['amountIncludingTax'] = $itemPrice;
+                    $request['body']['lineItems'][$i]['amountIncludingTax'] = $this->processAmount($itemPrice);
                     $request['body']['lineItems'][$i]['description'] = $item->getName();
                     $request['body']['lineItems'][$i]['quantity'] = (int)$item->getQty();
                     $request['body']['lineItems'][$i]['productUrl'] = $product->getProductUrl();
@@ -327,5 +336,10 @@ class CheckoutDataBuilder
         }
 
         return $teamId;
+    }
+
+    public function processAmount($amount)
+    {
+        return (int) number_format($amount * 100, 0, '', '');
     }
 }

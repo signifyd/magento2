@@ -923,7 +923,7 @@ class PurchaseHelper
         $transactions = [];
         $lastTransaction = [];
 
-        $lastTransaction['checkoutPaymentDetails'] = $this->makecheckoutPaymentDetails($order);
+        $lastTransaction['checkoutPaymentDetails'] = $this->makeCheckoutPaymentDetails($order);
         $lastTransaction['avsResponseCode'] = $this->getAvsCode($order);
         $lastTransaction['cvvResponseCode'] = $this->getCvvCode($order);
         $lastTransaction['transactionId'] = $this->getTransactionId($order);
@@ -967,7 +967,7 @@ class PurchaseHelper
      * @param $order Order
      * @return array
      */
-    public function makecheckoutPaymentDetails(Order $order)
+    public function makeCheckoutPaymentDetails(Order $order)
     {
         $billingAddress = $order->getBillingAddress();
         $checkoutPaymentDetails = [];
@@ -1458,7 +1458,7 @@ class PurchaseHelper
         }
 
         if (
-            is_array($checkoutPaymentDetails)
+            is_array($checkoutPaymentDetails) && empty($checkoutPaymentDetails) === false
         ) {
             $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardBin'] =
                 $checkoutPaymentDetails['cardBin'];
@@ -1770,5 +1770,22 @@ class PurchaseHelper
     function isJson($string) {
         json_decode($string);
         return json_last_error() === JSON_ERROR_NONE;
+    }
+
+    public function getIsPreAuthInUse($policyName)
+    {
+        $isJson = $this->isJson($policyName);
+
+        if ($isJson) {
+            $configPolicy = $this->jsonSerializer->unserialize($policyName);
+
+            if (isset($configPolicy['PRE_AUTH']) === false || is_array($configPolicy['PRE_AUTH']) === false) {
+                return false;
+            }
+
+            return true;
+        } else {
+            return ($policyName == 'PRE_AUTH');
+        }
     }
 }
