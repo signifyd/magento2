@@ -11,6 +11,10 @@ class CreateTest extends OrderTestCase
      * @var \Signifyd\Connect\Cron\RetryCaseJob $retryCaseJob
      */
     protected $retryCaseJob;
+    /**
+     * @var \Signifyd\Connect\Cron\RetryFulfillmentJob $retryFulfillmentJob
+     */
+    protected $retryFulfillmentJob;
 
     protected $paymentMethod = 'banktransfer';
 
@@ -19,6 +23,7 @@ class CreateTest extends OrderTestCase
         parent::setUp();
 
         $this->retryCaseJob = $this->objectManager->create(\Signifyd\Connect\Cron\RetryCaseJob::class);
+        $this->retryFulfillmentJob = $this->objectManager->create(\Signifyd\Connect\Cron\RetryFulfillmentJob::class);
     }
 
     /**
@@ -26,24 +31,14 @@ class CreateTest extends OrderTestCase
      */
     public function testCronCreateCase()
     {
-        $this->placeQuote($this->getQuote('guest_quote'));
-
-        /** @var \Signifyd\Connect\Model\Casedata $case */
-        $case = $this->objectManager->create(Casedata::class);
-        $case->setData([
-            'order_increment' => $this->incrementId,
-            // Case must be created with 60 seconds before now in order to trigger cron on retries
-            'created' => strftime('%Y-%m-%d %H:%M:%S', time()-60),
-            'updated' => strftime('%Y-%m-%d %H:%M:%S', time()-60),
-            'magento_status' => \Signifyd\Connect\Model\Casedata::WAITING_SUBMISSION_STATUS
-        ]);
-        $case->save();
+        $case = parent::createCase();
+        $entityId = $case->getId();
 
         require __DIR__ . '/../../_files/settings/restrict_none_payment_methods.php';
 
         $this->retryCaseJob->execute();
 
-        $case = $this->getCase();
+        $case = $this->getCase(['entity_id' => $entityId]);
 
         $this->assertEquals('PENDING', $case->getData('signifyd_status'));
         $this->assertEquals(Casedata::IN_REVIEW_STATUS, $case->getData('magento_status'));

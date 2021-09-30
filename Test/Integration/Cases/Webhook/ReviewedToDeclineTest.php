@@ -6,7 +6,7 @@ use Signifyd\Connect\Test\Integration\OrderTestCase;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Signifyd\Connect\Model\Casedata;
 
-class ReviewTest extends OrderTestCase
+class ReviewedToDeclineTest extends OrderTestCase
 {
     protected $incrementId = '100000002';
 
@@ -15,11 +15,11 @@ class ReviewTest extends OrderTestCase
      */
     public function testWebhookReviewCase()
     {
-        $request = file_get_contents(__DIR__ . '/../../_files/case/webhook/review-payload.json');
+        $request = file_get_contents(__DIR__ . '/../../_files/case/webhook/reviewed-decline-payload.json');
         $jsonSerializer = $this->objectManager->create(\Magento\Framework\Serialize\Serializer\Json::class);
         $requestJson = $jsonSerializer->unserialize($request);
 
-        $case = parent::createCase($requestJson['caseId'], Casedata::IN_REVIEW_STATUS);
+        $case = parent::createApprovedCompleteCase($requestJson['caseId']);
         $entityId = $case->getId();
 
         /** @var \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig */
@@ -32,12 +32,25 @@ class ReviewTest extends OrderTestCase
         $webhookIndex = $this->objectManager->create(\Signifyd\Connect\Controller\Webhooks\Index::class);
         $webhookIndex->processRequest($request, $hash, 'cases/review');
 
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = $this->objectManager->get(\Magento\Sales\Model\Order::class);
+        $order->loadByIncrementId($this->incrementId);
+        $histories = $order->getStatusHistories();
+        $comments = [];
+
+        foreach ($histories as $history) {
+            $comments[] = $history->getComment();
+        }
+
+        $isReviewed = in_array('Signifyd: case reviewed from ACCEPT (999) to DECLINED (333)', $comments);
+
         /** @var \Signifyd\Connect\Model\Casedata $case */
         $case = $this->getCase(['entity_id' => $entityId]);
 
-        $this->assertEquals('APPROVED', $case->getData('guarantee'));
-        $this->assertEquals('792', $case->getData('score'));
+        $this->assertEquals('DECLINED', $case->getData('guarantee'));
+        $this->assertEquals('333', $case->getData('score'));
         $this->assertEquals(Casedata::COMPLETED_STATUS, $case->getData('magento_status'));
+        $this->assertTrue($isReviewed);
     }
 
     public static function configFixture()

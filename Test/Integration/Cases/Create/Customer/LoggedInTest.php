@@ -20,22 +20,14 @@ class LoggedInTest extends OrderTestCase
      */
     public function testSendCaseLoggedInCustomer()
     {
-        /** @var \Magento\Customer\Api\CustomerRepositoryInterface $customerRepository */
-        $customerRepository = $this->objectManager->create(CustomerRepositoryInterface::class);
-        $customer = $customerRepository->getById(1);
-
-        /** @var \Magento\Quote\Model\Quote $quote */
-        $quote = $this->getQuote('guest_quote');
-        $quote->setCustomerIsGuest(false);
-        $quote->assignCustomer($customer);
-        $quote->save();
-
-        $order = $this->placeQuote($quote);
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = parent::createOrderCustomerLoggedIn();
         $case = $this->getCase();
 
         $this->assertNotEmpty($order->getCustomerId());
         $this->assertEquals($this->incrementId, $case->getOrderIncrement());
         $this->assertNotEmpty($case->getCode());
+        $this->assertEquals($case->getPolicyName(), 'post_auth');
     }
 
     public static function configFixture()

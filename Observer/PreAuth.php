@@ -156,22 +156,25 @@ class PreAuth implements ObserverInterface
             $checkoutPaymentDetails = [];
             $paymentMethod = null;
             $data = $this->requestHttp->getContent();
-            $dataArray = $this->jsonSerializer->unserialize($data);
 
-            if (isset($dataArray['paymentMethod']) &&
-                isset($dataArray['paymentMethod']['additional_data']) &&
-                isset($dataArray['paymentMethod']['additional_data']['signifyd-bin']) &&
-                isset($dataArray['paymentMethod']['additional_data']['signifyd-lastFour'])
-            ) {
-                $checkoutPaymentDetails['cardBin'] = $dataArray['paymentMethod']['additional_data']['signifyd-bin'];
-                $checkoutPaymentDetails['cardLast4'] =
-                    $dataArray['paymentMethod']['additional_data']['signifyd-lastFour'];
-            }
+            if (isset($data) === false) {
+                $dataArray = $this->jsonSerializer->unserialize($data);
 
-            if (isset($dataArray['paymentMethod']) &&
-                isset($dataArray['paymentMethod']['method'])
-            ) {
-                $paymentMethod = $dataArray['paymentMethod']['method'];
+                if (isset($dataArray['paymentMethod']) &&
+                    isset($dataArray['paymentMethod']['additional_data']) &&
+                    isset($dataArray['paymentMethod']['additional_data']['signifyd-bin']) &&
+                    isset($dataArray['paymentMethod']['additional_data']['signifyd-lastFour'])
+                ) {
+                    $checkoutPaymentDetails['cardBin'] = $dataArray['paymentMethod']['additional_data']['signifyd-bin'];
+                    $checkoutPaymentDetails['cardLast4'] =
+                        $dataArray['paymentMethod']['additional_data']['signifyd-lastFour'];
+                }
+
+                if (isset($dataArray['paymentMethod']) &&
+                    isset($dataArray['paymentMethod']['method'])
+                ) {
+                    $paymentMethod = $dataArray['paymentMethod']['method'];
+                }
             }
 
             $this->logger->info("Creating case for quote {$quote->getId()}");

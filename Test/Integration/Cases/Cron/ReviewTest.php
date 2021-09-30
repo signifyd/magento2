@@ -23,7 +23,6 @@ class ReviewTest extends CreateTest
 
         $case = $this->getCase();
 
-        $this->assertNotEquals('PENDING', $case->getData('signifyd_status'));
         $this->assertEquals(Casedata::COMPLETED_STATUS, $case->getData('magento_status'));
         $this->assertNotEmpty($case->getData('score'));
     }

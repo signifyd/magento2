@@ -43,16 +43,45 @@ class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * @return \Signifyd\Connect\Model\Casedata
      */
-    public function getCase($incrementId = null)
+    public function getCase(array $data = [])
     {
-        if (empty($incrementId) == true) {
-            $incrementId = $this->incrementId;
-        }
-
         /** @var \Signifyd\Connect\Model\Casedata $case */
         $case = $this->objectManager->create(\Signifyd\Connect\Model\Casedata::class);
-        $case->load($incrementId);
+
+        if (empty($data) === false) {
+            if (array_key_exists('order_increment', $data)) {
+                $case->load($data['order_increment'], 'order_increment');
+            } elseif (array_key_exists('entity_id', $data)) {
+                $case->load($data['entity_id'], 'entity_id');
+            }
+        } else {
+            $incrementId = $this->incrementId;
+            $case->load($incrementId, 'order_increment');
+        }
+
         return $case;
+    }
+
+    /**
+     * @return \Signifyd\Connect\Model\Fulfillment
+     */
+    public function getFulfillment(array $data = [])
+    {
+        /** @var \Signifyd\Connect\Model\Fulfillment $fulfillment */
+        $fulfillment = $this->objectManager->create(\Signifyd\Connect\Model\Fulfillment::class);
+
+        if (empty($data) === false) {
+            if (array_key_exists('order_increment', $data)) {
+                $fulfillment->load($data['order_increment'], 'order_id');
+            } elseif (array_key_exists('entity_id', $data)) {
+                $fulfillment->load($data['entity_id'], 'entity_id');
+            }
+        } else {
+            $incrementId = $this->incrementId;
+            $fulfillment->load($incrementId, 'order_id');
+        }
+
+        return $fulfillment;
     }
 
     /**
