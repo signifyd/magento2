@@ -32,10 +32,10 @@ class CheckoutPaymentsDetailsHandler
      * @param Logger $logger
      */
     public function __construct(
-    CasedataFactory $casedataFactory,
-    CasedataResourceModel $casedataResourceModel,
-    Logger $logger
-    ){
+        CasedataFactory $casedataFactory,
+        CasedataResourceModel $casedataResourceModel,
+        Logger $logger
+    ) {
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;

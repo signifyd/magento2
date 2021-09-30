@@ -178,31 +178,30 @@ class PreAuth implements ObserverInterface
 
         $checkoutPaymentDetails = [];
 
-            if (isset($dataArray['paymentMethod']) &&
+        if (isset($dataArray['paymentMethod']) &&
                 isset($dataArray['paymentMethod']['additional_data'])
             ) {
-                $checkoutPaymentDetails['cardBin'] =
-                    $dataArray['paymentMethod']['additional_data']['cardBin'] ?? null;
+            $checkoutPaymentDetails['cardBin'] =
+                $dataArray['paymentMethod']['additional_data']['cardBin'] ?? null;
 
-                $checkoutPaymentDetails['holderName'] =
-                    $dataArray['paymentMethod']['additional_data']['holderName'] ?? null;
+            $checkoutPaymentDetails['holderName'] =
+                $dataArray['paymentMethod']['additional_data']['holderName'] ?? null;
 
-                $checkoutPaymentDetails['cardLast4'] =
-                    $dataArray['paymentMethod']['additional_data']['cardLast4'] ?? null;
+            $checkoutPaymentDetails['cardLast4'] =
+                $dataArray['paymentMethod']['additional_data']['cardLast4'] ?? null;
 
-                $checkoutPaymentDetails['cardExpiryMonth'] =
-                    $dataArray['paymentMethod']['additional_data']['cardExpiryMonth'] ?? null;
+            $checkoutPaymentDetails['cardExpiryMonth'] =
+                $dataArray['paymentMethod']['additional_data']['cardExpiryMonth'] ?? null;
 
-                $checkoutPaymentDetails['cardExpiryYear'] =
-                    $dataArray['paymentMethod']['additional_data']['cardExpiryYear'] ?? null;
-            }
+            $checkoutPaymentDetails['cardExpiryYear'] =
+                $dataArray['paymentMethod']['additional_data']['cardExpiryYear'] ?? null;
+        }
 
         $this->logger->info("Creating case for quote {$quote->getId()}");
         $caseFromQuote = $this->purchaseHelper->processQuoteData($quote, $checkoutPaymentDetails, $paymentMethod);
         $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
 
-        if (
-            isset($caseResponse->recommendedAction) &&
+        if (isset($caseResponse->recommendedAction) &&
             ($caseResponse->recommendedAction == 'ACCEPT' || $caseResponse->recommendedAction == 'REJECT')
         ) {
             /** @var $case \Signifyd\Connect\Model\Casedata */

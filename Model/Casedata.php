@@ -291,7 +291,11 @@ class Casedata extends AbstractModel
             }
 
             // When Async e-mail sending it is enabled, do not process the order until the e-mail is sent
-            $isAsyncEmailEnabled = $this->configHelper->getConfigData('sales_email/general/async_sending', $order, true);
+            $isAsyncEmailEnabled = $this->configHelper->getConfigData(
+                'sales_email/general/async_sending',
+                $order,
+                true
+            );
 
             if ($isAsyncEmailEnabled && $order->getData('send_email') == 1 && empty($order->getEmailSent())) {
                 $this->setEntries('fail', 1);
@@ -311,6 +315,18 @@ class Casedata extends AbstractModel
 
             $isPassive = $enabledConfig == 'passive';
 
+            if ($isPassive && $orderAction['action'] !== false) {
+                $this->orderHelper->addCommentToStatusHistory(
+                    $order,
+                    "Signifyd: order action {$orderAction['action']}",
+                    false,
+                    $isPassive
+                );
+
+                $orderAction['action'] = false;
+                $completeCase = true;
+            }
+
             switch ($orderAction["action"]) {
                 case "hold":
                     if ($orderAction["reason"] == 'approved guarantees reviewed to declined') {
@@ -323,10 +339,8 @@ class Casedata extends AbstractModel
 
                     if ($order->canHold()) {
                         try {
-                            if ($isPassive === false) {
-                                $order->hold();
-                                $this->orderResourceModel->save($order);
-                            }
+                            $order->hold();
+                            $this->orderResourceModel->save($order);
 
                             $completeCase = true;
                             $this->orderHelper->addCommentToStatusHistory(
@@ -335,7 +349,7 @@ class Casedata extends AbstractModel
                             );
                         } catch (\Exception $e) {
                             $this->logger->debug($e->__toString(), ['entity' => $order]);
-                        $this->setEntries('fail', 1);
+                            $this->setEntries('fail', 1);
 
                             $orderAction['action'] = false;
 
@@ -365,10 +379,8 @@ class Casedata extends AbstractModel
                         $this->logger->debug('Unhold order action', ['entity' => $order]);
 
                         try {
-                            if ($isPassive === false) {
-                                $order->unhold();
-                                $this->orderResourceModel->save($order);
-                            }
+                            $order->unhold();
+                            $this->orderResourceModel->save($order);
 
                             $completeCase = true;
 
@@ -410,17 +422,15 @@ class Casedata extends AbstractModel
                     break;
 
                 case "cancel":
-                    if ($order->canUnhold() && $isPassive === false) {
+                    if ($order->canUnhold()) {
                         $order = $order->unhold();
                         $this->orderResourceModel->save($order);
                     }
 
                     if ($order->canCancel()) {
                         try {
-                            if ($isPassive === false) {
-                                $order->cancel();
-                                $this->orderResourceModel->save($order);
-                            }
+                            $order->cancel();
+                            $this->orderResourceModel->save($order);
 
                             $completeCase = true;
 
@@ -458,7 +468,7 @@ class Casedata extends AbstractModel
 
                     $order = $this->getOrder(true);
 
-                    if ($orderAction['action'] == false && $order->canHold() && $isPassive === false) {
+                    if ($orderAction['action'] == false && $order->canHold()) {
                         $order->hold();
                         $this->orderResourceModel->save($order);
                     }
@@ -467,54 +477,41 @@ class Casedata extends AbstractModel
 
                 case "capture":
                     try {
-                        if ($order->canUnhold() && $isPassive === false) {
+                        if ($order->canUnhold()) {
                             $order->unhold();
                             $this->orderResourceModel->save($order);
-                            $order = $this->getOrder(true);
                         }
 
+                        $order = $this->getOrder(true);
+
                         if ($order->canInvoice()) {
-                            if ($isPassive === false) {
-                                /** @var \Magento\Sales\Model\Order\Invoice $invoice */
-                                $invoice = $this->invoiceService->prepareInvoice($order);
+                            /** @var \Magento\Sales\Model\Order\Invoice $invoice */
+                            $invoice = $this->invoiceService->prepareInvoice($order);
 
-                                $this->orderHelper->isInvoiceValid($invoice);
+                            $this->orderHelper->isInvoiceValid($invoice);
 
-                                $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
-                                $invoice->addComment('Signifyd: Automatic invoice');
-                                $invoice->register();
+                            $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
+                            $invoice->addComment('Signifyd: Automatic invoice');
+                            $invoice->register();
 
-                                $order->setCustomerNoteNotify(true);
-                                $order->setIsInProcess(true);
+                            $order->setCustomerNoteNotify(true);
+                            $order->setIsInProcess(true);
 
-                                $this->orderResourceModel->save($order);
-                                $this->invoiceResourceModel->save($invoice);
+                            $this->orderResourceModel->save($order);
+                            $this->invoiceResourceModel->save($invoice);
 
-                                // Send invoice email
-                                try {
-                                    $this->invoiceSender->send($invoice);
-                                } catch (\Exception $e) {
-                                    $message = 'Failed to send the invoice email: ' . $e->getMessage();
-                                    $this->logger->debug($message, ['entity' => $order]);
-                                }
-                            }
-
-                            if ($isPassive) {
-                                $this->orderHelper->addCommentToStatusHistory(
-                                    $order,
-                                    'Invoice was created for order: ' . $order->getIncrementId()
-                                );
-                            } else {
-                                $this->orderHelper->addCommentToStatusHistory(
-                                    $order,
-                                    "Signifyd: create order invoice: {$invoice->getIncrementId()}"
-                                );
-                            }
+                            $this->orderHelper->addCommentToStatusHistory(
+                                $order,
+                                "Signifyd: create order invoice: {$invoice->getIncrementId()}"
+                            );
 
                             $this->logger->debug(
                                 'Invoice was created for order: ' . $order->getIncrementId(),
                                 ['entity' => $order]
                             );
+
+                            // Send invoice email
+                            $this->sendInvoice($invoice, $order);
 
                             $completeCase = true;
                         } else {
@@ -523,21 +520,13 @@ class Casedata extends AbstractModel
                             $this->logger->debug($message, ['entity' => $order]);
                             $this->setEntries('fail', 1);
                             $orderAction['action'] = false;
+                            $this->orderHelper->addCommentToStatusHistory(
+                                $order,
+                                "Signifyd: unable to create invoice: {$reason}"
+                            );
 
-                            if ($reason == "no items can be invoiced") {
-                                $completeCase = true;
-                                $this->orderHelper->addCommentToStatusHistory(
-                                    $order,
-                                    "Signifyd: invoice not created, {$reason}"
-                                );
-                            } elseif ($order->canHold() && $isPassive === false) {
-                                $order->hold();
-                                $this->orderResourceModel->save($order);
-                                $this->orderHelper->addCommentToStatusHistory(
-                                    $order,
-                                    "Signifyd: unable to create invoice: {$reason}"
-                                );
-                            }
+                            $completeCase = $this->validateReason($reason);
+                            $this->holdOrder($order);
                         }
                     } catch (\Exception $e) {
                         $this->logger->debug('Exception creating invoice: ' . $e->__toString(), ['entity' => $order]);
@@ -545,10 +534,7 @@ class Casedata extends AbstractModel
 
                         $order = $this->getOrder(true);
 
-                        if ($order->canHold() && $isPassive === false) {
-                            $order->hold();
-                            $this->orderResourceModel->save($order);
-                        }
+                        $this->holdOrder($order);
 
                         $this->orderHelper->addCommentToStatusHistory(
                             $order,
@@ -566,27 +552,22 @@ class Casedata extends AbstractModel
 
                     $this->orderHelper->addCommentToStatusHistory($order, $message);
 
-                    if ($isPassive === false) {
-                        try {
-                            $invoices = $order->getInvoiceCollection();
+                    try {
+                        $invoices = $order->getInvoiceCollection();
 
-                            foreach ($invoices as $invoice) {
-                                $creditmemo = $this->creditmemoFactory->createByOrder($order);
-                                $creditmemo->setInvoice($invoice);
-                                $this->creditmemoService->refund($creditmemo);
-                                $this->logger->debug(
-                                    'Credit memo was created for order: ' . $order->getIncrementId(),
-                                    ['entity' => $order]
-                                );
-                            }
-                        } catch (\Exception $e) {
-                            if ($order->canHold()) {
-                                $order->hold();
-                                $this->orderResourceModel->save($order);
-                            }
-
-                            $this->logger->debug("Creditmemo Not Created: ". $e->getMessage());
+                        foreach ($invoices as $invoice) {
+                            $creditmemo = $this->creditmemoFactory->createByOrder($order);
+                            $creditmemo->setInvoice($invoice);
+                            $this->creditmemoService->refund($creditmemo);
+                            $this->logger->debug(
+                                'Credit memo was created for order: ' . $order->getIncrementId(),
+                                ['entity' => $order]
+                            );
                         }
+                    } catch (\Exception $e) {
+                        $this->holdOrder($order);
+
+                        $this->logger->debug("Creditmemo Not Created: ". $e->getMessage());
                     }
                     break;
 
@@ -602,22 +583,7 @@ class Casedata extends AbstractModel
                 case 'nothing':
                     $orderAction['action'] = false;
                     $completeCase = true;
-
-                    switch ($orderAction['reason']) {
-                        case 'declined guarantees reviewed to approved':
-                            $message = "Signifyd: case reviewed on Signifyd from declined to approved. Old score: " .
-                            "{$this->getOrigData('score')}, new score: {$this->getData('score')}";
-                            $this->orderHelper->addCommentToStatusHistory($order, $message);
-                            break;
-
-                        case 'approved guarantees reviewed to declined':
-                            $message = "Signifyd: case reviewed " .
-                                "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
-                                "to {$this->getData('guarantee')} ({$this->getData('score')})";
-                            $this->orderHelper->addCommentToStatusHistory($order, $message);
-                            break;
-                    }
-
+                    $this->addReviewedMessage($orderAction['reason'], $order);
                     break;
             }
 
@@ -821,5 +787,50 @@ class Casedata extends AbstractModel
         $this->setRetries(0);
 
         return parent::setUpdated($updated);
+    }
+
+    public function sendInvoice($invoice, $order)
+    {
+        try {
+            $this->invoiceSender->send($invoice);
+        } catch (\Exception $e) {
+            $message = 'Failed to send the invoice email: ' . $e->getMessage();
+            $this->logger->debug($message, ['entity' => $order]);
+        }
+    }
+
+    public function validateReason($reason)
+    {
+        if ($reason == "no items can be invoiced") {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function holdOrder($order)
+    {
+        if ($order->canHold()) {
+            $order->hold();
+            $this->orderResourceModel->save($order);
+        }
+    }
+
+    public function addReviewedMessage($reason, $order)
+    {
+        switch ($reason) {
+            case 'declined guarantees reviewed to approved':
+                $message = "Signifyd: case reviewed on Signifyd from declined to approved. Old score: " .
+                    "{$this->getOrigData('score')}, new score: {$this->getData('score')}";
+                $this->orderHelper->addCommentToStatusHistory($order, $message);
+                break;
+
+            case 'approved guarantees reviewed to declined':
+                $message = "Signifyd: case reviewed " .
+                    "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
+                    "to {$this->getData('guarantee')} ({$this->getData('score')})";
+                $this->orderHelper->addCommentToStatusHistory($order, $message);
+                break;
+        }
     }
 }

@@ -146,7 +146,6 @@ class Purchase implements ObserverInterface
         try {
             $this->logger->info('Processing Signifyd event ' . $observer->getEvent()->getName());
 
-
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();
             $storeId = $order->getStoreId();
@@ -394,7 +393,7 @@ class Purchase implements ObserverInterface
      * @param $order
      * @return bool
      */
-    public function holdOrder(\Magento\Sales\Model\Order $order, \Signifyd\Connect\Model\Casedata $case, $isPassive = false)
+    public function holdOrder(Order $order, Casedata $case, $isPassive = false)
     {
         $positiveAction = $case->getPositiveAction();
         $negativeAction = $case->getNegativeAction();

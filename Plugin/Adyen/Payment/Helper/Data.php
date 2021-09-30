@@ -55,12 +55,11 @@ class Data
     {
         $adyenProxyEnabled = $this->scopeConfig->isSetFlag(
             'signifyd/proxy/adyen_enable',
-            'stores', $this->storeId
+            'stores',
+            $this->storeId
         );
 
-        $isEnable = $this->scopeConfig->isSetFlag('signifyd/proxy/adyen_enable', 'stores', $this->storeId);
-
-        if ($adyenProxyEnabled && $isEnable) {
+        if ($adyenProxyEnabled) {
             $environment = $subject->isDemoMode($this->storeId) ? \Adyen\Environment::TEST : \Adyen\Environment::LIVE;
             $client->getConfig()->set('endpointCheckout', $this->endpoints[$environment]);
         }

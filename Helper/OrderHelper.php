@@ -182,8 +182,9 @@ class OrderHelper
      * @param $comment
      * @param false $isVisibleOnFront
      */
-    public function addCommentToStatusHistory(Order $order, $comment, $isVisibleOnFront = false)
+    public function addCommentToStatusHistory(Order $order, $comment, $isVisibleOnFront = false, $isPassive = false)
     {
+        $comment = $isPassive ? 'PASSIVE: ' . $comment : $comment;
         $history = $this->historyFactory->create();
         $history->setStatus($order->getStatus());
         $history->setComment($comment);
