@@ -146,16 +146,7 @@ class PreAuth implements ObserverInterface
             $quote->getStoreId()
         );
 
-        $paymentMethod = null;
-        $data = $this->requestHttp->getContent();
-        $dataArray = $this->jsonSerializer->unserialize($data);
-
-        if (isset($dataArray['paymentMethod']) &&
-            isset($dataArray['paymentMethod']['method'])
-        ) {
-            $paymentMethod = $dataArray['paymentMethod']['method'];
-        }
-
+        $paymentMethod = $quote->getPayment()->getMethod();
         $isPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, $paymentMethod);
 
         if ($isPreAuth === false) {
@@ -177,10 +168,16 @@ class PreAuth implements ObserverInterface
         );
 
         $checkoutPaymentDetails = [];
+        $dataArray = [];
+        $data = $this->requestHttp->getContent();
+
+        if (empty($data) === false) {
+            $dataArray = $this->jsonSerializer->unserialize($data);
+        }
 
         if (isset($dataArray['paymentMethod']) &&
-                isset($dataArray['paymentMethod']['additional_data'])
-            ) {
+            isset($dataArray['paymentMethod']['additional_data'])
+        ) {
             $checkoutPaymentDetails['cardBin'] =
                 $dataArray['paymentMethod']['additional_data']['cardBin'] ?? null;
 
@@ -201,7 +198,8 @@ class PreAuth implements ObserverInterface
         $caseFromQuote = $this->purchaseHelper->processQuoteData($quote, $checkoutPaymentDetails, $paymentMethod);
         $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
 
-        if (isset($caseResponse->recommendedAction) &&
+        if (
+            isset($caseResponse->recommendedAction) &&
             ($caseResponse->recommendedAction == 'ACCEPT' || $caseResponse->recommendedAction == 'REJECT')
         ) {
             /** @var $case \Signifyd\Connect\Model\Casedata */
