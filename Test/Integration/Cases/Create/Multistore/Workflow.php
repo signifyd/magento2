@@ -25,8 +25,8 @@ class Workflow extends OrderTestCase
         $alternateStoreOrder = $this->placeQuote($this->getQuote('guest_quote_alt', $alternateStoreIncrementId));
         $defaultStoreOrder = $this->placeQuote($this->getQuote('guest_quote', $defaultStoreIncrementId));
 
-        $defaultStoreCase = $this->getCase($defaultStoreIncrementId);
-        $alternateStoreCase = $this->getCase($alternateStoreIncrementId);
+        $defaultStoreCase = $this->getCase(['order_increment' => $defaultStoreIncrementId]);
+        $alternateStoreCase = $this->getCase(['order_increment' => $alternateStoreIncrementId]);
 
         $this->assertEquals($defaultStoreIncrementId, $defaultStoreCase->getOrderIncrement());
         $this->assertEquals($alternateStoreIncrementId, $alternateStoreCase->getOrderIncrement());
