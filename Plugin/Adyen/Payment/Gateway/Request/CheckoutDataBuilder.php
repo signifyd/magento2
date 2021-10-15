@@ -265,7 +265,7 @@ class CheckoutDataBuilder
 
     public function getAddressData(\Magento\Quote\Model\Quote\Address $address)
     {
-        $data = implode($address->getStreet(), '');
+        $data = implode('', $address->getStreet());
         $data .= $address->getPostcode();
         $data .= $address->getCity();
         $data .= $address->getRegion();

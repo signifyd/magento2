@@ -211,13 +211,18 @@ class PreAuth implements ObserverInterface
             $case->setCode($caseResponse->caseId);
             $case->setScore(floor($caseResponse->score));
             $case->setGuarantee($caseResponse->recommendedAction);
-            $case->setEntriesText("");
             $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
             $case->setUpdated();
             $case->setMagentoStatus(Casedata::PRE_AUTH);
             $case->setPolicyName(Casedata::PRE_AUTH);
             $case->setCheckoutToken($caseFromQuote['purchase']['checkoutToken']);
             $case->setQuoteId($quote->getId());
+            $case->setOrderIncrement($quote->getReservedOrderId());
+            $entries = $case->getEntriesText();
+
+            if (isset($entries) === false) {
+                $case->setEntriesText("");
+            }
 
             $this->casedataResourceModel->save($case);
         }
