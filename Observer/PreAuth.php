@@ -136,10 +136,14 @@ class PreAuth implements ObserverInterface
 
     public function execute(Observer $observer)
     {
-        $this->logger->info("policy validation");
-
         /** @var \Magento\Quote\Model\Quote $quote */
         $quote = $observer->getEvent()->getQuote();
+
+        if ($this->configHelper->isEnabled($quote) == false) {
+            return;
+        }
+
+        $this->logger->info("policy validation");
 
         $policyName = $this->purchaseHelper->getPolicyName(
             $quote->getStore()->getScopeType(),
