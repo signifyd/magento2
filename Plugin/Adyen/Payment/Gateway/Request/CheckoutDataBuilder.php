@@ -175,10 +175,16 @@ class CheckoutDataBuilder
             $request['body']['additionalData']['bin'] = $magentoRequest['paymentMethod']['additional_data']['cardBin'];
         }
 
+        if ($quote->getCustomerIsGuest()) {
+            $customerEmail = $quote->getBillingAddress()->getEmail();
+        } else {
+            $customerEmail = $quote->getCustomerEmail();
+        }
+
         $request['body']['additionalData']['teamId'] = $teamId;
         $request['body']['additionalData']['checkoutAttemptId'] = uniqid();
         $request['body']['additionalData']['enhancedSchemeData.dutyAmount'] = $this->processAmount($taxAmount);
-        $request['body']['additionalData']['riskdata.basket.item0.receiverEmail'] = $quote->getCustomer()->getEmail();
+        $request['body']['additionalData']['riskdata.basket.item0.receiverEmail'] = $customerEmail;
 
         if ($discountAmount) {
             $request['body']['additionalData']['riskdata.promotions.promotion0.promotionDiscountAmount'] =
