@@ -974,7 +974,7 @@ class PurchaseHelper
         $checkoutPaymentDetails['holderName'] = $this->getCardholder($order);
         $checkoutPaymentDetails['holderTaxId'] = $this->getHolderTaxId();
         $checkoutPaymentDetails['holderTaxCountry'] = $this->getHolderTaxCountry();
-        $checkoutPaymentDetails['cardBin'] = $this->getBin($order);
+        $checkoutPaymentDetails['cardBin'] = (string) $this->getBin($order);
         $checkoutPaymentDetails['cardLast4'] = $this->getLast4($order);
         $checkoutPaymentDetails['cardExpiryMonth'] = $this->getExpMonth($order);
         $checkoutPaymentDetails['cardExpiryYear'] = $this->getExpYear($order);
