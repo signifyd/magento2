@@ -278,6 +278,7 @@ class Casedata extends AbstractModel
         $loadForUpdate = false;
 
         if ($enableTransaction) {
+            $this->logger->info("Begin database transaction");
             $this->orderResourceModel->getConnection()->beginTransaction();
             $loadForUpdate = true;
         }
@@ -497,8 +498,20 @@ class Casedata extends AbstractModel
                             $order->setCustomerNoteNotify(true);
                             $order->setIsInProcess(true);
 
-                            $this->orderResourceModel->save($order);
-                            $this->invoiceResourceModel->save($invoice);
+                            if ($enableTransaction) {
+                                $this->orderResourceModel->save($order);
+                                $this->invoiceResourceModel->save($invoice);
+                            } else {
+                                $transactionSave = \Magento\Framework\App\ObjectManager::getInstance()
+                                    ->get('Magento\Framework\DB\Transaction'
+                                )->addObject(
+                                    $invoice
+                                )->addObject(
+                                    $invoice->getOrder()
+                                );
+
+                                $transactionSave->save();
+                            }
 
                             $this->orderHelper->addCommentToStatusHistory(
                                 $order,
