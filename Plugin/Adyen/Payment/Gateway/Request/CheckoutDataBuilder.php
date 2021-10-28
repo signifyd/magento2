@@ -175,10 +175,16 @@ class CheckoutDataBuilder
             $request['body']['additionalData']['bin'] = $magentoRequest['paymentMethod']['additional_data']['cardBin'];
         }
 
+        if ($quote->getCustomerIsGuest()) {
+            $customerEmail = $quote->getBillingAddress()->getEmail();
+        } else {
+            $customerEmail = $quote->getCustomerEmail();
+        }
+
         $request['body']['additionalData']['teamId'] = $teamId;
         $request['body']['additionalData']['checkoutAttemptId'] = uniqid();
         $request['body']['additionalData']['enhancedSchemeData.dutyAmount'] = $this->processAmount($taxAmount);
-        $request['body']['additionalData']['riskdata.basket.item0.receiverEmail'] = $quote->getCustomer()->getEmail();
+        $request['body']['additionalData']['riskdata.basket.item0.receiverEmail'] = $customerEmail;
 
         if ($discountAmount) {
             $request['body']['additionalData']['riskdata.promotions.promotion0.promotionDiscountAmount'] =
@@ -226,9 +232,6 @@ class CheckoutDataBuilder
             }
         }
 
-        $createdAt = $quote->getCustomer()->getCreatedAt();
-        $createdAt = str_replace(' ', 'T', $createdAt) . "+00:00";
-
         $address = $quote->getShippingAddress()->getCity() !== null ?
             $quote->getShippingAddress() : $quote->getBillingAddress();
         $shippingData = $this->getAddressData($quote->getShippingAddress());
@@ -256,7 +259,13 @@ class CheckoutDataBuilder
             $request['body']['merchantRiskIndicator']['deliveryTimeframe'] = $deliveryTimeframe;
         }
 
-        $request['body']['accountInfo']['accountCreationDate'] = $createdAt;
+        $createdAt = $quote->getCustomer()->getCreatedAt();
+
+        if (isset($createdAt)) {
+            $createdAt = str_replace(' ', 'T', $createdAt) . "+00:00";
+            $request['body']['accountInfo']['accountCreationDate'] = $createdAt;
+        }
+
         $request['body']['merchantRiskIndicator']['deliveryAddressIndicator'] = $deliveryAddressIndicator;
         $request['body']['deliveryAddress'] = $adyenAddress;
 
@@ -265,7 +274,7 @@ class CheckoutDataBuilder
 
     public function getAddressData(\Magento\Quote\Model\Quote\Address $address)
     {
-        $data = implode($address->getStreet(), '');
+        $data = implode('', $address->getStreet());
         $data .= $address->getPostcode();
         $data .= $address->getCity();
         $data .= $address->getRegion();
