@@ -167,6 +167,7 @@ class CheckoutDataBuilder
         $magentoRequest = $this->jsonSerializer->unserialize($magentoRequestJson);
 
         $teamId = $this->getTeamId($quote);
+        $customerId = $quote->getCustomerId();
 
         if (isset($magentoRequest['paymentMethod']) &&
             isset($magentoRequest['paymentMethod']['additional_data']) &&
@@ -175,10 +176,10 @@ class CheckoutDataBuilder
             $request['body']['additionalData']['bin'] = $magentoRequest['paymentMethod']['additional_data']['cardBin'];
         }
 
-        if ($quote->getCustomerIsGuest()) {
-            $customerEmail = $quote->getBillingAddress()->getEmail();
-        } else {
+        if (isset($customerId)) {
             $customerEmail = $quote->getCustomerEmail();
+        } else {
+            $customerEmail = $quote->getBillingAddress()->getEmail();
         }
 
         $request['body']['additionalData']['teamId'] = $teamId;
@@ -259,11 +260,15 @@ class CheckoutDataBuilder
             $request['body']['merchantRiskIndicator']['deliveryTimeframe'] = $deliveryTimeframe;
         }
 
-        $createdAt = $quote->getCustomer()->getCreatedAt();
+        if (isset($customerId)) {
+            $createdAt = $quote->getCustomer()->getCreatedAt();
+            $transactionCount = $this->purchaseHelper->getPastTransactionsYear($quote->getCustomerId());
+            $purchaseCount = $this->purchaseHelper->getPurchasesLast6Months($quote->getCustomerId());
 
-        if (isset($createdAt)) {
             $createdAt = str_replace(' ', 'T', $createdAt) . "+00:00";
             $request['body']['accountInfo']['accountCreationDate'] = $createdAt;
+            $request['body']['accountInfo']['pastTransactionsYear'] = $transactionCount;
+            $request['body']['accountInfo']['purchasesLast6Months'] = $purchaseCount;
         }
 
         $request['body']['merchantRiskIndicator']['deliveryAddressIndicator'] = $deliveryAddressIndicator;

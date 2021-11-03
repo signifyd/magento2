@@ -35,6 +35,7 @@ use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory as CategoryCo
 use Magento\Catalog\Model\CategoryFactory;
 use Magento\Catalog\Model\ResourceModel\Category as CategoryResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\Stdlib\DateTime\DateTimeFactory;
 
 /**
  * Class PurchaseHelper
@@ -173,6 +174,11 @@ class PurchaseHelper
     protected $quoteResourceModel;
 
     /**
+     * @var DateTimeFactory
+     */
+    protected $dateTimeFactory;
+
+    /**
      * PurchaseHelper constructor.
      * @param OrderResourceModel $orderResourceModel
      * @param RemoteAddress $remoteAddress
@@ -200,6 +206,7 @@ class PurchaseHelper
      * @param CategoryResourceModel $categoryResourceModel
      * @param StoreManagerInterface $storeManagerInterface
      * @param QuoteResourceModel $quoteResourceModel
+     * @param DateTimeFactory $dateTimeFactory
      */
     public function __construct(
         OrderResourceModel $orderResourceModel,
@@ -227,7 +234,8 @@ class PurchaseHelper
         CategoryFactory $categoryFactory,
         CategoryResourceModel $categoryResourceModel,
         StoreManagerInterface $storeManagerInterface,
-        QuoteResourceModel $quoteResourceModel
+        QuoteResourceModel $quoteResourceModel,
+        DateTimeFactory $dateTimeFactory
     ) {
         $this->orderResourceModel = $orderResourceModel;
         $this->remoteAddress = $remoteAddress;
@@ -255,6 +263,7 @@ class PurchaseHelper
         $this->categoryResourceModel = $categoryResourceModel;
         $this->storeManagerInterface = $storeManagerInterface;
         $this->quoteResourceModel = $quoteResourceModel;
+        $this->dateTimeFactory = $dateTimeFactory;
     }
 
     /**
@@ -1788,5 +1797,44 @@ class PurchaseHelper
         } else {
             return ($policyName == 'PRE_AUTH');
         }
+    }
+
+    public function getPastTransactionsYear($customerId)
+    {
+        $transactionsCount = 0;
+
+        /** @var \Magento\Framework\Stdlib\DateTime\DateTime $date */
+        $date = $this->dateTimeFactory->create();
+        $gmtDate = $date->date(null, '-1 year');
+
+        /** @var $orderCollection \Magento\Sales\Model\ResourceModel\Order\Collection */
+        $orderCollection = $this->orderCollectionFactory->create();
+        $orderCollection->addFieldToFilter('customer_id', ['eq' => $customerId]);
+        $orderCollection->addFieldToFilter('created_at', ['gteq' => $gmtDate]);
+        $orderCollection->addFieldToFilter('state', ['nin' => ['closed', 'canceled']]);
+        $orderItems = $orderCollection->getItems();
+
+        /** @var $o \Magento\Sales\Model\Order */
+        foreach ($orderItems as $o) {
+            $transactions = $this->transactions->create()->addOrderIdFilter($o->getId());
+            $transactionsCount += $transactions->getTotalCount();
+        }
+
+        return $transactionsCount;
+    }
+
+    public function getPurchasesLast6Months($customerId)
+    {
+        /** @var \Magento\Framework\Stdlib\DateTime\DateTime $date */
+        $date = $this->dateTimeFactory->create();
+        $gmtDate = $date->date(null, '-6 months');
+
+        /** @var $orderCollection \Magento\Sales\Model\ResourceModel\Order\Collection */
+        $orderCollection = $this->orderCollectionFactory->create();
+        $orderCollection->addFieldToFilter('customer_id', ['eq' => $customerId]);
+        $orderCollection->addFieldToFilter('state', ['eq' => 'complete']);
+        $orderCollection->addFieldToFilter('created_at', ['gteq' => $gmtDate]);
+
+        return $orderCollection->getTotalCount();
     }
 }
