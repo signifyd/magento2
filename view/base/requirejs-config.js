@@ -9,6 +9,9 @@ var config = {
             },
             'Adyen_Payment/js/view/payment/method-renderer/adyen-cc-method': {
                 'Signifyd_Connect/js/model/adyen-cc-method-mixin': true
+            },
+            'Openpay_Cards/js/view/payment/method-renderer/cc-form': {
+                'Signifyd_Connect/js/model/openpay-cc-method-mixin': true
             }
         }
     }
