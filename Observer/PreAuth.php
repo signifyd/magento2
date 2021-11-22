@@ -136,10 +136,14 @@ class PreAuth implements ObserverInterface
 
     public function execute(Observer $observer)
     {
-        $this->logger->info("policy validation");
-
         /** @var \Magento\Quote\Model\Quote $quote */
         $quote = $observer->getEvent()->getQuote();
+
+        if ($this->configHelper->isEnabled($quote) == false) {
+            return;
+        }
+
+        $this->logger->info("policy validation");
 
         $policyName = $this->purchaseHelper->getPolicyName(
             $quote->getStore()->getScopeType(),
@@ -211,13 +215,18 @@ class PreAuth implements ObserverInterface
             $case->setCode($caseResponse->caseId);
             $case->setScore(floor($caseResponse->score));
             $case->setGuarantee($caseResponse->recommendedAction);
-            $case->setEntriesText("");
             $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
             $case->setUpdated();
             $case->setMagentoStatus(Casedata::PRE_AUTH);
             $case->setPolicyName(Casedata::PRE_AUTH);
             $case->setCheckoutToken($caseFromQuote['purchase']['checkoutToken']);
             $case->setQuoteId($quote->getId());
+            $case->setOrderIncrement($quote->getReservedOrderId());
+            $entries = $case->getEntriesText();
+
+            if (isset($entries) === false) {
+                $case->setEntriesText("");
+            }
 
             $this->casedataResourceModel->save($case);
         }

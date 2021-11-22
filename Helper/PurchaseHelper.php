@@ -949,6 +949,71 @@ class PurchaseHelper
         return $transactions;
     }
 
+    public function makeTransactionsFromQuote(Quote $quote, $methodData = [])
+    {
+        $transactions = [];
+        $lastTransaction = [];
+        $errorCode = $methodData['gatewayRefusedReason'] ?? "CARD_DECLINED";
+        $gateway = $methodData['gateway'] ?? null;
+
+        $lastTransaction['checkoutPaymentDetails'] = $this->makeCheckoutPaymentDetailsFromQuote($quote, $methodData);
+        $lastTransaction['currency'] = $quote->getBaseCurrencyCode();
+        $lastTransaction['amount'] = $quote->getGrandTotal();
+        $lastTransaction['gateway'] = $gateway;
+        $lastTransaction['paymentMethod'] = $this->makePaymentMethod('adyen_cc');
+        $lastTransaction['type'] = 'PREAUTHORIZATION';
+        $lastTransaction['gatewayStatusCode'] = 'FAILURE';
+        $lastTransaction['gatewayStatusMessage'] = $this->getGatewayStatusMessage();
+        $lastTransaction['gatewayErrorCode'] = $errorCode;
+        $lastTransaction['paypalPendingReasonCode'] = $this->getPaypalPendingReasonCode();
+        $lastTransaction['paypalProtectionEligibility'] = $this->getPaypalProtectionEligibility();
+        $lastTransaction['paypalProtectionEligibilityType'] = $this->getPaypalProtectionEligibilityType();
+        $lastTransaction['bankAuthCode'] = $this->getBankAuthCode();
+        $lastTransaction['paymentAccountHolder '] = $this->getPaymentAccountHolder();
+        $lastTransaction['verifications '] = $this->getVerifications();
+
+        $transactions[] = $lastTransaction;
+
+        return $transactions;
+    }
+
+    public function makeCheckoutPaymentDetailsFromQuote(Quote $quote, $methodData = [])
+    {
+        $checkoutPaymentDetails = [];
+
+        if (is_array($methodData)) {
+            $checkoutPaymentDetails['cardLast4'] = $methodData['cardLast4'] ?? null;
+            $checkoutPaymentDetails['cardExpiryMonth'] = $methodData['cardExpiryMonth'] ?? null;
+            $checkoutPaymentDetails['cardExpiryYear'] = $methodData['cardExpiryYear'] ?? null;
+        }
+
+        $billingAddress = $quote->getBillingAddress();
+        $checkoutPaymentDetails['holderName'] = $this->getCardholderFromQuote($quote);
+        $checkoutPaymentDetails['holderTaxId'] = $this->getHolderTaxId();
+        $checkoutPaymentDetails['holderTaxCountry'] = $this->getHolderTaxCountry();
+        $checkoutPaymentDetails['bankAccountNumber'] = $this->getBankAccountNumber();
+        $checkoutPaymentDetails['bankRoutingNumber'] = $this->getBankRoutingNumber();
+        $checkoutPaymentDetails['billingAddress'] = $this->formatSignifydAddress($billingAddress);
+
+        return $checkoutPaymentDetails;
+    }
+
+    public function getCardholderFromQuote(Quote $quote)
+    {
+        try{
+            $firstname = $quote->getBillingAddress()->getFirstname();
+            $lastname = $quote->getBillingAddress()->getLastname();
+            $cardholder = trim($firstname) . ' ' . trim($lastname);
+            $cardholder = strtoupper($cardholder);
+            $cardholder = preg_replace('/  +/', ' ', $cardholder);
+
+            return $cardholder;
+        } catch (Exception $e) {
+            $this->logger->error('Error fetching cardholder: ' . $e->getMessage(), ['entity' => $quote]);
+            return '';
+        }
+    }
+
     public function makePaymentMethod($paymentMethod)
     {
         $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/payment_methods_config');
@@ -1723,15 +1788,18 @@ class PurchaseHelper
         }
     }
 
-    public function postTransactionToSignifyd($transactionData, $order)
+    public function postTransactionToSignifyd($transactionData, $entity)
     {
-        $caseResponse = $this->configHelper->getSignifydCaseApi($order)->createTransaction($transactionData);
+        $caseResponse = $this->configHelper->getSignifydCaseApi($entity)->createTransaction($transactionData);
         $tokenSent = $transactionData['checkoutToken'];
         $tokenReceived = $caseResponse->getCheckoutToken();
 
         if ($tokenSent === $tokenReceived) {
-            $this->logger->debug("Transaction sent to order {$order->getIncrementId()}.
-                Token is {$caseResponse->getCheckoutToken()}");
+            $message = $entity instanceof \Magento\Quote\Model\Quote ?
+                "Transaction sent to quote {$entity->getId()}. Token is {$caseResponse->getCheckoutToken()}" :
+                "Transaction sent to order {$entity->getIncrementId()}. Token is {$caseResponse->getCheckoutToken()}";
+
+            $this->logger->debug($message);
             return $caseResponse;
         } else {
             $this->logger->error($this->jsonSerializer->serialize($caseResponse));
