@@ -1000,7 +1000,7 @@ class PurchaseHelper
 
     public function getCardholderFromQuote(Quote $quote)
     {
-        try{
+        try {
             $firstname = $quote->getBillingAddress()->getFirstname();
             $lastname = $quote->getBillingAddress()->getLastname();
             $cardholder = trim($firstname) . ' ' . trim($lastname);

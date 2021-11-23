@@ -89,7 +89,7 @@ class GeneralResponseValidator
 
         $isPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, 'braintree');
 
-        if ($isPreAuth === false)  {
+        if ($isPreAuth === false) {
             return null;
         }
 

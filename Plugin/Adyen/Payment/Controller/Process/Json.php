@@ -87,7 +87,7 @@ class Json
         $isPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, 'adyen_cc');
         $notificationItems = json_decode(file_get_contents('php://input'), true);
 
-        if ($isPreAuth === false && empty($notificationItems) === true)  {
+        if ($isPreAuth === false && empty($notificationItems) === true) {
             return null;
         }
 
@@ -98,7 +98,8 @@ class Json
             isset($notificationItems['notificationItems'][0]['NotificationRequestItem']['success']) &&
             isset($notificationItems['notificationItems'][0]['NotificationRequestItem']['reason'])
         ) {
-            $orderIncrement = $notificationItems['notificationItems'][0]['NotificationRequestItem']['merchantReference'];
+            $orderIncrement =
+                $notificationItems['notificationItems'][0]['NotificationRequestItem']['merchantReference'];
             $isSuccess = $notificationItems['notificationItems'][0]['NotificationRequestItem']['success'];
             $reason = $notificationItems['notificationItems'][0]['NotificationRequestItem']['reason'];
 
@@ -157,10 +158,13 @@ class Json
 
                 if (isset($notificationItems['notificationItems'][0]['NotificationRequestItem']['additionalData'])) {
                     $adyenData['cardLast4'] =
-                        $notificationItems['notificationItems'][0]['NotificationRequestItem']['additionalData']['cardSummary'] ?? null;
+                        $notificationItems['notificationItems'][0]
+                        ['NotificationRequestItem']['additionalData']['cardSummary'] ?? null;
 
-                    if (isset($notificationItems['notificationItems'][0]['NotificationRequestItem']['additionalData']['expiryDate'])){
-                        $expiryDate = $notificationItems['notificationItems'][0]['NotificationRequestItem']['additionalData']['expiryDate'];
+                    if (isset($notificationItems['notificationItems']
+                        [0]['NotificationRequestItem']['additionalData']['expiryDate'])) {
+                        $expiryDate = $notificationItems['notificationItems'][0]
+                            ['NotificationRequestItem']['additionalData']['expiryDate'];
                         $expiryDateArray = explode('/', $expiryDate);
                         $adyenData['cardExpiryMonth'] = $expiryDateArray[0];
                         $adyenData['cardExpiryYear'] = $expiryDateArray[1];
