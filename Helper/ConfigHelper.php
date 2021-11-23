@@ -236,6 +236,17 @@ class ConfigHelper
         return $this->getConfigData('signifyd/general/enabled', $entity, true);
     }
 
+    public function getEnabledByStoreId($storeId = null)
+    {
+        $key = $this->scopeConfigInterface->getValue('signifyd/general/key', 'stores' ,$storeId);
+
+        if (empty($key)) {
+            return false;
+        }
+
+        return $this->scopeConfigInterface->isSetFlag('signifyd/general/enabled', 'stores', $storeId);
+    }
+
     public function isScoreOnly()
     {
         return (bool) $this->scopeConfigInterface->getValue('signifyd/general/score_only');

@@ -14,6 +14,7 @@ use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\DeviceHelper;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Signifyd\Connect\Helper\PurchaseHelper;
+use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\WebhookLink;
 use Signifyd\Core\Api\WebhooksApiFactory;
 use Signifyd\Models\WebhookFactory;
@@ -86,6 +87,11 @@ class CheckoutDataBuilder
     protected $configHelper;
 
     /**
+     * @var Logger
+     */
+    protected $logger;
+
+    /**
      * CheckoutDataBuilder constructor.
      * @param QuoteResourceModel $quoteResourceModel
      * @param QuoteFactory $quoteFactory
@@ -99,6 +105,7 @@ class CheckoutDataBuilder
      * @param WebhookFactory $webhookFactory
      * @oaram WebhookLink $webhookLink
      * @param ConfigHelper $configHelper
+     * @param Logger $logger
      */
     public function __construct(
         QuoteResourceModel $quoteResourceModel,
@@ -112,7 +119,8 @@ class CheckoutDataBuilder
         WebhooksApiFactory $webhooksApiFactory,
         WebhookFactory $webhookFactory,
         WebhookLink $webhookLink,
-        ConfigHelper $configHelper
+        ConfigHelper $configHelper,
+        Logger $logger
     ) {
         $this->quoteResourceModel = $quoteResourceModel;
         $this->quoteFactory = $quoteFactory;
@@ -126,6 +134,7 @@ class CheckoutDataBuilder
         $this->webhookFactory = $webhookFactory;
         $this->webhookLink = $webhookLink;
         $this->configHelper = $configHelper;
+        $this->logger = $logger;
     }
 
     public function beforeBuild(AdyenCheckoutDataBuilder $subject, array $buildSubject)
@@ -167,6 +176,7 @@ class CheckoutDataBuilder
         $magentoRequest = $this->jsonSerializer->unserialize($magentoRequestJson);
 
         $teamId = $this->getTeamId($quote);
+        $customerId = $quote->getCustomerId();
 
         if (isset($magentoRequest['paymentMethod']) &&
             isset($magentoRequest['paymentMethod']['additional_data']) &&
@@ -175,10 +185,10 @@ class CheckoutDataBuilder
             $request['body']['additionalData']['bin'] = $magentoRequest['paymentMethod']['additional_data']['cardBin'];
         }
 
-        if ($quote->getCustomerIsGuest()) {
-            $customerEmail = $quote->getBillingAddress()->getEmail();
-        } else {
+        if (isset($customerId)) {
             $customerEmail = $quote->getCustomerEmail();
+        } else {
+            $customerEmail = $quote->getBillingAddress()->getEmail();
         }
 
         $request['body']['additionalData']['teamId'] = $teamId;
@@ -259,11 +269,15 @@ class CheckoutDataBuilder
             $request['body']['merchantRiskIndicator']['deliveryTimeframe'] = $deliveryTimeframe;
         }
 
-        $createdAt = $quote->getCustomer()->getCreatedAt();
+        if (isset($customerId)) {
+            $createdAt = $quote->getCustomer()->getCreatedAt();
+            $transactionCount = $this->purchaseHelper->getPastTransactionsYear($quote->getCustomerId());
+            $purchaseCount = $this->purchaseHelper->getPurchasesLast6Months($quote->getCustomerId());
 
-        if (isset($createdAt)) {
             $createdAt = str_replace(' ', 'T', $createdAt) . "+00:00";
             $request['body']['accountInfo']['accountCreationDate'] = $createdAt;
+            $request['body']['accountInfo']['pastTransactionsYear'] = $transactionCount;
+            $request['body']['accountInfo']['purchasesLast6Months'] = $purchaseCount;
         }
 
         $request['body']['merchantRiskIndicator']['deliveryAddressIndicator'] = $deliveryAddressIndicator;
@@ -336,10 +350,17 @@ class CheckoutDataBuilder
                 $webHookGuaranteeCompletion->setUrl($url);
                 $webhooksToCreate = [$webHookGuaranteeCompletion];
                 $createResponse = $webhooksApiCreate->createWebhooks($webhooksToCreate);
-                $teamId = $createResponse->getObjects()[0]->getTeam()['teamId'];
+
+                if (isset($createResponse->getObjects()[0])) {
+                    $teamId = $createResponse->getObjects()[0]->getTeam()['teamId'];
+                } else {
+                    $teamId = null;
+                    $this->logger->info("There was a problem getting teamId");
+                }
             }
         } catch (\Exception $e) {
-            throw new LocalizedException(__('There was a problem getting teamId'));
+            $teamId = null;
+            $this->logger->info($e->getMessage());
         }
 
         return $teamId;
