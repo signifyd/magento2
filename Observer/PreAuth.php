@@ -201,10 +201,6 @@ class PreAuth implements ObserverInterface
         $caseFromQuote = $this->purchaseHelper->processQuoteData($quote, $checkoutPaymentDetails, $paymentMethod);
         $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
 
-        \Magento\Framework\App\ObjectManager::getInstance()
-            ->get('Signifyd\Connect\Logger\Logger')
-            ->info(print_r($caseResponse,true));
-
         if (isset($caseResponse->recommendedAction) &&
             (
                 $caseResponse->recommendedAction == 'ACCEPT' ||
