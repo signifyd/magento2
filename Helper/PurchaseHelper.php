@@ -1192,7 +1192,7 @@ class PurchaseHelper
 
         $guarantee = $case->getData('guarantee');
 
-        if (empty($guarantee) || in_array($guarantee, ['DECLINED'])) {
+        if (empty($guarantee) || in_array($guarantee, ['DECLINED', 'REJECT', 'N/A'])) {
             $this->logger->debug("Guarantee cancel skipped: current guarantee is {$guarantee}", ['entity' => $order]);
             return false;
         }
