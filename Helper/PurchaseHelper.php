@@ -35,6 +35,7 @@ use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory as CategoryCo
 use Magento\Catalog\Model\CategoryFactory;
 use Magento\Catalog\Model\ResourceModel\Category as CategoryResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\Stdlib\DateTime\DateTimeFactory;
 
 /**
  * Class PurchaseHelper
@@ -173,6 +174,11 @@ class PurchaseHelper
     protected $quoteResourceModel;
 
     /**
+     * @var DateTimeFactory
+     */
+    protected $dateTimeFactory;
+
+    /**
      * PurchaseHelper constructor.
      * @param OrderResourceModel $orderResourceModel
      * @param RemoteAddress $remoteAddress
@@ -200,6 +206,7 @@ class PurchaseHelper
      * @param CategoryResourceModel $categoryResourceModel
      * @param StoreManagerInterface $storeManagerInterface
      * @param QuoteResourceModel $quoteResourceModel
+     * @param DateTimeFactory $dateTimeFactory
      */
     public function __construct(
         OrderResourceModel $orderResourceModel,
@@ -227,7 +234,8 @@ class PurchaseHelper
         CategoryFactory $categoryFactory,
         CategoryResourceModel $categoryResourceModel,
         StoreManagerInterface $storeManagerInterface,
-        QuoteResourceModel $quoteResourceModel
+        QuoteResourceModel $quoteResourceModel,
+        DateTimeFactory $dateTimeFactory
     ) {
         $this->orderResourceModel = $orderResourceModel;
         $this->remoteAddress = $remoteAddress;
@@ -255,6 +263,7 @@ class PurchaseHelper
         $this->categoryResourceModel = $categoryResourceModel;
         $this->storeManagerInterface = $storeManagerInterface;
         $this->quoteResourceModel = $quoteResourceModel;
+        $this->dateTimeFactory = $dateTimeFactory;
     }
 
     /**
@@ -923,6 +932,13 @@ class PurchaseHelper
         $transactions = [];
         $lastTransaction = [];
 
+        if ($transactionFromOrder->isEmpty()) {
+            $dateTime = $this->dateTimeFactory->create();
+            $transactionDate = $dateTime->gmtDate();
+        } else {
+            $transactionDate = $transactionFromOrder->getData('created_at');
+        }
+
         $lastTransaction['checkoutPaymentDetails'] = $this->makeCheckoutPaymentDetails($order);
         $lastTransaction['avsResponseCode'] = $this->getAvsCode($order);
         $lastTransaction['cvvResponseCode'] = $this->getCvvCode($order);
@@ -930,7 +946,7 @@ class PurchaseHelper
         $lastTransaction['currency'] = $order->getOrderCurrencyCode();
         $lastTransaction['amount'] = $order->getGrandTotal();
         $lastTransaction['gateway'] = $order->getPayment()->getMethod();
-        $lastTransaction['createdAt'] = date('c', strtotime($transactionFromOrder->getData('created_at')));
+        $lastTransaction['createdAt'] = date('c', strtotime($transactionDate));
         $lastTransaction['paymentMethod'] = $this->makePaymentMethod($order->getPayment()->getMethod());
         $lastTransaction['type'] = $transactionType;
         $lastTransaction['gatewayStatusCode'] = 'SUCCESS';
