@@ -206,8 +206,19 @@ class PreAuth implements ObserverInterface
         $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
 
         if (isset($caseResponse->recommendedAction) &&
-            ($caseResponse->recommendedAction == 'ACCEPT' || $caseResponse->recommendedAction == 'REJECT')
+            (
+                $caseResponse->recommendedAction == 'ACCEPT' ||
+                $caseResponse->recommendedAction == 'REJECT' ||
+                $caseResponse->recommendedAction == 'HOLD' ||
+                $caseResponse->recommendedAction == 'PENDING'
+            )
         ) {
+            if ($caseResponse->recommendedAction == 'ACCEPT' || $caseResponse->recommendedAction == 'REJECT') {
+                $magentoStatus = Casedata::PRE_AUTH;
+            } else {
+                $magentoStatus = Casedata::IN_REVIEW_STATUS;
+            }
+
             /** @var $case \Signifyd\Connect\Model\Casedata */
             $case = $this->casedataFactory->create();
             $this->casedataResourceModel->load($case, $quote->getId(), 'quote_id');
@@ -217,7 +228,7 @@ class PreAuth implements ObserverInterface
             $case->setGuarantee($caseResponse->recommendedAction);
             $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
             $case->setUpdated();
-            $case->setMagentoStatus(Casedata::PRE_AUTH);
+            $case->setMagentoStatus($magentoStatus);
             $case->setPolicyName(Casedata::PRE_AUTH);
             $case->setCheckoutToken($caseFromQuote['purchase']['checkoutToken']);
             $case->setQuoteId($quote->getId());
