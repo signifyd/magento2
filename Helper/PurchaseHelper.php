@@ -932,6 +932,13 @@ class PurchaseHelper
         $transactions = [];
         $lastTransaction = [];
 
+        if ($transactionFromOrder->isEmpty()) {
+            $dateTime = $this->dateTimeFactory->create();
+            $transactionDate = $dateTime->gmtDate();
+        } else {
+            $transactionDate = $transactionFromOrder->getData('created_at');
+        }
+
         $lastTransaction['checkoutPaymentDetails'] = $this->makeCheckoutPaymentDetails($order);
         $lastTransaction['avsResponseCode'] = $this->getAvsCode($order);
         $lastTransaction['cvvResponseCode'] = $this->getCvvCode($order);
@@ -939,7 +946,7 @@ class PurchaseHelper
         $lastTransaction['currency'] = $order->getOrderCurrencyCode();
         $lastTransaction['amount'] = $order->getGrandTotal();
         $lastTransaction['gateway'] = $order->getPayment()->getMethod();
-        $lastTransaction['createdAt'] = date('c', strtotime($transactionFromOrder->getData('created_at')));
+        $lastTransaction['createdAt'] = date('c', strtotime($transactionDate));
         $lastTransaction['paymentMethod'] = $this->makePaymentMethod($order->getPayment()->getMethod());
         $lastTransaction['type'] = $transactionType;
         $lastTransaction['gatewayStatusCode'] = 'SUCCESS';
