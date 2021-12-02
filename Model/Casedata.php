@@ -514,6 +514,9 @@ class Casedata extends AbstractModel
                             $this->sendInvoice($invoice, $order);
 
                             $completeCase = true;
+                        } elseif ($order->getInvoiceCollection()->count() > 0) {
+                            $this->logger->info("Invoice already created");
+                            $completeCase = true;
                         } else {
                             $reason = $this->orderHelper->getCannotInvoiceReason($order);
                             $message = "Order {$order->getIncrementId()} can not be invoiced because {$reason}";
