@@ -1041,7 +1041,7 @@ class PurchaseHelper
             }
         }
 
-        return false;
+        return null;
     }
 
     /**
