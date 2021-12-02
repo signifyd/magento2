@@ -182,8 +182,7 @@ class Purchase implements ObserverInterface
 
                 $this->casedataResourceModel->save($casesFromQuoteLoaded);
 
-                if (
-                    $casesFromQuote->getData('guarantee') == 'HOLD' ||
+                if ($casesFromQuote->getData('guarantee') == 'HOLD' ||
                     $casesFromQuote->getData('guarantee') == 'PENDING'
                 ) {
                     $this->holdOrder($order, $casesFromQuoteLoaded, $isPassive);

@@ -238,7 +238,7 @@ class ConfigHelper
 
     public function getEnabledByStoreId($storeId = null)
     {
-        $key = $this->scopeConfigInterface->getValue('signifyd/general/key', 'stores' ,$storeId);
+        $key = $this->scopeConfigInterface->getValue('signifyd/general/key', 'stores', $storeId);
 
         if (empty($key)) {
             return false;
