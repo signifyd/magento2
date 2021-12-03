@@ -28,7 +28,7 @@ If the setting stores a JSON, then it will map each payment method listed on JSO
 To set decision per payment method run command below on your database:
 
 ```sql
-INSERT INTO core_config_data (path, value) VALUES ('signifyd/advanced/policy_name', 'INSERT-JSON-MAPPING');
+INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/decision_request', 'INSERT-JSON-MAPPING');
 ```
 
 ### Updating decision
