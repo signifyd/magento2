@@ -23,7 +23,7 @@ It is possible to select a different decision per payment method.
 If the setting stores a JSON, then it will map each payment method listed on JSON to the corresponding decision. Any payment methods not mapped will fallback to the GUARANTEE decision. Here it is an example of how the final JSON could look like:
 
 ```
-{"GUARANTEE": ["braintree"], "SCORE": ["checkmo"], "DECISION": ["paypal_braintree"]}
+{"GUARANTEE": ["braintree"], "DECISION": ["paypal_braintree"]}
 ```
 To set decision per payment method run command below on your database:
 
