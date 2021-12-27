@@ -12,7 +12,14 @@ On the downloaded files, not on GitHub repository, check the [MAGENTO_ROOT]/app/
 
 https://github.com/signifyd/php/releases
 
-Uncompress the file contents into the folder [MAGENTO_ROOT]/app/code/Signifyd/Core of your Magento instance.
+Uncompress the file and move the contents of lib folder into the folder [MAGENTO_ROOT]/app/code/Signifyd of your Magento instance. On Unix like systems the coomand looks like:
+
+```
+cd [signifyd_php_uncompressed_directory]
+mv lib/* [MAGENTO_ROOT]/app/code/Signifyd
+```
+
+At this point, when listing the [MAGENTO_ROOT]/app/code/Signifyd folder it's expected to see these directories: Connect, Core, Models, Tests.
 
 Check if you are using production mode:
 
