@@ -2,7 +2,7 @@
 
 namespace Signifyd\Connect\Plugin\Braintree\Gateway\Validator;
 
-use Magento\Braintree\Gateway\SubjectReader;
+use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
