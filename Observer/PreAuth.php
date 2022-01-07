@@ -246,7 +246,10 @@ class PreAuth implements ObserverInterface
             $this->logger->error($e->getMessage());
         }
 
-        if (is_object($caseResponse) && $caseResponse->recommendedAction == 'REJECT') {
+        if (
+            isset($caseResponse) &&
+            is_object($caseResponse) &&
+            $caseResponse->recommendedAction == 'REJECT') {
             throw new LocalizedException(__($policyRejectMessage));
         }
     }
