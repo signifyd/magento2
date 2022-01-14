@@ -561,29 +561,60 @@ class Casedata extends AbstractModel
                     }
                     break;
 
-                case 'refund':
-                    $message = "Signifyd: case reviewed " .
-                        "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
-                        "to {$this->getData('guarantee')} ({$this->getData('score')})";
-
-                    $this->orderHelper->addCommentToStatusHistory($order, $message);
-
+                case "refund":
                     try {
+                        if ($order->canUnhold()) {
+                            $order->unhold();
+                            $this->orderResourceModel->save($order);
+                        }
+
+                        $order = $this->getOrder(true);
+
+                        if ($this->getOrigData('guarantee') != 'N/A') {
+                            $message = "Signifyd: case reviewed " .
+                                "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
+                                "to {$this->getData('guarantee')} ({$this->getData('score')})";
+
+                            $this->orderHelper->addCommentToStatusHistory($order, $message);
+                        }
+
                         $invoices = $order->getInvoiceCollection();
 
-                        foreach ($invoices as $invoice) {
-                            $creditmemo = $this->creditmemoFactory->createByOrder($order);
-                            $creditmemo->setInvoice($invoice);
-                            $this->creditmemoService->refund($creditmemo);
+                        if ($invoices->getTotalCount() > 0) {
+                            foreach ($invoices as $invoice) {
+                                $creditmemo = $this->creditmemoFactory->createByOrder($order);
+                                $creditmemo->setInvoice($invoice);
+                                $this->creditmemoService->refund($creditmemo);
+                                $this->logger->debug(
+                                    'Credit memo was created for order: ' . $order->getIncrementId(),
+                                    ['entity' => $order]
+                                );
+                            }
+                        } else {
+                            $this->holdOrder($order);
+                            $message = "Signifyd: tried to refund, but there is no invoice to add credit memo";
+                            $this->orderHelper->addCommentToStatusHistory($order, $message);
                             $this->logger->debug(
-                                'Credit memo was created for order: ' . $order->getIncrementId(),
+                                "tried to refund, but there is no invoice to add credit memo",
                                 ['entity' => $order]
                             );
                         }
+
+                        $completeCase = true;
                     } catch (\Exception $e) {
+                        $order = $this->getOrder(true);
+                        $this->setEntries('fail', 1);
                         $this->holdOrder($order);
 
-                        $this->logger->debug("Creditmemo Not Created: ". $e->getMessage());
+                        $this->logger->debug(
+                            'Exception creating creditmemo: ' . $e->__toString(),
+                            ['entity' => $order]
+                        );
+
+                        $this->orderHelper->addCommentToStatusHistory(
+                            $order,
+                            "Signifyd: unable to create creditmemo: {$e->getMessage()}"
+                        );
                     }
                     break;
 
