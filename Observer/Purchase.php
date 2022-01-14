@@ -8,6 +8,7 @@ namespace Signifyd\Connect\Observer;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Model\Order;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Logger\Logger;
@@ -98,6 +99,11 @@ class Purchase implements ObserverInterface
     protected $casedataCollectionFactory;
 
     /**
+     * @var JsonSerializer
+     */
+    protected $jsonSerializer;
+
+    /**
      * Purchase constructor.
      * @param Logger $logger
      * @param PurchaseHelper $purchaseHelper
@@ -110,6 +116,7 @@ class Purchase implements ObserverInterface
      * @param StoreManagerInterface $storeManager
      * @param AppState $appState
      * @param CasedataCollectionFactory $casedataCollectionFactory
+     * @param JsonSerializer $jsonSerializer
      */
     public function __construct(
         Logger $logger,
@@ -122,7 +129,8 @@ class Purchase implements ObserverInterface
         ScopeConfigInterface $scopeConfigInterface,
         StoreManagerInterface $storeManager,
         AppState $appState,
-        CasedataCollectionFactory $casedataCollectionFactory
+        CasedataCollectionFactory $casedataCollectionFactory,
+        JsonSerializer $jsonSerializer
     ) {
         $this->logger = $logger;
         $this->purchaseHelper = $purchaseHelper;
@@ -135,6 +143,7 @@ class Purchase implements ObserverInterface
         $this->storeManager = $storeManager;
         $this->appState = $appState;
         $this->casedataCollectionFactory = $casedataCollectionFactory;
+        $this->jsonSerializer = $jsonSerializer;
     }
 
     /**
@@ -220,6 +229,11 @@ class Purchase implements ObserverInterface
             $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
 
             if ($case->isEmpty()) {
+                $recipient = $this->purchaseHelper->makeRecipient($order);
+                $recipientJson = $this->jsonSerializer->serialize($recipient);
+                $hash = sha1($recipientJson);
+
+                $case->setEntries('hash', $hash);
                 $case->setData('magento_status', Casedata::NEW);
                 $case->setData('order_increment', $order->getIncrementId());
                 $case->setData('order_id', $order->getId());
@@ -270,7 +284,6 @@ class Purchase implements ObserverInterface
             $case->setSignifydStatus("PENDING");
             $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
             $case->setUpdated();
-            $case->setEntriesText("");
 
             // Stop case sending if order has an async payment method
             if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig())) {
