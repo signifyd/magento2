@@ -1186,6 +1186,20 @@ class PurchaseHelper
         }
     }
 
+    public function updateCaseSignifyd($updateData, $order, $caseId)
+    {
+        $caseResponse = $this->configHelper->getSignifydCaseApi($order)->updateCase($updateData, $caseId);
+
+        if (empty($caseResponse->getCaseId()) === false) {
+            $this->logger->debug("Case updated. Id is {$caseResponse->getCaseId()}", ['entity' => $order]);
+            return $caseResponse;
+        } else {
+            $this->logger->error($this->jsonSerializer->serialize($caseResponse));
+            $this->logger->error("Case failed to update.", ['entity' => $order]);
+            return false;
+        }
+    }
+
     /**
      * @param Order $order
      * @return bool

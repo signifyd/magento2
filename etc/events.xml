@@ -48,4 +48,8 @@
     <event name="cron_job_run">
         <observer name="onCronJobRun" instance="Signifyd\Connect\Observer\CronJob" />
     </event>
+
+    <event name="sales_order_address_save_commit_after">
+        <observer name="onSalesOrderAddressSave" instance="Signifyd\Connect\Observer\Order\SalesOrderAddressSave" />
+    </event>
 </config>
