@@ -29,7 +29,7 @@ class Index extends \Magento\Backend\App\Action
      */
     public function __construct(
         Context $context,
-        WriterInterface $configWriter,
+        WriterInterface $configWriter
     ) {
         parent::__construct($context);
         $this->configWriter = $configWriter;
