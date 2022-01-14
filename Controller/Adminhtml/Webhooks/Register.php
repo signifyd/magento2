@@ -4,9 +4,11 @@ namespace Signifyd\Connect\Controller\Adminhtml\Webhooks;
 
 use Magento\Backend\App\Action;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Filesystem\DirectoryList;
 use Signifyd\Connect\Model\WebhookLink;
 use Signifyd\Core\Api\WebhooksApiFactory;
 use Signifyd\Models\WebhookFactory;
+use Signifyd\Connect\Helper\ConfigHelper;
 
 class Register extends Action
 {
@@ -36,6 +38,16 @@ class Register extends Action
     protected $webhookFactory;
 
     /**
+     * @var ConfigHelper
+     */
+    protected $configHelper;
+
+    /**
+     * @var DirectoryList
+     */
+    protected $directory;
+
+    /**
      * Register constructor.
      * @param Action\Context $context
      * @param ScopeConfigInterface $scopeConfig
@@ -43,6 +55,8 @@ class Register extends Action
      * @param WebhooksApiFactory $webhooksApiFactory
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param WebhookFactory $webhookFactory
+     * @param ConfigHelper $configHelper
+     * @param DirectoryList $directory
      */
     public function __construct(
         Action\Context $context,
@@ -50,7 +64,9 @@ class Register extends Action
         WebhookLink $webhookLink,
         WebhooksApiFactory $webhooksApiFactory,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
-        WebhookFactory $webhookFactory
+        WebhookFactory $webhookFactory,
+        ConfigHelper $configHelper,
+        DirectoryList $directory
     ) {
         parent::__construct($context);
         $this->scopeConfig = $scopeConfig;
@@ -58,6 +74,8 @@ class Register extends Action
         $this->webhooksApiFactory = $webhooksApiFactory;
         $this->storeManager = $storeManager;
         $this->webhookFactory = $webhookFactory;
+        $this->configHelper = $configHelper;
+        $this->directory = $directory;
     }
 
     public function execute()
@@ -79,7 +97,10 @@ class Register extends Action
 
             $apiKey = $this->scopeConfig->getValue('signifyd/general/key', $scopeType, $scopeCode);
             $url = $this->webhookLink->getUrl();
-            $args = ['apiKey' => $apiKey];
+            $args = [
+                'apiKey' => $apiKey,
+                'logLocation' => $this->directory->getPath('log')
+            ];
 
             $webhooksApiGet = $this->webhooksApiFactory->create(['args' => $args]);
 
