@@ -1,12 +1,9 @@
 Index: Plugin/Braintree/Gateway/Validator/GeneralResponseValidator.php
-IDEA additional info:
-Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
-<+>UTF-8
 ===================================================================
-diff --git vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/GeneralResponseValidator.php vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/GeneralResponseValidator.php
+diff --git a/vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/GeneralResponseValidator.php b/vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/GeneralResponseValidator.php
 new file mode 100644
 --- /dev/null	(revision f70a8543cd60ea6936c57cc645cf7059b28e8177)
-+++ vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/GeneralResponseValidator.php	(revision f70a8543cd60ea6936c57cc645cf7059b28e8177)
++++ b/vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/GeneralResponseValidator.php	(revision f70a8543cd60ea6936c57cc645cf7059b28e8177)
 @@ -0,0 +1,89 @@
 +<?php
 +
@@ -103,9 +100,9 @@ IDEA additional info:
 Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
 <+>UTF-8
 ===================================================================
-diff --git vendor/signifyd/module-connect/etc/di.xml vendor/signifyd/module-connect/etc/di.xml
---- vendor/signifyd/module-connect/etc/di.xml	(revision b4376027ccf94ffa12fc11206dc9e38aa31fce77)
-+++ vendor/signifyd/module-connect/etc/di.xml	(revision f70a8543cd60ea6936c57cc645cf7059b28e8177)
+diff --git a/vendor/signifyd/module-connect/etc/di.xml b/vendor/signifyd/module-connect/etc/di.xml
+--- a/vendor/signifyd/module-connect/etc/di.xml	(revision b4376027ccf94ffa12fc11206dc9e38aa31fce77)
++++ b/vendor/signifyd/module-connect/etc/di.xml	(revision f70a8543cd60ea6936c57cc645cf7059b28e8177)
 @@ -1,5 +1,9 @@
  <?xml version="1.0"?>
  <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
