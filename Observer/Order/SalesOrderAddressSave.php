@@ -67,7 +67,7 @@ class SalesOrderAddressSave implements ObserverInterface
         ConfigHelper $configHelper,
         JsonSerializer $jsonSerializer,
         Logger $logger
-    ){
+    ) {
         $this->paymentUpdateFactory = $paymentUpdateFactory;
         $this->purchaseHelper = $purchaseHelper;
         $this->casedataFactory = $casedataFactory;

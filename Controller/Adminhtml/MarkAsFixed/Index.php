@@ -40,7 +40,9 @@ class Index extends \Magento\Backend\App\Action
         $this->configWriter->delete("signifyd/general/upgrade4.3_inconsistency");
 
         $this->messageManager->addSuccessMessage(__('Successfully marked as fixed'));
-        $this->messageManager->addWarningMessage(__("If the inconsistency message is still visible, it's necessary to clear the config cache"));
+        $this->messageManager->addWarningMessage(__(
+            "If the inconsistency message is still visible, it's necessary to clear the config cache"
+        ));
         return $this->_redirect($this->_redirect->getRefererUrl());
     }
 }

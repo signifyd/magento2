@@ -24,6 +24,7 @@ use Signifyd\Connect\Helper\OrderHelper;
 use Magento\Sales\Model\ResourceModel\Order\Invoice as InvoiceResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\DB\TransactionFactory;
 
 /**
  * ORM model declaration for case data
@@ -122,6 +123,11 @@ class Casedata extends AbstractModel
     protected $signifydOrderResourceModel;
 
     /**
+     * @var TransactionFactory
+     */
+    protected $transactionFactory;
+
+    /**
      * Casedata constructor.
      * @param Context $context
      * @param Registry $registry
@@ -139,6 +145,7 @@ class Casedata extends AbstractModel
      * @param CreditmemoService $creditmemoService
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
+     * @param TransactionFactory $transactionFactory
      */
     public function __construct(
         Context $context,
@@ -155,7 +162,8 @@ class Casedata extends AbstractModel
         CreditmemoFactory $creditmemoFactory,
         CreditmemoService $creditmemoService,
         ScopeConfigInterface $scopeConfigInterface,
-        SignifydOrderResourceModel $signifydOrderResourceModel
+        SignifydOrderResourceModel $signifydOrderResourceModel,
+        TransactionFactory $transactionFactory
     ) {
         $this->configHelper = $configHelper;
         $this->invoiceService = $invoiceService;
@@ -170,6 +178,7 @@ class Casedata extends AbstractModel
         $this->creditmemoService = $creditmemoService;
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
+        $this->transactionFactory = $transactionFactory;
 
         parent::__construct($context, $registry);
     }
@@ -502,9 +511,9 @@ class Casedata extends AbstractModel
                                 $this->orderResourceModel->save($order);
                                 $this->invoiceResourceModel->save($invoice);
                             } else {
-                                $transactionSave = \Magento\Framework\App\ObjectManager::getInstance()
-                                    ->get('Magento\Framework\DB\Transaction'
-                                )->addObject(
+                                /** @var \Magento\Framework\DB\Transaction $transactionSave */
+                                $transactionSave = $this->transactionFactory->create();
+                                $transactionSave->addObject(
                                     $invoice
                                 )->addObject(
                                     $invoice->getOrder()

@@ -30,8 +30,7 @@ class InconsistencyMessage implements MessageInterface
     public function __construct(
         ScopeConfigInterface $scopeConfigInterface,
         UrlInterface $urlInterface
-    )
-    {
+    ) {
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->urlInterface = $urlInterface;
     }
@@ -55,9 +54,9 @@ class InconsistencyMessage implements MessageInterface
     public function getText()
     {
         return __("Signifyd database inconsistency detected. This required immediate fix. Learn how on " .
-        " <a href='https://github.com/signifyd/magento2/blob/master/docs/DATABASE-INCONSISTENCY.md' target='_blank'>this link</a>. " .
-        "After fix the issue, you can <a href='" . $this->getFixUrl() . "'>mark as fixed</a>."
-        );
+        " <a href='https://github.com/signifyd/magento2/blob/master/docs/DATABASE-INCONSISTENCY.md' target='_blank'>
+            this link</a>. " .
+        "After fix the issue, you can <a href='" . $this->getFixUrl() . "'>mark as fixed</a>.");
     }
 
     public function getSeverity()

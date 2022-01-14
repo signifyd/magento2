@@ -37,11 +37,10 @@ class ValidateOrderId
         CasedataCollectionFactory $casedataCollection,
         WriterInterface $writerInterface,
         ScopeConfigInterface $scopeConfigInterface
-    )
-    {
-       $this->casedataCollection = $casedataCollection;
-       $this->writerInterface = $writerInterface;
-       $this->scopeConfigInterface = $scopeConfigInterface;
+    ) {
+        $this->casedataCollection = $casedataCollection;
+        $this->writerInterface = $writerInterface;
+        $this->scopeConfigInterface = $scopeConfigInterface;
     }
 
     public function execute()
@@ -61,6 +60,5 @@ class ValidateOrderId
         } else {
             $this->writerInterface->save("signifyd/general/upgrade4.3_inconsistency", "fixed");
         }
-
     }
 }

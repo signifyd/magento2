@@ -136,7 +136,7 @@ class PreAuth implements ObserverInterface
 
     public function execute(Observer $observer)
     {
-        try{
+        try {
             /** @var \Magento\Quote\Model\Quote $quote */
             $quote = $observer->getEvent()->getQuote();
 
@@ -246,8 +246,7 @@ class PreAuth implements ObserverInterface
             $this->logger->error($e->getMessage());
         }
 
-        if (
-            isset($caseResponse) &&
+        if (isset($caseResponse) &&
             is_object($caseResponse) &&
             $caseResponse->recommendedAction == 'REJECT') {
             throw new LocalizedException(__($policyRejectMessage));
