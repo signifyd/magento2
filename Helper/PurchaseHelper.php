@@ -1134,7 +1134,7 @@ class PurchaseHelper
         $case['decisionRequest'] = $this->getDecisionRequest();
         $case['sellers'] = $this->getSellers();
         $case['tags'] = $this->getTags();
-        $case['purchase']['checkoutToken'] = sha1($this->jsonSerializer->serialize($case));
+        $case['purchase']['checkoutToken'] = uniqid();
 
         /**
          * This registry entry it's used to collect data from some payment methods like Payflow Link
@@ -1519,7 +1519,7 @@ class PurchaseHelper
         $case['deviceFingerprints'] = $this->getDeviceFingerprints();
         $case['policy'] = $this->makePolicy($quote, ScopeInterface::SCOPE_STORES, $quote->getStoreId());
         $case['decisionRequest'] = $this->getDecisionRequest();
-        $case['purchase']['checkoutToken'] = sha1($this->jsonSerializer->serialize($case));
+        $case['purchase']['checkoutToken'] = uniqid();
 
         $positiveAction = $this->configHelper->getConfigData('signifyd/advanced/guarantee_positive_action');
         $transactionType = $positiveAction == 'capture' ? 'SALE' : 'AUTHORIZATION';
