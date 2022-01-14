@@ -92,6 +92,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     $signifydConnectCase . ".magento_status='complete'");
             } catch (\Exception $e) {
                 $this->logger->debug('Update order_id on magento status complete failed');
+                $this->configWriter->save("signifyd/general/upgrade4.3_inconsistency", "setup");
             }
 
             try {
@@ -101,6 +102,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                     $signifydConnectCase . ".magento_status<>'complete'");
             } catch (\Exception $e) {
                 $this->logger->debug('Update order_id on magento status different from complete failed');
+                $this->configWriter->save("signifyd/general/upgrade4.3_inconsistency", "setup");
             }
         }
 
