@@ -136,113 +136,120 @@ class PreAuth implements ObserverInterface
 
     public function execute(Observer $observer)
     {
-        /** @var \Magento\Quote\Model\Quote $quote */
-        $quote = $observer->getEvent()->getQuote();
+        try{
+            /** @var \Magento\Quote\Model\Quote $quote */
+            $quote = $observer->getEvent()->getQuote();
 
-        if ($this->configHelper->isEnabled($quote) == false) {
-            return;
-        }
-
-        $this->logger->info("policy validation");
-
-        $policyName = $this->purchaseHelper->getPolicyName(
-            $quote->getStore()->getScopeType(),
-            $quote->getStoreId()
-        );
-
-        $paymentMethod = null;
-        $data = $this->requestHttp->getContent();
-        $dataArray = $this->jsonSerializer->unserialize($data);
-
-        if (isset($dataArray['paymentMethod']) &&
-            isset($dataArray['paymentMethod']['method'])
-        ) {
-            $paymentMethod = $dataArray['paymentMethod']['method'];
-        }
-
-        $isPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, $paymentMethod);
-
-        if ($isPreAuth === false) {
-            /** @var $case \Signifyd\Connect\Model\Casedata */
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $quote->getId(), 'quote_id');
-
-            if ($case->isEmpty() === false) {
-                $this->casedataResourceModel->delete($case);
+            if ($this->configHelper->isEnabled($quote) == false) {
+                return;
             }
 
-            return;
-        }
+            $this->logger->info("policy validation");
 
-        $policyRejectMessage = $this->scopeConfigInterface->getValue(
-            'signifyd/advanced/policy_pre_auth_reject_message',
-            ScopeInterface::SCOPE_STORES,
-            $quote->getStoreId()
-        );
+            $policyName = $this->purchaseHelper->getPolicyName(
+                $quote->getStore()->getScopeType(),
+                $quote->getStoreId()
+            );
 
-        $checkoutPaymentDetails = [];
+            $paymentMethod = null;
+            $data = $this->requestHttp->getContent();
+            $dataArray = $this->jsonSerializer->unserialize($data);
 
-        if (isset($dataArray['paymentMethod']) &&
-                isset($dataArray['paymentMethod']['additional_data'])
+            if (isset($dataArray['paymentMethod']) &&
+                isset($dataArray['paymentMethod']['method'])
             ) {
-            $checkoutPaymentDetails['cardBin'] =
-                $dataArray['paymentMethod']['additional_data']['cardBin'] ?? null;
-
-            $checkoutPaymentDetails['holderName'] =
-                $dataArray['paymentMethod']['additional_data']['holderName'] ?? null;
-
-            $checkoutPaymentDetails['cardLast4'] =
-                $dataArray['paymentMethod']['additional_data']['cardLast4'] ?? null;
-
-            $checkoutPaymentDetails['cardExpiryMonth'] =
-                $dataArray['paymentMethod']['additional_data']['cardExpiryMonth'] ?? null;
-
-            $checkoutPaymentDetails['cardExpiryYear'] =
-                $dataArray['paymentMethod']['additional_data']['cardExpiryYear'] ?? null;
-        }
-
-        $this->logger->info("Creating case for quote {$quote->getId()}");
-        $caseFromQuote = $this->purchaseHelper->processQuoteData($quote, $checkoutPaymentDetails, $paymentMethod);
-        $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
-
-        if (isset($caseResponse->recommendedAction) &&
-            (
-                $caseResponse->recommendedAction == 'ACCEPT' ||
-                $caseResponse->recommendedAction == 'REJECT' ||
-                $caseResponse->recommendedAction == 'HOLD' ||
-                $caseResponse->recommendedAction == 'PENDING'
-            )
-        ) {
-            if ($caseResponse->recommendedAction == 'ACCEPT' || $caseResponse->recommendedAction == 'REJECT') {
-                $magentoStatus = Casedata::PRE_AUTH;
-            } else {
-                $magentoStatus = Casedata::IN_REVIEW_STATUS;
+                $paymentMethod = $dataArray['paymentMethod']['method'];
             }
 
-            /** @var $case \Signifyd\Connect\Model\Casedata */
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $quote->getId(), 'quote_id');
-            $case->setSignifydStatus($caseResponse->status);
-            $case->setCode($caseResponse->caseId);
-            $case->setScore(floor($caseResponse->score));
-            $case->setGuarantee($caseResponse->recommendedAction);
-            $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
-            $case->setUpdated();
-            $case->setMagentoStatus($magentoStatus);
-            $case->setPolicyName(Casedata::PRE_AUTH);
-            $case->setCheckoutToken($caseFromQuote['purchase']['checkoutToken']);
-            $case->setQuoteId($quote->getId());
-            $case->setOrderIncrement($quote->getReservedOrderId());
-            $entries = $case->getEntriesText();
+            $isPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, $paymentMethod);
 
-            if (isset($entries) === false) {
-                $case->setEntriesText("");
+            if ($isPreAuth === false) {
+                /** @var $case \Signifyd\Connect\Model\Casedata */
+                $case = $this->casedataFactory->create();
+                $this->casedataResourceModel->load($case, $quote->getId(), 'quote_id');
+
+                if ($case->isEmpty() === false) {
+                    $this->casedataResourceModel->delete($case);
+                }
+
+                return;
             }
 
-            $this->casedataResourceModel->save($case);
+            $policyRejectMessage = $this->scopeConfigInterface->getValue(
+                'signifyd/advanced/policy_pre_auth_reject_message',
+                ScopeInterface::SCOPE_STORES,
+                $quote->getStoreId()
+            );
+
+            $checkoutPaymentDetails = [];
+
+            if (isset($dataArray['paymentMethod']) &&
+                    isset($dataArray['paymentMethod']['additional_data'])
+                ) {
+                $checkoutPaymentDetails['cardBin'] =
+                    $dataArray['paymentMethod']['additional_data']['cardBin'] ?? null;
+
+                $checkoutPaymentDetails['holderName'] =
+                    $dataArray['paymentMethod']['additional_data']['holderName'] ?? null;
+
+                $checkoutPaymentDetails['cardLast4'] =
+                    $dataArray['paymentMethod']['additional_data']['cardLast4'] ?? null;
+
+                $checkoutPaymentDetails['cardExpiryMonth'] =
+                    $dataArray['paymentMethod']['additional_data']['cardExpiryMonth'] ?? null;
+
+                $checkoutPaymentDetails['cardExpiryYear'] =
+                    $dataArray['paymentMethod']['additional_data']['cardExpiryYear'] ?? null;
+            }
+
+            $this->logger->info("Creating case for quote {$quote->getId()}");
+            $caseFromQuote = $this->purchaseHelper->processQuoteData($quote, $checkoutPaymentDetails, $paymentMethod);
+            $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
+
+            if (isset($caseResponse->recommendedAction) &&
+                (
+                    $caseResponse->recommendedAction == 'ACCEPT' ||
+                    $caseResponse->recommendedAction == 'REJECT' ||
+                    $caseResponse->recommendedAction == 'HOLD' ||
+                    $caseResponse->recommendedAction == 'PENDING'
+                )
+            ) {
+                if ($caseResponse->recommendedAction == 'ACCEPT' || $caseResponse->recommendedAction == 'REJECT') {
+                    $magentoStatus = Casedata::PRE_AUTH;
+                } else {
+                    $magentoStatus = Casedata::IN_REVIEW_STATUS;
+                }
+
+                /** @var $case \Signifyd\Connect\Model\Casedata */
+                $case = $this->casedataFactory->create();
+                $this->casedataResourceModel->load($case, $quote->getId(), 'quote_id');
+                $case->setSignifydStatus($caseResponse->status);
+                $case->setCode($caseResponse->caseId);
+                $case->setScore(floor($caseResponse->score));
+                $case->setGuarantee($caseResponse->recommendedAction);
+                $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
+                $case->setUpdated();
+                $case->setMagentoStatus($magentoStatus);
+                $case->setPolicyName(Casedata::PRE_AUTH);
+                $case->setCheckoutToken($caseFromQuote['purchase']['checkoutToken']);
+                $case->setQuoteId($quote->getId());
+                $case->setOrderIncrement($quote->getReservedOrderId());
+                $entries = $case->getEntriesText();
+
+                if (isset($entries) === false) {
+                    $case->setEntriesText("");
+                }
+
+                $this->casedataResourceModel->save($case);
+            }
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
         }
 
-        if ($caseResponse->recommendedAction == 'REJECT') {
+        if (
+            isset($caseResponse) &&
+            is_object($caseResponse) &&
+            $caseResponse->recommendedAction == 'REJECT') {
             throw new LocalizedException(__($policyRejectMessage));
         }
     }
