@@ -89,6 +89,7 @@ class Register extends Action
             $bulkResponseGet = $webhooksApiGet->getWebhooks();
 
             $decisionMadeIsSet = false;
+            $caseReviewIsSet = false;
 
             foreach ($bulkResponseGet->getObjects() as $webhook) {
                 $webhooksApiCancel = $this->webhooksApiFactory->create(['args' => $args]);
@@ -97,17 +98,33 @@ class Register extends Action
                     $decisionMadeIsSet = true;
                 }
 
+                if ($webhook->eventType === 'CASE_REVIEW') {
+                    $caseReviewIsSet = true;
+                }
+
                 if ($webhook->eventType === 'GUARANTEE_COMPLETION') {
                     $webhooksApiCancel->deleteWebhook($webhook);
                 }
             }
 
-            if ($decisionMadeIsSet === false) {
+            if ($decisionMadeIsSet === false || $caseReviewIsSet === false) {
                 $webhooksApiCreate = $this->webhooksApiFactory->create(['args' => $args]);
-                $webHookGuaranteeCompletion = $this->webhookFactory->create();
-                $webHookGuaranteeCompletion->setEvent('DECISION_MADE');
-                $webHookGuaranteeCompletion->setUrl($url);
-                $webhooksToCreate = [$webHookGuaranteeCompletion];
+                $webhooksToCreate = [];
+
+                if ($decisionMadeIsSet === false) {
+                    $webHookDecisionMade = $this->webhookFactory->create();
+                    $webHookDecisionMade->setEvent('DECISION_MADE');
+                    $webHookDecisionMade->setUrl($url);
+                    $webhooksToCreate[] = $webHookDecisionMade;
+                }
+
+                if ($caseReviewIsSet === false) {
+                    $webHookDecisionMade = $this->webhookFactory->create();
+                    $webHookDecisionMade->setEvent('CASE_REVIEW');
+                    $webHookDecisionMade->setUrl($url);
+                    $webhooksToCreate[] = $webHookDecisionMade;
+                }
+
                 $webhooksApiCreate->createWebhooks($webhooksToCreate);
             }
         } catch (\Exception $e) {
