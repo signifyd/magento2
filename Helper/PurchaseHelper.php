@@ -1055,7 +1055,7 @@ class PurchaseHelper
         $checkoutPaymentDetails['holderName'] = $this->getCardholder($order);
         $checkoutPaymentDetails['holderTaxId'] = $this->getHolderTaxId();
         $checkoutPaymentDetails['holderTaxCountry'] = $this->getHolderTaxCountry();
-        $checkoutPaymentDetails['cardBin'] = (string) $this->getBin($order);
+        $checkoutPaymentDetails['cardBin'] = $this->getBin($order);
         $checkoutPaymentDetails['cardLast4'] = $this->getLast4($order);
         $checkoutPaymentDetails['cardExpiryMonth'] = $this->getExpMonth($order);
         $checkoutPaymentDetails['cardExpiryYear'] = $this->getExpYear($order);
@@ -1480,7 +1480,7 @@ class PurchaseHelper
                 return null;
             }
 
-            return $bin;
+            return (string) $bin;
         } catch (Exception $e) {
             $this->logger->error('Error fetching bin: ' . $e->getMessage(), ['entity' => $order]);
             return null;
