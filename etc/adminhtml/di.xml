@@ -16,4 +16,12 @@
     <type name="Magento\Sales\Controller\Adminhtml\Order\Unhold">
         <plugin name="Signifyd_Connect_Plugin_Magento_Sales_Controller_Adminhtml_Order_Unhold" type="\Signifyd\Connect\Plugin\Magento\Sales\Controller\Adminhtml\Order\Unhold" />
     </type>
+
+    <type name="Magento\Framework\Notification\MessageList">
+        <arguments>
+            <argument name="messages" xsi:type="array">
+                <item name="inconsistencyMessage" xsi:type="string">Signifyd\Connect\Model\InconsistencyMessage</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

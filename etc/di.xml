@@ -116,14 +116,6 @@
         <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Controller_Process_Json" type="\Signifyd\Connect\Plugin\Adyen\Payment\Controller\Process\Json" />
     </type>
 
-    <type name="Magento\Braintree\Gateway\Validator\GeneralResponseValidator">
-        <plugin name="Signifyd_Connect_Plugin_Braintree_Gateway_Validator_GeneralResponseValidator" type="\Signifyd\Connect\Plugin\Braintree\Gateway\Validator\GeneralResponseValidator" />
-    </type>
-
-    <type name="PayPal\Braintree\Gateway\Validator\GeneralResponseValidator">
-        <plugin name="Signifyd_Connect_Plugin_PayPal_Braintree_Gateway_Validator_GeneralResponseValidator" type="\Signifyd\Connect\Plugin\Braintree\Gateway\Validator\PayPal\GeneralResponseValidator" />
-    </type>
-
     <!-- Preferences -->
     <preference for="Magento\Sales\Model\ResourceModel\Order\Grid\Collection" type="Signifyd\Connect\Model\ResourceModel\Order\Grid\Collection" />
 

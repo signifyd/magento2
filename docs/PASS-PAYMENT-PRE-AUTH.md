@@ -44,3 +44,24 @@ The extension is prepared to receive these values through the request with the f
      }
    }
 ```
+
+
+
+### Pre auth for Braintree payment
+
+In order to have Braintree integrated to the pre auth process, its needed to apply a patch to add the code modifications needed.
+
+For Magento 2.3, use the file pre-auth-braintree-magento-2.3.patch
+
+For Magento 2.4, use the file pre-auth-braintree-magento-2.4.patch
+
+1. Copy the patch to the root directory of your Magento installation
+```
+cd [MAGENTO_ROOT]
+cp vendor/signifyd/module-connect/Patch/pre-auth-braintree-magento-2.X.patch .
+```
+
+2. Apply the path
+```
+git apply pre-auth-braintree-magento-2.X.patch
+```

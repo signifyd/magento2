@@ -1134,7 +1134,7 @@ class PurchaseHelper
         $case['decisionRequest'] = $this->getDecisionRequest();
         $case['sellers'] = $this->getSellers();
         $case['tags'] = $this->getTags();
-        $case['purchase']['checkoutToken'] = sha1($this->jsonSerializer->serialize($case));
+        $case['purchase']['checkoutToken'] = uniqid();
 
         /**
          * This registry entry it's used to collect data from some payment methods like Payflow Link
@@ -1186,6 +1186,20 @@ class PurchaseHelper
         }
     }
 
+    public function updateCaseSignifyd($updateData, $order, $caseId)
+    {
+        $caseResponse = $this->configHelper->getSignifydCaseApi($order)->updateCase($updateData, $caseId);
+
+        if (empty($caseResponse->getCaseId()) === false) {
+            $this->logger->debug("Case updated. Id is {$caseResponse->getCaseId()}", ['entity' => $order]);
+            return $caseResponse;
+        } else {
+            $this->logger->error($this->jsonSerializer->serialize($caseResponse));
+            $this->logger->error("Case failed to update.", ['entity' => $order]);
+            return false;
+        }
+    }
+
     /**
      * @param Order $order
      * @return bool
@@ -1208,7 +1222,7 @@ class PurchaseHelper
 
         $guarantee = $case->getData('guarantee');
 
-        if (empty($guarantee) || in_array($guarantee, ['DECLINED'])) {
+        if (empty($guarantee) || in_array($guarantee, ['DECLINED', 'REJECT', 'N/A'])) {
             $this->logger->debug("Guarantee cancel skipped: current guarantee is {$guarantee}", ['entity' => $order]);
             return false;
         }
@@ -1466,7 +1480,7 @@ class PurchaseHelper
                 return null;
             }
 
-            return $bin;
+            return (string) $bin;
         } catch (Exception $e) {
             $this->logger->error('Error fetching bin: ' . $e->getMessage(), ['entity' => $order]);
             return null;
@@ -1519,7 +1533,7 @@ class PurchaseHelper
         $case['deviceFingerprints'] = $this->getDeviceFingerprints();
         $case['policy'] = $this->makePolicy($quote, ScopeInterface::SCOPE_STORES, $quote->getStoreId());
         $case['decisionRequest'] = $this->getDecisionRequest();
-        $case['purchase']['checkoutToken'] = sha1($this->jsonSerializer->serialize($case));
+        $case['purchase']['checkoutToken'] = uniqid();
 
         $positiveAction = $this->configHelper->getConfigData('signifyd/advanced/guarantee_positive_action');
         $transactionType = $positiveAction == 'capture' ? 'SALE' : 'AUTHORIZATION';

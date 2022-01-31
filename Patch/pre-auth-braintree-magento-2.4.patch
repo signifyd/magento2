@@ -1,0 +1,117 @@
+Index: Plugin/Braintree/Gateway/Validator/PayPal/GeneralResponseValidator.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/PayPal/GeneralResponseValidator.php b/vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/PayPal/GeneralResponseValidator.php
+new file mode 100644
+--- /dev/null	(revision 181d36a5b276d283bbe3b331815057e52023d42d)
++++ b/vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/PayPal/GeneralResponseValidator.php	(revision 181d36a5b276d283bbe3b331815057e52023d42d)
+@@ -0,0 +1,89 @@
++<?php
++
++namespace Signifyd\Connect\Plugin\Braintree\Gateway\Validator\PayPal;
++
++use PayPal\Braintree\Gateway\Helper\SubjectReader;
++use Signifyd\Connect\Helper\PurchaseHelper;
++use Signifyd\Connect\Logger\Logger;
++use Signifyd\Connect\Model\CasedataFactory;
++use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
++use Signifyd\Connect\Model\Casedata;
++use Magento\Store\Model\StoreManagerInterface;
++use Magento\Quote\Model\QuoteFactory;
++use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
++
++class GeneralResponseValidator extends \Signifyd\Connect\Plugin\Braintree\GeneralResponseValidator
++{
++    /**
++     * @var CasedataFactory
++     */
++    protected $casedataFactory;
++
++    /**
++     * @var CasedataResourceModel
++     */
++    protected $casedataResourceModel;
++
++    /**
++     * @var Logger
++     */
++    protected $logger;
++
++    /**
++     * @var PurchaseHelper
++     */
++    protected $purchaseHelper;
++
++    /**
++     * @var StoreManagerInterface
++     */
++    protected $storeManager;
++
++    /**
++     * @var QuoteFactory
++     */
++    protected $quoteFactory;
++
++    /**
++     * @var QuoteResourceModel
++     */
++    protected $quoteResourceModel;
++
++    /**
++     * @var SubjectReader
++     */
++    protected $subjectReader;
++
++    /**
++     * CheckoutPaymentsDetailsHandler constructor.
++     * @param CasedataFactory $casedataFactory
++     * @param CasedataResourceModel $casedataResourceModel
++     * @param Logger $logger
++     * @param PurchaseHelper $purchaseHelper
++     * @param StoreManagerInterface $storeManager
++     * @param QuoteFactory $quoteFactory
++     * @param QuoteResourceModel $quoteResourceModel
++     * @param SubjectReader $subjectReader
++     */
++    public function __construct(
++        CasedataFactory $casedataFactory,
++        CasedataResourceModel $casedataResourceModel,
++        Logger $logger,
++        PurchaseHelper $purchaseHelper,
++        StoreManagerInterface $storeManager,
++        QuoteFactory $quoteFactory,
++        QuoteResourceModel $quoteResourceModel,
++        SubjectReader $subjectReader
++    ) {
++        parent::__construct(
++            $casedataFactory,
++            $casedataResourceModel,
++            $logger,
++            $purchaseHelper,
++            $storeManager,
++            $quoteFactory,
++            $quoteResourceModel
++        );
++        $this->subjectReader = $subjectReader;
++    }
++}
+Index: etc/di.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/vendor/signifyd/module-connect/etc/di.xml b/vendor/signifyd/module-connect/etc/di.xml
+--- a/vendor/signifyd/module-connect/etc/di.xml	(revision b4376027ccf94ffa12fc11206dc9e38aa31fce77)
++++ b/vendor/signifyd/module-connect/etc/di.xml	(revision 181d36a5b276d283bbe3b331815057e52023d42d)
+@@ -1,5 +1,9 @@
+ <?xml version="1.0"?>
+ <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
++    <type name="PayPal\Braintree\Gateway\Validator\GeneralResponseValidator">
++        <plugin name="Signifyd_Connect_Plugin_PayPal_Braintree_Gateway_Validator_GeneralResponseValidator" type="\Signifyd\Connect\Plugin\Braintree\Gateway\Validator\PayPal\GeneralResponseValidator" />
++    </type>
++
+     <!-- Loggers -->
+     <type name="Signifyd\Connect\Logger\Handler">
+         <arguments>

@@ -24,6 +24,7 @@ use Signifyd\Connect\Helper\OrderHelper;
 use Magento\Sales\Model\ResourceModel\Order\Invoice as InvoiceResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\DB\TransactionFactory;
 
 /**
  * ORM model declaration for case data
@@ -122,6 +123,11 @@ class Casedata extends AbstractModel
     protected $signifydOrderResourceModel;
 
     /**
+     * @var TransactionFactory
+     */
+    protected $transactionFactory;
+
+    /**
      * Casedata constructor.
      * @param Context $context
      * @param Registry $registry
@@ -139,6 +145,7 @@ class Casedata extends AbstractModel
      * @param CreditmemoService $creditmemoService
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
+     * @param TransactionFactory $transactionFactory
      */
     public function __construct(
         Context $context,
@@ -155,7 +162,8 @@ class Casedata extends AbstractModel
         CreditmemoFactory $creditmemoFactory,
         CreditmemoService $creditmemoService,
         ScopeConfigInterface $scopeConfigInterface,
-        SignifydOrderResourceModel $signifydOrderResourceModel
+        SignifydOrderResourceModel $signifydOrderResourceModel,
+        TransactionFactory $transactionFactory
     ) {
         $this->configHelper = $configHelper;
         $this->invoiceService = $invoiceService;
@@ -170,6 +178,7 @@ class Casedata extends AbstractModel
         $this->creditmemoService = $creditmemoService;
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
+        $this->transactionFactory = $transactionFactory;
 
         parent::__construct($context, $registry);
     }
@@ -216,7 +225,7 @@ class Casedata extends AbstractModel
             }
 
             $isScoreOnly = $this->configHelper->isScoreOnly();
-            $caseScore = $this->getData('score');
+            $caseScore = $this->getScore();
 
             if (isset($caseScore) && $isScoreOnly) {
                 $this->setMagentoStatus(Casedata::COMPLETED_STATUS);
@@ -252,6 +261,19 @@ class Casedata extends AbstractModel
             if (isset($failEntry)) {
                 $this->unsetEntries('fail');
             }
+
+            $origGuarantee = $this->getOrigData('guarantee');
+            $newGuarantee = $this->getData('guarantee');
+            $origScore = (int) $this->getOrigData('score');
+            $newScore = (int) $this->getData('score');
+
+            if (empty($origGuarantee) == false && $origGuarantee != 'N/A' && $origGuarantee != $newGuarantee ||
+                $origScore > 0 && $origScore != $newScore) {
+                $message = "Signifyd: case reviewed " .
+                    "from {$origGuarantee} ({$origScore}) " .
+                    "to {$newGuarantee} ({$newScore})";
+                $this->orderHelper->addCommentToStatusHistory($this->getOrder(), $message);
+            }
         } catch (\Exception $e) {
             $this->logger->critical($e->__toString(), ['entity' => $this]);
             return false;
@@ -278,6 +300,7 @@ class Casedata extends AbstractModel
         $loadForUpdate = false;
 
         if ($enableTransaction) {
+            $this->logger->info("Begin database transaction");
             $this->orderResourceModel->getConnection()->beginTransaction();
             $loadForUpdate = true;
         }
@@ -329,14 +352,6 @@ class Casedata extends AbstractModel
 
             switch ($orderAction["action"]) {
                 case "hold":
-                    if ($orderAction["reason"] == 'approved guarantees reviewed to declined') {
-                        $message = "Signifyd: case reviewed " .
-                            "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
-                            "to {$this->getData('guarantee')} ({$this->getData('score')})";
-
-                        $this->orderHelper->addCommentToStatusHistory($order, $message);
-                    }
-
                     if ($order->canHold()) {
                         try {
                             $order->hold();
@@ -497,8 +512,20 @@ class Casedata extends AbstractModel
                             $order->setCustomerNoteNotify(true);
                             $order->setIsInProcess(true);
 
-                            $this->orderResourceModel->save($order);
-                            $this->invoiceResourceModel->save($invoice);
+                            if ($enableTransaction) {
+                                $this->orderResourceModel->save($order);
+                                $this->invoiceResourceModel->save($invoice);
+                            } else {
+                                /** @var \Magento\Framework\DB\Transaction $transactionSave */
+                                $transactionSave = $this->transactionFactory->create();
+                                $transactionSave->addObject(
+                                    $invoice
+                                )->addObject(
+                                    $invoice->getOrder()
+                                );
+
+                                $transactionSave->save();
+                            }
 
                             $this->orderHelper->addCommentToStatusHistory(
                                 $order,
@@ -548,29 +575,52 @@ class Casedata extends AbstractModel
                     }
                     break;
 
-                case 'refund':
-                    $message = "Signifyd: case reviewed " .
-                        "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
-                        "to {$this->getData('guarantee')} ({$this->getData('score')})";
-
-                    $this->orderHelper->addCommentToStatusHistory($order, $message);
-
+                case "refund":
                     try {
+                        if ($order->canUnhold()) {
+                            $order->unhold();
+                            $this->orderResourceModel->save($order);
+                        }
+
+                        $order = $this->getOrder(true);
+
                         $invoices = $order->getInvoiceCollection();
 
-                        foreach ($invoices as $invoice) {
-                            $creditmemo = $this->creditmemoFactory->createByOrder($order);
-                            $creditmemo->setInvoice($invoice);
-                            $this->creditmemoService->refund($creditmemo);
+                        if ($invoices->getTotalCount() > 0) {
+                            foreach ($invoices as $invoice) {
+                                $creditmemo = $this->creditmemoFactory->createByOrder($order);
+                                $creditmemo->setInvoice($invoice);
+                                $this->creditmemoService->refund($creditmemo);
+                                $this->logger->debug(
+                                    'Credit memo was created for order: ' . $order->getIncrementId(),
+                                    ['entity' => $order]
+                                );
+                            }
+                        } else {
+                            $this->holdOrder($order);
+                            $message = "Signifyd: tried to refund, but there is no invoice to add credit memo";
+                            $this->orderHelper->addCommentToStatusHistory($order, $message);
                             $this->logger->debug(
-                                'Credit memo was created for order: ' . $order->getIncrementId(),
+                                "tried to refund, but there is no invoice to add credit memo",
                                 ['entity' => $order]
                             );
                         }
+
+                        $completeCase = true;
                     } catch (\Exception $e) {
+                        $order = $this->getOrder(true);
+                        $this->setEntries('fail', 1);
                         $this->holdOrder($order);
 
-                        $this->logger->debug("Creditmemo Not Created: ". $e->getMessage());
+                        $this->logger->debug(
+                            'Exception creating creditmemo: ' . $e->__toString(),
+                            ['entity' => $order]
+                        );
+
+                        $this->orderHelper->addCommentToStatusHistory(
+                            $order,
+                            "Signifyd: unable to create creditmemo: {$e->getMessage()}"
+                        );
                     }
                     break;
 
@@ -586,7 +636,6 @@ class Casedata extends AbstractModel
                 case 'nothing':
                     $orderAction['action'] = false;
                     $completeCase = true;
-                    $this->addReviewedMessage($orderAction['reason'], $order);
                     break;
             }
 
@@ -816,24 +865,6 @@ class Casedata extends AbstractModel
         if ($order->canHold()) {
             $order->hold();
             $this->orderResourceModel->save($order);
-        }
-    }
-
-    public function addReviewedMessage($reason, $order)
-    {
-        switch ($reason) {
-            case 'declined guarantees reviewed to approved':
-                $message = "Signifyd: case reviewed on Signifyd from declined to approved. Old score: " .
-                    "{$this->getOrigData('score')}, new score: {$this->getData('score')}";
-                $this->orderHelper->addCommentToStatusHistory($order, $message);
-                break;
-
-            case 'approved guarantees reviewed to declined':
-                $message = "Signifyd: case reviewed " .
-                    "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
-                    "to {$this->getData('guarantee')} ({$this->getData('score')})";
-                $this->orderHelper->addCommentToStatusHistory($order, $message);
-                break;
         }
     }
 }

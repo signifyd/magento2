@@ -47,6 +47,10 @@ class Negative implements ArrayInterface
             [
                 'value' => 'cancel',
                 'label' => 'Cancel order'
+            ],
+            [
+                'value' => 'refund',
+                'label' => 'Create credit memo'
             ]
         ];
 
