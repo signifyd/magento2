@@ -225,7 +225,7 @@ class Casedata extends AbstractModel
             }
 
             $isScoreOnly = $this->configHelper->isScoreOnly();
-            $caseScore = $this->getData('score');
+            $caseScore = $this->getScore();
 
             if (isset($caseScore) && $isScoreOnly) {
                 $this->setMagentoStatus(Casedata::COMPLETED_STATUS);
@@ -260,6 +260,19 @@ class Casedata extends AbstractModel
 
             if (isset($failEntry)) {
                 $this->unsetEntries('fail');
+            }
+
+            $origGuarantee = $this->getOrigData('guarantee');
+            $newGuarantee = $this->getData('guarantee');
+            $origScore = (int) $this->getOrigData('score');
+            $newScore = (int) $this->getData('score');
+
+            if (empty($origGuarantee) == false && $origGuarantee != 'N/A' && $origGuarantee != $newGuarantee ||
+                $origScore > 0 && $origScore != $newScore) {
+                $message = "Signifyd: case reviewed " .
+                    "from {$origGuarantee} ({$origScore}) " .
+                    "to {$newGuarantee} ({$newScore})";
+                $this->orderHelper->addCommentToStatusHistory($this->getOrder(), $message);
             }
         } catch (\Exception $e) {
             $this->logger->critical($e->__toString(), ['entity' => $this]);
@@ -339,14 +352,6 @@ class Casedata extends AbstractModel
 
             switch ($orderAction["action"]) {
                 case "hold":
-                    if ($orderAction["reason"] == 'approved guarantees reviewed to declined') {
-                        $message = "Signifyd: case reviewed " .
-                            "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
-                            "to {$this->getData('guarantee')} ({$this->getData('score')})";
-
-                        $this->orderHelper->addCommentToStatusHistory($order, $message);
-                    }
-
                     if ($order->canHold()) {
                         try {
                             $order->hold();
@@ -579,14 +584,6 @@ class Casedata extends AbstractModel
 
                         $order = $this->getOrder(true);
 
-                        if ($this->getOrigData('guarantee') != 'N/A') {
-                            $message = "Signifyd: case reviewed " .
-                                "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
-                                "to {$this->getData('guarantee')} ({$this->getData('score')})";
-
-                            $this->orderHelper->addCommentToStatusHistory($order, $message);
-                        }
-
                         $invoices = $order->getInvoiceCollection();
 
                         if ($invoices->getTotalCount() > 0) {
@@ -639,7 +636,6 @@ class Casedata extends AbstractModel
                 case 'nothing':
                     $orderAction['action'] = false;
                     $completeCase = true;
-                    $this->addReviewedMessage($orderAction['reason'], $order);
                     break;
             }
 
@@ -869,24 +865,6 @@ class Casedata extends AbstractModel
         if ($order->canHold()) {
             $order->hold();
             $this->orderResourceModel->save($order);
-        }
-    }
-
-    public function addReviewedMessage($reason, $order)
-    {
-        switch ($reason) {
-            case 'declined guarantees reviewed to approved':
-                $message = "Signifyd: case reviewed on Signifyd from declined to approved. Old score: " .
-                    "{$this->getOrigData('score')}, new score: {$this->getData('score')}";
-                $this->orderHelper->addCommentToStatusHistory($order, $message);
-                break;
-
-            case 'approved guarantees reviewed to declined':
-                $message = "Signifyd: case reviewed " .
-                    "from {$this->getOrigData('guarantee')} ({$this->getOrigData('score')}) " .
-                    "to {$this->getData('guarantee')} ({$this->getData('score')})";
-                $this->orderHelper->addCommentToStatusHistory($order, $message);
-                break;
         }
     }
 }
