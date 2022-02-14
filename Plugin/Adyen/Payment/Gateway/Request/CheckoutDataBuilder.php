@@ -18,6 +18,7 @@ use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\WebhookLink;
 use Signifyd\Core\Api\WebhooksApiFactory;
 use Signifyd\Models\WebhookFactory;
+use Magento\Store\Model\StoreManagerInterface;
 
 class CheckoutDataBuilder
 {
@@ -92,6 +93,11 @@ class CheckoutDataBuilder
     protected $logger;
 
     /**
+     * @var StoreManagerInterface
+     */
+    protected $storeManagerInterface;
+
+    /**
      * CheckoutDataBuilder constructor.
      * @param QuoteResourceModel $quoteResourceModel
      * @param QuoteFactory $quoteFactory
@@ -106,6 +112,7 @@ class CheckoutDataBuilder
      * @oaram WebhookLink $webhookLink
      * @param ConfigHelper $configHelper
      * @param Logger $logger
+     * @param StoreManagerInterface $storeManagerInterface
      */
     public function __construct(
         QuoteResourceModel $quoteResourceModel,
@@ -120,7 +127,8 @@ class CheckoutDataBuilder
         WebhookFactory $webhookFactory,
         WebhookLink $webhookLink,
         ConfigHelper $configHelper,
-        Logger $logger
+        Logger $logger,
+        StoreManagerInterface $storeManagerInterface
     ) {
         $this->quoteResourceModel = $quoteResourceModel;
         $this->quoteFactory = $quoteFactory;
@@ -135,6 +143,7 @@ class CheckoutDataBuilder
         $this->webhookLink = $webhookLink;
         $this->configHelper = $configHelper;
         $this->logger = $logger;
+        $this->storeManagerInterface = $storeManagerInterface;
     }
 
     public function beforeBuild(AdyenCheckoutDataBuilder $subject, array $buildSubject)
@@ -156,10 +165,12 @@ class CheckoutDataBuilder
             return $request;
         }
 
+        $storeId = $this->storeManagerInterface->getStore()->getId();
+
         $adyenProxyEnabled = $this->scopeConfig->isSetFlag(
             'signifyd/proxy/adyen_enable',
             'stores',
-            $quote->getStoreId()
+            $storeId
         );
 
         if ($adyenProxyEnabled === false) {
