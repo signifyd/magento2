@@ -12,6 +12,9 @@ var config = {
             },
             'Openpay_Cards/js/view/payment/method-renderer/cc-form': {
                 'Signifyd_Connect/js/model/openpay-cc-method-mixin': true
+            },
+            'Adyen_Payment/js/view/payment/method-renderer/adyen-oneclick-method': {
+                'Signifyd_Connect/js/model/adyen-oneclick-method-mixin': true
             }
         }
     }
