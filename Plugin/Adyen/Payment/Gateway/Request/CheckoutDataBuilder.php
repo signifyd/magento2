@@ -207,7 +207,7 @@ class CheckoutDataBuilder
         }
 
         if ($this->deviceHelper->isDeviceFingerprintEnabled()) {
-            $request['body']['additionalData']['ordersessionId'] =
+            $request['body']['additionalData']['orderSessionId'] =
                 $this->deviceHelper->generateFingerprint($quote->getId());
         }
 
