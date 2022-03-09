@@ -1,22 +1,13 @@
 <?php
-/**
- * Copyright 2015 SIGNIFYD Inc. All rights reserved.
- * See LICENSE.txt for license details.
- */
-namespace Signifyd\Connect\Setup;
 
-use Magento\Framework\Setup\InstallSchemaInterface;
-use Magento\Framework\Setup\ModuleContextInterface;
-use Magento\Framework\Setup\SchemaSetupInterface;
-use Magento\Framework\DB\Ddl\Table;
-use Magento\Framework\App\Config\Storage\WriterInterface;
+namespace Signifyd\Connect\Setup\Patch\Data;
+
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Config\Storage\WriterInterface;
+use Magento\Framework\Setup\Patch\DataPatchInterface;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 
-/**
- * @codeCoverageIgnore
- */
-class InstallSchema implements InstallSchemaInterface
+class InstallConfig implements DataPatchInterface
 {
     protected $logger;
 
@@ -35,6 +26,12 @@ class InstallSchema implements InstallSchemaInterface
      */
     protected $dateTime;
 
+    /**
+     * @param \Signifyd\Connect\Logger\Install $logger
+     * @param WriterInterface $writerInterface
+     * @param ScopeConfigInterface $scopeConfigInterface
+     * @param DateTime $dateTime
+     */
     public function __construct(
         \Signifyd\Connect\Logger\Install $logger,
         WriterInterface $writerInterface,
@@ -47,11 +44,7 @@ class InstallSchema implements InstallSchemaInterface
         $this->dateTime = $dateTime;
     }
 
-    /**
-     * {@inheritdoc}
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     */
-    public function install(SchemaSetupInterface $setup, ModuleContextInterface $context)
+    public function apply()
     {
         try {
             if ($this->scopeConfigInterface->isSetFlag('signifyd_connect/general/installation_date') === false) {
@@ -62,5 +55,23 @@ class InstallSchema implements InstallSchemaInterface
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
         }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAliases()
+    {
+        return [];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function getDependencies()
+    {
+        return [
+
+        ];
     }
 }

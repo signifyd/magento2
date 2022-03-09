@@ -23,6 +23,7 @@
         <column identity="false" name="quote_id" padding="10" nullable="true" unsigned="true" xsi:type="int"/>
         <column length="255" name="checkout_token" nullable="false" xsi:type="varchar"/>
         <column length="255" name="policy_name" nullable="false" xsi:type="varchar"/>
+        <column identity="false" name="lock_start" padding="10" nullable="true" default="null" xsi:type="int"/>
         <index referenceId="INDEX_MAGENTO_STATUS" indexType="btree">
             <column name="magento_status"/>
         </index>
