@@ -1,11 +1,34 @@
 # Adyen Proxy
 
-### Setting Adyen Proxy
+The Adyen Proxy can be configured either in global (default) scope, store view (stores) or website (websites).
 
-To set Adyen Proxy run command below on your database:
+### Setting by website
+To find the website id just use the following command in the database:
+```sql
+select * from store_website;
+```
+With the id found (for exemple: 2) run command below on your database:
 
 ```sql
-INSERT INTO core_config_data (path, value) VALUES ('signifyd/proxy/adyen_enable', 1);
+INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('websites', 2, 'signifyd/proxy/adyen_enable', 1);
+```
+
+### Setting by store view
+To find the store view id just use the following command in the database:
+```sql
+select * from store;
+```
+With the id found (for exemple: 4) run command below on your database:
+
+```sql
+INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('stores', 4, 'signifyd/proxy/adyen_enable', 1);
+```
+
+### Setting Global
+To set global configuration run command below on your database:
+
+```sql
+INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', 0, 'signifyd/proxy/adyen_enable', 1);
 ```
 
 ### Remove Adyen Proxy
