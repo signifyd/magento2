@@ -7,6 +7,7 @@ use Magento\Framework\App\Helper\Context;
 use Signifyd\Connect\Model\ResourceModel\Casedata\CollectionFactory as CasedataCollectionFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Logger\Logger;
+use Signifyd\Connect\Model\CasedataFactory;
 
 class Retry extends AbstractHelper
 {
@@ -26,23 +27,31 @@ class Retry extends AbstractHelper
     protected $logger;
 
     /**
+     * @var CasedataFactory
+     */
+    protected $casedataFactory;
+
+    /**
      * Retry constructor.
      * @param Context $context
      * @param CasedataCollectionFactory $casedataCollectionFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
+     * @param CasedataFactory $casedataFactory
      */
     public function __construct(
         Context $context,
         CasedataCollectionFactory $casedataCollectionFactory,
         CasedataResourceModel $casedataResourceModel,
-        Logger $logger
+        Logger $logger,
+        CasedataFactory $casedataFactory
     ) {
         parent::__construct($context);
 
         $this->casedataCollectionFactory = $casedataCollectionFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
+        $this->casedataFactory = $casedataFactory;
     }
 
     /**
@@ -72,13 +81,17 @@ class Retry extends AbstractHelper
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($casesCollection->getItems() as $case) {
-            $retries = $case->getData('retries');
+            $caseToUpdate = $this->casedataFactory->create();
+            $this->casedataResourceModel->loadForUpdate($caseToUpdate, $case->getId());
+
+            $retries = $caseToUpdate->getData('retries');
             $secondsAfterUpdate = $case->getData('seconds_after_update');
 
             if ($secondsAfterUpdate > $retryTimes[$retries]) {
-                $casesToRetry[$case->getId()] = $case;
-                $case->setData('retries', $retries + 1);
-                $this->casedataResourceModel->save($case);
+
+                $casesToRetry[$caseToUpdate->getId()] = $caseToUpdate;
+                $caseToUpdate->setData('retries', $retries + 1);
+                $this->casedataResourceModel->save($caseToUpdate);
             }
         }
 
