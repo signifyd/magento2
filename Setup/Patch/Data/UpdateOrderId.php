@@ -45,20 +45,24 @@ class UpdateOrderId implements DataPatchInterface
         $salesOrder = $this->schemaSetupInterface->getTable('sales_order');
 
         try {
-            $this->schemaSetupInterface->getConnection()->query("UPDATE ". $signifydConnectCase ." JOIN " . $salesOrder . " ON " .
+            $this->schemaSetupInterface->getConnection()->query(
+                "UPDATE ". $signifydConnectCase ." JOIN " . $salesOrder . " ON " .
                 $signifydConnectCase .".order_increment = " . $salesOrder . ".increment_id SET " .
                 $signifydConnectCase .".order_id = " . $salesOrder . ".entity_id WHERE " .
-                $signifydConnectCase . ".magento_status='complete'");
+                $signifydConnectCase . ".magento_status='complete'"
+            );
         } catch (\Exception $e) {
             $this->logger->debug('Update order_id on magento status complete failed');
             $this->configWriter->save("signifyd/general/upgrade4.3_inconsistency", "setup");
         }
 
         try {
-            $this->schemaSetupInterface->getConnection()->query("UPDATE ". $signifydConnectCase ." JOIN " . $salesOrder . " ON " .
+            $this->schemaSetupInterface->getConnection()->query(
+                "UPDATE ". $signifydConnectCase ." JOIN " . $salesOrder . " ON " .
                 $signifydConnectCase .".order_increment = " . $salesOrder . ".increment_id SET ".
                 $signifydConnectCase .".order_id = " . $salesOrder . ".entity_id WHERE ".
-                $signifydConnectCase . ".magento_status<>'complete'");
+                $signifydConnectCase . ".magento_status<>'complete'"
+            );
         } catch (\Exception $e) {
             $this->logger->debug('Update order_id on magento status different from complete failed');
             $this->configWriter->save("signifyd/general/upgrade4.3_inconsistency", "setup");

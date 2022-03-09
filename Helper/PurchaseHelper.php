@@ -421,7 +421,6 @@ class PurchaseHelper
         $configDecision = $this->configHelper->getDecisionRequest();
         $decisionRequest['paymentFraud'] =  $this->getDecisionForMethod($configDecision, $paymentMethod);
 
-
         return $decisionRequest;
     }
 

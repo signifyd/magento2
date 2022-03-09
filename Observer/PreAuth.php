@@ -203,13 +203,16 @@ class PreAuth implements ObserverInterface
                             ->unserialize($dataArray['paymentMethod']['additional_data']['stateData']);
 
                         /** @var \Adyen\Payment\Model\Api\PaymentRequest $paymentRequest */
-                        $paymentRequest = $this->objectManagerInterface->create(\Adyen\Payment\Model\Api\PaymentRequest::class);
+                        $paymentRequest = $this->objectManagerInterface->create(
+                            \Adyen\Payment\Model\Api\PaymentRequest::class
+                        );
 
                         $shopperReference = $quote->getCustomer()->getId() < 100 ?
                             0 . $quote->getCustomer()->getId() : $quote->getCustomer()->getId();
 
                         $contracts = $paymentRequest->getRecurringContractsForShopper(
-                            $shopperReference, $quote->getStoreId()
+                            $shopperReference,
+                            $quote->getStoreId()
                         );
 
                         if (isset($stateData['paymentMethod']) &&
@@ -222,7 +225,7 @@ class PreAuth implements ObserverInterface
                         } else {
                             $checkoutPaymentDetails['cardBin'] = null;
                         }
-                    } catch (\Exception $e){
+                    } catch (\Exception $e) {
                         $checkoutPaymentDetails['cardBin'] = null;
                     }
                 } else {

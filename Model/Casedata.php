@@ -512,20 +512,7 @@ class Casedata extends AbstractModel
                             $order->setCustomerNoteNotify(true);
                             $order->setIsInProcess(true);
 
-                            if ($enableTransaction) {
-                                $this->orderResourceModel->save($order);
-                                $this->invoiceResourceModel->save($invoice);
-                            } else {
-                                /** @var \Magento\Framework\DB\Transaction $transactionSave */
-                                $transactionSave = $this->transactionFactory->create();
-                                $transactionSave->addObject(
-                                    $invoice
-                                )->addObject(
-                                    $invoice->getOrder()
-                                );
-
-                                $transactionSave->save();
-                            }
+                            $this->handleTransaction($enableTransaction, $order, $invoice);
 
                             $this->orderHelper->addCommentToStatusHistory(
                                 $order,
@@ -587,15 +574,7 @@ class Casedata extends AbstractModel
                         $invoices = $order->getInvoiceCollection();
 
                         if ($invoices->getTotalCount() > 0) {
-                            foreach ($invoices as $invoice) {
-                                $creditmemo = $this->creditmemoFactory->createByOrder($order);
-                                $creditmemo->setInvoice($invoice);
-                                $this->creditmemoService->refund($creditmemo);
-                                $this->logger->debug(
-                                    'Credit memo was created for order: ' . $order->getIncrementId(),
-                                    ['entity' => $order]
-                                );
-                            }
+                            $this->createInvoicesCreditMemo($invoices, $order);
                         } else {
                             $this->holdOrder($order);
                             $message = "Signifyd: tried to refund, but there is no invoice to add credit memo";
@@ -865,6 +844,37 @@ class Casedata extends AbstractModel
         if ($order->canHold()) {
             $order->hold();
             $this->orderResourceModel->save($order);
+        }
+    }
+
+    public function handleTransaction($enableTransaction, $order, $invoice)
+    {
+        if ($enableTransaction) {
+            $this->orderResourceModel->save($order);
+            $this->invoiceResourceModel->save($invoice);
+        } else {
+            /** @var \Magento\Framework\DB\Transaction $transactionSave */
+            $transactionSave = $this->transactionFactory->create();
+            $transactionSave->addObject(
+                $invoice
+            )->addObject(
+                $invoice->getOrder()
+            );
+
+            $transactionSave->save();
+        }
+    }
+
+    public function createInvoicesCreditMemo($invoices, $order)
+    {
+        foreach ($invoices as $invoice) {
+            $creditmemo = $this->creditmemoFactory->createByOrder($order);
+            $creditmemo->setInvoice($invoice);
+            $this->creditmemoService->refund($creditmemo);
+            $this->logger->debug(
+                'Credit memo was created for order: ' . $order->getIncrementId(),
+                ['entity' => $order]
+            );
         }
     }
 }
