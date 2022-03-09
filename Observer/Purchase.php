@@ -178,26 +178,31 @@ class Purchase implements ObserverInterface
                 /** @var $case \Signifyd\Connect\Model\Casedata */
                 $casesFromQuoteLoaded = $this->casedataFactory->create();
                 $this->casedataResourceModel->load($casesFromQuoteLoaded, $casesFromQuote->getCode(), 'code');
-                $casesFromQuoteLoaded->setData('order_increment', $order->getIncrementId());
-                $casesFromQuoteLoaded->setData('order_id', $order->getId());
 
-                if ($casesFromQuoteLoaded->getData('magento_status') == Casedata::PRE_AUTH) {
-                    $this->logger->info(
-                        "Completing case for order {$order->getIncrementId()} ({$order->getId()}) " .
-                        "because it is a pre auth case"
-                    );
-                    $casesFromQuoteLoaded->setData('magento_status', Casedata::COMPLETED_STATUS);
+                if ($casesFromQuoteLoaded->getGuarantee() == 'REJECT') {
+                    $this->casedataResourceModel->delete($casesFromQuoteLoaded);
+                } else {
+                    $casesFromQuoteLoaded->setData('order_increment', $order->getIncrementId());
+                    $casesFromQuoteLoaded->setData('order_id', $order->getId());
+
+                    if ($casesFromQuoteLoaded->getData('magento_status') == Casedata::PRE_AUTH) {
+                        $this->logger->info(
+                            "Completing case for order {$order->getIncrementId()} ({$order->getId()}) " .
+                            "because it is a pre auth case"
+                        );
+                        $casesFromQuoteLoaded->setData('magento_status', Casedata::COMPLETED_STATUS);
+                    }
+
+                    $this->casedataResourceModel->save($casesFromQuoteLoaded);
+
+                    if ($casesFromQuote->getData('guarantee') == 'HOLD' ||
+                        $casesFromQuote->getData('guarantee') == 'PENDING'
+                    ) {
+                        $this->holdOrder($order, $casesFromQuoteLoaded, $isPassive);
+                    }
+
+                    return;
                 }
-
-                $this->casedataResourceModel->save($casesFromQuoteLoaded);
-
-                if ($casesFromQuote->getData('guarantee') == 'HOLD' ||
-                    $casesFromQuote->getData('guarantee') == 'PENDING'
-                ) {
-                    $this->holdOrder($order, $casesFromQuoteLoaded, $isPassive);
-                }
-
-                return;
             }
 
             if (!is_object($order)) {
@@ -311,9 +316,6 @@ class Purchase implements ObserverInterface
             $checkoutToken = $orderData['purchase']['checkoutToken'];
             $caseResponse = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
 
-            // Initial hold order
-            $this->holdOrder($order, $case, $isPassive);
-
             if (is_object($caseResponse)) {
                 $case->setCode($caseResponse->getCaseId());
                 $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
@@ -322,6 +324,9 @@ class Purchase implements ObserverInterface
             }
 
             $this->casedataResourceModel->save($case);
+
+            // Initial hold order
+            $this->holdOrder($order, $case, $isPassive);
 
             if ($isPassive === false) {
                 $this->orderResourceModel->save($order);
