@@ -172,6 +172,24 @@ To check the current custom lock timeout, run the command below:
 SELECT * FROM core_config_data WHERE path LIKE 'signifyd/general/lock_timeout%';
 ```
 
+## Failed to read auto-increment value from storage engine
+
+If an error similar to the below one show up when upgrading the extension, copy the SQL command from the error message, remove the "AUTO_INCREMENT = XXXXXX" part and manually run the SQL on your database.
+
+```mysql
+SQLSTATE[HY000]: General error: 1467 Failed to read auto-increment value from storage engine, query was: ALTER TABLE `signifyd_connect_case` MODIFY COLUMN `code` varchar(255) NOT NULL , MODIFY COLUMN `order_increment` varchar(255) NOT NULL , MODIFY COLUMN `signifyd_status` varchar(255) NOT NULL DEFAULT "PENDING" , MODIFY COLUMN `score` float(10, 0) NULL , MODIFY COLUMN `guarantee` varchar(64) NOT NULL DEFAULT "N/A" , MODIFY COLUMN `entries_text` text NOT NULL , MODIFY COLUMN `created` timestamp NULL , MODIFY COLUMN `updated` timestamp NULL , MODIFY COLUMN `magento_status` varchar(255) NOT NULL DEFAULT "waiting_submission" , MODIFY COLUMN `retries` int NOT NULL DEFAULT 0 , ADD COLUMN `entity_id` int UNSIGNED NOT NULL AUTO_INCREMENT COMMENT "Entity ID", AUTO_INCREMENT = 18000000688, ADD COLUMN `origin_store_code` varchar(32) NULL DEFAULT "NULL" , ADD COLUMN `checkpoint_action_reason` text NOT NULL , ADD COLUMN `order_id` int UNSIGNED NULL , ADD COLUMN `quote_id` int UNSIGNED NULL , ADD COLUMN `checkout_token` varchar(255) NOT NULL , ADD COLUMN `policy_name` varchar(255) NOT NULL , DROP PRIMARY KEY, ADD CONSTRAINT PRIMARY KEY (`entity_id`), ADD INDEX `SIGNIFYD_CONNECT_CASE_MAGENTO_STATUS` (`magento_status`), ADD INDEX `SIGNIFYD_CONNECT_CASE_ORDER_ID` (`order_id`), ADD INDEX `SIGNIFYD_CONNECT_CASE_CODE` (`code`), COMMENT='signifyd_connect_case Table'
+```
+
+E.g. on the above error message, we would remove the "AUTO_INCREMENT = 18000000688, " part from the SQL and run the below command on database.
+
+**Do not copy/paste the command from this documentation, use the one from your application logs, as instructed.**
+
+```mysql
+ALTER TABLE `signifyd_connect_case` MODIFY COLUMN `code` varchar(255) NOT NULL , MODIFY COLUMN `order_increment` varchar(255) NOT NULL , MODIFY COLUMN `signifyd_status` varchar(255) NOT NULL DEFAULT "PENDING" , MODIFY COLUMN `score` float(10, 0) NULL , MODIFY COLUMN `guarantee` varchar(64) NOT NULL DEFAULT "N/A" , MODIFY COLUMN `entries_text` text NOT NULL , MODIFY COLUMN `created` timestamp NULL , MODIFY COLUMN `updated` timestamp NULL , MODIFY COLUMN `magento_status` varchar(255) NOT NULL DEFAULT "waiting_submission" , MODIFY COLUMN `retries` int NOT NULL DEFAULT 0 , ADD COLUMN `entity_id` int UNSIGNED NOT NULL AUTO_INCREMENT COMMENT "Entity ID", ADD COLUMN `origin_store_code` varchar(32) NULL DEFAULT "NULL" , ADD COLUMN `checkpoint_action_reason` text NOT NULL , ADD COLUMN `order_id` int UNSIGNED NULL , ADD COLUMN `quote_id` int UNSIGNED NULL , ADD COLUMN `checkout_token` varchar(255) NOT NULL , ADD COLUMN `policy_name` varchar(255) NOT NULL , DROP PRIMARY KEY, ADD CONSTRAINT PRIMARY KEY (`entity_id`), ADD INDEX `SIGNIFYD_CONNECT_CASE_MAGENTO_STATUS` (`magento_status`), ADD INDEX `SIGNIFYD_CONNECT_CASE_ORDER_ID` (`order_id`), ADD INDEX `SIGNIFYD_CONNECT_CASE_CODE` (`code`), COMMENT='signifyd_connect_case Table'
+```
+
+**Do not copy/paste the command from this documentation, use the one from your application logs, as instructed.**
+
 ## All of the steps were followed but some error prevented the extension from installing succesfully
 
 Check for any log errors on the web server (e.g. Apache, NGINX) and on PHP logs. Also check for errors on MAGENTO_ROOT/var/log on files system.log, exception.log and signifyd_connect.log. If you are still stuck you can [contact our support team](https://community.signifyd.com/support/s/)
