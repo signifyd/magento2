@@ -26,8 +26,7 @@ class CreateTest extends OrderTestCase
      */
     public function testCronCreateCase()
     {
-        $this->placeQuote($this->getQuote('guest_quote'));
-
+        $order = $this->placeQuote($this->getQuote('guest_quote'));
         /** @var \Signifyd\Connect\Model\Casedata $case */
         $case = $this->objectManager->create(Casedata::class);
         $case->setData([
@@ -35,6 +34,7 @@ class CreateTest extends OrderTestCase
             // Case must be created with 60 seconds before now in order to trigger cron on retries
             'created' => strftime('%Y-%m-%d %H:%M:%S', time()-60),
             'updated' => strftime('%Y-%m-%d %H:%M:%S', time()-60),
+            'order_id' => $order->getId(),
             'magento_status' => \Signifyd\Connect\Model\Casedata::WAITING_SUBMISSION_STATUS
         ]);
         $case->save();

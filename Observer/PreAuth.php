@@ -162,7 +162,12 @@ class PreAuth implements ObserverInterface
 
             $paymentMethod = null;
             $data = $this->requestHttp->getContent();
-            $dataArray = $this->jsonSerializer->unserialize($data);
+
+            if (empty($data) === false) {
+                $dataArray = $this->jsonSerializer->unserialize($data);
+            } else {
+                $dataArray = [];
+            }
 
             if (isset($dataArray['paymentMethod']) &&
                 isset($dataArray['paymentMethod']['method'])

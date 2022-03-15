@@ -51,7 +51,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
         $case = $this->objectManager->create(\Signifyd\Connect\Model\Casedata::class);
-        $case->load($incrementId);
+        $case->load($incrementId, 'order_increment');
         return $case;
     }
 
