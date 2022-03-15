@@ -793,6 +793,26 @@ class PurchaseHelper
         return $shipments;
     }
 
+    /**
+     * @param Quote $quote
+     * @return array
+     */
+    public function makeShipmentsFromQuote(Quote $quote)
+    {
+        $shipments = [];
+        $shipment = [];
+        $shippingMethod = $quote->getShippingAddress()->getShippingMethod();
+        $shippingAmount = $quote->getShippingAddress()->getShippingAmount();
+
+        $shipment['shippingMethod'] =  $shippingMethod ? $this->makeshippingMethod($shippingMethod) : null;
+        $shipment['shippingPrice'] = is_numeric($shippingAmount) ? floatval($shippingAmount) : null;
+        $shipment['shipper'] = $shippingMethod ? $this->makeShipper($shippingMethod) : null;
+
+        $shipments[] = $shipment;
+
+        return $shipments;
+    }
+
     public function makeShipper($shippingMethod)
     {
         if (is_string($shippingMethod)) {
@@ -1629,6 +1649,7 @@ class PurchaseHelper
             }
         }
 
+        $purchase['shipments'] = $this->makeShipmentsFromQuote($quote);
         $purchase['orderChannel'] = "WEB";
         $purchase['totalPrice'] = $quote->getGrandTotal();
         $purchase['currency'] = $quote->getQuoteCurrencyCode();

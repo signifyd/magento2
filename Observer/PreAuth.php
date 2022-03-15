@@ -207,8 +207,13 @@ class PreAuth implements ObserverInterface
                             \Adyen\Payment\Model\Api\PaymentRequest::class
                         );
 
-                        $shopperReference = $quote->getCustomer()->getId() < 100 ?
-                            0 . $quote->getCustomer()->getId() : $quote->getCustomer()->getId();
+                        if ($quote->getCustomer()->getId() < 10) {
+                            $shopperReference = '00' . $quote->getCustomer()->getId();
+                        } elseif ($quote->getCustomer()->getId() >= 10 && $quote->getCustomer()->getId() <= 100) {
+                            $shopperReference = '0' . $quote->getCustomer()->getId();
+                        } else {
+                            $shopperReference = $quote->getCustomer()->getId();
+                        }
 
                         $contracts = $paymentRequest->getRecurringContractsForShopper(
                             $shopperReference,
