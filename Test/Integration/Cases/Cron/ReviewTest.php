@@ -16,14 +16,14 @@ class ReviewTest extends CreateTest
      */
     public function testCronReviewCase()
     {
-        parent::testCronCreateCase();
+        $this->placeQuote($this->getQuote('guest_quote'));
 
         $this->updateCaseForRetry();
+
         $this->tryToReviewCase();
 
         $case = $this->getCase();
 
-        $this->assertNotEquals('PENDING', $case->getData('signifyd_status'));
         $this->assertEquals(Casedata::COMPLETED_STATUS, $case->getData('magento_status'));
         $this->assertNotEmpty($case->getData('score'));
     }

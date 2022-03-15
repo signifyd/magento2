@@ -15,7 +15,12 @@ class ReviewTest extends OrderTestCase
      */
     public function testWebhookReviewCase()
     {
-        $this->placeQuote($this->getQuote('guest_quote'));
+        $order = $this->placeQuote($this->getQuote('guest_quote'));
+
+        $case = $this->getCase();
+        $case->setCode('991716767');
+        $case->setOrderId($order->getId());
+        $case->save();
 
         /** @var \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig */
         $scopeConfig = $this->objectManager->create(ScopeConfigInterface::class);
@@ -29,8 +34,7 @@ class ReviewTest extends OrderTestCase
         $webhookIndex->processRequest($request, $hash, 'cases/review');
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
-        $case = $this->objectManager->create(Casedata::class);
-        $case->load($this->incrementId);
+        $case = $this->getCase();
 
         $this->assertEquals('APPROVED', $case->getData('guarantee'));
         $this->assertEquals('792', $case->getData('score'));

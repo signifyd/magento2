@@ -311,9 +311,6 @@ class Purchase implements ObserverInterface
             $checkoutToken = $orderData['purchase']['checkoutToken'];
             $caseResponse = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
 
-            // Initial hold order
-            $this->holdOrder($order, $case, $isPassive);
-
             if (is_object($caseResponse)) {
                 $case->setCode($caseResponse->getCaseId());
                 $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
@@ -322,6 +319,9 @@ class Purchase implements ObserverInterface
             }
 
             $this->casedataResourceModel->save($case);
+
+            // Initial hold order
+            $this->holdOrder($order, $case, $isPassive);
 
             if ($isPassive === false) {
                 $this->orderResourceModel->save($order);

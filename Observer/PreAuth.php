@@ -20,6 +20,7 @@ use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
 use Magento\Framework\App\Request\Http as RequestHttp;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
+use Magento\Framework\ObjectManagerInterface;
 
 class PreAuth implements ObserverInterface
 {
@@ -89,6 +90,11 @@ class PreAuth implements ObserverInterface
     protected $configHelper;
 
     /**
+     * @var ObjectManagerInterface
+     */
+    protected $objectManagerInterface;
+
+    /**
      * PreAuth constructor.
      * @param Logger $logger
      * @param PurchaseHelper $purchaseHelper
@@ -103,6 +109,7 @@ class PreAuth implements ObserverInterface
      * @param RequestHttp $requestHttp
      * @param JsonSerializer $jsonSerializer
      * @param ConfigHelper $configHelper
+     * @param ObjectManagerInterface $objectManagerInterface
      */
     public function __construct(
         Logger $logger,
@@ -117,7 +124,8 @@ class PreAuth implements ObserverInterface
         CasedataResourceModel $casedataResourceModel,
         RequestHttp $requestHttp,
         JsonSerializer $jsonSerializer,
-        ConfigHelper $configHelper
+        ConfigHelper $configHelper,
+        ObjectManagerInterface $objectManagerInterface
     ) {
         $this->logger = $logger;
         $this->purchaseHelper = $purchaseHelper;
@@ -132,6 +140,7 @@ class PreAuth implements ObserverInterface
         $this->requestHttp = $requestHttp;
         $this->jsonSerializer = $jsonSerializer;
         $this->configHelper = $configHelper;
+        $this->objectManagerInterface = $objectManagerInterface;
     }
 
     public function execute(Observer $observer)
@@ -153,7 +162,12 @@ class PreAuth implements ObserverInterface
 
             $paymentMethod = null;
             $data = $this->requestHttp->getContent();
-            $dataArray = $this->jsonSerializer->unserialize($data);
+
+            if (empty($data) === false) {
+                $dataArray = $this->jsonSerializer->unserialize($data);
+            } else {
+                $dataArray = [];
+            }
 
             if (isset($dataArray['paymentMethod']) &&
                 isset($dataArray['paymentMethod']['method'])
@@ -185,9 +199,49 @@ class PreAuth implements ObserverInterface
 
             if (isset($dataArray['paymentMethod']) &&
                     isset($dataArray['paymentMethod']['additional_data'])
+            ) {
+                if ($paymentMethod == 'adyen_oneclick' &&
+                    isset($dataArray['paymentMethod']['additional_data']['stateData'])
                 ) {
-                $checkoutPaymentDetails['cardBin'] =
-                    $dataArray['paymentMethod']['additional_data']['cardBin'] ?? null;
+                    try {
+                        $stateData = $this->jsonSerializer
+                            ->unserialize($dataArray['paymentMethod']['additional_data']['stateData']);
+
+                        /** @var \Adyen\Payment\Model\Api\PaymentRequest $paymentRequest */
+                        $paymentRequest = $this->objectManagerInterface->create(
+                            \Adyen\Payment\Model\Api\PaymentRequest::class
+                        );
+
+                        if ($quote->getCustomer()->getId() < 10) {
+                            $shopperReference = '00' . $quote->getCustomer()->getId();
+                        } elseif ($quote->getCustomer()->getId() >= 10 && $quote->getCustomer()->getId() <= 100) {
+                            $shopperReference = '0' . $quote->getCustomer()->getId();
+                        } else {
+                            $shopperReference = $quote->getCustomer()->getId();
+                        }
+
+                        $contracts = $paymentRequest->getRecurringContractsForShopper(
+                            $shopperReference,
+                            $quote->getStoreId()
+                        );
+
+                        if (isset($stateData['paymentMethod']) &&
+                            isset($stateData['paymentMethod']['storedPaymentMethodId'])
+                        ) {
+                            $storedPaymentMethodId = $stateData['paymentMethod']['storedPaymentMethodId'];
+
+                            $checkoutPaymentDetails['cardBin'] =
+                                $contracts[$storedPaymentMethodId]['additionalData']['cardBin'] ?? null;
+                        } else {
+                            $checkoutPaymentDetails['cardBin'] = null;
+                        }
+                    } catch (\Exception $e) {
+                        $checkoutPaymentDetails['cardBin'] = null;
+                    }
+                } else {
+                    $checkoutPaymentDetails['cardBin'] =
+                        $dataArray['paymentMethod']['additional_data']['cardBin'] ?? null;
+                }
 
                 $checkoutPaymentDetails['holderName'] =
                     $dataArray['paymentMethod']['additional_data']['holderName'] ?? null;

@@ -10,15 +10,6 @@ use Magento\Store\Model\StoreManagerInterface;
 class Data
 {
     /**
-     *
-     * @var string[]
-     */
-    protected $endpoints = [
-        \Adyen\Environment::TEST => 'https://checkout-test.adyen.staging.signifyd.com/checkout',
-        \Adyen\Environment::LIVE => 'https://checkout-test.adyen.com/checkout'
-    ];
-
-    /**
      * @var null|int
      */
     protected $storeId = null;
@@ -71,17 +62,24 @@ class Data
      */
     public function afterInitializeAdyenClient(AdyenHelperData $subject, $client)
     {
-        $adyenProxyEnabled = $this->scopeConfig->isSetFlag(
-            'signifyd/proxy/adyen_enable',
-            'stores',
-            $this->storeId
-        );
-
         $storeId = $this->storeManager->getStore()->getId();
 
+        $adyenProxyConfigEnabled = $this->scopeConfig->getValue(
+            'signifyd/proxy/adyen_enable',
+            'stores',
+            $storeId
+        );
+
+        $adyenProxyEnabled = $adyenProxyConfigEnabled != 0;
+
         if ($adyenProxyEnabled && $this->configHelper->getEnabledByStoreId($storeId)) {
-            $environment = $subject->isDemoMode($this->storeId) ? \Adyen\Environment::TEST : \Adyen\Environment::LIVE;
-            $client->getConfig()->set('endpointCheckout', $this->endpoints[$environment]);
+            $environmentReplace = $adyenProxyConfigEnabled == 2 ?
+                ".staging.signifyd.com" : ".signifyd.com";
+
+            $environmentUrl = $client->getConfig()->get('endpointCheckout');
+            $environmentSignifydUrl = str_replace(".com", $environmentReplace, $environmentUrl);
+
+            $client->getConfig()->set('endpointCheckout', $environmentSignifydUrl);
         }
 
         return $client;

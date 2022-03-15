@@ -409,18 +409,17 @@ class PurchaseHelper
      *
      * The decision request.
      */
-    public function getDecisionRequest()
+    public function getDecisionRequest($paymentMethod = null)
     {
         $decisionRequest = [];
 
         if ($this->configHelper->isScoreOnly()) {
             $decisionRequest['paymentFraud'] = 'SCORE';
-        } else {
-            $configDecision = $this->configHelper->getDecisionRequest();
-            $allowedDecisions = ['GUARANTEE', 'SCORE', 'DECISION'];
-            $decisionRequest['paymentFraud'] = in_array($configDecision, $allowedDecisions) ?
-                $configDecision : 'GUARANTEE';
+            return $decisionRequest;
         }
+
+        $configDecision = $this->configHelper->getDecisionRequest();
+        $decisionRequest['paymentFraud'] =  $this->getDecisionForMethod($configDecision, $paymentMethod);
 
         return $decisionRequest;
     }
@@ -794,6 +793,26 @@ class PurchaseHelper
         return $shipments;
     }
 
+    /**
+     * @param Quote $quote
+     * @return array
+     */
+    public function makeShipmentsFromQuote(Quote $quote)
+    {
+        $shipments = [];
+        $shipment = [];
+        $shippingMethod = $quote->getShippingAddress()->getShippingMethod();
+        $shippingAmount = $quote->getShippingAddress()->getShippingAmount();
+
+        $shipment['shippingMethod'] =  $shippingMethod ? $this->makeshippingMethod($shippingMethod) : null;
+        $shipment['shippingPrice'] = is_numeric($shippingAmount) ? floatval($shippingAmount) : null;
+        $shipment['shipper'] = $shippingMethod ? $this->makeShipper($shippingMethod) : null;
+
+        $shipments[] = $shipment;
+
+        return $shipments;
+    }
+
     public function makeShipper($shippingMethod)
     {
         if (is_string($shippingMethod)) {
@@ -1131,7 +1150,7 @@ class PurchaseHelper
         $case['customerOrderRecommendation'] = $this->getCustomerOrderRecommendation();
         $case['deviceFingerprints'] = $this->getDeviceFingerprints();
         $case['policy'] = $this->makePolicy($order, ScopeInterface::SCOPE_STORES, $order->getStoreId());
-        $case['decisionRequest'] = $this->getDecisionRequest();
+        $case['decisionRequest'] = $this->getDecisionRequest($order->getPayment()->getMethod());
         $case['sellers'] = $this->getSellers();
         $case['tags'] = $this->getTags();
         $case['purchase']['checkoutToken'] = uniqid();
@@ -1532,8 +1551,8 @@ class PurchaseHelper
         $case['customerOrderRecommendation'] = $this->getCustomerOrderRecommendation();
         $case['deviceFingerprints'] = $this->getDeviceFingerprints();
         $case['policy'] = $this->makePolicy($quote, ScopeInterface::SCOPE_STORES, $quote->getStoreId());
-        $case['decisionRequest'] = $this->getDecisionRequest();
-        $case['purchase']['checkoutToken'] = uniqid();
+        $case['decisionRequest'] = $this->getDecisionRequest($paymentMethod);
+        $case['purchase']['checkoutToken'] = sha1($this->jsonSerializer->serialize($case));
 
         $positiveAction = $this->configHelper->getConfigData('signifyd/advanced/guarantee_positive_action');
         $transactionType = $positiveAction == 'capture' ? 'SALE' : 'AUTHORIZATION';
@@ -1630,6 +1649,7 @@ class PurchaseHelper
             }
         }
 
+        $purchase['shipments'] = $this->makeShipmentsFromQuote($quote);
         $purchase['orderChannel'] = "WEB";
         $purchase['totalPrice'] = $quote->getGrandTotal();
         $purchase['currency'] = $quote->getQuoteCurrencyCode();
@@ -1863,6 +1883,44 @@ class PurchaseHelper
         } else {
             return ($policyName == 'PRE_AUTH');
         }
+    }
+
+    public function getDecisionForMethod($decision, $paymentMethod)
+    {
+        $isJson = $this->isJson($decision);
+
+        if ($isJson) {
+            if (isset($paymentMethod) === false) {
+                return "GUARANTEE";
+            }
+
+            $configDecisions = $this->jsonSerializer->unserialize($decision);
+
+            foreach ($configDecisions as $configDecision => $method) {
+                if ($this->isDecisionValid($configDecision) === false) {
+                    continue;
+                }
+
+                if (in_array($paymentMethod, $method)) {
+                    return $configDecision;
+                }
+            }
+
+            return "GUARANTEE";
+        } else {
+            if ($this->isDecisionValid($decision) === false) {
+                return "GUARANTEE";
+            }
+
+            return $decision;
+        }
+    }
+
+    public function isDecisionValid($decision)
+    {
+        $allowedDecisions = ['GUARANTEE', 'SCORE', 'DECISION'];
+
+        return in_array($decision, $allowedDecisions);
     }
 
     public function isJson($string)

@@ -6,12 +6,29 @@ A list of the possible values for DECISION-REQUEST can be founded on Signifyd AP
 
 [https://developer.signifyd.com/api/#/reference/cases/create-case](https://developer.signifyd.com/api/#/reference/cases/create-case)
 
-### Setting decision
+### Setting global decision
 
-To set a decision, run command below on your database:
+If the setting has a string, the extension will assume this as the only decision for all cases.
+
+To set global decision run command below on your database:
 
 ```sql
 INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/decision_request', 'DECISION-REQUEST');
+```
+
+### Setting decision per payment method
+
+It is possible to select a different decision per payment method.
+
+If the setting stores a JSON, then it will map each payment method listed on JSON to the corresponding decision. Any payment methods not mapped will fallback to the GUARANTEE decision. Here it is an example of how the final JSON could look like:
+
+```
+{"GUARANTEE": ["braintree"], "DECISION": ["paypal_braintree"]}
+```
+To set decision per payment method run command below on your database:
+
+```sql
+INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/decision_request', 'INSERT-JSON-MAPPING');
 ```
 
 ### Updating decision
