@@ -259,16 +259,17 @@ class PreAuth implements ObserverInterface
             $this->logger->info("Creating case for quote {$quote->getId()}");
             $caseFromQuote = $this->purchaseHelper->processQuoteData($quote, $checkoutPaymentDetails, $paymentMethod);
             $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
+            $validActions = ['ACCEPT', 'REJECT', 'HOLD', 'PENDING'];
+            $caseAction = false;
 
-            if (isset($caseResponse->recommendedAction) &&
-                (
-                    $caseResponse->recommendedAction == 'ACCEPT' ||
-                    $caseResponse->recommendedAction == 'REJECT' ||
-                    $caseResponse->recommendedAction == 'HOLD' ||
-                    $caseResponse->recommendedAction == 'PENDING'
-                )
-            ) {
-                if ($caseResponse->recommendedAction == 'ACCEPT' || $caseResponse->recommendedAction == 'REJECT') {
+            if (isset($caseResponse->recommendedAction)) {
+                $caseAction = $caseResponse->recommendedAction;
+            } elseif (isset($caseResponse->checkpointAction)) {
+                $caseAction = $caseResponse->checkpointAction;
+            }
+
+            if ($caseAction !== false && in_array($caseAction, $validActions)) {
+                if ($caseAction == 'ACCEPT' || $caseAction == 'REJECT') {
                     $magentoStatus = Casedata::PRE_AUTH;
                 } else {
                     $magentoStatus = Casedata::IN_REVIEW_STATUS;
@@ -280,7 +281,7 @@ class PreAuth implements ObserverInterface
                 $case->setSignifydStatus($caseResponse->status);
                 $case->setCode($caseResponse->caseId);
                 $case->setScore(floor($caseResponse->score));
-                $case->setGuarantee($caseResponse->recommendedAction);
+                $case->setGuarantee($caseAction);
                 $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
                 $case->setUpdated();
                 $case->setMagentoStatus($magentoStatus);
@@ -302,7 +303,7 @@ class PreAuth implements ObserverInterface
 
         if (isset($caseResponse) &&
             is_object($caseResponse) &&
-            $caseResponse->recommendedAction == 'REJECT') {
+            $caseAction == 'REJECT') {
             throw new LocalizedException(__($policyRejectMessage));
         }
     }
