@@ -1649,13 +1649,16 @@ class PurchaseHelper
             }
         }
 
+        $dateTime = $this->dateTimeFactory->create();
+        $caseCreateDate = $dateTime->gmtDate();
+
         $purchase['shipments'] = $this->makeShipmentsFromQuote($quote);
         $purchase['orderChannel'] = "WEB";
         $purchase['totalPrice'] = $quote->getGrandTotal();
         $purchase['currency'] = $quote->getQuoteCurrencyCode();
         $purchase['orderId'] = $reservedOrderId;
         $purchase['receivedBy'] = $this->getReceivedBy();
-        $purchase['createdAt'] = date('c', strtotime($quote->getCreatedAt()));
+        $purchase['createdAt'] = date('c', strtotime($caseCreateDate));
         $purchase['browserIpAddress'] = $this->filterIp($this->remoteAddress->getRemoteAddress());
 
         if ($this->deviceHelper->isDeviceFingerprintEnabled()) {
