@@ -228,14 +228,6 @@ class Index extends Action
             } elseif ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS) {
                 $httpCode = Http::STATUS_CODE_400;
                 throw new LocalizedException(__("Case {$requestJson->caseId} it is not ready to be updated"));
-            } elseif ($case->getMagentoStatus() == Casedata::COMPLETED_STATUS &&
-                $this->configHelper->isScoreOnly() === false &&
-                $topic != 'cases/review'
-            ) {
-                $httpCode = Http::STATUS_CODE_200;
-                throw new LocalizedException(
-                    __("Case {$requestJson->caseId} already completed, no action will be taken")
-                );
             } elseif ($case->getMagentoStatus() == Casedata::PRE_AUTH) {
                 $httpCode = Http::STATUS_CODE_200;
                 throw new LocalizedException(
