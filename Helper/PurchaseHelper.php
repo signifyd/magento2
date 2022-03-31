@@ -995,7 +995,7 @@ class PurchaseHelper
         $lastTransaction['currency'] = $quote->getBaseCurrencyCode();
         $lastTransaction['amount'] = $quote->getGrandTotal();
         $lastTransaction['gateway'] = $gateway;
-        $lastTransaction['paymentMethod'] = $this->makePaymentMethod('adyen_cc');
+        $lastTransaction['paymentMethod'] = $this->makePaymentMethod($quote->getPayment()->getMethod());
         $lastTransaction['type'] = 'PREAUTHORIZATION';
         $lastTransaction['gatewayStatusCode'] = 'FAILURE';
         $lastTransaction['gatewayStatusMessage'] = $this->getGatewayStatusMessage();
