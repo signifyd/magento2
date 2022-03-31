@@ -10,6 +10,7 @@ use Magento\Framework\App\Response\Http;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Magento\Framework\Data\Form\FormKey;
@@ -74,6 +75,11 @@ class Index extends Action
     protected $emulation;
 
     /**
+     * @var StoreManagerInterface
+     */
+    protected $storeManagerInterface;
+
+    /**
      * Index constructor.
      * @param Context $context
      * @param DateTime $dateTime
@@ -87,6 +93,7 @@ class Index extends Action
      * @param JsonSerializer $jsonSerializer
      * @param ResourceConnection $resourceConnection
      * @param Emulation $emulation
+     * @param StoreManagerInterface $storeManagerInterface
      * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function __construct(
@@ -101,7 +108,8 @@ class Index extends Action
         OrderResourceModel $orderResourceModel,
         JsonSerializer $jsonSerializer,
         ResourceConnection $resourceConnection,
-        Emulation $emulation
+        Emulation $emulation,
+        StoreManagerInterface $storeManagerInterface
     ) {
         parent::__construct($context);
 
@@ -114,6 +122,7 @@ class Index extends Action
         $this->jsonSerializer = $jsonSerializer;
         $this->resourceConnection = $resourceConnection;
         $this->emulation = $emulation;
+        $this->storeManagerInterface = $storeManagerInterface;
 
         // Compatibility with Magento 2.3+ which required form_key on every request
         // Magento expects class to implement \Magento\Framework\App\CsrfAwareActionInterface but this causes
@@ -238,6 +247,7 @@ class Index extends Action
             $this->logger->info("WEBHOOK: Processing case {$case->getId()}");
 
             $this->emulation->startEnvironmentEmulation(0, 'adminhtml');
+            $this->storeManagerInterface->setCurrentStore($case->getOrder()->getStore()->getStoreId());
 
             $currentCaseHash = sha1(implode(',', $case->getData()));
             $case->updateCase($requestJson);
