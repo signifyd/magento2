@@ -220,7 +220,7 @@ class Casedata extends AbstractModel
     public function updateCase($response)
     {
         try {
-            if (isset($response->score) && $this->getScore() != $response->score) {
+            if (isset($response->score) && $this->getScore() !== $response->score) {
                 $this->setScore(floor($response->score));
             }
 
