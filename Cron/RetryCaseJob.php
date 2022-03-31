@@ -19,6 +19,7 @@ use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Store\Model\App\Emulation;
+use Magento\Store\Model\StoreManagerInterface;
 
 class RetryCaseJob
 {
@@ -83,6 +84,11 @@ class RetryCaseJob
     protected $emulation;
 
     /**
+     * @var StoreManagerInterface
+     */
+    protected $storeManagerInterface;
+
+    /**
      * RetryCaseJob constructor.
      * @param ObjectManagerInterface $objectManager
      * @param PurchaseHelper $purchaseHelper
@@ -95,6 +101,7 @@ class RetryCaseJob
      * @param CasedataFactory $casedataFactory
      * @param ResourceConnection $resourceConnection
      * @param Emulation $emulation
+     * @param StoreManagerInterface $storeManagerInterface
      */
     public function __construct(
         ObjectManagerInterface $objectManager,
@@ -107,7 +114,8 @@ class RetryCaseJob
         CasedataResourceModel $casedataResourceModel,
         CasedataFactory $casedataFactory,
         ResourceConnection $resourceConnection,
-        Emulation $emulation
+        Emulation $emulation,
+        StoreManagerInterface $storeManagerInterface
     ) {
         $this->objectManager = $objectManager;
         $this->purchaseHelper = $purchaseHelper;
@@ -120,6 +128,7 @@ class RetryCaseJob
         $this->casedataFactory = $casedataFactory;
         $this->resourceConnection = $resourceConnection;
         $this->emulation = $emulation;
+        $this->storeManagerInterface = $storeManagerInterface;
     }
 
     /**
@@ -134,6 +143,8 @@ class RetryCaseJob
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($asyncWaitingCases as $case) {
+            $this->storeManagerInterface->setCurrentStore($case->getOrder()->getStore()->getStoreId());
+
             $this->logger->debug(
                 "CRON: preparing for send case no: {$case->getOrderIncrement()}",
                 ['entity' => $case]
@@ -166,6 +177,8 @@ class RetryCaseJob
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($waitingCases as $case) {
+            $this->storeManagerInterface->setCurrentStore($case->getOrder()->getStore()->getStoreId());
+
             $this->logger->debug(
                 "CRON: preparing for send case no: {$case['order_increment']}",
                 ['entity' => $case]
@@ -198,6 +211,8 @@ class RetryCaseJob
         $inReviewCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::IN_REVIEW_STATUS);
 
         foreach ($inReviewCases as $case) {
+            $this->storeManagerInterface->setCurrentStore($case->getOrder()->getStore()->getStoreId());
+
             $this->logger->debug(
                 "CRON: preparing for review case no: {$case['order_increment']}",
                 ['entity' => $case]
