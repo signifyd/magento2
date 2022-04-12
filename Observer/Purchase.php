@@ -71,7 +71,7 @@ class Purchase implements ObserverInterface
      *
      * @var array
      */
-    protected $ownEventsMethods = ['authorizenet_directpost'];
+    protected $ownEventsMethods = ['authorizenet_directpost', 'paypal_express'];
 
     /**
      * @var DateTime
