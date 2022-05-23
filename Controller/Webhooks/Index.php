@@ -246,7 +246,6 @@ class Index extends Action
 
             $this->logger->info("WEBHOOK: Processing case {$case->getId()}");
 
-            $this->emulation->startEnvironmentEmulation(0, 'adminhtml');
             $this->storeManagerInterface->setCurrentStore($case->getOrder()->getStore()->getStoreId());
 
             $currentCaseHash = sha1(implode(',', $case->getData()));
