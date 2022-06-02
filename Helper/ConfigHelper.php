@@ -9,7 +9,9 @@ namespace Signifyd\Connect\Helper;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Signifyd\Core\Api\SaleApiFactory;
 use Signifyd\Core\Api\CaseApiFactory;
+use Signifyd\Core\Api\CheckoutApiFactory;
 use Signifyd\Core\Api\GuaranteeApiFactory;
 use Signifyd\Core\Api\WebhooksApiFactory;
 use Magento\Framework\Filesystem\DirectoryList;
@@ -45,6 +47,16 @@ class ConfigHelper
     protected $caseApiFactory;
 
     /**
+     * @var SaleApiFactory
+     */
+    protected $saleApiFactory;
+
+    /**
+     * @var CheckoutApiFactory
+     */
+    protected $checkoutApiFactory;
+
+    /**
      * @var GuaranteeApiFactory
      */
     protected $guaranteeApiFactory;
@@ -64,6 +76,8 @@ class ConfigHelper
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param StoreManagerInterface $storeManager
      * @param CaseApiFactory $caseApiFactory
+     * @param CheckoutApiFactory $checkoutApiFactory
+     * @param SaleApiFactory $saleApiFactory
      * @param GuaranteeApiFactory $guaranteeApiFactory
      * @param WebhooksApiFactory $webhooksApiFactory
      * @param DirectoryList $directory
@@ -72,6 +86,8 @@ class ConfigHelper
         ScopeConfigInterface $scopeConfigInterface,
         StoreManagerInterface $storeManager,
         CaseApiFactory $caseApiFactory,
+        SaleApiFactory $saleApiFactory,
+        CheckoutApiFactory $checkoutApiFactory,
         GuaranteeApiFactory $guaranteeApiFactory,
         WebhooksApiFactory $webhooksApiFactory,
         DirectoryList $directory
@@ -79,6 +95,8 @@ class ConfigHelper
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->storeManager = $storeManager;
         $this->caseApiFactory = $caseApiFactory;
+        $this->saleApiFactory = $saleApiFactory;
+        $this->checkoutApiFactory = $checkoutApiFactory;
         $this->guaranteeApiFactory = $guaranteeApiFactory;
         $this->webhooksApiFactory = $webhooksApiFactory;
         $this->directory = $directory;
@@ -181,6 +199,14 @@ class ConfigHelper
                     $this->signifydAPI[$apiId] = $this->caseApiFactory->create(['args' => $args]);
                     break;
 
+                case 'sale':
+                    $this->signifydAPI[$apiId] = $this->saleApiFactory->create(['args' => $args]);
+                    break;
+
+                case 'checkout':
+                    $this->signifydAPI[$apiId] = $this->checkoutApiFactory->create(['args' => $args]);
+                    break;
+
                 case 'guarantee':
                     $this->signifydAPI[$apiId] = $this->guaranteeApiFactory->create(['args' => $args]);
                     break;
@@ -201,6 +227,24 @@ class ConfigHelper
     public function getSignifydCaseApi(\Magento\Framework\Model\AbstractModel $entity = null)
     {
         return $this->getSignifydApi('case', $entity);
+    }
+
+    /**
+     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @return \Signifyd\Core\Api\CheckoutApi
+     */
+    public function getSignifydCheckoutApi(\Magento\Framework\Model\AbstractModel $entity = null)
+    {
+        return $this->getSignifydApi('checkout', $entity);
+    }
+
+    /**
+     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @return \Signifyd\Core\Response\SaleResponse
+     */
+    public function getSignifydSaleApi(\Magento\Framework\Model\AbstractModel $entity = null)
+    {
+        return $this->getSignifydApi('sale', $entity);
     }
 
     /**

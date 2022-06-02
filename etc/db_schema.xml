@@ -40,18 +40,15 @@
             <column name="id"/>
         </constraint>
         <column length="32" name="order_id" nullable="false" xsi:type="varchar"/>
-        <column length="30" name="created_at" nullable="false" xsi:type="varchar"/>
-        <column length="255" name="delivery_email" nullable="true" xsi:type="varchar"/>
+        <column length="30" name="shipped_at" nullable="false" xsi:type="varchar"/>
         <column length="30" name="fulfillment_status" nullable="false" xsi:type="varchar"/>
-        <column length="255" name="tracking_numbers" nullable="true" xsi:type="varchar"/>
-        <column name="tracking_urls" nullable="true" xsi:type="text"/>
         <column name="products" nullable="true" xsi:type="text"/>
         <column length="30" name="shipment_status" nullable="true" xsi:type="varchar"/>
-        <column name="delivery_address" nullable="true" xsi:type="text"/>
-        <column length="255" name="recipient_name" nullable="true" xsi:type="varchar"/>
-        <column length="255" name="confirmation_name" nullable="true" xsi:type="varchar"/>
-        <column length="50" name="confirmation_phone" nullable="true" xsi:type="varchar"/>
-        <column length="255" name="shipping_carrier" nullable="true" xsi:type="varchar"/>
+        <column name="tracking_urls" nullable="true" xsi:type="text"/>
+        <column length="255" name="tracking_numbers" nullable="true" xsi:type="varchar"/>
+        <column name="destination" nullable="true" xsi:type="text"/>
+        <column name="origin" nullable="true" xsi:type="text"/>
+        <column length="255" name="carrier" nullable="true" xsi:type="varchar"/>
         <column length="50" name="magento_status" default="waiting_submission" nullable="false" xsi:type="varchar"/>
         <column identity="false" name="retries" padding="11" nullable="false" default="0" xsi:type="int"/>
         <column name="inserted_at" nullable="true" default="CURRENT_TIMESTAMP" xsi:type="datetime"/>

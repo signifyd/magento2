@@ -168,20 +168,17 @@ class FulfillmentHelper
     {
         /** @var \Signifyd\Connect\Model\Fulfillment $fulfillment */
         $fulfillment = $this->fulfillmentFactory->create();
-        $fulfillment->setData('id', $fulfillmentData['id']);
+        $fulfillment->setData('id', $fulfillmentData['shipmentId']);
         $fulfillment->setData('order_id', $fulfillmentData['orderId']);
-        $fulfillment->setData('created_at', $fulfillmentData['createdAt']);
-        $fulfillment->setData('delivery_email', $fulfillmentData['deliveryEmail']);
+        $fulfillment->setData('shipped_at', $fulfillmentData['shippedAt']);
         $fulfillment->setData('fulfillment_status', $fulfillmentData['fulfillmentStatus']);
-        $fulfillment->setData('tracking_numbers', $this->serialize($fulfillmentData['trackingNumbers']));
-        $fulfillment->setData('tracking_urls', $this->serialize($fulfillmentData['trackingUrls']));
         $fulfillment->setData('products', $this->serialize($fulfillmentData['products']));
         $fulfillment->setData('shipment_status', $fulfillmentData['shipmentStatus']);
-        $fulfillment->setData('delivery_address', $this->serialize($fulfillmentData['deliveryAddress']));
-        $fulfillment->setData('recipient_name', $fulfillmentData['recipientName']);
-        $fulfillment->setData('confirmation_name', $fulfillmentData['confirmationName']);
-        $fulfillment->setData('confirmation_phone', $fulfillmentData['confirmationPhone']);
-        $fulfillment->setData('shipping_carrier', $fulfillmentData['shippingCarrier']);
+        $fulfillment->setData('tracking_urls', $this->serialize($fulfillmentData['trackingUrls']));
+        $fulfillment->setData('tracking_numbers', $this->serialize($fulfillmentData['trackingNumbers']));
+        $fulfillment->setData('destination', $this->serialize($fulfillmentData['destination']));
+        $fulfillment->setData('origin', $this->serialize($fulfillmentData['origin']));
+        $fulfillment->setData('carrier', $fulfillmentData['carrier']);
 
         return $fulfillment;
     }
@@ -213,23 +210,31 @@ class FulfillmentHelper
         }
 
         $fulfillment = [];
-        $fulfillment['id'] = $shipment->getIncrementId();
         $fulfillment['orderId'] = $shipment->getOrder()->getIncrementId();
-        $fulfillment['createdAt'] = $this->getCreatedAt($shipment);
-        $fulfillment['deliveryEmail'] = $this->getDeliveryEmail($shipment);
         $fulfillment['fulfillmentStatus'] = $this->getFulfillmentStatus($shipment);
-        $fulfillment['trackingNumbers'] = $trackingNumbers;
-        $fulfillment['trackingUrls'] = $this->getTrackingUrls($shipment);
+        $fulfillment['shipmentId'] = $shipment->getIncrementId();
+        $fulfillment['shippedAt'] = $this->getCreatedAt($shipment);
         $fulfillment['products'] = $this->getProducts($shipment);
         $fulfillment['shipmentStatus'] = $this->getShipmentStatus($shipment);
-        $fulfillment['deliveryAddress'] = $this->getDeliveryAddress($shipment);
-        $fulfillment['recipientName'] = $shipment->getShippingAddress()->getName();
-        $fulfillment['confirmationName'] = null;
-        $fulfillment['confirmationPhone'] = null;
-        $fulfillment['shippingCarrier'] = $this->purchaseHelper
+        $fulfillment['trackingUrls'] = $this->getTrackingUrls($shipment);
+        $fulfillment['trackingNumbers'] = $trackingNumbers;
+        $fulfillment['destination'] = $this->makeDestination($shipment);
+        $fulfillment['origin'] = $this->purchaseHelper->makeOrigin($shipment->getOrder());
+        $fulfillment['carrier'] = $this->purchaseHelper
             ->makeShipper($shipment->getOrder()->getShippingMethod());
 
         return $fulfillment;
+    }
+
+    public function makeDestination(\Magento\Sales\Model\Order\Shipment $shipment)
+    {
+        $destination = [];
+        $firstname = $shipment->getOrder()->getBillingAddress()->getFirstname();
+        $lastname = $shipment->getOrder()->getBillingAddress()->getLastname();
+        $destination['fullName'] = $firstname . ' ' . $lastname;
+        $destination['address'] = $this->getDeliveryAddress($shipment);
+
+        return $destination;
     }
 
     /**
@@ -302,9 +307,9 @@ class FulfillmentHelper
         $shipmentsCount = $shipment->getOrder()->getShipmentsCollection()->count();
 
         if ($shipment->getOrder()->canShip() == false) {
-            return 'complete';
+            return 'COMPLETE';
         } else {
-            return 'partial';
+            return 'PARTIAL';
         }
     }
 
@@ -337,16 +342,8 @@ class FulfillmentHelper
              */
 
             $product = [];
-            $product['itemId'] = $item->getSku();
             $product['itemName'] = $item->getName();
-            $product['itemIsDigital'] = (bool) $item->getOrderItem()->getIsVirtual();
-            $product['itemCategory'] = null;
-            $product['itemSubCategory'] = null;
-            $product['itemUrl'] = $this->getItemUrl($item);
-            $product['itemImage'] = $this->getItemImage($item);
             $product['itemQuantity'] = floatval($item->getQty());
-            $product['itemPrice'] = floatval($item->getPrice());
-            $product['itemWeight'] = floatval($item->getWeight());
 
             $products[] = $product;
         }
