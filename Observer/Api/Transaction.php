@@ -83,10 +83,11 @@ class Transaction implements ObserverInterface
                 if ($case->isEmpty() == false && $case->getPolicyName() == Casedata::PRE_AUTH) {
                     $this->logger->info("Sending pre_auth transaction to Signifyd for order
                         {$case->getOrderIncrement()}");
-                    $transaction = [];
-                    $transaction['transactions'] = $this->purchaseHelper->makeTransactions($order);
-                    $transaction['checkoutToken'] = $case->getCheckoutToken();
-                    $this->purchaseHelper->postTransactionToSignifyd($transaction, $order);
+                    $saleTransaction = [];
+                    $saleTransaction['checkoutId'] = $case->getCheckoutToken();
+                    $saleTransaction['orderId'] = $order->getIncrementId();
+                    $saleTransaction['transactions'] = $this->purchaseHelper->makeTransactions($order);
+                    $this->purchaseHelper->postTransactionToSignifyd($saleTransaction, $order);
                 }
             } catch (\Exception $e) {
                 $this->logger->debug($e->getMessage());

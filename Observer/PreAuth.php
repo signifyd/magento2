@@ -262,10 +262,10 @@ class PreAuth implements ObserverInterface
             $validActions = ['ACCEPT', 'REJECT', 'HOLD', 'PENDING'];
             $caseAction = false;
 
-            if (isset($caseResponse->recommendedAction)) {
-                $caseAction = $caseResponse->recommendedAction;
-            } elseif (isset($caseResponse->checkpointAction)) {
-                $caseAction = $caseResponse->checkpointAction;
+            if (isset($caseResponse->decision)) {
+                if (isset($caseResponse->decision->checkpointAction)) {
+                    $caseAction = $caseResponse->decision->checkpointAction;
+                }
             }
 
             if ($caseAction !== false && in_array($caseAction, $validActions)) {
@@ -278,15 +278,14 @@ class PreAuth implements ObserverInterface
                 /** @var $case \Signifyd\Connect\Model\Casedata */
                 $case = $this->casedataFactory->create();
                 $this->casedataResourceModel->load($case, $quote->getId(), 'quote_id');
-                $case->setSignifydStatus($caseResponse->status);
-                $case->setCode($caseResponse->caseId);
-                $case->setScore(floor($caseResponse->score));
+                $case->setCode($caseResponse->signifydId);
+                $case->setScore(floor($caseResponse->decision->score));
                 $case->setGuarantee($caseAction);
                 $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
                 $case->setUpdated();
                 $case->setMagentoStatus($magentoStatus);
                 $case->setPolicyName(Casedata::PRE_AUTH);
-                $case->setCheckoutToken($caseFromQuote['purchase']['checkoutToken']);
+                $case->setCheckoutToken($caseFromQuote['checkoutId']);
                 $case->setQuoteId($quote->getId());
                 $case->setOrderIncrement($quote->getReservedOrderId());
                 $entries = $case->getEntriesText();
@@ -295,10 +294,27 @@ class PreAuth implements ObserverInterface
                     $case->setEntriesText("");
                 }
 
+                if (isset($caseResponse->scaEvaluation)) {
+                    $case->setEntries(
+                        'tra_pre_auth',
+                        $caseResponse->scaEvaluation->toJson()
+                    );
+                }
+
                 $this->casedataResourceModel->save($case);
             }
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
+        }
+
+        $enabledConfig = $this->scopeConfigInterface->getValue(
+            'signifyd/general/enabled',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $quote->getStoreId()
+        );
+
+        if ($enabledConfig == 'passive') {
+            return;
         }
 
         if (isset($caseResponse) &&

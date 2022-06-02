@@ -7,6 +7,7 @@
 namespace Signifyd\Connect\Helper;
 
 use Braintree\Exception;
+use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Framework\Module\ModuleListInterface;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
@@ -36,6 +37,8 @@ use Magento\Catalog\Model\CategoryFactory;
 use Magento\Catalog\Model\ResourceModel\Category as CategoryResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Stdlib\DateTime\DateTimeFactory;
+use Magento\Directory\Model\RegionFactory;
+use Magento\Directory\Model\ResourceModel\Region as RegionResourceModel;
 
 /**
  * Class PurchaseHelper
@@ -179,6 +182,21 @@ class PurchaseHelper
     protected $dateTimeFactory;
 
     /**
+     * @var ProductMetadataInterface
+     */
+    protected $productMetadataInterface;
+
+    /**
+     * @var RegionFactory
+     */
+    protected $regionFactory;
+
+    /**
+     * @var RegionResourceModel
+     */
+    protected $regionResourceModel;
+
+    /**
      * PurchaseHelper constructor.
      * @param OrderResourceModel $orderResourceModel
      * @param RemoteAddress $remoteAddress
@@ -207,6 +225,9 @@ class PurchaseHelper
      * @param StoreManagerInterface $storeManagerInterface
      * @param QuoteResourceModel $quoteResourceModel
      * @param DateTimeFactory $dateTimeFactory
+     * @param ProductMetadataInterface $productMetadataInterface
+     * @param RegionFactory $regionFactory
+     * @param RegionResourceModel $regionResourceModel
      */
     public function __construct(
         OrderResourceModel $orderResourceModel,
@@ -235,7 +256,10 @@ class PurchaseHelper
         CategoryResourceModel $categoryResourceModel,
         StoreManagerInterface $storeManagerInterface,
         QuoteResourceModel $quoteResourceModel,
-        DateTimeFactory $dateTimeFactory
+        DateTimeFactory $dateTimeFactory,
+        ProductMetadataInterface $productMetadataInterface,
+        RegionFactory $regionFactory,
+        RegionResourceModel $regionResourceModel
     ) {
         $this->orderResourceModel = $orderResourceModel;
         $this->remoteAddress = $remoteAddress;
@@ -264,6 +288,9 @@ class PurchaseHelper
         $this->storeManagerInterface = $storeManagerInterface;
         $this->quoteResourceModel = $quoteResourceModel;
         $this->dateTimeFactory = $dateTimeFactory;
+        $this->productMetadataInterface = $productMetadataInterface;
+        $this->regionFactory = $regionFactory;
+        $this->regionResourceModel = $regionResourceModel;
     }
 
     /**
@@ -375,17 +402,18 @@ class PurchaseHelper
         }
 
         $product = [];
-        $product['itemId'] = $item->getSku();
         $product['itemName'] = $item->getName();
-        $product['itemIsDigital'] = (bool) $item->getIsVirtual();
         $product['itemPrice'] = $itemPrice;
         $product['itemQuantity'] = (int)$item->getQtyOrdered();
-        $product['itemUrl'] = $item->getProduct()->getProductUrl();
-        $product['itemWeight'] = $item->getProduct()->getWeight();
-        $product['itemImage'] = $productImageUrl;
+        $product['itemIsDigital'] = (bool) $item->getIsVirtual();
         $product['itemCategory'] = $mainCategoryName;
         $product['itemSubCategory'] = $subCategoryName;
-        $product['sellerAccountNumber'] = $this->getSellerAccountNumber();
+        $product['itemId'] = $item->getSku();
+        $product['itemImage'] = $productImageUrl;
+        $product['itemUrl'] = $item->getProduct()->getProductUrl();
+        $product['itemWeight'] = $item->getProduct()->getWeight();
+        $product['shipmentId'] = null;
+        $product['subscription'] = $this->makeSubscription();
 
         return $product;
     }
@@ -405,23 +433,22 @@ class PurchaseHelper
     }
 
     /**
-     * @return array
-     *
-     * The decision request.
+     * @param $paymentMethod
+     * @return array|string[]|null
      */
     public function getDecisionRequest($paymentMethod = null)
     {
-        $decisionRequest = [];
-
         if ($this->configHelper->isScoreOnly()) {
-            $decisionRequest['paymentFraud'] = 'SCORE';
-            return $decisionRequest;
+            return ["NONE"];
         }
 
         $configDecision = $this->configHelper->getDecisionRequest();
-        $decisionRequest['paymentFraud'] =  $this->getDecisionForMethod($configDecision, $paymentMethod);
 
-        return $decisionRequest;
+        if (isset($configDecision) === false) {
+            return null;
+        }
+
+        return $this->getDecisionForMethod($configDecision, $paymentMethod);
     }
 
     /**
@@ -531,63 +558,12 @@ class PurchaseHelper
         return null;
     }
 
-    /**
-     * getBankAuthCode method should be extended/intercepted by plugin to add value to it.
-     * A non-unique six digit number that is used by banks or
-     * financial institutions to tie an auth transaction with an order.
-     *
-     * @return null
-     */
-    public function getBankAuthCode()
+    public function getVerifications($order)
     {
-        return null;
-    }
-
-    /**
-     * getBankAccountNumber method should be extended/intercepted by plugin to add value to it.
-     * The last 4 digits of the bank account as provided during checkout.
-     *
-     * @return null
-     */
-    public function getBankAccountNumber()
-    {
-        return null;
-    }
-
-    /**
-     * getBankRoutingNumber method should be extended/intercepted by plugin to add value to it.
-     * The routing number (ABA) of the bank account that was used as provided during checkout.
-     *
-     * @return null
-     */
-    public function getBankRoutingNumber()
-    {
-        return null;
-    }
-
-    /**
-     * getPaymentAccountHolder method should be extended/intercepted by plugin to add value to it.
-     * If the payment method requires an account to use,
-     * the information pertaining to that payment account should be provided.
-     * This information should only come from by the financial institution
-     * or payment provider that manages the payment account and not the purchaser.
-     *
-     * @return null
-     */
-    public function getPaymentAccountHolder()
-    {
-        return null;
-    }
-
-    /**
-     * getVerifications method should be extended/intercepted by plugin to add value to it.
-     * Send the raw AVS and CVV response codes from your payment gateway.
-     *
-     * @return null
-     */
-    public function getVerifications()
-    {
-        return null;
+        $verifications = [];
+        $verifications['avsResponseCode'] = $this->getAvsCode($order);
+        $verifications['cvvResponseCode'] = $this->getCvvCode($order);
+        return $verifications;
     }
 
     /**
@@ -610,17 +586,6 @@ class PurchaseHelper
      * @return null
      */
     public function getTags()
-    {
-        return null;
-    }
-
-    /**
-     * customerSubmitForGuaranteeIndicator field it is part of enterprise APIs
-     * and this method should be extended/intercepted by plugin to add value to it
-     *
-     * @return null
-     */
-    public function getCustomerSubmitForGuaranteeIndicator()
     {
         return null;
     }
@@ -703,27 +668,15 @@ class PurchaseHelper
     }
 
     /**
-     * rating field it is part of enterprise APIs
-     * and this method should be extended/intercepted by plugin to add value to it
-     *
-     * @return null
-     */
-    public function getRating()
-    {
-        return null;
-    }
-
-    /**
      * @param $order Order
      * @return array
      */
     public function makePurchase(Order $order)
     {
         $originStoreCode = $order->getData('origin_store_code');
-
-        // Get all of the purchased products
         $items = $order->getAllItems();
         $purchase = [];
+        $purchase['createdAt'] = date('c', strtotime($order->getCreatedAt()));
 
         if ($originStoreCode == 'admin') {
             $purchase['orderChannel'] = "PHONE";
@@ -731,6 +684,9 @@ class PurchaseHelper
             $purchase['orderChannel'] = "WEB";
         }
 
+        $purchase['totalPrice'] = $order->getGrandTotal();
+        $purchase['currency'] = $order->getOrderCurrencyCode();
+        $purchase['confirmationEmail'] = $order->getCustomerEmail();
         $purchase['products'] = [];
 
         /** @var \Magento\Sales\Model\Order\Item $item */
@@ -742,13 +698,9 @@ class PurchaseHelper
             }
         }
 
-        $purchase['totalPrice'] = $order->getGrandTotal();
-        $purchase['currency'] = $order->getOrderCurrencyCode();
-        $purchase['orderId'] = $order->getIncrementId();
-        $purchase['receivedBy'] = $this->getReceivedBy();
-        $purchase['createdAt'] = date('c', strtotime($order->getCreatedAt()));
-        $purchase['browserIpAddress'] = $this->getIPAddress($order);
-
+        $purchase['shipments'] = $this->makeShipments($order);
+        $purchase['confirmationPhone'] = $order->getCustomerEmail();
+        $purchase['totalShippingCost'] = $order->getShippingAmount();
         $couponCode = $order->getCouponCode();
 
         if (empty($couponCode) === false) {
@@ -758,15 +710,7 @@ class PurchaseHelper
             ];
         }
 
-        $purchase['shipments'] = $this->makeShipments($order);
-
-        if (empty($originStoreCode) === false &&
-            $originStoreCode != 'admin' &&
-            $this->deviceHelper->isDeviceFingerprintEnabled()
-        ) {
-            $purchase['orderSessionId'] =
-                $this->deviceHelper->generateFingerprint($order->getQuoteId(), $order->getStoreId());
-        }
+        $purchase['receivedBy'] = $this->getReceivedBy();
 
         return $purchase;
     }
@@ -780,14 +724,27 @@ class PurchaseHelper
         $shipments = [];
         $shippingMethod = $order->getShippingMethod(true);
 
-        if (empty($shippingMethod) === false) {
-            $shipment = [];
-            $shipment['shipper'] = $this->makeShipper($shippingMethod);
-            $shipment['shippingPrice'] = floatval($order->getShippingAmount()) +
-                floatval($order->getShippingTaxAmount());
-            $shipment['shippingMethod'] = $this->makeshippingMethod($shippingMethod);
+        $shipment = [];
+        $shipment['destination'] = $this->makeRecipient($order);
+        $shipment['origin'] = $this->makeOrigin($order->getStoreId());
+        $shipment['carrier'] = $this->makeShipper($shippingMethod);;
+        $shipment['minDeliveryDate'] = $this->makeMinDeliveryDate();
+        $shipment['maxDeliveryDate'] = null;
+        $shipment['shipmentId'] = null;
+        $shipment['fulfillmentMethod'] = $this->makeFulfillmentMethod();
 
-            $shipments[] = $shipment;
+        $shipments[] = $shipment;
+
+        foreach ($order->getItems() as $item) {
+            if ($item->getProductType() == 'giftcard') {
+                $shipmentGc = [];
+                $shipmentGc['destination'] = [
+                    'email' => $item->getProductOptions()['giftcard_recipient_email'],
+                    'fullName' => $item->getProductOptions()['giftcard_recipient_name']
+                ];
+
+                $shipments[] = $shipmentGc;
+            }
         }
 
         return $shipments;
@@ -800,26 +757,45 @@ class PurchaseHelper
     public function makeShipmentsFromQuote(Quote $quote)
     {
         $shipments = [];
-        $shipment = [];
         $shippingMethod = $quote->getShippingAddress()->getShippingMethod();
-        $shippingAmount = $quote->getShippingAddress()->getShippingAmount();
 
-        $shipment['shippingMethod'] =  $shippingMethod ? $this->makeshippingMethod($shippingMethod) : null;
-        $shipment['shippingPrice'] = is_numeric($shippingAmount) ? floatval($shippingAmount) : null;
-        $shipment['shipper'] = $shippingMethod ? $this->makeShipper($shippingMethod) : null;
+        $shipment = [];
+        $shipment['destination'] = $this->makeRecipientFromQuote($quote);
+        $shipment['origin'] = $this->makeOrigin($quote->getStoreId());
+        $shipment['carrier'] = $shippingMethod ? $this->makeShipper($shippingMethod) : null;
+        $shipment['minDeliveryDate'] = $this->makeMinDeliveryDate();
+        $shipment['maxDeliveryDate'] = null;
+        $shipment['shipmentId'] = null;
+        $shipment['fulfillmentMethod'] = $this->makeFulfillmentMethod();
 
         $shipments[] = $shipment;
+
+        foreach ($quote->getItems() as $item) {
+            if ($item->getProductType() == 'giftcard') {
+                $shipmentGc = [];
+                $shipmentGc['destination'] = [
+                    'email' => $item->getProductOptions()['giftcard_recipient_email'],
+                    'fullName' => $item->getProductOptions()['giftcard_recipient_name']
+                ];
+
+                $shipments[] = $shipmentGc;
+            }
+        }
 
         return $shipments;
     }
 
     public function makeShipper($shippingMethod)
     {
+        if (isset($shippingMethod) === false) {
+            return null;
+        }
+
         if (is_string($shippingMethod)) {
             $shippingMethodArray = explode('_', $shippingMethod);
 
             if (count($shippingMethodArray) < 2) {
-                return false;
+                return null;
             }
 
             $shippingCarrier = $shippingMethodArray[0];
@@ -836,7 +812,7 @@ class PurchaseHelper
             }
         }
 
-        return false;
+        return null;
     }
 
     public function makeshippingMethod($shippingMethod)
@@ -875,14 +851,10 @@ class PurchaseHelper
 
         $address['streetAddress'] = $mageAddress->getStreetLine(1);
         $address['unit'] = $mageAddress->getStreetLine(2);
+        $address['postalCode'] = $mageAddress->getPostcode();
         $address['city'] = $mageAddress->getCity();
         $address['provinceCode'] = $mageAddress->getRegionCode();
-        $address['postalCode'] = $mageAddress->getPostcode();
         $address['countryCode'] = $mageAddress->getCountryId();
-        $address['isDeliverable'] = $this->getIsDeliverable();
-        $address['isReceivingMail'] = $this->getIsReceivingMail();
-        $address['type'] = $this->getType();
-        $address['deliveryPoint'] = $this->getDeliveryPoint();
 
         return $address;
     }
@@ -893,43 +865,84 @@ class PurchaseHelper
      */
     public function makeRecipient(Order $order)
     {
-        $recipients = [];
         $recipient = [];
-        $recipientGc = [];
         $address = $order->getShippingAddress();
 
         if ($address !== null) {
             $recipient['fullName'] = $address->getName();
-            $recipient['confirmationEmail'] = $address->getEmail();
-            $recipient['confirmationPhone'] = $address->getTelephone();
             $recipient['organization'] = $address->getCompany();
-            $recipient['deliveryAddress'] = $this->formatSignifydAddress($address);
+            $recipient['address'] = $this->formatSignifydAddress($address);
+        } else {
+            $recipient['email'] = $order->getCustomerEmail();
         }
+
 
         if (empty($recipient['fullName'])) {
             $recipient['fullName'] = $order->getCustomerName();
         }
 
-        if (empty($recipient['confirmationEmail'])) {
-            $recipient['confirmationEmail'] = $order->getCustomerEmail();
+        return $recipient;
+    }
+
+    public function makeOrigin($storeId)
+    {
+        $streetAddress = $this->scopeConfigInterface->getValue(
+            'general/store_information/street_line1',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $storeId
+        );
+
+        $postalCode = $this->scopeConfigInterface->getValue(
+            'general/store_information/postcode',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $storeId
+        );
+
+        $city = $this->scopeConfigInterface->getValue(
+            'general/store_information/city',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $storeId
+        );
+
+        $provinceId = $this->scopeConfigInterface->getValue(
+            'general/store_information/region_id',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $storeId
+        );
+
+        $countryCode = $this->scopeConfigInterface->getValue(
+            'general/store_information/country_id',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $storeId
+        );
+
+        if (isset($streetAddress) === false ||
+            isset($postalCode) === false ||
+            isset($city) === false
+        ) {
+            return null;
         }
 
-        if (empty($recipient['confirmationPhone'])) {
-            $recipient['confirmationPhone'] = $order->getBillingAddress()->getTelephone();
+        if (isset($provinceId)) {
+            $magentoRegion = $this->regionFactory->create();
+            $this->regionResourceModel->load($magentoRegion, $provinceId);
+            $provinceCode = $magentoRegion->getCode();
+        } else {
+            $provinceCode = null;
         }
 
-        foreach ($order->getItems() as $item) {
-            if ($item->getProductType() == 'giftcard') {
-                $recipientGc['fullName'] = $item->getProductOptions()['giftcard_recipient_name'];
-                $recipientGc['confirmationEmail'] = $item->getProductOptions()['giftcard_recipient_email'];
 
-                $recipients[] = $recipientGc;
-            }
-        }
+        $origin = [];
+        $origin['locationId'] = $storeId;
+        $origin['address'] = [
+            'streetAddress' => $streetAddress,
+            'postalCode' => $postalCode,
+            'city' => $city,
+            'provinceCode' => $provinceCode,
+            'countryCode' => $countryCode ?? null
+        ];
 
-        $recipients[] = $recipient;
-
-        return $recipients;
+        return $origin;
     }
 
     public function makeTransactions(Order $order)
@@ -938,15 +951,6 @@ class PurchaseHelper
         $transactionsFromOrder = $this->transactionCollectionFactory->create()
             ->addFieldToFilter('txn_id', ['eq' => $lastTransaction]);
         $transactionFromOrder = $transactionsFromOrder->getFirstItem();
-        $transactionType = $transactionFromOrder->getData('txn_type');
-
-        if ($transactionType == 'authorization') {
-            $transactionType = 'AUTHORIZATION';
-        } elseif ($transactionType == 'capture') {
-            $transactionType = 'SALE';
-        } else {
-            $transactionType = 'PREAUTHORIZATION';
-        }
 
         $transactions = [];
         $lastTransaction = [];
@@ -958,58 +962,76 @@ class PurchaseHelper
             $transactionDate = $transactionFromOrder->getData('created_at');
         }
 
-        $lastTransaction['checkoutPaymentDetails'] = $this->makeCheckoutPaymentDetails($order);
-        $lastTransaction['avsResponseCode'] = $this->getAvsCode($order);
-        $lastTransaction['cvvResponseCode'] = $this->getCvvCode($order);
-        $lastTransaction['transactionId'] = $this->getTransactionId($order);
-        $lastTransaction['currency'] = $order->getOrderCurrencyCode();
-        $lastTransaction['amount'] = $order->getGrandTotal();
-        $lastTransaction['gateway'] = $order->getPayment()->getMethod();
-        $lastTransaction['createdAt'] = date('c', strtotime($transactionDate));
-        $lastTransaction['paymentMethod'] = $this->makePaymentMethod($order->getPayment()->getMethod());
-        $lastTransaction['type'] = $transactionType;
+        $transactionId = $this->getTransactionId($order);
+
         $lastTransaction['gatewayStatusCode'] = 'SUCCESS';
-        $lastTransaction['gatewayStatusMessage'] = $this->getGatewayStatusMessage();
+        $lastTransaction['paymentMethod'] = $this->makePaymentMethod($order->getPayment()->getMethod());
+        $lastTransaction['checkoutPaymentDetails'] = $this->makeCheckoutPaymentDetails($order);
+        $lastTransaction['amount'] = $order->getGrandTotal();
+        $lastTransaction['currency'] = $order->getOrderCurrencyCode();
+        $lastTransaction['gateway'] = $order->getPayment()->getMethod();
+        $lastTransaction['sourceAccountDetails'] = $this->makeSourceAccountDetails();
+        $lastTransaction['acquirerDetails'] = $this->makeAcquirerDetails();
         $lastTransaction['gatewayErrorCode'] = $this->getGatewayErrorCode();
+        $lastTransaction['gatewayStatusMessage'] = $this->getGatewayStatusMessage();
+        $lastTransaction['createdAt'] = date('c', strtotime($transactionDate));
         $lastTransaction['parentTransactionId'] = $this->getParentTransactionId();
+        $lastTransaction['scaExemptionRequested'] = $this->makeScaExemptionRequested();
+        $lastTransaction['verifications '] = $this->getVerifications($order);
+        $lastTransaction['threeDsResult '] = $this->makeThreeDsResult();
         $lastTransaction['paypalPendingReasonCode'] = $this->getPaypalPendingReasonCode();
         $lastTransaction['paypalProtectionEligibility'] = $this->getPaypalProtectionEligibility();
         $lastTransaction['paypalProtectionEligibilityType'] = $this->getPaypalProtectionEligibilityType();
-        $lastTransaction['bankAuthCode'] = $this->getBankAuthCode();
-        $lastTransaction['paymentAccountHolder '] = $this->getPaymentAccountHolder();
-        $lastTransaction['verifications '] = $this->getVerifications();
 
+        if (isset($transactionId) === false) {
+            $transactionId = sha1($this->jsonSerializer->serialize($lastTransaction));
+        }
+
+        $lastTransaction['transactionId'] = $transactionId;
         $transactions[] = $lastTransaction;
 
         return $transactions;
     }
 
-    public function makeTransactionsFromQuote(Quote $quote, $methodData = [])
+    public function makeCheckoutTransactions(Quote $quote, $checkoutToken ,$methodData = [])
     {
-        $transactions = [];
-        $lastTransaction = [];
+        $reservedOrderId = $quote->getReservedOrderId();
+
+        if (empty($reservedOrderId)) {
+            $quote->reserveOrderId();
+            $reservedOrderId = $quote->getReservedOrderId();
+            $this->quoteResourceModel->save($quote);
+        }
+
+        $checkoutTransaction = [];
+        $checkoutTransaction['checkoutId'] = $checkoutToken;
+        $checkoutTransaction['orderId'] = $reservedOrderId;
         $errorCode = $methodData['gatewayRefusedReason'] ?? "CARD_DECLINED";
         $gateway = $methodData['gateway'] ?? null;
 
-        $lastTransaction['checkoutPaymentDetails'] = $this->makeCheckoutPaymentDetailsFromQuote($quote, $methodData);
-        $lastTransaction['currency'] = $quote->getBaseCurrencyCode();
-        $lastTransaction['amount'] = $quote->getGrandTotal();
-        $lastTransaction['gateway'] = $gateway;
-        $lastTransaction['paymentMethod'] = $this->makePaymentMethod($quote->getPayment()->getMethod());
-        $lastTransaction['type'] = 'PREAUTHORIZATION';
-        $lastTransaction['gatewayStatusCode'] = 'FAILURE';
-        $lastTransaction['gatewayStatusMessage'] = $this->getGatewayStatusMessage();
-        $lastTransaction['gatewayErrorCode'] = $errorCode;
-        $lastTransaction['paypalPendingReasonCode'] = $this->getPaypalPendingReasonCode();
-        $lastTransaction['paypalProtectionEligibility'] = $this->getPaypalProtectionEligibility();
-        $lastTransaction['paypalProtectionEligibilityType'] = $this->getPaypalProtectionEligibilityType();
-        $lastTransaction['bankAuthCode'] = $this->getBankAuthCode();
-        $lastTransaction['paymentAccountHolder '] = $this->getPaymentAccountHolder();
-        $lastTransaction['verifications '] = $this->getVerifications();
+        $transactions = [];
+        $transaction = [];
+        $transaction['gatewayStatusCode'] = 'FAILURE';
+        $transaction['paymentMethod'] = $this->makePaymentMethod($quote->getPayment()->getMethod());
+        $transaction['checkoutPaymentDetails'] = $this->makeCheckoutPaymentDetailsFromQuote($quote, $methodData);
+        $transaction['amount'] = $quote->getGrandTotal();
+        $transaction['currency'] = $quote->getBaseCurrencyCode();;
+        $transaction['gateway'] = $gateway;
+        $transaction['sourceAccountDetails'] = $this->makeSourceAccountDetails();
+        $transaction['acquirerDetails'] = $this->makeAcquirerDetails();
+        $transaction['gatewayErrorCode'] = $errorCode;
+        $transaction['gatewayStatusMessage'] = $this->getGatewayStatusMessage();
+        $transaction['scaExemptionRequested'] = $this->makeScaExemptionRequested();
+        $transaction['threeDsResult'] = $this->makeThreeDsResult();
+        $transaction['paypalPendingReasonCode'] = $this->getPaypalPendingReasonCode();
+        $transaction['paypalProtectionEligibility'] = $this->getPaypalProtectionEligibility();
+        $transaction['paypalProtectionEligibilityType'] = $this->getPaypalProtectionEligibilityType();
+        $transaction['transactionId'] = sha1($this->jsonSerializer->serialize($transaction));
 
-        $transactions[] = $lastTransaction;
+        $transactions[] = $transaction;
+        $checkoutTransaction['transactions'] = $transactions;
 
-        return $transactions;
+        return $checkoutTransaction;
     }
 
     public function makeCheckoutPaymentDetailsFromQuote(Quote $quote, $methodData = [])
@@ -1023,11 +1045,9 @@ class PurchaseHelper
         }
 
         $billingAddress = $quote->getBillingAddress();
-        $checkoutPaymentDetails['holderName'] = $this->getCardholderFromQuote($quote);
-        $checkoutPaymentDetails['holderTaxId'] = $this->getHolderTaxId();
-        $checkoutPaymentDetails['holderTaxCountry'] = $this->getHolderTaxCountry();
-        $checkoutPaymentDetails['bankAccountNumber'] = $this->getBankAccountNumber();
-        $checkoutPaymentDetails['bankRoutingNumber'] = $this->getBankRoutingNumber();
+        $checkoutPaymentDetails['accountHolderName'] = $this->getCardholderFromQuote($quote);
+        $checkoutPaymentDetails['accountHolderTaxId'] = $this->getHolderTaxId();
+        $checkoutPaymentDetails['accountHolderTaxIdCountry'] = $this->getHolderTaxCountry();
         $checkoutPaymentDetails['billingAddress'] = $this->formatSignifydAddress($billingAddress);
 
         return $checkoutPaymentDetails;
@@ -1071,16 +1091,20 @@ class PurchaseHelper
     {
         $billingAddress = $order->getBillingAddress();
         $checkoutPaymentDetails = [];
-        $checkoutPaymentDetails['holderName'] = $this->getCardholder($order);
-        $checkoutPaymentDetails['holderTaxId'] = $this->getHolderTaxId();
-        $checkoutPaymentDetails['holderTaxCountry'] = $this->getHolderTaxCountry();
+        $checkoutPaymentDetails['billingAddress'] = $this->formatSignifydAddress($billingAddress);
+        $checkoutPaymentDetails['accountHolderName'] = $this->getCardholder($order);
+        $checkoutPaymentDetails['accountHolderTaxId'] = $this->getHolderTaxId();
+        $checkoutPaymentDetails['accountHolderTaxIdCountry'] = $this->getHolderTaxCountry();
+        $checkoutPaymentDetails['accountLast4'] = $this->makeAccountLast4();
+        $checkoutPaymentDetails['abaRoutingNumber'] = $this->makeAbaRoutingNumber();
+        $checkoutPaymentDetails['cardToken'] = $this->makeCardToken();
+        $checkoutPaymentDetails['cardTokenProvider'] = $this->makeCardTokenProvider();
         $checkoutPaymentDetails['cardBin'] = $this->getBin($order);
-        $checkoutPaymentDetails['cardLast4'] = $this->getLast4($order);
         $checkoutPaymentDetails['cardExpiryMonth'] = $this->getExpMonth($order);
         $checkoutPaymentDetails['cardExpiryYear'] = $this->getExpYear($order);
-        $checkoutPaymentDetails['bankAccountNumber'] = $this->getBankAccountNumber();
-        $checkoutPaymentDetails['bankRoutingNumber'] = $this->getBankRoutingNumber();
-        $checkoutPaymentDetails['billingAddress'] = $this->formatSignifydAddress($billingAddress);
+        $checkoutPaymentDetails['cardLast4'] = $this->getLast4($order);
+        $checkoutPaymentDetails['cardBrand'] = $this->makeCardBrand();
+        $checkoutPaymentDetails['cardInstallments'] = $this->makeCardInstallments();
 
         return $checkoutPaymentDetails;
     }
@@ -1092,13 +1116,12 @@ class PurchaseHelper
     public function makeUserAccount(Order $order)
     {
         $user = [];
-        $user['email'] = $order->getCustomerEmail();
         $user['username'] = $order->getCustomerEmail();
         $user['accountNumber'] = $order->getCustomerId();
-        $user['phone'] = $order->getBillingAddress()->getTelephone();
-        $user['rating'] = $this->getRating();
         $user['aggregateOrderCount'] = 0;
         $user['aggregateOrderDollars'] = 0.0;
+        $user['email'] = $order->getCustomerEmail();
+        $user['phone'] = $order->getBillingAddress()->getTelephone();
 
         /* @var $customer \Magento\Customer\Model\Customer */
         $customer = $this->customerFactory->create();
@@ -1107,6 +1130,9 @@ class PurchaseHelper
         if ($customer !== null && !$customer->isEmpty()) {
             $user['createdDate'] = date('c', strtotime($customer->getCreatedAt()));
             $user['lastUpdateDate'] = date('c', strtotime($customer->getData('updated_at')));
+            $user['emailLastUpdateDate'] = null;
+            $user['phoneLastUpdateDate'] = null;
+            $user['passwordLastUpdateDate'] = null;
 
             $lastOrders = $this->orderCollectionFactory->create()
                 ->addFieldToFilter('customer_id', ['eq' => $customer->getId()])
@@ -1141,19 +1167,19 @@ class PurchaseHelper
     {
         $case = [];
 
+        $case['orderId'] = $order->getIncrementId();
         $case['purchase'] = $this->makePurchase($order);
-        $case['recipients'] = $this->makeRecipient($order);
-        $case['transactions'] = $this->makeTransactions($order);
         $case['userAccount'] = $this->makeUserAccount($order);
-        $case['clientVersion'] = $this->makeVersions();
-        $case['customerSubmitForGuaranteeIndicator'] = $this->getCustomerSubmitForGuaranteeIndicator();
-        $case['customerOrderRecommendation'] = $this->getCustomerOrderRecommendation();
-        $case['deviceFingerprints'] = $this->getDeviceFingerprints();
-        $case['policy'] = $this->makePolicy($order, ScopeInterface::SCOPE_STORES, $order->getStoreId());
-        $case['decisionRequest'] = $this->getDecisionRequest($order->getPayment()->getMethod());
+        $case['memberships'] = $this->makeMemberships();
+        $case['coverageRequests'] = $this->getDecisionRequest($order->getPayment()->getMethod());
+        $case['merchantCategoryCode'] = $this->makeMerchantCategoryCode();
+        $case['device'] = $this->makeDevice($order->getQuoteId(), $order->getStoreId());
+        $case['merchantPlatform'] = $this->getMerchantPlataform();
+        $case['signifydClient'] = $this->makeVersions();
+        $case['transactions'] = $this->makeTransactions($order);
         $case['sellers'] = $this->getSellers();
         $case['tags'] = $this->getTags();
-        $case['purchase']['checkoutToken'] = uniqid();
+        $case['customerOrderRecommendation'] = $this->getCustomerOrderRecommendation();
 
         /**
          * This registry entry it's used to collect data from some payment methods like Payflow Link
@@ -1168,10 +1194,8 @@ class PurchaseHelper
     public function makeVersions()
     {
         $version = [];
-        $version['storePlatformVersion'] = $this->productMetadata->getVersion();
-        $version['signifydClientApp'] = 'Magento 2';
-        $version['storePlatform'] = 'Magento 2';
-        $version['signifydClientAppVersion'] = (string)($this->moduleList->getOne('Signifyd_Connect')['setup_version']);
+        $version['application'] = 'Magento 2';
+        $version['version'] = (string)($this->moduleList->getOne('Signifyd_Connect')['setup_version']);
 
         return $version;
     }
@@ -1179,7 +1203,7 @@ class PurchaseHelper
     /**
      * @param $caseData
      * @param $order
-     * @return \Signifyd\Core\Response\CaseResponse|bool
+     * @return \Signifyd\Core\Response\SaleResponse|bool
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      * @throws \Signifyd\Core\Exceptions\CaseModelException
      * @throws \Signifyd\Core\Exceptions\InvalidClassException
@@ -1187,17 +1211,18 @@ class PurchaseHelper
      */
     public function postCaseToSignifyd($caseData, $order)
     {
-        $caseResponse = $this->configHelper->getSignifydCaseApi($order)->createCase($caseData);
+        /** @var \Signifyd\Core\Response\SaleResponse $saleResponse */
+        $saleResponse = $this->configHelper->getSignifydSaleApi($order)->createOrder('orders/events/sales', $caseData);
 
-        if (empty($caseResponse->getCaseId()) === false) {
-            $this->logger->debug("Case sent. Id is {$caseResponse->getCaseId()}", ['entity' => $order]);
+        if (empty($saleResponse->getSignifydId()) === false) {
+            $this->logger->debug("Case sent. Id is {$saleResponse->getSignifydId()}", ['entity' => $order]);
             $this->orderHelper->addCommentToStatusHistory(
                 $order,
-                "Signifyd: case created {$caseResponse->getCaseId()}"
+                "Signifyd: case created {$saleResponse->getSignifydId()}"
             );
-            return $caseResponse;
+            return $saleResponse;
         } else {
-            $this->logger->error($this->jsonSerializer->serialize($caseResponse));
+            $this->logger->error($this->jsonSerializer->serialize($saleResponse));
             $this->logger->error("Case failed to send.", ['entity' => $order]);
             $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: failed to create case");
 
@@ -1205,16 +1230,16 @@ class PurchaseHelper
         }
     }
 
-    public function updateCaseSignifyd($updateData, $order, $caseId)
+    public function createReroute($updateData, $order)
     {
-        $caseResponse = $this->configHelper->getSignifydCaseApi($order)->updateCase($updateData, $caseId);
+        $caseResponse = $this->configHelper->getSignifydSaleApi($order)->reroute($updateData);
 
-        if (empty($caseResponse->getCaseId()) === false) {
-            $this->logger->debug("Case updated. Id is {$caseResponse->getCaseId()}", ['entity' => $order]);
+        if (empty($caseResponse->getSignifydId()) === false) {
+            $this->logger->debug("Reroute created. Id is {$caseResponse->getSignifydId()}", ['entity' => $order]);
             return $caseResponse;
         } else {
             $this->logger->error($this->jsonSerializer->serialize($caseResponse));
-            $this->logger->error("Case failed to update.", ['entity' => $order]);
+            $this->logger->error("Reroute failed to create.", ['entity' => $order]);
             return false;
         }
     }
@@ -1542,51 +1567,69 @@ class PurchaseHelper
     public function processQuoteData(Quote $quote, $checkoutPaymentDetails = null, $paymentMethod = null)
     {
         $case = [];
+        $reservedOrderId = $quote->getReservedOrderId();
 
+        if (empty($reservedOrderId)) {
+            $quote->reserveOrderId();
+            $reservedOrderId = $quote->getReservedOrderId();
+            $this->quoteResourceModel->save($quote);
+        }
+
+        $case['orderId'] = $reservedOrderId;
         $case['purchase'] = $this->makePurchaseFromQuote($quote);
-        $case['recipients'] = $this->makeRecipientFromQuote($quote);
         $case['userAccount'] = $this->makeUserAccountFromQuote($quote);
-        $case['clientVersion'] = $this->makeVersions();
-        $case['customerSubmitForGuaranteeIndicator'] = $this->getCustomerSubmitForGuaranteeIndicator();
+        $case['memberships'] = $this->makeMemberships();
+        $case['coverageRequests'] = $this->getDecisionRequest($paymentMethod);
+        $case['merchantCategoryCode'] = $this->makeMerchantCategoryCode();
+        $case['device'] = $this->makeDevice($quote->getId(), $quote->getStore());
+        $case['merchantPlatform'] = $this->getMerchantPlataform();
+        $case['signifydClient'] = $this->makeVersions();
+        $case['sellers'] = $this->getSellers();
+        $case['tags'] = $this->getTags();
         $case['customerOrderRecommendation'] = $this->getCustomerOrderRecommendation();
-        $case['deviceFingerprints'] = $this->getDeviceFingerprints();
-        $case['policy'] = $this->makePolicy($quote, ScopeInterface::SCOPE_STORES, $quote->getStoreId());
-        $case['decisionRequest'] = $this->getDecisionRequest($paymentMethod);
-        $case['purchase']['checkoutToken'] = sha1($this->jsonSerializer->serialize($case));
 
-        $positiveAction = $this->configHelper->getConfigData('signifyd/advanced/guarantee_positive_action');
-        $transactionType = $positiveAction == 'capture' ? 'SALE' : 'AUTHORIZATION';
-        $billingAddres = $quote->getBillingAddress();
-        $transactionCheckoutPaymentDetails = [];
-        $transaction = [];
-        $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['billingAddress'] =
-            $this->formatSignifydAddress($billingAddres);
-        $transactionCheckoutPaymentDetails['currency'] = $quote->getBaseCurrencyCode();
-        $transactionCheckoutPaymentDetails['amount'] = $quote->getGrandTotal();
-        $transactionCheckoutPaymentDetails['type'] = $transactionType;
-        $transactionCheckoutPaymentDetails['gatewayStatusCode'] = 'PENDING';
+        $policyConfig = $this->getPolicyName(
+            $quote->getStore()->getScopeType(),
+            $quote->getStoreId()
+        );
+        $policyFromMethod = $this->getPolicyFromMethod($policyConfig, $paymentMethod);
+        $evalRequest = ($policyFromMethod == 'TRA_PRE_AUTH') ? ['SCA_EVALUATION'] : null;
+        $case['additionalEvalRequests'] = $evalRequest;
+
+        $case['checkoutId'] = sha1($this->jsonSerializer->serialize($case));
+
+        $transactions = [];
 
         if (isset($paymentMethod)) {
-            $transactionCheckoutPaymentDetails['paymentMethod'] = $this->makePaymentMethod($paymentMethod);
-            $transactionCheckoutPaymentDetails['gateway'] = $paymentMethod;
+            $transaction = [];
+            $billingAddres = $quote->getBillingAddress();
+            $transaction['checkoutPaymentDetails']['billingAddress'] =
+                $this->formatSignifydAddress($billingAddres);
+            $transaction['currency'] = $quote->getBaseCurrencyCode();
+            $transaction['amount'] = $quote->getGrandTotal();
+            $transaction['sourceAccountDetails'] = $this->makeSourceAccountDetails();
+            $transaction['acquirerDetails'] = $this->makeAcquirerDetails();
+            $transaction['paymentMethod'] = $this->makePaymentMethod($paymentMethod);
+            $transaction['gateway'] = $paymentMethod;
+
+            if (is_array($checkoutPaymentDetails) && empty($checkoutPaymentDetails) === false
+            ) {
+                $transaction['checkoutPaymentDetails']['cardBin'] =
+                    $checkoutPaymentDetails['cardBin'];
+                $transaction['checkoutPaymentDetails']['accountHolderName'] =
+                    $checkoutPaymentDetails['holderName'];
+                $transaction['checkoutPaymentDetails']['cardLast4'] =
+                    $checkoutPaymentDetails['cardLast4'];
+                $transaction['checkoutPaymentDetails']['cardExpiryMonth'] =
+                    $checkoutPaymentDetails['cardExpiryMonth'];
+                $transaction['checkoutPaymentDetails']['cardExpiryYear'] =
+                    $checkoutPaymentDetails['cardExpiryYear'];
+            }
+
+            $transactions[] = $transaction;
         }
 
-        if (is_array($checkoutPaymentDetails) && empty($checkoutPaymentDetails) === false
-        ) {
-            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardBin'] =
-                $checkoutPaymentDetails['cardBin'];
-            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['holderName'] =
-                $checkoutPaymentDetails['holderName'];
-            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardLast4'] =
-                $checkoutPaymentDetails['cardLast4'];
-            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardExpiryMonth'] =
-                $checkoutPaymentDetails['cardExpiryMonth'];
-            $transactionCheckoutPaymentDetails['checkoutPaymentDetails']['cardExpiryYear'] =
-                $checkoutPaymentDetails['cardExpiryYear'];
-        }
-
-        $transaction[] = $transactionCheckoutPaymentDetails;
-        $case['transactions'] = $transaction;
+        $case['transactions'] = $transactions;
 
         /**
          * This registry entry it's used to collect data from some payment methods like Payflow Link
@@ -1598,19 +1641,6 @@ class PurchaseHelper
         return $case;
     }
 
-    public function makePolicy($entity, $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
-    {
-        $policy = [];
-        $policyName = $this->getPolicyName($scopeType, $scopeCode);
-        $paymentMethod = $entity->getPayment()->getMethod();
-        $isPreAuth = $this->getIsPreAuth($policyName, $paymentMethod);
-        $policyLabel = $isPreAuth ? 'PRE_AUTH' : 'POST_AUTH';
-
-        $policy['name'] = $policyLabel;
-
-        return $policy;
-    }
-
     public function getPolicyName($scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
     {
         return $this->scopeConfigInterface->getValue(
@@ -1620,24 +1650,17 @@ class PurchaseHelper
         );
     }
 
-    /**
-     * @param $order Order
-     * @return array
-     */
     public function makePurchaseFromQuote(Quote $quote)
     {
-        // Get all of the purchased products
         $items = $quote->getAllItems();
         $purchase = [];
-
-        $reservedOrderId = $quote->getReservedOrderId();
-
-        if (empty($reservedOrderId)) {
-            $quote->reserveOrderId();
-            $reservedOrderId = $quote->getReservedOrderId();
-            $this->quoteResourceModel->save($quote);
-        }
-
+        $dateTime = $this->dateTimeFactory->create();
+        $caseCreateDate = $dateTime->gmtDate();
+        $purchase['createdAt'] = date('c', strtotime($caseCreateDate));
+        $purchase['orderChannel'] = "WEB";
+        $purchase['totalPrice'] = $quote->getGrandTotal();
+        $purchase['currency'] = $quote->getQuoteCurrencyCode();
+        $purchase['confirmationEmail'] = $quote->getCustomerEmail();
         $purchase['products'] = [];
 
         /** @var \Magento\Quote\Model\Quote\Item $item */
@@ -1649,22 +1672,12 @@ class PurchaseHelper
             }
         }
 
-        $dateTime = $this->dateTimeFactory->create();
-        $caseCreateDate = $dateTime->gmtDate();
-
+        $shippingAmount = $quote->getShippingAddress()->getShippingAmount();
         $purchase['shipments'] = $this->makeShipmentsFromQuote($quote);
-        $purchase['orderChannel'] = "WEB";
-        $purchase['totalPrice'] = $quote->getGrandTotal();
-        $purchase['currency'] = $quote->getQuoteCurrencyCode();
-        $purchase['orderId'] = $reservedOrderId;
+        $purchase['confirmationPhone'] = $quote->getCustomerEmail();
+        $purchase['totalShippingCost'] = is_numeric($shippingAmount) ? floatval($shippingAmount) : null;
+        $purchase['discountCodes'] = null;
         $purchase['receivedBy'] = $this->getReceivedBy();
-        $purchase['createdAt'] = date('c', strtotime($caseCreateDate));
-        $purchase['browserIpAddress'] = $this->filterIp($this->remoteAddress->getRemoteAddress());
-
-        if ($this->deviceHelper->isDeviceFingerprintEnabled()) {
-            $purchase['orderSessionId'] =
-                $this->deviceHelper->generateFingerprint($quote->getId(), $quote->getStoreId());
-        }
 
         return $purchase;
     }
@@ -1732,17 +1745,18 @@ class PurchaseHelper
         }
 
         $product = [];
-        $product['itemId'] = $item->getSku();
         $product['itemName'] = $item->getName();
-        $product['itemIsDigital'] = (bool) $item->getIsVirtual();
         $product['itemPrice'] = $itemPrice;
-        $product['itemQuantity'] = (int)$item->getQty();
-        $product['itemUrl'] = $item->getProduct()->getProductUrl();
-        $product['itemWeight'] = $item->getProduct()->getWeight();
-        $product['itemImage'] = $productImageUrl;
+        $product['itemQuantity'] = (int)$item->getQtyOrdered();
+        $product['itemIsDigital'] = (bool) $item->getIsVirtual();
         $product['itemCategory'] = $mainCategoryName;
         $product['itemSubCategory'] = $subCategoryName;
-        $product['sellerAccountNumber'] = $this->getSellerAccountNumber();
+        $product['itemId'] = $item->getSku();
+        $product['itemImage'] = $productImageUrl;
+        $product['itemUrl'] = $item->getProduct()->getProductUrl();
+        $product['itemWeight'] = $item->getProduct()->getWeight();
+        $product['shipmentId'] = null;
+        $product['subscription'] = $this->makeSubscription();
 
         return $product;
     }
@@ -1753,30 +1767,23 @@ class PurchaseHelper
      */
     public function makeRecipientFromQuote(Quote $quote)
     {
-        $recipients = [];
         $recipient = [];
         $address = $quote->getShippingAddress()->getCity() !== null ?
             $quote->getShippingAddress() : $quote->getBillingAddress();
 
         if ($address !== null) {
             $recipient['fullName'] = $address->getName();
-            $recipient['confirmationEmail'] = $address->getEmail();
-            $recipient['confirmationPhone'] = $address->getTelephone();
             $recipient['organization'] = $address->getCompany();
-            $recipient['deliveryAddress'] = $this->formatSignifydAddress($address);
+            $recipient['address'] = $this->formatSignifydAddress($address);
+        }else {
+            $recipient['email'] = $quote->getCustomerEmail();
         }
 
-        if (empty($recipient->fullName)) {
+        if (empty($recipient['fullName'] )) {
             $recipient['fullName'] = $quote->getCustomerFirstname() . ' ' . $quote->getCustomerLastname();
         }
 
-        if (empty($recipient['confirmationEmail'])) {
-            $recipient['confirmationEmail'] = $quote->getCustomerEmail();
-        }
-
-        $recipients[] = $recipient;
-
-        return $recipients;
+        return $recipient;
     }
 
     /** Construct a user account blob
@@ -1790,7 +1797,6 @@ class PurchaseHelper
         $user['username'] = $quote->getCustomerEmail();
         $user['accountNumber'] = $quote->getCustomerId();
         $user['phone'] = $quote->getBillingAddress()->getTelephone();
-        $user['rating'] = $this->getRating();
         $user['aggregateOrderCount'] = 0;
         $user['aggregateOrderDollars'] = 0.0;
 
@@ -1801,6 +1807,9 @@ class PurchaseHelper
         if ($customer !== null && !$customer->isEmpty()) {
             $user['createdDate'] = date('c', strtotime($customer->getCreatedAt()));
             $user['lastUpdateDate'] = date('c', strtotime($customer->getData('updated_at')));
+            $user['emailLastUpdateDate'] = null;
+            $user['phoneLastUpdateDate'] = null;
+            $user['passwordLastUpdateDate'] = null;
 
             $lastOrders = $this->orderCollectionFactory->create()
                 ->addFieldToFilter('customer_id', ['eq' => $customer->getId()])
@@ -1825,17 +1834,25 @@ class PurchaseHelper
         return $user;
     }
 
+    /**
+     * @param $caseData
+     * @param $quote
+     * @return bool|\Signifyd\Core\Response\CheckoutsResponse
+     * @throws \Signifyd\Core\Exceptions\ApiException
+     * @throws \Signifyd\Core\Exceptions\InvalidClassException
+     * @throws \Signifyd\Core\Exceptions\LoggerException]
+     */
     public function postCaseFromQuoteToSignifyd($caseData, $quote)
     {
-        $caseResponse = $this->configHelper->getSignifydCaseApi($quote)->createCase($caseData);
+        $caseResponse = $this->configHelper->getSignifydCheckoutApi($quote)
+            ->createOrder('orders/events/checkouts', $caseData);
 
-        if (empty($caseResponse->getCaseId()) === false) {
-            $this->logger->debug("Case sent. Id is {$caseResponse->getCaseId()}", ['entity' => $quote]);
+        if (empty($caseResponse->getSignifydId()) === false) {
+            $this->logger->debug("Case sent. Id is {$caseResponse->getSignifydId()}", ['entity' => $quote]);
             return $caseResponse;
         } else {
             $this->logger->error($this->jsonSerializer->serialize($caseResponse));
             $this->logger->error("Case failed to send.", ['entity' => $quote]);
-            $this->orderHelper->addCommentToStatusHistory($quote, "Signifyd: failed to create case");
 
             return false;
         }
@@ -1843,14 +1860,14 @@ class PurchaseHelper
 
     public function postTransactionToSignifyd($transactionData, $entity)
     {
-        $caseResponse = $this->configHelper->getSignifydCaseApi($entity)->createTransaction($transactionData);
-        $tokenSent = $transactionData['checkoutToken'];
-        $tokenReceived = $caseResponse->getCheckoutToken();
+        $caseResponse = $this->configHelper->getSignifydCheckoutApi($entity)->createTransaction($transactionData);
+        $tokenSent = $transactionData['checkoutId'];
+        $tokenReceived = $caseResponse->getCheckoutId();
 
         if ($tokenSent === $tokenReceived) {
             $message = $entity instanceof \Magento\Quote\Model\Quote ?
-                "Transaction sent to quote {$entity->getId()}. Token is {$caseResponse->getCheckoutToken()}" :
-                "Transaction sent to order {$entity->getIncrementId()}. Token is {$caseResponse->getCheckoutToken()}";
+                "Transaction sent to quote {$entity->getId()}. Token is {$caseResponse->getCheckoutId()}" :
+                "Transaction sent to order {$entity->getIncrementId()}. Token is {$caseResponse->getCheckoutId()}";
 
             $this->logger->debug($message);
             return $caseResponse;
@@ -1865,12 +1882,19 @@ class PurchaseHelper
 
     public function getIsPreAuth($policyName, $paymentMethod)
     {
+        $policyFromMethod = $this->getPolicyFromMethod($policyName, $paymentMethod);
+
+        return ($policyFromMethod == 'PRE_AUTH' || $policyFromMethod == 'TRA_PRE_AUTH');
+    }
+
+    public function getPolicyFromMethod($policyName, $paymentMethod)
+    {
         if (isset($paymentMethod) === false) {
-            return false;
+            return 'POST_AUTH';
         }
 
         if ($this->configHelper->isPaymentRestricted($paymentMethod)) {
-            return false;
+            return 'POST_AUTH';
         }
 
         $isJson = $this->isJson($policyName);
@@ -1878,13 +1902,21 @@ class PurchaseHelper
         if ($isJson) {
             $configPolicy = $this->jsonSerializer->unserialize($policyName);
 
-            if (isset($configPolicy['PRE_AUTH']) === false || is_array($configPolicy['PRE_AUTH']) === false) {
-                return false;
+            foreach ($configPolicy as $key => $value) {
+                if ($key == 'PRE_AUTH' || $key == 'TRA_PRE_AUTH') {
+                    if (is_array($value) === false) {
+                        continue;
+                    }
+
+                    if (in_array($paymentMethod, $value)) {
+                        return $key;
+                    }
+                }
             }
 
-            return in_array($paymentMethod, $configPolicy['PRE_AUTH']);
+            return 'POST_AUTH';
         } else {
-            return ($policyName == 'PRE_AUTH');
+            return $policyName;
         }
     }
 
@@ -1894,7 +1926,7 @@ class PurchaseHelper
 
         if ($isJson) {
             if (isset($paymentMethod) === false) {
-                return "GUARANTEE";
+                return null;
             }
 
             $configDecisions = $this->jsonSerializer->unserialize($decision);
@@ -1905,23 +1937,23 @@ class PurchaseHelper
                 }
 
                 if (in_array($paymentMethod, $method)) {
-                    return $configDecision;
+                    return [$configDecision];
                 }
             }
 
-            return "GUARANTEE";
+            return null;
         } else {
             if ($this->isDecisionValid($decision) === false) {
-                return "GUARANTEE";
+                return null;
             }
 
-            return $decision;
+            return [$decision];
         }
     }
 
     public function isDecisionValid($decision)
     {
-        $allowedDecisions = ['GUARANTEE', 'SCORE', 'DECISION'];
+        $allowedDecisions = ['FRAUD', 'INR', 'SNAD', 'ALL', 'NONE'];
 
         return in_array($decision, $allowedDecisions);
     }
@@ -1986,5 +2018,194 @@ class PurchaseHelper
         $orderCollection->addFieldToFilter('created_at', ['gteq' => $gmtDate]);
 
         return $orderCollection->getTotalCount();
+    }
+
+    public function makeDevice($quoteId, $storeId)
+    {
+        $device = [];
+        $device['clientIpAddress'] = $this->filterIp($this->remoteAddress->getRemoteAddress());
+        $device['sessionId'] = $this->deviceHelper->generateFingerprint($quoteId, $storeId);
+        $device['fingerprint'] = $this->getDeviceFingerprints();
+        return $device;
+    }
+
+    public function getMerchantPlataform()
+    {
+        $merchantPlataform = [];
+        $merchantPlataform['name'] = 'Magento';
+        $merchantPlataform['version'] = $this->productMetadataInterface->getVersion();
+        return $merchantPlataform;
+    }
+
+    /**
+     * makeSourceAccountDetails method should be extended/intercepted by plugin to add value to it.
+     * These are details about the Payment Instrument
+     * that are sourced directly from the institution that manages that instrument, the issuing bank for example.
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeSourceAccountDetails()
+    {
+        return null;
+    }
+
+    /**
+     * makeAcquirerDetails method should be extended/intercepted by plugin to add value to it.
+     * Details about the merchant's acquiring bank.
+     * Although this information is optional, if it is not present it may result in missed SCA exemptions/exclusions.
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeAcquirerDetails()
+    {
+        return null;
+    }
+
+    /**
+     * makeScaExemptionRequested method should be extended/intercepted by plugin to add value to it.
+     * The SCA exemption that was requested by the merchant
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeScaExemptionRequested()
+    {
+        return null;
+    }
+
+    /**
+     * makeThreeDsResult method should be extended/intercepted by plugin to add value to it.
+     * These are details about the result of the 3D Secure authentication
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeThreeDsResult()
+    {
+        return null;
+    }
+
+    /**
+     * If this product is being delivered as part of a subscription, then you can include these fields
+     * to include data about the subscription itself. The entire itemQuantity on this
+     * product should be purchased via the subscription.
+     * If the buyer added extra items of the same product, those should be listed in separate product line item.
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeSubscription()
+    {
+        return null;
+    }
+
+    /**
+     * The membership object should be used to indicate the usage of a rewards, discount,
+     * or admission program by the buyer when they completed the checkout.
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeMemberships()
+    {
+        return null;
+    }
+
+    /**
+     * A Merchant Category Code (MCC) is a four-digit number listed in ISO 18245 for retail financial services.
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeMerchantCategoryCode()
+    {
+        return null;
+    }
+
+    /**
+     * The routing number (ABA) of the bank account that was used as provided during checkout.
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeAbaRoutingNumber()
+    {
+        return null;
+    }
+
+    /**
+     * A unique string value as provided by the cardTokenProvider which replaces the card Primary Account Number (PAN).
+     * The same cardToken from the same cardTokenProvider should never be from two different PANs.
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeCardToken()
+    {
+        return null;
+    }
+
+    /**
+     * The issuer of the cardToken, that is, whomever generated the cardToken originally.
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeCardTokenProvider()
+    {
+        return null;
+    }
+
+    /**
+     * Details about the installment plan used to make the purchase.
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeCardInstallments()
+    {
+        return null;
+    }
+
+    /**
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeMinDeliveryDate()
+    {
+        return null;
+    }
+
+    /**
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeFulfillmentMethod()
+    {
+        return null;
+    }
+
+    /**
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeAccountLast4()
+    {
+        return null;
+    }
+
+    /**
+     * This method should be extended/intercepted by plugin to add value to it
+     *
+     * @return null
+     */
+    public function makeCardBrand()
+    {
+        return null;
     }
 }

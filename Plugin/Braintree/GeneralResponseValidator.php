@@ -171,9 +171,9 @@ class GeneralResponseValidator
                 $quote = $this->quoteFactory->create();
                 $this->quoteResourceModel->load($quote, $case->getQuoteId());
 
-                $transaction = [];
-                $transaction['transactions'] = $this->purchaseHelper->makeTransactionsFromQuote($quote, $branitreeData);
-                $transaction['checkoutToken'] = $case->getCheckoutToken();
+                $transaction = $this->purchaseHelper->makeCheckoutTransactions(
+                    $quote, $case->getCheckoutToken(), $branitreeData
+                );
                 $this->purchaseHelper->postTransactionToSignifyd($transaction, $quote);
             }
         }

@@ -178,6 +178,14 @@ class Purchase implements ObserverInterface
                 /** @var $case \Signifyd\Connect\Model\Casedata */
                 $casesFromQuoteLoaded = $this->casedataFactory->create();
                 $this->casedataResourceModel->load($casesFromQuoteLoaded, $casesFromQuote->getCode(), 'code');
+                $orderId = $casesFromQuoteLoaded->getData('order_id');
+
+                if (isset($orderId) &&
+                    $casesFromQuoteLoaded->getData('magento_status') == Casedata::IN_REVIEW_STATUS
+                ) {
+                    return;
+                }
+
                 $casesFromQuoteLoaded->setData('order_increment', $order->getIncrementId());
                 $casesFromQuoteLoaded->setData('order_id', $order->getId());
 
@@ -306,16 +314,13 @@ class Purchase implements ObserverInterface
             }
 
             $order->setData('origin_store_code', $case->getData('origin_store_code'));
-
             $orderData = $this->purchaseHelper->processOrderData($order);
-            $checkoutToken = $orderData['purchase']['checkoutToken'];
-            $caseResponse = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
+            $saleResponse = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
 
-            if (is_object($caseResponse)) {
-                $case->setCode($caseResponse->getCaseId());
+            if (is_object($saleResponse)) {
+                $case->setCode($saleResponse->getSignifydId());
                 $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
                 $case->setUpdated();
-                $case->setCheckoutToken($checkoutToken);
             }
 
             $this->casedataResourceModel->save($case);

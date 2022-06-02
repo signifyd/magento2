@@ -110,10 +110,12 @@ class RetryFulfillmentJob
             $order = $this->orderFactory->create();
             $this->orderResourceModel->load($order, $orderId, 'increment_id');
             $fulfillmentData = $this->generateFulfillmentData($fulfillment);
-            $fulfillmentBulkResponse = $this->configHelper
-                ->getSignifydCaseApi($order)->addFulfillment($fulfillmentData);
 
-            if ($fulfillmentBulkResponse->isError()) {
+            $fulfillmentBulkResponse = $this->configHelper
+                ->getSignifydSaleApi($order)->addFulfillment($fulfillmentData);
+            $fulfillmentOrderId = $fulfillmentBulkResponse->getOrderId();
+
+            if (isset($fulfillmentOrderId) === false) {
                 $message = "CRON: Fullfilment failed to send";
             } else {
                 $message = "CRON: Fullfilment sent";
@@ -135,22 +137,29 @@ class RetryFulfillmentJob
     public function generateFulfillmentData($fulfillment)
     {
         $fulfillmentData = [];
-        $fulfillmentData['id'] = $fulfillment->getData('id');
         $fulfillmentData['orderId'] = $fulfillment->getData('order_id');
-        $fulfillmentData['createdAt'] = $fulfillment->getData('created_at');
-        $fulfillmentData['deliveryEmail'] = $fulfillment->getData('delivery_email');
         $fulfillmentData['fulfillmentStatus'] = $fulfillment->getData('fulfillment_status');
-        $fulfillmentData['trackingNumbers'] = $fulfillment->getData('tracking_numbers');
-        $fulfillmentData['trackingUrls'] = $fulfillment->getData('tracking_urls');
-        $fulfillmentData['products'] = $this->getFulfillmentsProducts($fulfillment);
-        $fulfillmentData['shipmentStatus'] = $fulfillment->getData('shipment_status');
-        $fulfillmentData['deliveryAddress'] = $fulfillment->getData('delivery_address');
-        $fulfillmentData['recipientName'] = $fulfillment->getData('recipient_name');
-        $fulfillmentData['confirmationName'] = null;
-        $fulfillmentData['confirmationPhone'] = null;
-        $fulfillmentData['shippingCarrier'] = $fulfillment->getData('shipping_carrier');
+        $fulfillmentData['fulfillments'] = $this->makeFulfillments($fulfillment);
 
         return $fulfillmentData;
+    }
+
+    public function makeFulfillments($fulfillmentData)
+    {
+        $fulfillments = [];
+        $fulfillment = [];
+        $fulfillment['shipmentId'] = $fulfillmentData->getData('id');
+        $fulfillment['shippedAt'] = $fulfillmentData->getData('shipped_at');
+        $fulfillment['products'] = $this->getFulfillmentsProducts($fulfillmentData);
+        $fulfillment['shipmentStatus'] = $fulfillmentData->getData('shipment_status');
+        $fulfillment['trackingUrls'] = $fulfillmentData->getData('tracking_urls');
+        $fulfillment['trackingNumbers'] = $fulfillmentData->getData('tracking_numbers');
+        $fulfillment['destination'] = $this->jsonSerializer->unserialize($fulfillmentData->getData('destination'));
+        $fulfillment['origin'] = $this->jsonSerializer->unserialize($fulfillmentData->getData('origin'));
+        $fulfillment['carrier'] = $fulfillmentData->getData('carrier');
+
+        $fulfillments[] = $fulfillment;
+        return $fulfillments;
     }
 
     /**
