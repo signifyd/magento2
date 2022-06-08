@@ -61,7 +61,7 @@ class ReviewTest extends CreateTest
     public function updateCaseForRetry($case = null)
     {
         $case = empty($case) ? $this->getCase() : $case;
-        $case->setUpdated(strftime('%Y-%m-%d %H:%M:%S', time()-60));
+        $case->setUpdated(date('Y-m-d H:i:s', time()-60));
         $case->save();
     }
 }

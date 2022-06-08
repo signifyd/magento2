@@ -290,7 +290,7 @@ class Purchase implements ObserverInterface
             $this->logger->debug($message, ['entity' => $order]);
 
             $case->setSignifydStatus("PENDING");
-            $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
+            $case->setCreated(date('Y-m-d H:i:s', time()));
             $case->setUpdated();
 
             // Stop case sending if order has an async payment method
@@ -350,6 +350,11 @@ class Purchase implements ObserverInterface
     public function getAsyncPaymentMethodsConfig()
     {
         $asyncPaymentMethods = $this->configHelper->getConfigData('signifyd/general/async_payment_methods');
+
+        if (isset($asyncPaymentMethods) === false) {
+            return null;
+        }
+
         $asyncPaymentMethods = explode(',', $asyncPaymentMethods);
         $asyncPaymentMethods = array_map('trim', $asyncPaymentMethods);
 
@@ -399,6 +404,11 @@ class Purchase implements ObserverInterface
         }
 
         $restrictedStates = $this->configHelper->getConfigData("signifyd/general/restrict_states_{$action}");
+
+        if (isset($restrictedStates) === false) {
+            return false;
+        }
+
         $restrictedStates = explode(',', $restrictedStates);
         $restrictedStates = array_map('trim', $restrictedStates);
         $restrictedStates = array_filter($restrictedStates);

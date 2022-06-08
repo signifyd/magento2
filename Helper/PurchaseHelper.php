@@ -680,7 +680,7 @@ class PurchaseHelper
 
         if ($originStoreCode == 'admin') {
             $purchase['orderChannel'] = "PHONE";
-        } elseif (!empty($originStoreCode)) {
+        } else {
             $purchase['orderChannel'] = "WEB";
         }
 
@@ -1080,7 +1080,7 @@ class PurchaseHelper
             }
         }
 
-        return null;
+        return $paymentMethod;
     }
 
     /**
@@ -1337,6 +1337,11 @@ class PurchaseHelper
             $this->logger->debug('Getting AVS code using ' . get_class($avsAdapter), ['entity' => $order]);
 
             $avsCode = $avsAdapter->getData($order);
+
+            if (isset($avsCode) === false) {
+                return null;
+            }
+
             $avsCode = trim(strtoupper($avsCode));
 
             if ($avsAdapter->validate($avsCode)) {
@@ -1364,6 +1369,11 @@ class PurchaseHelper
             $this->logger->debug('Getting CVV code using ' . get_class($cvvAdapter), ['entity' => $order]);
 
             $cvvCode = $cvvAdapter->getData($order);
+
+            if (isset($cvvCode) === false) {
+                return null;
+            }
+
             $cvvCode = trim(strtoupper($cvvCode));
 
             if ($cvvAdapter->validate($cvvCode)) {
@@ -1424,6 +1434,11 @@ class PurchaseHelper
             $this->logger->debug('Getting last4 using ' . get_class($last4Adapter), ['entity' => $order]);
 
             $last4 = $last4Adapter->getData($order);
+
+            if (isset($last4) === false) {
+                return null;
+            }
+
             $last4 = preg_replace('/\D/', '', $last4);
 
             if (!empty($last4) && strlen($last4) == 4 && is_numeric($last4)) {
@@ -1451,6 +1466,11 @@ class PurchaseHelper
             $this->logger->debug('Getting expiry month using ' . get_class($monthAdapter), ['entity' => $order]);
 
             $expMonth = $monthAdapter->getData($order);
+
+            if (isset($expMonth) === false) {
+                return null;
+            }
+
             $expMonth = preg_replace('/\D/', '', $expMonth);
 
             $expMonth = (int) $expMonth;
@@ -1479,6 +1499,11 @@ class PurchaseHelper
             $this->logger->debug('Getting expiry year using ' . get_class($yearAdapter), ['entity' => $order]);
 
             $expYear = $yearAdapter->getData($order);
+
+            if (isset($expYear) === false) {
+                return null;
+            }
+
             $expYear = preg_replace('/\D/', '', $expYear);
 
             $expYear = (int) $expYear;
@@ -1512,6 +1537,11 @@ class PurchaseHelper
             $this->logger->debug('Getting bin using ' . get_class($binAdapter), ['entity' => $order]);
 
             $bin = $binAdapter->getData($order);
+
+            if (isset($bin) === false) {
+                return null;
+            }
+
             $bin = preg_replace('/\D/', '', $bin);
 
             if (empty($bin)) {
@@ -2022,8 +2052,14 @@ class PurchaseHelper
 
     public function makeDevice($quoteId, $storeId)
     {
+        $filterIpd = $this->filterIp($this->remoteAddress->getRemoteAddress());
+
+        if (isset($filterIpd) === false) {
+            return null;
+        }
+
         $device = [];
-        $device['clientIpAddress'] = $this->filterIp($this->remoteAddress->getRemoteAddress());
+        $device['clientIpAddress'] = $filterIpd;
         $device['sessionId'] = $this->deviceHelper->generateFingerprint($quoteId, $storeId);
         $device['fingerprint'] = $this->getDeviceFingerprints();
         return $device;

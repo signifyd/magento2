@@ -55,7 +55,7 @@ class CheckoutPaymentsDetailsHandler
             $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
             $case->setQuoteId($quoteId);
             $case->setEntriesText("");
-            $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
+            $case->setCreated(date('Y-m-d H:i:s', time()));
             $case->setUpdated();
             $case->setPolicyName(Casedata::POST_AUTH);
             $this->casedataResourceModel->save($case);

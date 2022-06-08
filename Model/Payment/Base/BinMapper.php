@@ -16,6 +16,11 @@ class BinMapper extends DataMapper
     {
         //Get CC number even if it is encrypted
         $ccNumber = $order->getPayment()->getData('cc_number');
+
+        if (isset($ccNumber) === false) {
+            return '';
+        }
+
         $ccNumber = preg_replace('/\D/', '', $ccNumber);
 
         if (empty($ccNumber) || strlen($ccNumber) < 6) {

@@ -32,8 +32,8 @@ class CreateTest extends OrderTestCase
         $case->setData([
             'order_increment' => $this->incrementId,
             // Case must be created with 60 seconds before now in order to trigger cron on retries
-            'created' => strftime('%Y-%m-%d %H:%M:%S', time()-60),
-            'updated' => strftime('%Y-%m-%d %H:%M:%S', time()-60),
+            'created' => date('Y-m-d H:i:s', time()-60),
+            'updated' => date('Y-m-d H:i:s', time()-60),
             'order_id' => $order->getId(),
             'magento_status' => \Signifyd\Connect\Model\Casedata::WAITING_SUBMISSION_STATUS
         ]);

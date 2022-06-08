@@ -281,7 +281,7 @@ class PreAuth implements ObserverInterface
                 $case->setCode($caseResponse->signifydId);
                 $case->setScore(floor($caseResponse->decision->score));
                 $case->setGuarantee($caseAction);
-                $case->setCreated(strftime('%Y-%m-%d %H:%M:%S', time()));
+                $case->setCreated(date('Y-m-d H:i:s', time()));
                 $case->setUpdated();
                 $case->setMagentoStatus($magentoStatus);
                 $case->setPolicyName(Casedata::PRE_AUTH);

@@ -812,7 +812,7 @@ class Casedata extends AbstractModel
     public function setUpdated($updated = null)
     {
         if (empty($updated)) {
-            $updated = strftime('%Y-%m-%d %H:%M:%S', time());
+            $updated = date('Y-m-d H:i:s', time());
         }
 
         $this->setRetries(0);

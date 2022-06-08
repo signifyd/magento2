@@ -241,6 +241,11 @@ abstract class DataMapper implements PaymentVerificationInterface
 
         if (empty($transactionId)) {
             $transactionId = $order->getPayment()->getLastTransId();
+
+            if (isset($transactionId) === false) {
+                return null;
+            }
+
             $transactionId = str_replace(['-capture', '-void', '-refund'], '', $transactionId);
         }
 

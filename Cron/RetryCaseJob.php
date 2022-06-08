@@ -190,9 +190,9 @@ class RetryCaseJob
                 $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
 
                 $caseModel = $this->purchaseHelper->processOrderData($case->getOrder());
-                /** @var \Signifyd\Core\Response\CaseResponse $caseResponse */
+                /** @var \Signifyd\Core\Response\SaleResponse $caseResponse */
                 $caseResponse = $this->purchaseHelper->postCaseToSignifyd($caseModel, $case->getOrder());
-                $investigationId = $caseResponse->getCaseId();
+                $investigationId = $caseResponse->getSignifydId();
 
                 if (empty($investigationId) === false) {
                     $case->setCode($investigationId);

@@ -219,7 +219,7 @@ class FulfillmentHelper
         $fulfillment['trackingUrls'] = $this->getTrackingUrls($shipment);
         $fulfillment['trackingNumbers'] = $trackingNumbers;
         $fulfillment['destination'] = $this->makeDestination($shipment);
-        $fulfillment['origin'] = $this->purchaseHelper->makeOrigin($shipment->getOrder());
+        $fulfillment['origin'] = $this->purchaseHelper->makeOrigin($shipment->getOrder()->getStoreId());
         $fulfillment['carrier'] = $this->purchaseHelper
             ->makeShipper($shipment->getOrder()->getShippingMethod());
 

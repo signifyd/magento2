@@ -240,7 +240,7 @@ class ConfigHelper
 
     /**
      * @param \Magento\Framework\Model\AbstractModel|null $entity
-     * @return \Signifyd\Core\Response\SaleResponse
+     * @return \Signifyd\Core\Api\ApiModel
      */
     public function getSignifydSaleApi(\Magento\Framework\Model\AbstractModel $entity = null)
     {
@@ -314,6 +314,11 @@ class ConfigHelper
     public function getRestrictedPaymentMethodsConfig()
     {
         $restrictedPaymentMethods = $this->getConfigData('signifyd/general/restrict_payment_methods');
+
+        if (isset($restrictedPaymentMethods) === false) {
+            return [];
+        }
+
         $restrictedPaymentMethods = explode(',', $restrictedPaymentMethods);
         $restrictedPaymentMethods = array_map('trim', $restrictedPaymentMethods);
 
