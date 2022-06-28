@@ -46,7 +46,7 @@ class ScaEvaluation extends AbstractModel
         CasedataResourceModel $casedataResourceModel,
         ScaEvaluationModelFactory $scaEvaluationModelFactory,
         SerializerInterface $serializer
-    ){
+    ) {
         parent::__construct($context, $registry);
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;

@@ -43,7 +43,6 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
             $key = $keyArray[0];
         }
 
-
         if (isset($key) && isset(self::$cvvMap[$key]) && $this->validate(self::$cvvMap[$key])) {
             $cvvStatus = self::$cvvMap[$key];
         }

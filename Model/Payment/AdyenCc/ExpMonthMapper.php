@@ -20,7 +20,8 @@ class ExpMonthMapper extends Base_ExpMonthMapper
         if (isset($additionalInfo['adyen_expiry_date']) && empty($additionalInfo['adyen_expiry_date']) == false) {
             $expiryDate = explode("/", $additionalInfo['adyen_expiry_date']);
         } elseif (isset($additionalInfo['additionalData']) &&
-            isset($additionalInfo['additionalData']['expiryDate']) && empty($additionalInfo['additionalData']['expiryDate']) == false) {
+            isset($additionalInfo['additionalData']['expiryDate']) &&
+            empty($additionalInfo['additionalData']['expiryDate']) == false) {
             $expiryDate = explode("/", $additionalInfo['additionalData']['expiryDate']);
         }
 

@@ -23,7 +23,7 @@ class BinMapper extends Base_BinMapper
         } elseif (isset($additionalInfo['additionalData']) &&
             isset($additionalInfo['additionalData']['cardBin']) &&
             empty($additionalInfo['additionalData']['cardBin']) === false &&
-            strlen($additionalInfo['additionalData']['cardBin']) === 6)  {
+            strlen($additionalInfo['additionalData']['cardBin']) === 6) {
             $bin = $additionalInfo['additionalData']['cardBin'];
         }
 

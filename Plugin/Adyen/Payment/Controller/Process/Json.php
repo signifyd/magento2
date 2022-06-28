@@ -175,7 +175,9 @@ class Json
                 $this->quoteResourceModel->load($quote, $case->getQuoteId());
 
                 $transaction = $this->purchaseHelper->makeCheckoutTransactions(
-                    $quote, $case->getCheckoutToken(), $adyenData
+                    $quote,
+                    $case->getCheckoutToken(),
+                    $adyenData
                 );
 
                 $this->purchaseHelper->postTransactionToSignifyd($transaction, $quote);

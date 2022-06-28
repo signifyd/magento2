@@ -734,7 +734,8 @@ class PurchaseHelper
         $shipment = [];
         $shipment['destination'] = $this->makeRecipient($order);
         $shipment['origin'] = $this->makeOrigin($order->getStoreId());
-        $shipment['carrier'] = $this->makeShipper($shippingMethod);;
+        $shipment['carrier'] = $this->makeShipper($shippingMethod);
+        ;
         $shipment['minDeliveryDate'] = $this->makeMinDeliveryDate();
         $shipment['maxDeliveryDate'] = null;
         $shipment['shipmentId'] = null;
@@ -883,7 +884,6 @@ class PurchaseHelper
             $recipient['email'] = $order->getCustomerEmail();
         }
 
-
         if (empty($recipient['fullName'])) {
             $recipient['fullName'] = $order->getCustomerName();
         }
@@ -937,7 +937,6 @@ class PurchaseHelper
         } else {
             $provinceCode = null;
         }
-
 
         $origin = [];
         $origin['locationId'] = $storeId;
@@ -1000,7 +999,7 @@ class PurchaseHelper
         return $transactions;
     }
 
-    public function makeCheckoutTransactions(Quote $quote, $checkoutToken ,$methodData = [])
+    public function makeCheckoutTransactions(Quote $quote, $checkoutToken, $methodData = [])
     {
         $reservedOrderId = $quote->getReservedOrderId();
 
@@ -1022,7 +1021,8 @@ class PurchaseHelper
         $transaction['paymentMethod'] = $this->makePaymentMethod($quote->getPayment()->getMethod());
         $transaction['checkoutPaymentDetails'] = $this->makeCheckoutPaymentDetailsFromQuote($quote, $methodData);
         $transaction['amount'] = $quote->getGrandTotal();
-        $transaction['currency'] = $quote->getBaseCurrencyCode();;
+        $transaction['currency'] = $quote->getBaseCurrencyCode();
+        ;
         $transaction['gateway'] = $gateway;
         $transaction['sourceAccountDetails'] = $this->makeSourceAccountDetails();
         $transaction['acquirerDetails'] = $this->makeAcquirerDetails();
@@ -1812,11 +1812,11 @@ class PurchaseHelper
             $recipient['fullName'] = $address->getName();
             $recipient['organization'] = $address->getCompany();
             $recipient['address'] = $this->formatSignifydAddress($address);
-        }else {
+        } else {
             $recipient['email'] = $quote->getCustomerEmail();
         }
 
-        if (empty($recipient['fullName'] )) {
+        if (empty($recipient['fullName'])) {
             $recipient['fullName'] = $quote->getCustomerFirstname() . ' ' . $quote->getCustomerLastname();
         }
 
