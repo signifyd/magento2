@@ -20,6 +20,11 @@ class BinMapper extends Base_BinMapper
             empty($additionalInfo['adyen_card_bin']) === false &&
             strlen($additionalInfo['adyen_card_bin']) === 6) {
             $bin = $additionalInfo['adyen_card_bin'];
+        } elseif (isset($additionalInfo['additionalData']) &&
+            isset($additionalInfo['additionalData']['cardBin']) &&
+            empty($additionalInfo['additionalData']['cardBin']) === false &&
+            strlen($additionalInfo['additionalData']['cardBin']) === 6)  {
+            $bin = $additionalInfo['additionalData']['cardBin'];
         }
 
         $message = 'Bin found on payment mapper: ' . (empty($bin) ? 'false' : 'true');

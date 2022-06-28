@@ -579,14 +579,21 @@ class PurchaseHelper
     }
 
     /**
-     * getTags method should be extended/intercepted by plugin to add value to it.
-     * A list of attributes or short descriptors associated with the order,
-     * formatted as a string of comma-separated values. Example: tag1, tag2, tag3.
-     *
-     * @return null
+     * @param $storeId
+     * @return string[]|null
      */
-    public function getTags()
+    public function getTags($storeId)
     {
+        $enabledConfig = $this->scopeConfigInterface->getValue(
+            'signifyd/general/enabled',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $storeId
+        );
+
+        if ($enabledConfig == 'passive') {
+            return ['Passive Mode'];
+        }
+
         return null;
     }
 
@@ -977,8 +984,8 @@ class PurchaseHelper
         $lastTransaction['createdAt'] = date('c', strtotime($transactionDate));
         $lastTransaction['parentTransactionId'] = $this->getParentTransactionId();
         $lastTransaction['scaExemptionRequested'] = $this->makeScaExemptionRequested();
-        $lastTransaction['verifications '] = $this->getVerifications($order);
-        $lastTransaction['threeDsResult '] = $this->makeThreeDsResult();
+        $lastTransaction['verifications'] = $this->getVerifications($order);
+        $lastTransaction['threeDsResult'] = $this->makeThreeDsResult();
         $lastTransaction['paypalPendingReasonCode'] = $this->getPaypalPendingReasonCode();
         $lastTransaction['paypalProtectionEligibility'] = $this->getPaypalProtectionEligibility();
         $lastTransaction['paypalProtectionEligibilityType'] = $this->getPaypalProtectionEligibilityType();
@@ -1178,7 +1185,7 @@ class PurchaseHelper
         $case['signifydClient'] = $this->makeVersions();
         $case['transactions'] = $this->makeTransactions($order);
         $case['sellers'] = $this->getSellers();
-        $case['tags'] = $this->getTags();
+        $case['tags'] = $this->getTags($order->getStoreId());
         $case['customerOrderRecommendation'] = $this->getCustomerOrderRecommendation();
 
         /**
@@ -1615,7 +1622,7 @@ class PurchaseHelper
         $case['merchantPlatform'] = $this->getMerchantPlataform();
         $case['signifydClient'] = $this->makeVersions();
         $case['sellers'] = $this->getSellers();
-        $case['tags'] = $this->getTags();
+        $case['tags'] = $this->getTags($quote->getStoreId());
         $case['customerOrderRecommendation'] = $this->getCustomerOrderRecommendation();
 
         $policyConfig = $this->getPolicyName(
@@ -1777,7 +1784,7 @@ class PurchaseHelper
         $product = [];
         $product['itemName'] = $item->getName();
         $product['itemPrice'] = $itemPrice;
-        $product['itemQuantity'] = (int)$item->getQtyOrdered();
+        $product['itemQuantity'] = (int)$item->getQty();
         $product['itemIsDigital'] = (bool) $item->getIsVirtual();
         $product['itemCategory'] = $mainCategoryName;
         $product['itemSubCategory'] = $subCategoryName;

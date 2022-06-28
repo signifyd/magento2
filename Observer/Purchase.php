@@ -317,6 +317,10 @@ class Purchase implements ObserverInterface
             $orderData = $this->purchaseHelper->processOrderData($order);
             $saleResponse = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
 
+            if ($saleResponse === false) {
+                return;
+            }
+
             if (is_object($saleResponse)) {
                 $case->setCode($saleResponse->getSignifydId());
                 $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);

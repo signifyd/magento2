@@ -54,14 +54,20 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $additionalInfo = $order->getPayment()->getAdditionalInformation();
+        $key = null;
 
         if (isset($additionalInfo['adyen_avs_result']) && empty($additionalInfo['adyen_avs_result']) == false) {
             $key = explode(" ", $additionalInfo['adyen_avs_result']);
             $key = array_shift($key);
+        } elseif (isset($additionalInfo['additionalData']) &&
+            isset($additionalInfo['additionalData']['avsResult']) &&
+            empty($additionalInfo['additionalData']['avsResult']) == false) {
+            $keyArray = explode(" ", $additionalInfo['additionalData']['avsResult']);
+            $key = $keyArray[0];
+        }
 
-            if (isset(self::$avsMap[$key]) && $this->validate(self::$avsMap[$key])) {
-                $avsStatus = self::$avsMap[$key];
-            }
+        if (isset($key) && isset(self::$avsMap[$key]) && $this->validate(self::$avsMap[$key])) {
+            $avsStatus = self::$avsMap[$key];
         }
 
         $message = 'AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);

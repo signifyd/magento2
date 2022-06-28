@@ -31,14 +31,21 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $additionalInfo = $order->getPayment()->getAdditionalInformation();
+        $key = null;
 
         if (isset($additionalInfo['adyen_cvc_result']) && empty($additionalInfo['adyen_cvc_result']) === false) {
             $key = explode(" ", $additionalInfo['adyen_cvc_result']);
             $key = array_shift($key);
+        } elseif (isset($additionalInfo['additionalData']) &&
+            isset($additionalInfo['additionalData']['cvcResult']) &&
+            empty($additionalInfo['additionalData']['cvcResult']) === false) {
+            $keyArray = explode(" ", $additionalInfo['additionalData']['cvcResult']);
+            $key = $keyArray[0];
+        }
 
-            if (isset(self::$cvvMap[$key]) && $this->validate(self::$cvvMap[$key])) {
-                $cvvStatus = self::$cvvMap[$key];
-            }
+
+        if (isset($key) && isset(self::$cvvMap[$key]) && $this->validate(self::$cvvMap[$key])) {
+            $cvvStatus = self::$cvvMap[$key];
         }
 
         $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);

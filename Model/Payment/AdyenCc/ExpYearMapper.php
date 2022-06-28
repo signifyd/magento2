@@ -15,13 +15,17 @@ class ExpYearMapper extends Base_ExpYearMapper
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $additionalInfo = $order->getPayment()->getAdditionalInformation();
+        $expiryDate = [];
 
         if (isset($additionalInfo['adyen_expiry_date']) && empty($additionalInfo['adyen_expiry_date']) == false) {
             $expiryDate = explode("/", $additionalInfo['adyen_expiry_date']);
+        } elseif (isset($additionalInfo['additionalData']) &&
+            isset($additionalInfo['additionalData']['expiryDate']) && empty($additionalInfo['additionalData']['expiryDate']) == false) {
+            $expiryDate = explode("/", $additionalInfo['additionalData']['expiryDate']);
+        }
 
-            if (isset($expiryDate[1])) {
-                $expYear = $expiryDate[1];
-            }
+        if (isset($expiryDate[1])) {
+            $expYear = $expiryDate[1];
         }
 
         $message = 'Expiry year found on payment mapper: ' . (empty($expYear) ? 'false' : $expYear);

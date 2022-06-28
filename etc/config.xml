@@ -20,6 +20,7 @@
                 <async_payment_methods>cybersource,mercadopago_basic</async_payment_methods>
                 <lock_timeout>20</lock_timeout>
                 <enable_transaction>0</enable_transaction>
+                <decision_request>FRAUD</decision_request>
             </general>
             <advanced>
                 <guarantee_negative_action>nothing</guarantee_negative_action>
