@@ -1022,7 +1022,6 @@ class PurchaseHelper
         $transaction['checkoutPaymentDetails'] = $this->makeCheckoutPaymentDetailsFromQuote($quote, $methodData);
         $transaction['amount'] = $quote->getGrandTotal();
         $transaction['currency'] = $quote->getBaseCurrencyCode();
-        ;
         $transaction['gateway'] = $gateway;
         $transaction['sourceAccountDetails'] = $this->makeSourceAccountDetails();
         $transaction['acquirerDetails'] = $this->makeAcquirerDetails();
