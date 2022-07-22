@@ -13,13 +13,10 @@ use Signifyd\Connect\Helper\DeviceHelper;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\WebhookLink;
 use Signifyd\Core\Api\WebhooksApiFactory;
 use Signifyd\Models\WebhookFactory;
 use Magento\Store\Model\StoreManagerInterface;
-use Signifyd\Connect\Model\TRAPreAuth\ScaEvaluation;
 
 class CheckoutDataBuilder
 {
@@ -99,11 +96,6 @@ class CheckoutDataBuilder
     protected $storeManagerInterface;
 
     /**
-     * @var ScaEvaluation
-     */
-    protected $scaEvaluation;
-
-    /**
      * CheckoutDataBuilder constructor.
      * @param QuoteResourceModel $quoteResourceModel
      * @param QuoteFactory $quoteFactory
@@ -119,7 +111,6 @@ class CheckoutDataBuilder
      * @param ConfigHelper $configHelper
      * @param Logger $logger
      * @param StoreManagerInterface $storeManagerInterface
-     * @param ScaEvaluation $scaEvaluation
      */
     public function __construct(
         QuoteResourceModel $quoteResourceModel,
@@ -135,8 +126,7 @@ class CheckoutDataBuilder
         WebhookLink $webhookLink,
         ConfigHelper $configHelper,
         Logger $logger,
-        StoreManagerInterface $storeManagerInterface,
-        ScaEvaluation $scaEvaluation
+        StoreManagerInterface $storeManagerInterface
     ) {
         $this->quoteResourceModel = $quoteResourceModel;
         $this->quoteFactory = $quoteFactory;
@@ -152,7 +142,6 @@ class CheckoutDataBuilder
         $this->configHelper = $configHelper;
         $this->logger = $logger;
         $this->storeManagerInterface = $storeManagerInterface;
-        $this->scaEvaluation = $scaEvaluation;
     }
 
     public function beforeBuild(AdyenCheckoutDataBuilder $subject, array $buildSubject)
@@ -182,38 +171,7 @@ class CheckoutDataBuilder
             $storeId
         );
 
-        $scaEvaluation = $this->scaEvaluation->getScaEvaluation($quote->getId());
-
-        if ($scaEvaluation !== false) {
-            $executeThreeD = null;
-            $scaExemption = null;
-
-            switch ($scaEvaluation->outcome) {
-                case 'REQUEST_EXEMPTION':
-                    $placement = $scaEvaluation->exemptionDetails->placement;
-
-                    if ($placement === 'AUTHENTICATION') {
-                        $executeThreeD = 'True';
-                        $scaExemption = 'tra';
-                    } elseif ($placement === 'AUTHORIZATION') {
-                        $executeThreeD = 'False';
-                        $scaExemption = 'tra';
-                    }
-
-                    break;
-
-                case 'REQUEST_EXCLUSION':
-                case 'DELEGATE_TO_PSP':
-                    $executeThreeD = '';
-                    $scaExemption = '';
-                    break;
-            }
-
-            $request['body']['additionalData']['executeThreeD'] = $executeThreeD;
-            $request['body']['additionalData']['scaExemption'] = $scaExemption;
-        }
-
-        if ($adyenProxyEnabled === false) {
+        if ($adyenProxyEnabled) {
             return $request;
         }
 
