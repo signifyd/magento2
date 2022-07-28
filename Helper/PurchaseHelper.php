@@ -1013,6 +1013,7 @@ class PurchaseHelper
         $checkoutTransaction['checkoutId'] = $checkoutToken;
         $checkoutTransaction['orderId'] = $reservedOrderId;
         $errorCode = $methodData['gatewayRefusedReason'] ?? "CARD_DECLINED";
+        $statusMessage = $methodData['gatewayStatusMessage'] ?? $this->getGatewayStatusMessage();
         $gateway = $methodData['gateway'] ?? null;
 
         $transactions = [];
@@ -1026,7 +1027,7 @@ class PurchaseHelper
         $transaction['sourceAccountDetails'] = $this->makeSourceAccountDetails();
         $transaction['acquirerDetails'] = $this->makeAcquirerDetails();
         $transaction['gatewayErrorCode'] = $errorCode;
-        $transaction['gatewayStatusMessage'] = $this->getGatewayStatusMessage();
+        $transaction['gatewayStatusMessage'] = $statusMessage;
         $transaction['scaExemptionRequested'] = $this->makeScaExemptionRequested();
         $transaction['threeDsResult'] = $this->makeThreeDsResult();
         $transaction['paypalPendingReasonCode'] = $this->getPaypalPendingReasonCode();
@@ -1933,58 +1934,54 @@ class PurchaseHelper
             return 'POST_AUTH';
         }
 
-        $isJson = $this->isJson($policyName);
-
-        if ($isJson) {
+        try {
             $configPolicy = $this->jsonSerializer->unserialize($policyName);
-
-            foreach ($configPolicy as $key => $value) {
-                if ($key == 'PRE_AUTH' || $key == 'TRA_PRE_AUTH') {
-                    if (is_array($value) === false) {
-                        continue;
-                    }
-
-                    if (in_array($paymentMethod, $value)) {
-                        return $key;
-                    }
-                }
-            }
-
-            return 'POST_AUTH';
-        } else {
+        } catch (\InvalidArgumentException $e) {
             return $policyName;
         }
+
+        foreach ($configPolicy as $key => $value) {
+            if ($key == 'PRE_AUTH' || $key == 'TRA_PRE_AUTH') {
+                if (is_array($value) === false) {
+                    continue;
+                }
+
+                if (in_array($paymentMethod, $value)) {
+                    return $key;
+                }
+            }
+        }
+
+        return 'POST_AUTH';
     }
 
     public function getDecisionForMethod($decision, $paymentMethod)
     {
-        $isJson = $this->isJson($decision);
-
-        if ($isJson) {
-            if (isset($paymentMethod) === false) {
-                return null;
-            }
-
-            $configDecisions = $this->jsonSerializer->unserialize($decision);
-
-            foreach ($configDecisions as $configDecision => $method) {
-                if ($this->isDecisionValid($configDecision) === false) {
-                    continue;
-                }
-
-                if (in_array($paymentMethod, $method)) {
-                    return [$configDecision];
-                }
-            }
-
+        if (isset($paymentMethod) === false) {
             return null;
-        } else {
+        }
+
+        try {
+            $configDecisions = $this->jsonSerializer->unserialize($decision);
+        } catch (\InvalidArgumentException $e) {
             if ($this->isDecisionValid($decision) === false) {
                 return null;
             }
 
             return [$decision];
         }
+
+        foreach ($configDecisions as $configDecision => $method) {
+            if ($this->isDecisionValid($configDecision) === false) {
+                continue;
+            }
+
+            if (in_array($paymentMethod, $method)) {
+                return [$configDecision];
+            }
+        }
+
+        return null;
     }
 
     public function isDecisionValid($decision)
@@ -1994,27 +1991,19 @@ class PurchaseHelper
         return in_array($decision, $allowedDecisions);
     }
 
-    public function isJson($string)
-    {
-        json_decode($string);
-        return json_last_error() === JSON_ERROR_NONE;
-    }
-
     public function getIsPreAuthInUse($policyName)
     {
-        $isJson = $this->isJson($policyName);
-
-        if ($isJson) {
+        try {
             $configPolicy = $this->jsonSerializer->unserialize($policyName);
-
-            if (isset($configPolicy['PRE_AUTH']) === false || is_array($configPolicy['PRE_AUTH']) === false) {
-                return false;
-            }
-
-            return true;
-        } else {
+        } catch (\InvalidArgumentException $e) {
             return ($policyName == 'PRE_AUTH');
         }
+
+        if (isset($configPolicy['PRE_AUTH']) === false || is_array($configPolicy['PRE_AUTH']) === false) {
+            return false;
+        }
+
+        return true;
     }
 
     public function getPastTransactionsYear($customerId)

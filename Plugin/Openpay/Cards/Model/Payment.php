@@ -68,6 +68,13 @@ class Payment
         $this->checkoutCart = $checkoutCart;
     }
 
+    /**
+     * @param OpenpayPayment $subject
+     * @param $e
+     * @return null
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
     public function beforeError(OpenpayPayment $subject, $e) {
         $policyName = $this->purchaseHelper->getPolicyName(
             \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
@@ -79,7 +86,7 @@ class Payment
         $quote = $this->checkoutCart->getQuote();
 
         if ($isPreAuth === false || isset($quote) === false) {
-            return $e;
+            return null;
         }
 
         $quoteId = $quote->getId();
@@ -88,17 +95,34 @@ class Payment
         $this->casedataResourceModel->load($case, $quoteId, 'quote_id');
 
         if ($case->isEmpty()) {
-            return $e;
+            return null;
         }
 
         switch ($e->getCode()) {
+            case '2004':
+                $signifydReason = 'INVALID_NUMBER';
+                break;
+            case '2005':
+                $signifydReason = 'INVALID_EXPIRY_DATE';
+                break;
+            case '2006':
+                $signifydReason = 'INCORRECT_CVC';
+                break;
+            case '2007':
+                $signifydReason = 'TEST_CARD_DECLINE';
+                break;
+            case '2009':
+                $signifydReason = 'INVALID_CVC';
+                break;
+            case '3005':
+            case '2010':
+                $signifydReason = 'FRAUD_DECLINE';
+                break;
             case '3004':
             case '3009':
                 $signifydReason = 'STOLEN_CARD';
                 break;
             case '3001':
-            case '3005':
-            case '3007':
                 $signifydReason = 'CARD_DECLINED';
                 break;
             case '3002':
@@ -108,13 +132,15 @@ class Payment
                 $signifydReason = 'INSUFFICIENT_FUNDS';
                 break;
             case '3010':
+            case '3011':
+            case '2008':
+            case '2011':
                 $signifydReason = 'RESTRICTED_CARD';
                 break;
-            case '3011':
             case '3012':
                 $signifydReason = 'CALL_ISSUER';
                 break;
-            default: /* Demás errores 400 */
+            case '3006':
                 $signifydReason = 'PROCESSING_ERROR';
                 break;
         }
@@ -126,6 +152,7 @@ class Payment
 
         $openPayData = [];
         $openPayData['gatewayRefusedReason'] = $signifydReason;
+        $openPayData['gatewayStatusMessage'] = $e->getDescription();
         $openPayData['gateway'] = 'openpay_cards';
 
         $case->setEntries("OpenPayRefusedReason", $signifydReason);
@@ -138,6 +165,6 @@ class Payment
         );
 
         $this->purchaseHelper->postTransactionToSignifyd($transaction, $quote);
-        return $e;
+        return null;
     }
 }
