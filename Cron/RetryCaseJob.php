@@ -136,7 +136,6 @@ class RetryCaseJob
      */
     public function execute()
     {
-        $this->emulation->startEnvironmentEmulation(0, 'adminhtml');
         $this->logger->debug("CRON: Main retry method called");
 
         $asyncWaitingCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::ASYNC_WAIT);
@@ -254,7 +253,6 @@ class RetryCaseJob
         }
 
         $this->logger->debug("CRON: Main retry method ended");
-        $this->emulation->stopEnvironmentEmulation();
     }
 
     /**
