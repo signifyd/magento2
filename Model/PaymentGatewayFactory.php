@@ -63,7 +63,12 @@ class PaymentGatewayFactory
             return false;
         }
 
-        return $this->objectManager->create($gatewayClass, ['params' => $gatewayIntegrationSettings['params']]);
+        $this->gateways[$gatewayIntegrationSettings['gateway']] = $this->objectManager->create(
+            $gatewayClass,
+            ['params' => $gatewayIntegrationSettings['params']]
+        );
+
+        return $this->gateways[$gatewayIntegrationSettings['gateway']];
     }
 
     /**
