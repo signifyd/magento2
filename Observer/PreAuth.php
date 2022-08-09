@@ -296,7 +296,7 @@ class PreAuth implements ObserverInterface
 
                 if (isset($caseResponse->scaEvaluation)) {
                     $case->setEntries(
-                        'tra_pre_auth',
+                        'sca_pre_auth',
                         $caseResponse->scaEvaluation->toJson()
                     );
                 }

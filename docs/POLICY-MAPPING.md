@@ -2,9 +2,9 @@
 
 Signifyd has a mapping for the response type that should be applied to the case: an asynchronous response that will require subscribing to webhook events or polling the Get Case API or a synchronous response.
 
-By default the extension will automatically use asynchronous response (POST_AUTH), but it is possible to set synchronous response (PRE_AUTH and TRA_PRE_AUTH).
+By default the extension will automatically use asynchronous response (POST_AUTH), but it is possible to set synchronous response (PRE_AUTH and SCA_PRE_AUTH).
 
-For more information about transaction risk analysis pre-auth (TRA_PRE_AUTH), access the [documentation](TRA_PRE_AUTH.md).
+For more information about transaction risk analysis pre-auth (SCA_PRE_AUTH), access the [documentation](SCA_PRE_AUTH.md).
 
 ### Setting global synchronous response
 
@@ -31,7 +31,7 @@ It is possible to select a different policy per payment method.
 If the setting stores a JSON, then it will map each payment method listed on JSON to the corresponding policy. Any payment methods not mapped will fallback to the POST_AUTH policy. Here it is an example of how the final JSON could look like:
 
 ```
-{"PRE_AUTH": ["paypal_braintree"], "POST_AUTH": ["checkmo"], "TRA_PRE_AUTH": ["braintree"]}
+{"PRE_AUTH": ["paypal_braintree"], "POST_AUTH": ["checkmo"], "SCA_PRE_AUTH": ["braintree"]}
 ```
 To set policy per payment method run command below on your database:
 

@@ -13,6 +13,7 @@ use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
 use Magento\Sales\Model\Order;
 use Magento\Quote\Model\Quote;
+use Magento\Quote\Model\QuoteFactory;
 use Magento\Sales\Model\Order\Address;
 use Magento\Sales\Model\Order\Item;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
@@ -26,6 +27,7 @@ use Signifyd\Connect\Model\PaymentVerificationFactory;
 use Magento\Framework\Registry;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
+use Signifyd\Connect\Model\ScaPreAuth\ScaEvaluation;
 use Signifyd\Models\GuaranteeFactory as GuaranteeModelFactory;
 use Signifyd\Connect\Logger\Logger;
 use Magento\Framework\App\ResourceConnection;
@@ -197,6 +199,16 @@ class PurchaseHelper
     protected $regionResourceModel;
 
     /**
+     * @var ScaEvaluation
+     */
+    protected $scaEvaluation;
+
+    /**
+     * @var QuoteFactory
+     */
+    protected $quoteFactory;
+
+    /**
      * PurchaseHelper constructor.
      * @param OrderResourceModel $orderResourceModel
      * @param RemoteAddress $remoteAddress
@@ -228,6 +240,8 @@ class PurchaseHelper
      * @param ProductMetadataInterface $productMetadataInterface
      * @param RegionFactory $regionFactory
      * @param RegionResourceModel $regionResourceModel
+     * @param ScaEvaluation $scaEvaluation
+     * @param QuoteFactory $quoteFactory
      */
     public function __construct(
         OrderResourceModel $orderResourceModel,
@@ -259,7 +273,9 @@ class PurchaseHelper
         DateTimeFactory $dateTimeFactory,
         ProductMetadataInterface $productMetadataInterface,
         RegionFactory $regionFactory,
-        RegionResourceModel $regionResourceModel
+        RegionResourceModel $regionResourceModel,
+        ScaEvaluation $scaEvaluation,
+        QuoteFactory $quoteFactory
     ) {
         $this->orderResourceModel = $orderResourceModel;
         $this->remoteAddress = $remoteAddress;
@@ -291,6 +307,8 @@ class PurchaseHelper
         $this->productMetadataInterface = $productMetadataInterface;
         $this->regionFactory = $regionFactory;
         $this->regionResourceModel = $regionResourceModel;
+        $this->scaEvaluation = $scaEvaluation;
+        $this->quoteFactory = $quoteFactory;
     }
 
     /**
@@ -982,7 +1000,7 @@ class PurchaseHelper
         $lastTransaction['gatewayStatusMessage'] = $this->getGatewayStatusMessage();
         $lastTransaction['createdAt'] = date('c', strtotime($transactionDate));
         $lastTransaction['parentTransactionId'] = $this->getParentTransactionId();
-        $lastTransaction['scaExemptionRequested'] = $this->makeScaExemptionRequested();
+        $lastTransaction['scaExemptionRequested'] = $this->makeScaExemptionRequested($order->getQuoteId());
         $lastTransaction['verifications'] = $this->getVerifications($order);
         $lastTransaction['threeDsResult'] = $this->makeThreeDsResult();
         $lastTransaction['paypalPendingReasonCode'] = $this->getPaypalPendingReasonCode();
@@ -1028,7 +1046,7 @@ class PurchaseHelper
         $transaction['acquirerDetails'] = $this->makeAcquirerDetails();
         $transaction['gatewayErrorCode'] = $errorCode;
         $transaction['gatewayStatusMessage'] = $statusMessage;
-        $transaction['scaExemptionRequested'] = $this->makeScaExemptionRequested();
+        $transaction['scaExemptionRequested'] = $this->makeScaExemptionRequested($quote->getId());
         $transaction['threeDsResult'] = $this->makeThreeDsResult();
         $transaction['paypalPendingReasonCode'] = $this->getPaypalPendingReasonCode();
         $transaction['paypalProtectionEligibility'] = $this->getPaypalProtectionEligibility();
@@ -1645,7 +1663,7 @@ class PurchaseHelper
             $quote->getStoreId()
         );
         $policyFromMethod = $this->getPolicyFromMethod($policyConfig, $paymentMethod);
-        $evalRequest = ($policyFromMethod == 'TRA_PRE_AUTH') ? ['SCA_EVALUATION'] : null;
+        $evalRequest = ($policyFromMethod == 'SCA_PRE_AUTH') ? ['SCA_EVALUATION'] : null;
         $case['additionalEvalRequests'] = $evalRequest;
 
         $case['checkoutId'] = sha1($this->jsonSerializer->serialize($case));
@@ -1936,7 +1954,7 @@ class PurchaseHelper
     {
         $policyFromMethod = $this->getPolicyFromMethod($policyName, $paymentMethod);
 
-        return ($policyFromMethod == 'PRE_AUTH' || $policyFromMethod == 'TRA_PRE_AUTH');
+        return ($policyFromMethod == 'PRE_AUTH' || $policyFromMethod == 'SCA_PRE_AUTH');
     }
 
     public function getPolicyFromMethod($policyName, $paymentMethod)
@@ -1955,11 +1973,11 @@ class PurchaseHelper
             return $policyName;
         }
 
-        foreach ($configPolicy as $key => $value) {
-            if ($key == 'PRE_AUTH' || $key == 'TRA_PRE_AUTH') {
-                if (is_array($value) === false) {
-                    continue;
-                }
+            foreach ($configPolicy as $key => $value) {
+                if ($key == 'PRE_AUTH' || $key == 'SCA_PRE_AUTH') {
+                    if (is_array($value) === false) {
+                        continue;
+                    }
 
                 if (in_array($paymentMethod, $value)) {
                     return $key;
@@ -2109,15 +2127,35 @@ class PurchaseHelper
         return null;
     }
 
-    /**
-     * makeScaExemptionRequested method should be extended/intercepted by plugin to add value to it.
-     * The SCA exemption that was requested by the merchant
-     * This method should be extended/intercepted by plugin to add value to it
-     *
-     * @return null
-     */
-    public function makeScaExemptionRequested()
+    public function makeScaExemptionRequested($quoteId = null)
     {
+        if (isset($quoteId)) {
+            $quote = $this->quoteFactory->create();
+            $this->quoteResourceModel->load($quote, $quoteId);
+
+            if ($quote->isEmpty()) {
+                return null;
+            }
+
+            /** @var $case \Signifyd\Connect\Model\Casedata */
+            $case = $this->casedataFactory->create();
+            $this->casedataResourceModel->load($case, $quoteId, 'quote_id');
+
+            if ($case->isEmpty()) {
+                return null;
+            }
+
+            /** @var \Signifyd\Models\ScaEvaluation $scaEvaluation */
+            $scaEvaluation = $this->scaEvaluation->getScaEvaluation($quote);
+
+            if ($scaEvaluation !== false &&
+                isset($scaEvaluation->exemptionDetails) &&
+                isset($scaEvaluation->exemptionDetails->exemption)
+            ) {
+                return $scaEvaluation->exemptionDetails->exemption;
+            }
+        }
+
         return null;
     }
 
