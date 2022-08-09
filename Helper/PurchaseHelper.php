@@ -1096,6 +1096,21 @@ class PurchaseHelper
      */
     public function makeCheckoutPaymentDetails(Order $order)
     {
+        $cardInstallments = $this->makeCardInstallments();
+
+        if ($order->getPayment()->getMethod() == 'openpay_cards' &&
+            is_array($order->getPayment()->getData('additional_information')) &&
+            isset($order->getPayment()->getData('additional_information')['interest_free']) &&
+            $order->getPayment()->getData('additional_information')['interest_free'] > 1
+            ) {
+
+            $cardInstallments = [
+                'interval' => 'Month',
+                'count' => $order->getPayment()->getData('additional_information')['interest_free'],
+                'totalValue' => $order->getGrandTotal()
+            ];
+        }
+
         $billingAddress = $order->getBillingAddress();
         $checkoutPaymentDetails = [];
         $checkoutPaymentDetails['billingAddress'] = $this->formatSignifydAddress($billingAddress);
@@ -1111,7 +1126,7 @@ class PurchaseHelper
         $checkoutPaymentDetails['cardExpiryYear'] = $this->getExpYear($order);
         $checkoutPaymentDetails['cardLast4'] = $this->getLast4($order);
         $checkoutPaymentDetails['cardBrand'] = $this->makeCardBrand();
-        $checkoutPaymentDetails['cardInstallments'] = $this->makeCardInstallments();
+        $checkoutPaymentDetails['cardInstallments'] = $cardInstallments;
 
         return $checkoutPaymentDetails;
     }
