@@ -216,8 +216,6 @@ class Index extends Action
                 break;
         }
 
-        $this->emulation->startEnvironmentEmulation(0, 'adminhtml');
-
         try {
             $httpCode = null;
 
@@ -245,10 +243,7 @@ class Index extends Action
             }
 
             $this->logger->info("WEBHOOK: Processing case {$case->getId()}");
-
-            $this->emulation->startEnvironmentEmulation(0, 'adminhtml');
             $this->storeManagerInterface->setCurrentStore($case->getOrder()->getStore()->getStoreId());
-
             $currentCaseHash = sha1(implode(',', $case->getData()));
             $case->updateCase($requestJson);
             $newCaseHash = sha1(implode(',', $case->getData()));
@@ -276,6 +271,5 @@ class Index extends Action
 
         $httpCode = empty($httpCode) ? 200 : $httpCode;
         $this->getResponse()->setStatusCode($httpCode);
-        $this->emulation->stopEnvironmentEmulation();
     }
 }
