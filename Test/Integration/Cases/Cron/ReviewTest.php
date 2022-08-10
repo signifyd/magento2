@@ -16,12 +16,7 @@ class ReviewTest extends CreateTest
      */
     public function testCronReviewCase()
     {
-        $this->placeQuote($this->getQuote('guest_quote'));
-
-        $this->updateCaseForRetry();
-
-        $this->tryToReviewCase();
-
+        $this->processReviewCase();
         $case = $this->getCase();
 
         $this->assertEquals(Casedata::COMPLETED_STATUS, $case->getData('magento_status'));
