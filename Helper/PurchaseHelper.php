@@ -1973,11 +1973,11 @@ class PurchaseHelper
             return $policyName;
         }
 
-            foreach ($configPolicy as $key => $value) {
-                if ($key == 'PRE_AUTH' || $key == 'SCA_PRE_AUTH') {
-                    if (is_array($value) === false) {
-                        continue;
-                    }
+        foreach ($configPolicy as $key => $value) {
+            if ($key == 'PRE_AUTH' || $key == 'SCA_PRE_AUTH') {
+                if (is_array($value) === false) {
+                    continue;
+                }
 
                 if (in_array($paymentMethod, $value)) {
                     return $key;

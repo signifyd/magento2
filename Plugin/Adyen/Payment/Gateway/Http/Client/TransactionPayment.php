@@ -41,7 +41,7 @@ class TransactionPayment
         Logger $logger,
         ScaEvaluation $scaEvaluation,
         ScaEvaluationConfig $scaEvaluationConfig
-    ){
+    ) {
         $this->storeManager = $storeManager;
         $this->logger = $logger;
         $this->scaEvaluation = $scaEvaluation;

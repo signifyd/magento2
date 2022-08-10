@@ -58,8 +58,7 @@ class Payment
         PurchaseHelper        $purchaseHelper,
         StoreManagerInterface $storeManager,
         CheckoutCart $checkoutCart
-    )
-    {
+    ) {
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
@@ -75,7 +74,8 @@ class Payment
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    public function beforeError(OpenpayPayment $subject, $e) {
+    public function beforeError(OpenpayPayment $subject, $e)
+    {
         $policyName = $this->purchaseHelper->getPolicyName(
             \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
             $this->storeManager->getStore()->getId()
