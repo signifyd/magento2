@@ -7,10 +7,10 @@ use Magento\Framework\Registry;
 use Magento\Sales\Api\CreditmemoManagementInterface as CreditmemoManager;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
-use Magento\Sales\Model\Order\Payment\Operations\SaleOperation;
 use Magento\Sales\Model\Order\Payment\Transaction\ManagerInterface;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\ScaPreAuth\ScaEvaluation;
+use Magento\Framework\App\ProductMetadataInterface;
 
 class Payment extends \Magento\Sales\Model\Order\Payment
 {
@@ -25,6 +25,7 @@ class Payment extends \Magento\Sales\Model\Order\Payment
     protected $scaEvaluation;
 
     /**
+     * @param ProductMetadataInterface $productMetadataInterface
      * @param \Magento\Framework\Model\Context $context
      * @param Registry $registry
      * @param \Magento\Framework\Api\ExtensionAttributesFactory $extensionFactory
@@ -44,9 +45,9 @@ class Payment extends \Magento\Sales\Model\Order\Payment
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
      * @param array $data
      * @param CreditmemoManager|null $creditmemoManager
-     * @param SaleOperation|null $saleOperation
      */
     public function __construct(
+        ProductMetadataInterface $productMetadataInterface,
         \Magento\Framework\Model\Context $context,
         Registry $registry,
         \Magento\Framework\Api\ExtensionAttributesFactory $extensionFactory,
@@ -65,10 +66,12 @@ class Payment extends \Magento\Sales\Model\Order\Payment
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = [],
-        CreditmemoManager $creditmemoManager = null,
-        SaleOperation $saleOperation = null
+        CreditmemoManager $creditmemoManager = null
     ) {
-        parent::__construct(
+        //Backward compatibility with Magento 2.3, in this version the parent
+        // construct don't have $saleOperation parameter, causing di:compile error
+        $this->initConstructor(
+            $productMetadataInterface,
             $context,
             $registry,
             $extensionFactory,
@@ -85,12 +88,77 @@ class Payment extends \Magento\Sales\Model\Order\Payment
             $resource,
             $resourceCollection,
             $data,
-            $creditmemoManager,
-            $saleOperation
+            $creditmemoManager
         );
 
         $this->logger = $logger;
         $this->scaEvaluation = $scaEvaluation;
+    }
+
+    public function initConstructor(
+        $productMetadataInterface,
+        $context,
+        $registry,
+        $extensionFactory,
+        $customAttributeFactory,
+        $paymentData,
+        $encryptor,
+        $creditmemoFactory,
+        $priceCurrency,
+        $transactionRepository,
+        $transactionManager,
+        $transactionBuilder,
+        $paymentProcessor,
+        $orderRepository,
+        $resource,
+        $resourceCollection,
+        $data,
+        $creditmemoManager
+    ) {
+        if (version_compare($productMetadataInterface->getVersion(), '2.4.0') >= 0) {
+            $saleOperation = \Magento\Framework\App\ObjectManager::getInstance()
+                ->get('Magento\Sales\Model\Order\Payment\Operations\SaleOperation');
+            parent::__construct(
+                $context,
+                $registry,
+                $extensionFactory,
+                $customAttributeFactory,
+                $paymentData,
+                $encryptor,
+                $creditmemoFactory,
+                $priceCurrency,
+                $transactionRepository,
+                $transactionManager,
+                $transactionBuilder,
+                $paymentProcessor,
+                $orderRepository,
+                $resource,
+                $resourceCollection,
+                $data,
+                $creditmemoManager,
+                $saleOperation
+            );
+        } else {
+            parent::__construct(
+                $context,
+                $registry,
+                $extensionFactory,
+                $customAttributeFactory,
+                $paymentData,
+                $encryptor,
+                $creditmemoFactory,
+                $priceCurrency,
+                $transactionRepository,
+                $transactionManager,
+                $transactionBuilder,
+                $paymentProcessor,
+                $orderRepository,
+                $resource,
+                $resourceCollection,
+                $data,
+                $creditmemoManager
+            );
+        }
     }
 
     protected function processAction($action, Order $order)
