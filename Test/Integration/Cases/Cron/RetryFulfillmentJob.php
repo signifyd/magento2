@@ -4,7 +4,7 @@ namespace Signifyd\Connect\Test\Integration\Cases\Cron;
 
 use Signifyd\Connect\Test\Integration\OrderTestCase;
 
-class RetryFulfillmentJob  extends OrderTestCase
+class RetryFulfillmentJob extends OrderTestCase
 {
     /**
      * @var \Signifyd\Connect\Cron\RetryFulfillmentJob
@@ -65,7 +65,7 @@ class RetryFulfillmentJob  extends OrderTestCase
         /** @var \Magento\Sales\Model\Order\Shipment $shipment */
         $shipment = $convertOrder->toShipment($order);
 
-        foreach ($order->getAllItems() AS $orderItem) {
+        foreach ($order->getAllItems() as $orderItem) {
             // Check if order item has qty to ship or is virtual
             if (! $orderItem->getQtyToShip() || $orderItem->getIsVirtual()) {
                 continue;
