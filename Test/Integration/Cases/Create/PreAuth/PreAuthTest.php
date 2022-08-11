@@ -17,9 +17,9 @@ class PreAuthTest extends OrderTestCase
         $this->assertNotEmpty($caseFromQuote['checkoutId']);
         $this->assertNotEmpty($caseFromQuote['orderId']);
         $this->assertNotEmpty($caseFromQuote['purchase']);
-        $this->assertNotEmpty($caseResponse->decision);
-        $this->assertNotEmpty($caseResponse->decision->checkpointAction);
-        $this->assertNotEmpty($caseResponse->decision->score);
+        $this->assertNotEmpty($caseResponse->signifydId);
+        $this->assertNotEmpty($caseResponse->checkoutId);
+        $this->assertNotEmpty($caseResponse->orderId);
     }
 
     public static function configFixture()
