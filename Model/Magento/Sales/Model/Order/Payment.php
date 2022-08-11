@@ -117,7 +117,7 @@ class Payment extends \Magento\Sales\Model\Order\Payment
     ) {
         if (version_compare($productMetadataInterface->getVersion(), '2.4.0') >= 0) {
             $saleOperation = \Magento\Framework\App\ObjectManager::getInstance()
-                ->get('Magento\Sales\Model\Order\Payment\Operations\SaleOperation');
+                ->get(\Magento\Sales\Model\Order\Payment\Operations\SaleOperation::class);
             parent::__construct(
                 $context,
                 $registry,
