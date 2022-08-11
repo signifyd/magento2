@@ -46,7 +46,7 @@ class Logger extends \Monolog\Logger
      * @param array $context
      * @return bool
      */
-    public function addRecord($level, $message, array $context = []): bool
+    public function addRecord($level, $message, array $context = [], $datetime = null): bool
     {
         if (isset($context['entity'])) {
             $log = $this->configHelper->getConfigData('signifyd/logs/log', $context['entity']);
@@ -59,6 +59,6 @@ class Logger extends \Monolog\Logger
             return false;
         }
 
-        return parent::addRecord($level, $message, $context);
+        return parent::addRecord($level, $message, $context, $datetime);
     }
 }
