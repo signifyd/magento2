@@ -56,6 +56,21 @@ class TestCase extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * @return \Signifyd\Connect\Model\Fulfillment
+     */
+    public function getFulfillment($incrementId = null)
+    {
+        if (empty($incrementId) == true) {
+            $incrementId = $this->incrementId;
+        }
+
+        /** @var \Signifyd\Connect\Model\Fulfillment $fulfillment */
+        $fulfillment = $this->objectManager->create(\Signifyd\Connect\Model\Fulfillment::class);
+        $fulfillment->load($incrementId, 'order_id');
+        return $fulfillment;
+    }
+
+    /**
      * @return \Magento\Sales\Model\Order
      */
     public function getOrder()

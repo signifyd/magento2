@@ -796,7 +796,7 @@ class PurchaseHelper
 
         $shipments[] = $shipment;
 
-        foreach ($quote->getItems() as $item) {
+        foreach ($quote->getAllItems() as $item) {
             if ($item->getProductType() == 'giftcard') {
                 $shipmentGc = [];
                 $shipmentGc['destination'] = [

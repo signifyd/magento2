@@ -8,7 +8,7 @@ use Signifyd\Connect\Model\Casedata;
 class CreateTest extends OrderTestCase
 {
     /**
-     * @var \Signifyd\Connect\Cron\RetryCaseJob $retryCaseJob
+     * @var \Signifyd\Connect\Cron\RetryCaseJob
      */
     protected $retryCaseJob;
 

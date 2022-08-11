@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Signifyd\Connect\Test\Integration;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Quote\Api\GuestCartManagementInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteIdMask;
@@ -19,6 +20,11 @@ class OrderTestCase extends TestCase
     protected $quoteIdMaskFactory;
 
     /**
+     * @var \Signifyd\Connect\Helper\PurchaseHelper
+     */
+    protected $purchaseHelper;
+
+    /**
      * @inheritdoc
      */
     protected function setUp(): void
@@ -26,6 +32,7 @@ class OrderTestCase extends TestCase
         parent::setUp();
 
         $this->quoteIdMaskFactory = $this->objectManager->get(QuoteIdMaskFactory::class);
+        $this->purchaseHelper = $this->objectManager->create(\Signifyd\Connect\Helper\PurchaseHelper::class);
     }
 
     /**
@@ -127,5 +134,30 @@ class OrderTestCase extends TestCase
 
         $order->save();
         $creditmemo->save();
+    }
+
+    public function processReviewCase()
+    {
+        $this->placeQuote($this->getQuote('guest_quote'));
+        $this->updateCaseForRetry();
+        $this->tryToReviewCase();
+    }
+
+    public function processPreAuth()
+    {
+        /** @var \Magento\Customer\Api\CustomerRepositoryInterface $customerRepository */
+        $customerRepository = $this->objectManager->create(CustomerRepositoryInterface::class);
+        $customer = $customerRepository->getById(1);
+
+        /** @var \Magento\Quote\Model\Quote $quote */
+        $quote = $this->getQuote('guest_quote');
+        $quote->setCustomerIsGuest(false);
+        $quote->assignCustomer($customer);
+        $quote->save();
+
+        $caseFromQuote = $this->purchaseHelper->processQuoteData($quote);
+        $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
+
+        return [$caseFromQuote, $caseResponse, $quote];
     }
 }
