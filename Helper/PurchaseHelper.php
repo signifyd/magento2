@@ -753,11 +753,14 @@ class PurchaseHelper
         $shipment['destination'] = $this->makeRecipient($order);
         $shipment['origin'] = $this->makeOrigin($order->getStoreId());
         $shipment['carrier'] = $this->makeShipper($shippingMethod);
-        ;
         $shipment['minDeliveryDate'] = $this->makeMinDeliveryDate();
         $shipment['maxDeliveryDate'] = null;
         $shipment['shipmentId'] = null;
-        $shipment['fulfillmentMethod'] = $this->makeFulfillmentMethod();
+        $shipment['fulfillmentMethod'] = $this->getFulfillmentMethodMapping(
+            $order->getShippingMethod(),
+            ScopeInterface::SCOPE_STORES,
+            $order->getStoreId()
+        );
 
         $shipments[] = $shipment;
 
@@ -792,7 +795,12 @@ class PurchaseHelper
         $shipment['minDeliveryDate'] = $this->makeMinDeliveryDate();
         $shipment['maxDeliveryDate'] = null;
         $shipment['shipmentId'] = null;
-        $shipment['fulfillmentMethod'] = $this->makeFulfillmentMethod();
+        $shipment['fulfillmentMethod'] = $this->getFulfillmentMethodMapping(
+            $quote->getShippingMethod(),
+            ScopeInterface::SCOPE_STORES,
+            $quote->getStoreId()
+        );
+
 
         $shipments[] = $shipment;
 
@@ -1988,6 +1996,40 @@ class PurchaseHelper
         return 'POST_AUTH';
     }
 
+    public function getFulfillmentMethodMapping(
+        $shippingMethod,
+        $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
+        $scopeCode = null
+    ){
+        if (isset($shippingMethod) === false) {
+            return null;
+        }
+
+        $fulfillmentMapping = $this->scopeConfigInterface->getValue(
+            'signifyd/advanced/fulfillment_method',
+            $scopeType,
+            $scopeCode
+        );
+
+        if (isset($fulfillmentMapping) === false) {
+            return 'DELIVERY';
+        }
+
+        try {
+            $configMapping = $this->jsonSerializer->unserialize($fulfillmentMapping);
+        } catch (\InvalidArgumentException $e) {
+            return $fulfillmentMapping;
+        }
+
+        foreach ($configMapping as $key => $value) {
+            if (in_array($shippingMethod, $value)) {
+                return $key;
+            }
+        }
+
+        return 'DELIVERY';
+    }
+
     public function getDecisionForMethod($decision, $paymentMethod)
     {
         if (isset($paymentMethod) === false) {
@@ -2259,16 +2301,6 @@ class PurchaseHelper
      * @return null
      */
     public function makeMinDeliveryDate()
-    {
-        return null;
-    }
-
-    /**
-     * This method should be extended/intercepted by plugin to add value to it
-     *
-     * @return null
-     */
-    public function makeFulfillmentMethod()
     {
         return null;
     }
