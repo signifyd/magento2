@@ -169,6 +169,8 @@ class Payment extends \Magento\Sales\Model\Order\Payment
             if ($this->scaEvaluation->getIsSoftDecline()) {
                 $this->logger->info("Reprocessing payment due to soft decline error");
                 parent::processAction($action, $order);
+            } else {
+                throw $e;
             }
         }
     }
