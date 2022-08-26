@@ -801,7 +801,6 @@ class PurchaseHelper
             $quote->getStoreId()
         );
 
-
         $shipments[] = $shipment;
 
         foreach ($quote->getAllItems() as $item) {
@@ -2000,7 +1999,7 @@ class PurchaseHelper
         $shippingMethod,
         $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
         $scopeCode = null
-    ){
+    ) {
         if (isset($shippingMethod) === false) {
             return null;
         }
