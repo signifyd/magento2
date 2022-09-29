@@ -1220,7 +1220,7 @@ class PurchaseHelper
         $case['memberships'] = $this->makeMemberships();
         $case['coverageRequests'] = $this->getDecisionRequest($order->getPayment()->getMethod());
         $case['merchantCategoryCode'] = $this->makeMerchantCategoryCode();
-        $case['device'] = $this->makeDevice($order->getQuoteId(), $order->getStoreId());
+        $case['device'] = $this->makeDevice($order->getQuoteId(), $order->getStoreId(), $order);
         $case['merchantPlatform'] = $this->getMerchantPlataform();
         $case['signifydClient'] = $this->makeVersions();
         $case['transactions'] = $this->makeTransactions($order);
@@ -2119,9 +2119,10 @@ class PurchaseHelper
         return $orderCollection->getTotalCount();
     }
 
-    public function makeDevice($quoteId, $storeId)
+    public function makeDevice($quoteId, $storeId, $order = null)
     {
-        $filterIpd = $this->filterIp($this->remoteAddress->getRemoteAddress());
+        $filterIpd = isset($order) ?
+            $this->getIPAddress($order) : $this->filterIp($this->remoteAddress->getRemoteAddress());
 
         if (isset($filterIpd) === false) {
             return null;
