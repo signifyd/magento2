@@ -8,6 +8,7 @@
 namespace Signifyd\Connect\Helper;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Sales\Model\Order;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Core\Api\SaleApiFactory;
 use Signifyd\Core\Api\CaseApiFactory;
@@ -341,5 +342,23 @@ class ConfigHelper
         }
 
         return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsOrderProcessedByAmazon(Order $order)
+    {
+        $paymentAction =  $this->scopeConfigInterface->getValue(
+            'payment/amazon_payment_v2/payment_action',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $order->getStoreId()
+        );
+
+        if ($paymentAction === 'authorize_capture' && $order->hasInvoices() === false) {
+            return false;
+        }
+
+        return true;
     }
 }

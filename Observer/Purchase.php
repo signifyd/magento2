@@ -224,6 +224,8 @@ class Purchase implements ObserverInterface
             }
 
             $paymentMethod = $order->getPayment()->getMethod();
+            $isOrderProcessedByAmazon = $paymentMethod === 'amazon_payment_v2' &&
+                $this->configHelper->getIsOrderProcessedByAmazon($order) === true;
 
             if ($this->configHelper->isPaymentRestricted($paymentMethod)) {
                 $message = 'Case creation for order ' . $incrementId .
@@ -257,6 +259,14 @@ class Purchase implements ObserverInterface
 
                 $this->casedataResourceModel->save($case);
             } elseif ($case->getData('magento_status') != Casedata::NEW) {
+                if ($isOrderProcessedByAmazon && $case->getMagentoStatus() === Casedata::AWAITING_PSP) {
+                    // Hold order after Amazon capture the payment
+                    $this->holdOrder($order, $case, $isPassive);
+                    $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
+
+                    $this->casedataResourceModel->save($case);
+                }
+
                 return;
             } elseif ($case->isEmpty() === false && $isPassive) {
                 return;
@@ -323,7 +333,19 @@ class Purchase implements ObserverInterface
 
             if (is_object($saleResponse)) {
                 $case->setCode($saleResponse->getSignifydId());
-                $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
+
+                if ($paymentMethod === 'amazon_payment_v2') {
+                    if ($this->configHelper->getIsOrderProcessedByAmazon($order) === true) {
+                        $magentoStatus = Casedata::IN_REVIEW_STATUS;
+                    } else {
+                        $magentoStatus = Casedata::AWAITING_PSP;
+                    }
+                } else {
+                    $magentoStatus = Casedata::IN_REVIEW_STATUS;
+                }
+
+                $case->setMagentoStatus($magentoStatus);
+
                 $case->setUpdated();
             }
 
@@ -465,6 +487,20 @@ class Purchase implements ObserverInterface
                 if (!$order->getEmailSent()) {
                     return false;
                 }
+            }
+
+            if ($order->getPayment()->getMethod() === 'amazon_payment_v2' &&
+                $this->configHelper->getIsOrderProcessedByAmazon($order) === false
+            ) {
+                $this->logger->debug(
+                    "Cannot hold order as Amazon Pay is set to capture" .
+                    " the payment and the order is not invoiced",
+                    ['entity' => $order]
+                );
+                $order->addCommentToStatusHistory(
+                    "Signifyd: cannot hold order as Amazon Pay is set to capture" .
+                    " the payment and the order is not invoiced");
+                return false;
             }
 
             $this->logger->debug(
