@@ -224,6 +224,15 @@ class Purchase implements ObserverInterface
             }
 
             $paymentMethod = $order->getPayment()->getMethod();
+            $checkOwnEventsMethodsEvent = $observer->getEvent()->getCheckOwnEventsMethods();
+
+            if ($checkOwnEventsMethodsEvent !== null) {
+                $checkOwnEventsMethods = $checkOwnEventsMethodsEvent;
+            }
+
+            if ($checkOwnEventsMethods && in_array($paymentMethod, $this->ownEventsMethods)) {
+                return;
+            }
 
             if ($this->configHelper->isPaymentRestricted($paymentMethod)) {
                 $message = 'Case creation for order ' . $incrementId .
@@ -268,16 +277,6 @@ class Purchase implements ObserverInterface
             }
 
             $state = $order->getState();
-
-            $checkOwnEventsMethodsEvent = $observer->getEvent()->getCheckOwnEventsMethods();
-
-            if ($checkOwnEventsMethodsEvent !== null) {
-                $checkOwnEventsMethods = $checkOwnEventsMethodsEvent;
-            }
-
-            if ($checkOwnEventsMethods && in_array($paymentMethod, $this->ownEventsMethods)) {
-                return;
-            }
 
             if ($this->isStateRestricted($state, 'create')) {
                 $message = 'Case creation for order ' . $incrementId . ' with state ' . $state . ' is restricted';
