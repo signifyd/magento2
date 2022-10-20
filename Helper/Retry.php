@@ -86,10 +86,10 @@ class Retry extends AbstractHelper
             ['updated']
         );
 
-        $cronPagination = $this->configHelper->getCronPagination();
+        $cronBatchSize = $this->configHelper->getCronBatchSize();
 
-        if (isset($cronPagination) && is_numeric($cronPagination)) {
-            $casesCollection->setPageSize((int)$cronPagination);
+        if (isset($cronBatchSize) && is_numeric($cronBatchSize)) {
+            $casesCollection->setPageSize((int)$cronBatchSize);
         }
 
         $casesToRetry = [];

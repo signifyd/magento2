@@ -306,9 +306,9 @@ class ConfigHelper
         return $this->scopeConfigInterface->getValue('signifyd/advanced/guarantees_reviewed_action');
     }
 
-    public function getCronPagination()
+    public function getCronBatchSize()
     {
-        return $this->scopeConfigInterface->getValue('signifyd/advanced/cron_pagination');
+        return $this->scopeConfigInterface->getValue('signifyd/advanced/cron_batch_size');
     }
 
     /**
