@@ -306,6 +306,11 @@ class ConfigHelper
         return $this->scopeConfigInterface->getValue('signifyd/advanced/guarantees_reviewed_action');
     }
 
+    public function getCronPagination()
+    {
+        return $this->scopeConfigInterface->getValue('signifyd/advanced/cron_pagination');
+    }
+
     /**
      * Get restricted payment methods from store configs
      *
