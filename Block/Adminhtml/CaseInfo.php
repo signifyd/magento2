@@ -92,6 +92,12 @@ class CaseInfo extends Template
      */
     public function getCaseScore()
     {
+        $score = $this->getCaseEntity()->getData('score');
+
+        if (isset($score) === false) {
+            return 0;
+        }
+
         return floor($this->getCaseEntity()->getData('score'));
     }
 

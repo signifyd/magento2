@@ -409,12 +409,17 @@ class PurchaseHelper
             $subCategoryName = null;
         }
 
-        $itemPrice = floatval(number_format($item->getPriceInclTax(), 2, '.', ''));
+        $itemPriceInclTax = is_float($item->getPriceInclTax()) ? $item->getPriceInclTax() : 0;
+
+        $itemPrice = floatval(number_format($itemPriceInclTax, 2, '.', ''));
 
         if ($itemPrice <= 0) {
             if ($item->getParentItem()) {
                 if ($item->getParentItem()->getProductType() === 'configurable') {
-                    $itemPrice = floatval(number_format($item->getParentItem()->getPriceInclTax(), 2, '.', ''));
+                    $parentItemPriceInclTax = is_float($item->getParentItem()->getPriceInclTax()) ?
+                        $item->getParentItem()->getPriceInclTax() : 0;
+
+                    $itemPrice = floatval(number_format($parentItemPriceInclTax, 2, '.', ''));
                 }
             }
         }
