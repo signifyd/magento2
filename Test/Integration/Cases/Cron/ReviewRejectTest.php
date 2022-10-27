@@ -4,7 +4,7 @@ namespace Signifyd\Connect\Test\Integration\Cases\Cron;
 
 use Signifyd\Connect\Model\Casedata;
 
-class ReviewTest extends CreateTest
+class ReviewRejectTest extends CreateTest
 {
     public function testCronCreateCase()
     {
@@ -14,13 +14,13 @@ class ReviewTest extends CreateTest
     /**
      * @magentoDataFixture configFixture
      */
-    public function testCronReviewCase()
+    public function testReviewReject()
     {
-        $this->processReviewCase();
+        $this->processReviewCase(true);
         $case = $this->getCase();
 
         $this->assertEquals(Casedata::COMPLETED_STATUS, $case->getData('magento_status'));
-        $this->assertEquals('ACCEPT', $case->getData('guarantee'));
+        $this->assertEquals('REJECT', $case->getData('guarantee'));
         $this->assertNotEmpty($case->getData('score'));
     }
 }
