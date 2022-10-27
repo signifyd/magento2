@@ -232,6 +232,17 @@ class Purchase implements ObserverInterface
             $isOrderProcessedByAmazon = $paymentMethod === 'amazon_payment_v2' &&
                 $this->configHelper->getIsOrderProcessedByAmazon($order) === true;
 
+
+            $checkOwnEventsMethodsEvent = $observer->getEvent()->getCheckOwnEventsMethods();
+
+            if ($checkOwnEventsMethodsEvent !== null) {
+                $checkOwnEventsMethods = $checkOwnEventsMethodsEvent;
+            }
+
+            if ($checkOwnEventsMethods && in_array($paymentMethod, $this->ownEventsMethods)) {
+                return;
+            }
+
             if ($this->configHelper->isPaymentRestricted($paymentMethod)) {
                 $message = 'Case creation for order ' . $incrementId .
                     ' with payment ' . $paymentMethod . ' is restricted';
@@ -283,16 +294,6 @@ class Purchase implements ObserverInterface
             }
 
             $state = $order->getState();
-
-            $checkOwnEventsMethodsEvent = $observer->getEvent()->getCheckOwnEventsMethods();
-
-            if ($checkOwnEventsMethodsEvent !== null) {
-                $checkOwnEventsMethods = $checkOwnEventsMethodsEvent;
-            }
-
-            if ($checkOwnEventsMethods && in_array($paymentMethod, $this->ownEventsMethods)) {
-                return;
-            }
 
             if ($this->isStateRestricted($state, 'create')) {
                 $message = 'Case creation for order ' . $incrementId . ' with state ' . $state . ' is restricted';
