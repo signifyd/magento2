@@ -84,10 +84,6 @@
         <plugin name="Signifyd_Connect_Magento_Authorizenet_Model_TransactionService" type="\Signifyd\Connect\Plugin\Magento\Authorizenet\Model\TransactionService" />
     </type>
 
-    <type name="Magento\Sales\Model\Order">
-        <plugin name="Signifyd_Connect_Magento_Sales_Model_Order" type="\Signifyd\Connect\Plugin\Magento\Sales\Model\Order" />
-    </type>
-
     <type name="Magento\GiftCard\Model\AccountGenerator">
         <plugin name="Signifyd_Connect_Plugin_Magento_GiftCard_Model_AccountGenerator" type="\Signifyd\Connect\Plugin\Magento\GiftCard\Model\AccountGenerator" />
     </type>

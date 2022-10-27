@@ -108,13 +108,10 @@ class Order implements ObserverInterface
 
             if (isset($step['class'])) {
                 $function .= $step['class'];
+                list($vendor, $module, $class) = explode('\\', $step['class'], 3);
 
-                if ($step['class'] != \Signifyd\Connect\Plugin\Magento\Sales\Model\Order::class) {
-                    list($vendor, $module, $class) = explode('\\', $step['class'], 3);
-
-                    if ($vendor != "Magento") {
-                        $nonMagentoModules["{$vendor}\\{$module}"] = '';
-                    }
+                if ($vendor != "Magento") {
+                    $nonMagentoModules["{$vendor}\\{$module}"] = '';
                 }
             }
 
