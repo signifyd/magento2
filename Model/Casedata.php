@@ -286,6 +286,64 @@ class Casedata extends AbstractModel
     }
 
     /**
+     * @param $caseData
+     * @return bool
+     */
+    public function updateCaseV3($response)
+    {
+        try {
+            if (isset($response->decision['score']) && $this->getScore() !== $response->decision['score']) {
+                $this->setScore(floor($response->decision['score']));
+            }
+
+            $isScoreOnly = $this->configHelper->isScoreOnly();
+            $caseScore = $this->getScore();
+
+            if (isset($caseScore) && $isScoreOnly) {
+                $this->setMagentoStatus(Casedata::COMPLETED_STATUS);
+            }
+
+            if (isset($response->decision['checkpointAction']) &&
+                $this->getGuarantee() != $response->decision['checkpointAction']) {
+                $this->setGuarantee($response->decision['checkpointAction']);
+            }
+
+            if (isset($response->decision['checkpointActionReason']) &&
+                $this->getCheckpointActionReason() != $response->decision['checkpointActionReason']) {
+                $this->setCheckpointActionReason($response->decision['checkpointActionReason']);
+            }
+
+            if (isset($response->signifydId)) {
+                $this->setCode($response->signifydId);
+            }
+
+            $failEntry = $this->getEntries('fail');
+
+            if (isset($failEntry)) {
+                $this->unsetEntries('fail');
+            }
+
+            $origGuarantee = $this->getOrigData('guarantee');
+            $newGuarantee = $this->getData('guarantee');
+            $origScore = (int) $this->getOrigData('score');
+            $newScore = (int) $this->getData('score');
+
+            if (empty($origGuarantee) == false && $origGuarantee != 'N/A' && $origGuarantee != $newGuarantee ||
+                $origScore > 0 && $origScore != $newScore) {
+                $message = "Signifyd: case reviewed " .
+                    "from {$origGuarantee} ({$origScore}) " .
+                    "to {$newGuarantee} ({$newScore})";
+                $this->orderHelper->addCommentToStatusHistory($this->getOrder(), $message);
+            }
+        } catch (\Exception $e) {
+            $this->logger->critical($e->__toString(), ['entity' => $this]);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * @param $orderAction
      * @return bool
      * @throws \Magento\Framework\Exception\LocalizedException

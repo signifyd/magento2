@@ -62,6 +62,10 @@ class Casedata extends AbstractDb
 
         $return = parent::load($case, $value, $field);
 
+        if ($case->isEmpty()) {
+            return $return;
+        }
+
         if ($this->isCaseLocked($case)) {
             $this->rollBack();
 

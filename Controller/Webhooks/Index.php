@@ -156,8 +156,14 @@ class Index extends Action
     public function execute()
     {
         $request = $this->getRawPost();
-        $hash = $this->getRequest()->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
-        $topic = $this->getRequest()->getHeader('X-SIGNIFYD-TOPIC');
+
+        if (empty($this->getRequest()->getHeader('signifyd-checkpoint')) === false) {
+            $hash = $this->getRequest()->getHeader('signifyd-sec-hmac-sha256');
+            $topic = $this->getRequest()->getHeader('signifyd-topic');
+        } else {
+            $hash = $this->getRequest()->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
+            $topic = $this->getRequest()->getHeader('X-SIGNIFYD-TOPIC');
+        }
 
         $this->logger->debug('WEBHOOK: request: ' . $request);
         $this->logger->debug('WEBHOOK: request hash: ' . $hash);
@@ -184,7 +190,13 @@ class Index extends Action
             return;
         }
 
-        if (isset($requestJson->caseId) === false) {
+        if (isset($requestJson->caseId)) {
+            $caseId = $requestJson->caseId;
+            $webHookVersion = "v2";
+        } elseif (isset($requestJson->signifydId)) {
+            $caseId = $requestJson->signifydId;
+            $webHookVersion = "v3";
+        } else {
             $httpCode = Http::STATUS_CODE_200;
             throw new LocalizedException(__("Invalid body, no 'caseId' field found on request"));
         }
@@ -193,7 +205,7 @@ class Index extends Action
         $case = $this->casedataFactory->create();
 
         try {
-            $this->casedataResourceModel->loadForUpdate($case, (string) $requestJson->caseId, 'code');
+            $this->casedataResourceModel->loadForUpdate($case, (string) $caseId, 'code');
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
             return;
@@ -221,7 +233,7 @@ class Index extends Action
 
             if ($case->isEmpty()) {
                 $httpCode = Http::STATUS_CODE_400;
-                throw new LocalizedException(__("Case {$requestJson->caseId} on request not found on Magento"));
+                throw new LocalizedException(__("Case {$caseId} on request not found on Magento"));
             }
 
             $signifydWebhookApi = $this->configHelper->getSignifydWebhookApi($case);
@@ -236,24 +248,33 @@ class Index extends Action
                 $case->getMagentoStatus() == Casedata::AWAITING_PSP
             ) {
                 $httpCode = Http::STATUS_CODE_400;
-                throw new LocalizedException(__("Case {$requestJson->caseId} it is not ready to be updated"));
+                throw new LocalizedException(__("Case {$caseId} it is not ready to be updated"));
             } elseif ($case->getMagentoStatus() == Casedata::PRE_AUTH) {
                 $httpCode = Http::STATUS_CODE_200;
                 throw new LocalizedException(
-                    __("Case {$requestJson->caseId} already completed by synchronous response, no action will be taken")
+                    __("Case {$caseId} already completed by synchronous response, no action will be taken")
                 );
             }
 
             $this->logger->info("WEBHOOK: Processing case {$case->getId()}");
             $this->storeManagerInterface->setCurrentStore($case->getOrder()->getStore()->getStoreId());
             $currentCaseHash = sha1(implode(',', $case->getData()));
-            $case->updateCase($requestJson);
+
+            switch ($webHookVersion) {
+                case "v2":
+                    $case->updateCase($requestJson);
+                    break;
+                case "v3":
+                    $case->updateCaseV3($requestJson);
+                    break;
+            }
+
             $newCaseHash = sha1(implode(',', $case->getData()));
 
             if ($currentCaseHash == $newCaseHash) {
                 $httpCode = Http::STATUS_CODE_200;
                 throw new LocalizedException(
-                    __("Case {$requestJson->caseId} already update with this data, no action will be taken")
+                    __("Case {$caseId} already update with this data, no action will be taken")
                 );
             }
 

@@ -6,10 +6,11 @@
             <label>Webhook Url</label>
             <comment><model>Signifyd\Connect\Model\WebhookLink</model></comment>
         </field>
-        <field id="register_webhook" translate="label comment" type="button" sortOrder="37" showInDefault="1" showInWebsite="1" showInStore="1">
-            <label>Register Webhook</label>
-            <comment />
-            <frontend_model>Signifyd\Connect\Block\Adminhtml\System\Config\Button\Webhook</frontend_model>
-        </field>
+<!--        TODO: register webhook disabled until there is a way to get the teamId from the api in Controller/Adminhtml/Webhooks/Register.php -->
+<!--        <field id="register_webhook" translate="label comment" type="button" sortOrder="37" showInDefault="1" showInWebsite="1" showInStore="1">-->
+<!--            <label>Register Webhook</label>-->
+<!--            <comment />-->
+<!--            <frontend_model>Signifyd\Connect\Block\Adminhtml\System\Config\Button\Webhook</frontend_model>-->
+<!--        </field>-->
     </group>
 </include>
