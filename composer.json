@@ -2,12 +2,12 @@
   "name": "signifyd/module-connect",
   "description": "Signifyd integration for Magento",
   "require": {
-    "signifyd/signifyd-php": "4.0.2",
+    "signifyd/signifyd-php": "4.0.3",
     "monolog/monolog": ">=1.16.0",
     "php": ">=5.5.22"
   },
   "type": "magento2-module",
-  "version": "5.1.1",
+  "version": "5.2.0",
   "autoload": {
     "files": [
       "registration.php"
