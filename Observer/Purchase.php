@@ -157,6 +157,11 @@ class Purchase implements ObserverInterface
 
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();
+
+            if (isset($order) === false) {
+                return;
+            }
+
             $storeId = $order->getStoreId();
 
             $enabledConfig = $this->scopeConfigInterface->getValue(
