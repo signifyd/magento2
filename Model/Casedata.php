@@ -52,6 +52,9 @@ class Casedata extends AbstractModel
     /* Asynchronous response */
     const POST_AUTH = "post_auth";
 
+    /* Awaiting payment response */
+    const AWAITING_PSP = "awaiting_psp";
+
     /**
      * @var ConfigHelper
      */

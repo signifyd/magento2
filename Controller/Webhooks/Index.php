@@ -232,7 +232,9 @@ class Index extends Action
             } elseif ($this->configHelper->isEnabled($case) == false) {
                 $httpCode = Http::STATUS_CODE_400;
                 throw new LocalizedException(__('Signifyd plugin it is not enabled'));
-            } elseif ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS) {
+            } elseif ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS ||
+                $case->getMagentoStatus() == Casedata::AWAITING_PSP
+            ) {
                 $httpCode = Http::STATUS_CODE_400;
                 throw new LocalizedException(__("Case {$requestJson->caseId} it is not ready to be updated"));
             } elseif ($case->getMagentoStatus() == Casedata::PRE_AUTH) {
