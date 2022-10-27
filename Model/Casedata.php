@@ -517,6 +517,7 @@ class Casedata extends AbstractModel
                         } catch (\Exception $e) {
                             $this->logger->debug($e->__toString(), ['entity' => $order]);
                             $this->setEntries('fail', 1);
+                            $this->holdOrder($order);
 
                             $orderAction['action'] = false;
 
