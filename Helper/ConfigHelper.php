@@ -15,6 +15,7 @@ use Signifyd\Core\Api\CaseApiFactory;
 use Signifyd\Core\Api\CheckoutApiFactory;
 use Signifyd\Core\Api\GuaranteeApiFactory;
 use Signifyd\Core\Api\WebhooksApiFactory;
+use Signifyd\Core\Api\WebhooksV2ApiFactory;
 use Magento\Framework\Filesystem\DirectoryList;
 
 class ConfigHelper
@@ -68,6 +69,11 @@ class ConfigHelper
     protected $webhooksApiFactory;
 
     /**
+     * @var WebhooksV2ApiFactory
+     */
+    protected $webhooksV2ApiFactory;
+
+    /**
      * @var DirectoryList
      */
     protected $directory;
@@ -81,6 +87,7 @@ class ConfigHelper
      * @param SaleApiFactory $saleApiFactory
      * @param GuaranteeApiFactory $guaranteeApiFactory
      * @param WebhooksApiFactory $webhooksApiFactory
+     * @param WebhooksV2ApiFactory $webhooksV2ApiFactory
      * @param DirectoryList $directory
      */
     public function __construct(
@@ -91,6 +98,7 @@ class ConfigHelper
         CheckoutApiFactory $checkoutApiFactory,
         GuaranteeApiFactory $guaranteeApiFactory,
         WebhooksApiFactory $webhooksApiFactory,
+        WebhooksV2ApiFactory $webhooksV2ApiFactory,
         DirectoryList $directory
     ) {
         $this->scopeConfigInterface = $scopeConfigInterface;
@@ -100,6 +108,7 @@ class ConfigHelper
         $this->checkoutApiFactory = $checkoutApiFactory;
         $this->guaranteeApiFactory = $guaranteeApiFactory;
         $this->webhooksApiFactory = $webhooksApiFactory;
+        $this->webhooksV2ApiFactory = $webhooksV2ApiFactory;
         $this->directory = $directory;
     }
 
@@ -215,6 +224,10 @@ class ConfigHelper
                 case 'webhook':
                     $this->signifydAPI[$apiId] = $this->webhooksApiFactory->create(['args' => $args]);
                     break;
+
+                case 'webhookv2':
+                    $this->signifydAPI[$apiId] = $this->webhooksV2ApiFactory->create(['args' => $args]);
+                    break;
             }
         }
 
@@ -264,6 +277,15 @@ class ConfigHelper
     public function getSignifydWebhookApi(\Magento\Framework\Model\AbstractModel $entity = null)
     {
         return $this->getSignifydApi('webhook', $entity);
+    }
+
+    /**
+     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @return \Signifyd\Core\Api\WebhooksV2Api
+     */
+    public function getSignifydWebhookV2Api(\Magento\Framework\Model\AbstractModel $entity = null)
+    {
+        return $this->getSignifydApi('webhookV2', $entity);
     }
 
     /**
