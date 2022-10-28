@@ -92,7 +92,7 @@ class Register extends Action
             } else {
                 $webhooksV2ApiCreate = $this->configHelper->getSignifydWebhookV2Api();
                 $webHookGuaranteeCompletion = $this->webhookV2Factory->create();
-                $webHookGuaranteeCompletion->setEvent('DECISION_MADE');
+                $webHookGuaranteeCompletion->setEvent('CASE_CREATION');
                 $webHookGuaranteeCompletion->setUrl($url);
                 $webhooksToCreate = [$webHookGuaranteeCompletion];
                 $createResponse = $webhooksV2ApiCreate->createWebhooks($webhooksToCreate);
