@@ -60,7 +60,14 @@ class CreateTest extends OrderTestCase
             $score = 999.0;
         }
 
-        $arrayToUpdateCase = ["createdAt" => "2021-06-21T14:12:47+0000","updatedAt" => "2021-06-21T14:12:47+0000","isTest" => true,"score" => $score,"customerCaseId" => $case->getOrderIncrement(),"checkpointAction" => $checkpointAction,"caseId" => $case->getCode()];
+        $arrayToUpdateCase = ["createdAt" => "2021-06-21T14:12:47+0000",
+            "updatedAt" => "2021-06-21T14:12:47+0000",
+            "isTest" => true,
+            "score" => $score,
+            "customerCaseId" => $case->getOrderIncrement(),
+            "checkpointAction" => $checkpointAction,
+            "caseId" => $case->getCode()
+        ];
 
         /** @var \Magento\Framework\Serialize\Serializer\Json $jsonSerializer */
         $jsonSerializer = $this->objectManager->create(\Magento\Framework\Serialize\Serializer\Json::class);

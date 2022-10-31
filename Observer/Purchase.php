@@ -232,7 +232,6 @@ class Purchase implements ObserverInterface
             $isOrderProcessedByAmazon = $paymentMethod === 'amazon_payment_v2' &&
                 $this->configHelper->getIsOrderProcessedByAmazon($order) === true;
 
-
             $checkOwnEventsMethodsEvent = $observer->getEvent()->getCheckOwnEventsMethods();
 
             if ($checkOwnEventsMethodsEvent !== null) {
@@ -505,7 +504,8 @@ class Purchase implements ObserverInterface
                 );
                 $order->addCommentToStatusHistory(
                     "Signifyd: cannot hold order as Amazon Pay is set to capture" .
-                    " the payment and the order is not invoiced");
+                    " the payment and the order is not invoiced"
+                );
                 return false;
             }
 
