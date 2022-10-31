@@ -256,8 +256,15 @@ class Index extends Action
                 );
             }
 
+            $order = $case->getOrder();
+
+            if (isset($order) === false) {
+                $httpCode = Http::STATUS_CODE_400;
+                throw new LocalizedException(__("Order not found"));
+            }
+
             $this->logger->info("WEBHOOK: Processing case {$case->getId()}");
-            $this->storeManagerInterface->setCurrentStore($case->getOrder()->getStore()->getStoreId());
+            $this->storeManagerInterface->setCurrentStore($order->getStore()->getStoreId());
             $currentCaseHash = sha1(implode(',', $case->getData()));
 
             switch ($webHookVersion) {
