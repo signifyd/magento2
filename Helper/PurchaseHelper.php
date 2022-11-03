@@ -729,7 +729,7 @@ class PurchaseHelper
         }
 
         $purchase['shipments'] = $this->makeShipments($order);
-        $purchase['confirmationPhone'] = $order->getCustomerEmail();
+        $purchase['confirmationPhone'] = $order->getBillingAddress()->getTelephone();
         $purchase['totalShippingCost'] = $order->getShippingAmount();
         $couponCode = $order->getCouponCode();
 
@@ -1756,7 +1756,7 @@ class PurchaseHelper
 
         $shippingAmount = $quote->getShippingAddress()->getShippingAmount();
         $purchase['shipments'] = $this->makeShipmentsFromQuote($quote);
-        $purchase['confirmationPhone'] = $quote->getCustomerEmail();
+        $purchase['confirmationPhone'] = $quote->getBillingAddress()->getTelephone();
         $purchase['totalShippingCost'] = is_numeric($shippingAmount) ? floatval($shippingAmount) : null;
         $purchase['discountCodes'] = null;
         $purchase['receivedBy'] = $this->getReceivedBy();
