@@ -22,7 +22,6 @@ use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\App\ResourceConnection;
-use Magento\Store\Model\App\Emulation;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
@@ -70,11 +69,6 @@ class Index extends Action
     protected $resourceConnection;
 
     /**
-     * @var Emulation
-     */
-    protected $emulation;
-
-    /**
      * @var StoreManagerInterface
      */
     protected $storeManagerInterface;
@@ -92,7 +86,6 @@ class Index extends Action
      * @param OrderResourceModel $orderResourceModel
      * @param JsonSerializer $jsonSerializer
      * @param ResourceConnection $resourceConnection
-     * @param Emulation $emulation
      * @param StoreManagerInterface $storeManagerInterface
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -108,7 +101,6 @@ class Index extends Action
         OrderResourceModel $orderResourceModel,
         JsonSerializer $jsonSerializer,
         ResourceConnection $resourceConnection,
-        Emulation $emulation,
         StoreManagerInterface $storeManagerInterface
     ) {
         parent::__construct($context);
@@ -121,7 +113,6 @@ class Index extends Action
         $this->orderResourceModel = $orderResourceModel;
         $this->jsonSerializer = $jsonSerializer;
         $this->resourceConnection = $resourceConnection;
-        $this->emulation = $emulation;
         $this->storeManagerInterface = $storeManagerInterface;
 
         // Compatibility with Magento 2.3+ which required form_key on every request

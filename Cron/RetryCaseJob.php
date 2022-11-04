@@ -18,7 +18,6 @@ use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
 use Magento\Framework\App\ResourceConnection;
-use Magento\Store\Model\App\Emulation;
 use Magento\Store\Model\StoreManagerInterface;
 
 class RetryCaseJob
@@ -79,11 +78,6 @@ class RetryCaseJob
     protected $stripeConfig;
 
     /**
-     * @var Emulation
-     */
-    protected $emulation;
-
-    /**
      * @var StoreManagerInterface
      */
     protected $storeManagerInterface;
@@ -100,7 +94,6 @@ class RetryCaseJob
      * @param CasedataResourceModel $casedataResourceModel
      * @param CasedataFactory $casedataFactory
      * @param ResourceConnection $resourceConnection
-     * @param Emulation $emulation
      * @param StoreManagerInterface $storeManagerInterface
      */
     public function __construct(
@@ -114,7 +107,6 @@ class RetryCaseJob
         CasedataResourceModel $casedataResourceModel,
         CasedataFactory $casedataFactory,
         ResourceConnection $resourceConnection,
-        Emulation $emulation,
         StoreManagerInterface $storeManagerInterface
     ) {
         $this->objectManager = $objectManager;
@@ -127,7 +119,6 @@ class RetryCaseJob
         $this->casedataResourceModel = $casedataResourceModel;
         $this->casedataFactory = $casedataFactory;
         $this->resourceConnection = $resourceConnection;
-        $this->emulation = $emulation;
         $this->storeManagerInterface = $storeManagerInterface;
     }
 
