@@ -32,7 +32,7 @@ define([
             var me = this;
 
             if (typeof dataOrderSessionId !== 'undefined' && dataOrderSessionId.length > 0) {
-                console.log('Sending fingerprint...');
+                //console.log('Sending fingerprint...');
 
                 me.callScript(dataOrderSessionId);
 
@@ -42,8 +42,8 @@ define([
 
                 return true;
             } else {
-                console.log('Will not send fingerprint');
-                console.log(dataOrderSessionId);
+                //console.log('Will not send fingerprint');
+                //console.log(dataOrderSessionId);
 
                 return false;
             }
