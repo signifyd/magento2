@@ -121,6 +121,10 @@
         <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Controller_Process_Json" type="\Signifyd\Connect\Plugin\Openpay\Cards\Model\Payment" />
     </type>
 
+    <type name="Holacash\Payment\Model\PaymentMethod">
+        <plugin name="Signifyd_Connect_Plugin_Holacash_Model_Payment" type="\Signifyd\Connect\Plugin\Holacash\Model\Payment" />
+    </type>
+
     <type name="Adyen\Payment\Gateway\Http\Client\TransactionPayment">
         <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Gateway_Http_Client_TransactionPayment" type="\Signifyd\Connect\Plugin\Adyen\Payment\Gateway\Http\Client\TransactionPayment" />
     </type>
