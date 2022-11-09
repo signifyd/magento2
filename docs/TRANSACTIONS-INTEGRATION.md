@@ -61,11 +61,9 @@ define(function () {
 
 ### Implementation in case of failure
 
-First it is necessary to find where the payment method response is received, then create a plugin/preference. 
+First it is necessary to find where the payment method response is received, then create a plugin/preference and inject the class Signifyd\Connect\Model\TransactionIntegration to set the gateway refused reason, gateway status message and use the method submitToTransactionApi to submit the data to Signifyd. 
 
-First, it is necessary to validate if the policy is PreAuthorization and if the quote is set.
-With the quoteId in hand, it is necessary to load and validate if the case is populated.
-Next, it is necessary to map the payment method code according to the Signifyd documentation (https://docs.signifyd.com/#operation/Transaction in transactions > gatewayErrorCode). Note: Before accessing array elements, assert that you're accessing an array to avoid fatal errors.
+Then it is necessary to map the payment method code according to the Signifyd documentation (https://docs.signifyd.com/#operation/Transaction in transactions > gatewayErrorCode). Note: Before accessing array elements, assert that you're accessing an array to avoid fatal errors.
 
 The final plugin/preference class should look like the bellow one:
 
