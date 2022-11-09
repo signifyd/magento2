@@ -192,16 +192,6 @@ class Index extends Action
             throw new LocalizedException(__("Invalid body, no 'caseId' field found on request"));
         }
 
-        /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->casedataFactory->create();
-
-        try {
-            $this->casedataResourceModel->loadForUpdate($case, (string) $caseId, 'code');
-        } catch (\Exception $e) {
-            $this->logger->error($e->getMessage());
-            return;
-        }
-
         switch ($topic) {
             case 'cases/test':
                 // Test is only verifying that the endpoint is reachable. So we just complete here
@@ -217,6 +207,16 @@ class Index extends Action
                     return;
                 }
                 break;
+        }
+
+        /** @var $case \Signifyd\Connect\Model\Casedata */
+        $case = $this->casedataFactory->create();
+
+        try {
+            $this->casedataResourceModel->loadForUpdate($case, (string) $caseId, 'code');
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
+            return;
         }
 
         try {
