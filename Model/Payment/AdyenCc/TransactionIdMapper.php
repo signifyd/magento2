@@ -22,7 +22,7 @@ class TransactionIdMapper extends Base_TransactionIdMapper
             $transactionId = $additionalInfo['pspReference'];
         }
 
-        $message = 'Transaction ID found on payment mapper: ' . $transactionId;
+        $message = 'Transaction ID found on payment mapper: ' . (empty($transactionId) ? 'false' : $transactionId);
         $this->logger->debug($message, ['entity' => $order]);
 
         if (empty($transactionId)) {
