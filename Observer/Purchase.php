@@ -146,11 +146,54 @@ class Purchase implements ObserverInterface
         $this->jsonSerializer = $jsonSerializer;
     }
 
+
     /**
+     * Fix for multishipping
+     *
      * @param Observer $observer
      * @param bool $checkOwnEventsMethods
      */
     public function execute(Observer $observer, $checkOwnEventsMethods = true)
+    {
+        /**
+         * If the observer contains an array of orders, we emulate
+         * receiving an observer for each particular order.
+         * That is done in order not to alter extension's logic.
+         */
+        $orders = $observer->getOrders();
+        if (is_array($orders)) {
+            $eventName = $observer->getEvent()->getName();
+            $quote = $observer->getQuote();
+            $ownMethods = $observer->getCheckOwnEventsMethods();
+            foreach ($orders as $order) {
+                /**
+                 * Please note that Magento instantiates events and observers without factories.
+                 * @see \Magento\Staging\Model\Event\Manager::dispatch()
+                 */
+                $event = new \Magento\Framework\Event([
+                    'name' => $eventName,
+                    'order' => $order,
+                    'quote' => $quote,
+                    'check_own_events_methods' => $ownMethods
+                ]);
+                $orderObserver = new Observer([
+                    'event' => $event,
+                    'order' => $order,
+                    'quote' => $quote,
+                    'check_own_events_methods' => $ownMethods
+                ]);
+                $this->processOrder($orderObserver, $checkOwnEventsMethods);
+            }
+        } else {
+            $this->processOrder($observer, $checkOwnEventsMethods);
+        }
+    }
+
+    /**
+     * @param Observer $observer
+     * @param bool $checkOwnEventsMethods
+     */
+    public function processOrder(Observer $observer, $checkOwnEventsMethods = true)
     {
         try {
             $this->logger->info('Processing Signifyd event ' . $observer->getEvent()->getName());
