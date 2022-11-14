@@ -3,20 +3,15 @@
 namespace Signifyd\Connect\Controller\Adminhtml\Webhooks;
 
 use Magento\Backend\App\Action;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Filesystem\DirectoryList;
+use Magento\Framework\Exception\LocalizedException;
 use Signifyd\Connect\Model\WebhookLink;
 use Signifyd\Core\Api\WebhooksApiFactory;
 use Signifyd\Models\WebhookFactory;
+use Signifyd\Models\WebhookV2Factory;
 use Signifyd\Connect\Helper\ConfigHelper;
 
 class Register extends Action
 {
-    /**
-     * @var ScopeConfigInterface
-     */
-    protected $scopeConfig;
-
     /**
      * @var WebhookLink
      */
@@ -38,122 +33,119 @@ class Register extends Action
     protected $webhookFactory;
 
     /**
+     * @var WebhookV2Factory
+     */
+    protected $webhookV2Factory;
+
+    /**
      * @var ConfigHelper
      */
     protected $configHelper;
 
     /**
-     * @var DirectoryList
-     */
-    protected $directory;
-
-    /**
      * Register constructor.
      * @param Action\Context $context
-     * @param ScopeConfigInterface $scopeConfig
      * @param WebhookLink $webhookLink
      * @param WebhooksApiFactory $webhooksApiFactory
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param WebhookFactory $webhookFactory
+     * @param WebhookV2Factory $webhookV2Factory
      * @param ConfigHelper $configHelper
-     * @param DirectoryList $directory
      */
     public function __construct(
         Action\Context $context,
-        ScopeConfigInterface $scopeConfig,
         WebhookLink $webhookLink,
         WebhooksApiFactory $webhooksApiFactory,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         WebhookFactory $webhookFactory,
-        ConfigHelper $configHelper,
-        DirectoryList $directory
+        WebhookV2Factory $webhookV2Factory,
+        ConfigHelper $configHelper
     ) {
         parent::__construct($context);
-        $this->scopeConfig = $scopeConfig;
         $this->webhookLink = $webhookLink;
         $this->webhooksApiFactory = $webhooksApiFactory;
         $this->storeManager = $storeManager;
         $this->webhookFactory = $webhookFactory;
+        $this->webhookV2Factory = $webhookV2Factory;
         $this->configHelper = $configHelper;
-        $this->directory = $directory;
     }
 
     public function execute()
     {
         try {
-            $websiteId = $this->_request->getParam('website');
-            $storeId = $this->_request->getParam('store');
-
-            if (empty($websiteId) == false) {
-                $scopeType = 'stores';
-                $scopeCode = $this->storeManager->getWebsite($websiteId)->getDefaultStore()->getId();
-            } elseif (empty($storeId) == false) {
-                $scopeType = 'stores';
-                $scopeCode = $storeId;
-            } else {
-                $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
-                $scopeCode = null;
-            }
-
-            $apiKey = $this->scopeConfig->getValue('signifyd/general/key', $scopeType, $scopeCode);
             $url = $this->webhookLink->getUrl();
-            $args = [
-                'apiKey' => $apiKey,
-                'logLocation' => $this->directory->getPath('log')
-            ];
+            $isWebhookRegistered = false;
+            $webhooksV2ToDelete = [];
+            $webhooksV2Api = $this->configHelper->getSignifydWebhookV2Api();
+            $webhooksV2 = $webhooksV2Api->getWebhooks();
 
-            $webhooksApiGet = $this->webhooksApiFactory->create(['args' => $args]);
+            if (isset($webhooksV2->getObjects()[0])) {
+                $team = $webhooksV2->getObjects()[0]->getTeam();
+                $teamId = isset($team) && is_array($team) ? $team['teamId'] : null;
 
-            /**
-             * @var \Signifyd\Core\Response\WebhooksBulkResponse $bulkResponse
-             */
-            $bulkResponseGet = $webhooksApiGet->getWebhooks();
-
-            $decisionMadeIsSet = false;
-            $caseReviewIsSet = false;
-
-            foreach ($bulkResponseGet->getObjects() as $webhook) {
-                $webhooksApiCancel = $this->webhooksApiFactory->create(['args' => $args]);
-
-                if ($webhook->eventType === 'DECISION_MADE') {
-                    $decisionMadeIsSet = true;
+                /** @var \Signifyd\Core\Response\WebhooksV2Response $webHookV2 */
+                foreach ($webhooksV2->getObjects() as $webHookV2) {
+                    if ($webHookV2->getUrl() === $url) {
+                        $webhooksV2ToDelete[] = $webHookV2->getId();
+                    }
                 }
+            } else {
+                $webhooksV2ApiCreate = $this->configHelper->getSignifydWebhookV2Api();
+                $webHookGuaranteeCompletion = $this->webhookV2Factory->create();
+                $webHookGuaranteeCompletion->setEvent('CASE_CREATION');
+                $webHookGuaranteeCompletion->setUrl($url);
+                $webhooksToCreate = [$webHookGuaranteeCompletion];
+                $createResponse = $webhooksV2ApiCreate->createWebhooks($webhooksToCreate);
 
-                if ($webhook->eventType === 'CASE_REVIEW') {
-                    $caseReviewIsSet = true;
-                }
-
-                if ($webhook->eventType === 'GUARANTEE_COMPLETION') {
-                    $webhooksApiCancel->deleteWebhook($webhook);
+                if (isset($createResponse->getObjects()[0])) {
+                    $teamId = $createResponse->getObjects()[0]->getTeam()['teamId'];
+                    $webhooksV2ToDelete[] = $createResponse->getObjects()[0]->getId();
+                } else {
+                    $teamId = null;
                 }
             }
 
-            if ($decisionMadeIsSet === false || $caseReviewIsSet === false) {
-                $webhooksApiCreate = $this->webhooksApiFactory->create(['args' => $args]);
-                $webhooksToCreate = [];
+            if (isset($teamId) === false) {
+                throw new LocalizedException(__("Failed to get team id"));
+            }
 
-                if ($decisionMadeIsSet === false) {
-                    $webHookDecisionMade = $this->webhookFactory->create();
-                    $webHookDecisionMade->setEvent('DECISION_MADE');
-                    $webHookDecisionMade->setUrl($url);
-                    $webhooksToCreate[] = $webHookDecisionMade;
+            $webhooksApi = $this->configHelper->getSignifydWebhookApi();
+            $webhookResponse = $webhooksApi->getWebhooks($teamId);
+
+            foreach ($webhookResponse->getObjects() as $webhook) {
+                if ($webhook->getUrl() === $url) {
+                    if ($isWebhookRegistered) {
+                        $webhooksApi->deleteWebhook($teamId, $webhook->getId());
+                    } else {
+                        $isWebhookRegistered = true;
+                    }
                 }
+            }
 
-                if ($caseReviewIsSet === false) {
-                    $webHookDecisionMade = $this->webhookFactory->create();
-                    $webHookDecisionMade->setEvent('CASE_REVIEW');
-                    $webHookDecisionMade->setUrl($url);
-                    $webhooksToCreate[] = $webHookDecisionMade;
+            if ($isWebhookRegistered === false) {
+                /** @var \Signifyd\Core\Response\WebhooksResponse $webHookV3Creation */
+                $webHookV3Creation = $webhooksApi->createWebhooks($teamId, ['url' => $url]);
+
+                $webHookV3Id = $webHookV3Creation->getId();
+                $isWebhookRegistered = isset($webHookV3Id);
+            }
+
+            if ($isWebhookRegistered) {
+                if (empty($webhooksV2ToDelete) === false) {
+                    foreach ($webhooksV2ToDelete as $webhookV2ToDelete) {
+                        $webhooksV2Api = $this->configHelper->getSignifydWebhookV2Api();
+                        $webhooksV2Api->deleteWebhook($webhookV2ToDelete);
+                    }
                 }
-
-                $webhooksApiCreate->createWebhooks($webhooksToCreate);
+            } else {
+                throw new LocalizedException(__("Failed to create webhook"));
             }
         } catch (\Exception $e) {
-            $exceptionMessage = method_exists($e, 'getMessege') ? $e->getMessege() : '';
-
             $this->messageManager->addErrorMessage(
-                __('There was a problem registering the webooks: ' . $exceptionMessage)
+                __('There was a problem registering the webooks: ' . $e->getMessage())
             );
+
+            return $this->_redirect($this->_redirect->getRefererUrl());
         }
 
         $this->messageManager->addSuccessMessage(__('The webhook was registred successfully.'));

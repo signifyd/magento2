@@ -32,19 +32,26 @@ class Retry extends AbstractHelper
     protected $casedataFactory;
 
     /**
+     * @var ConfigHelper
+     */
+    protected $configHelper;
+
+    /**
      * Retry constructor.
      * @param Context $context
      * @param CasedataCollectionFactory $casedataCollectionFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
      * @param CasedataFactory $casedataFactory
+     * @param ConfigHelper $configHelper
      */
     public function __construct(
         Context $context,
         CasedataCollectionFactory $casedataCollectionFactory,
         CasedataResourceModel $casedataResourceModel,
         Logger $logger,
-        CasedataFactory $casedataFactory
+        CasedataFactory $casedataFactory,
+        ConfigHelper $configHelper
     ) {
         parent::__construct($context);
 
@@ -52,6 +59,7 @@ class Retry extends AbstractHelper
         $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
         $this->casedataFactory = $casedataFactory;
+        $this->configHelper = $configHelper;
     }
 
     /**
@@ -67,6 +75,7 @@ class Retry extends AbstractHelper
         $current = date('Y-m-d H:i:s', $time);
         $from = date('Y-m-d H:i:s', $lastTime);
 
+        /** @var  \Signifyd\Connect\Model\ResourceModel\Casedata\Collection $casesCollection */
         $casesCollection = $this->casedataCollectionFactory->create();
         $casesCollection->addFieldToFilter('updated', ['gteq' => $from]);
         $casesCollection->addFieldToFilter('magento_status', ['eq' => $status]);
@@ -76,6 +85,12 @@ class Retry extends AbstractHelper
             "TIME_TO_SEC(TIMEDIFF('{$current}', updated))",
             ['updated']
         );
+
+        $cronBatchSize = $this->configHelper->getCronBatchSize();
+
+        if (isset($cronBatchSize) && is_numeric($cronBatchSize)) {
+            $casesCollection->setPageSize((int)$cronBatchSize);
+        }
 
         $casesToRetry = [];
 

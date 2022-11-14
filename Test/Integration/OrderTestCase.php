@@ -73,7 +73,7 @@ class OrderTestCase extends TestCase
      * @param $reservedOrderId
      * @return Quote
      */
-    public function getQuote($reservedOrderId, $newReservedOrderId = null)
+    public function getQuote($reservedOrderId, $newReservedOrderId = null, $isRejectGuarantee = false)
     {
         if (empty($newReservedOrderId) == true) {
             $newReservedOrderId = $this->incrementId;
@@ -83,6 +83,12 @@ class OrderTestCase extends TestCase
         $quote = $this->objectManager->create(Quote::class);
         $quote->load($reservedOrderId, 'reserved_order_id');
         $quote->setReservedOrderId($newReservedOrderId);
+
+        if ($isRejectGuarantee) {
+            $quote->getShippingAddress()->setEmail('testdeclined@signifyd.com');
+            $quote->getBillingAddress()->setEmail('testdeclined@signifyd.com');
+        }
+
         $quote->save();
 
         return $quote;
@@ -136,9 +142,9 @@ class OrderTestCase extends TestCase
         $creditmemo->save();
     }
 
-    public function processReviewCase()
+    public function processReviewCase($isRejectGuarantee = false)
     {
-        $this->placeQuote($this->getQuote('guest_quote'));
+        $this->placeQuote($this->getQuote('guest_quote', null, $isRejectGuarantee));
         $this->updateCaseForRetry();
         $this->tryToReviewCase();
     }

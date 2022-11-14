@@ -409,12 +409,17 @@ class PurchaseHelper
             $subCategoryName = null;
         }
 
-        $itemPrice = floatval(number_format($item->getPriceInclTax(), 2, '.', ''));
+        $itemPriceInclTax = is_float($item->getPriceInclTax()) ? $item->getPriceInclTax() : 0;
+
+        $itemPrice = floatval(number_format($itemPriceInclTax, 2, '.', ''));
 
         if ($itemPrice <= 0) {
             if ($item->getParentItem()) {
                 if ($item->getParentItem()->getProductType() === 'configurable') {
-                    $itemPrice = floatval(number_format($item->getParentItem()->getPriceInclTax(), 2, '.', ''));
+                    $parentItemPriceInclTax = is_float($item->getParentItem()->getPriceInclTax()) ?
+                        $item->getParentItem()->getPriceInclTax() : 0;
+
+                    $itemPrice = floatval(number_format($parentItemPriceInclTax, 2, '.', ''));
                 }
             }
         }
@@ -724,7 +729,7 @@ class PurchaseHelper
         }
 
         $purchase['shipments'] = $this->makeShipments($order);
-        $purchase['confirmationPhone'] = $order->getCustomerEmail();
+        $purchase['confirmationPhone'] = $order->getBillingAddress()->getTelephone();
         $purchase['totalShippingCost'] = $order->getShippingAmount();
         $couponCode = $order->getCouponCode();
 
@@ -1220,7 +1225,7 @@ class PurchaseHelper
         $case['memberships'] = $this->makeMemberships();
         $case['coverageRequests'] = $this->getDecisionRequest($order->getPayment()->getMethod());
         $case['merchantCategoryCode'] = $this->makeMerchantCategoryCode();
-        $case['device'] = $this->makeDevice($order->getQuoteId(), $order->getStoreId());
+        $case['device'] = $this->makeDevice($order->getQuoteId(), $order->getStoreId(), $order);
         $case['merchantPlatform'] = $this->getMerchantPlataform();
         $case['signifydClient'] = $this->makeVersions();
         $case['transactions'] = $this->makeTransactions($order);
@@ -1751,7 +1756,7 @@ class PurchaseHelper
 
         $shippingAmount = $quote->getShippingAddress()->getShippingAmount();
         $purchase['shipments'] = $this->makeShipmentsFromQuote($quote);
-        $purchase['confirmationPhone'] = $quote->getCustomerEmail();
+        $purchase['confirmationPhone'] = $quote->getBillingAddress()->getTelephone();
         $purchase['totalShippingCost'] = is_numeric($shippingAmount) ? floatval($shippingAmount) : null;
         $purchase['discountCodes'] = null;
         $purchase['receivedBy'] = $this->getReceivedBy();
@@ -1811,12 +1816,16 @@ class PurchaseHelper
             $subCategoryName = null;
         }
 
-        $itemPrice = floatval(number_format($item->getPriceInclTax(), 2, '.', ''));
+        $itemPriceInclTax = is_float($item->getPriceInclTax()) ? $item->getPriceInclTax() : 0;
+
+        $itemPrice = floatval(number_format($itemPriceInclTax, 2, '.', ''));
 
         if ($itemPrice <= 0) {
             if ($item->getParentItem()) {
                 if ($item->getParentItem()->getProductType() === 'configurable') {
-                    $itemPrice = floatval(number_format($item->getParentItem()->getPriceInclTax(), 2, '.', ''));
+                    $itemPriceInclTax = is_float($item->getParentItem()->getPriceInclTax()) ? $item->getParentItem()->getPriceInclTax() : 0;
+
+                    $itemPrice = floatval(number_format($itemPriceInclTax, 2, '.', ''));
                 }
             }
         }
@@ -2119,9 +2128,10 @@ class PurchaseHelper
         return $orderCollection->getTotalCount();
     }
 
-    public function makeDevice($quoteId, $storeId)
+    public function makeDevice($quoteId, $storeId, $order = null)
     {
-        $filterIpd = $this->filterIp($this->remoteAddress->getRemoteAddress());
+        $filterIpd = isset($order) ?
+            $this->getIPAddress($order) : $this->filterIp($this->remoteAddress->getRemoteAddress());
 
         if (isset($filterIpd) === false) {
             return null;

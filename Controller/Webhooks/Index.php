@@ -22,7 +22,6 @@ use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\App\ResourceConnection;
-use Magento\Store\Model\App\Emulation;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
@@ -70,11 +69,6 @@ class Index extends Action
     protected $resourceConnection;
 
     /**
-     * @var Emulation
-     */
-    protected $emulation;
-
-    /**
      * @var StoreManagerInterface
      */
     protected $storeManagerInterface;
@@ -92,7 +86,6 @@ class Index extends Action
      * @param OrderResourceModel $orderResourceModel
      * @param JsonSerializer $jsonSerializer
      * @param ResourceConnection $resourceConnection
-     * @param Emulation $emulation
      * @param StoreManagerInterface $storeManagerInterface
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -108,7 +101,6 @@ class Index extends Action
         OrderResourceModel $orderResourceModel,
         JsonSerializer $jsonSerializer,
         ResourceConnection $resourceConnection,
-        Emulation $emulation,
         StoreManagerInterface $storeManagerInterface
     ) {
         parent::__construct($context);
@@ -121,7 +113,6 @@ class Index extends Action
         $this->orderResourceModel = $orderResourceModel;
         $this->jsonSerializer = $jsonSerializer;
         $this->resourceConnection = $resourceConnection;
-        $this->emulation = $emulation;
         $this->storeManagerInterface = $storeManagerInterface;
 
         // Compatibility with Magento 2.3+ which required form_key on every request
@@ -156,8 +147,14 @@ class Index extends Action
     public function execute()
     {
         $request = $this->getRawPost();
-        $hash = $this->getRequest()->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
-        $topic = $this->getRequest()->getHeader('X-SIGNIFYD-TOPIC');
+
+        if (empty($this->getRequest()->getHeader('signifyd-checkpoint')) === false) {
+            $hash = $this->getRequest()->getHeader('signifyd-sec-hmac-sha256');
+            $topic = $this->getRequest()->getHeader('signifyd-topic');
+        } else {
+            $hash = $this->getRequest()->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
+            $topic = $this->getRequest()->getHeader('X-SIGNIFYD-TOPIC');
+        }
 
         $this->logger->debug('WEBHOOK: request: ' . $request);
         $this->logger->debug('WEBHOOK: request hash: ' . $hash);
@@ -184,19 +181,15 @@ class Index extends Action
             return;
         }
 
-        if (isset($requestJson->caseId) === false) {
+        if (isset($requestJson->caseId)) {
+            $caseId = $requestJson->caseId;
+            $webHookVersion = "v2";
+        } elseif (isset($requestJson->signifydId)) {
+            $caseId = $requestJson->signifydId;
+            $webHookVersion = "v3";
+        } else {
             $httpCode = Http::STATUS_CODE_200;
             throw new LocalizedException(__("Invalid body, no 'caseId' field found on request"));
-        }
-
-        /** @var $case \Signifyd\Connect\Model\Casedata */
-        $case = $this->casedataFactory->create();
-
-        try {
-            $this->casedataResourceModel->loadForUpdate($case, (string) $requestJson->caseId, 'code');
-        } catch (\Exception $e) {
-            $this->logger->error($e->getMessage());
-            return;
         }
 
         switch ($topic) {
@@ -216,12 +209,22 @@ class Index extends Action
                 break;
         }
 
+        /** @var $case \Signifyd\Connect\Model\Casedata */
+        $case = $this->casedataFactory->create();
+
+        try {
+            $this->casedataResourceModel->loadForUpdate($case, (string) $caseId, 'code');
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
+            return;
+        }
+
         try {
             $httpCode = null;
 
             if ($case->isEmpty()) {
                 $httpCode = Http::STATUS_CODE_400;
-                throw new LocalizedException(__("Case {$requestJson->caseId} on request not found on Magento"));
+                throw new LocalizedException(__("Case {$caseId} on request not found on Magento"));
             }
 
             $signifydWebhookApi = $this->configHelper->getSignifydWebhookApi($case);
@@ -232,26 +235,44 @@ class Index extends Action
             } elseif ($this->configHelper->isEnabled($case) == false) {
                 $httpCode = Http::STATUS_CODE_400;
                 throw new LocalizedException(__('Signifyd plugin it is not enabled'));
-            } elseif ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS) {
+            } elseif ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS ||
+                $case->getMagentoStatus() == Casedata::AWAITING_PSP
+            ) {
                 $httpCode = Http::STATUS_CODE_400;
-                throw new LocalizedException(__("Case {$requestJson->caseId} it is not ready to be updated"));
+                throw new LocalizedException(__("Case {$caseId} it is not ready to be updated"));
             } elseif ($case->getMagentoStatus() == Casedata::PRE_AUTH) {
                 $httpCode = Http::STATUS_CODE_200;
                 throw new LocalizedException(
-                    __("Case {$requestJson->caseId} already completed by synchronous response, no action will be taken")
+                    __("Case {$caseId} already completed by synchronous response, no action will be taken")
                 );
             }
 
+            $order = $case->getOrder();
+
+            if (isset($order) === false) {
+                $httpCode = Http::STATUS_CODE_400;
+                throw new LocalizedException(__("Order not found"));
+            }
+
             $this->logger->info("WEBHOOK: Processing case {$case->getId()}");
-            $this->storeManagerInterface->setCurrentStore($case->getOrder()->getStore()->getStoreId());
+            $this->storeManagerInterface->setCurrentStore($order->getStore()->getStoreId());
             $currentCaseHash = sha1(implode(',', $case->getData()));
-            $case->updateCase($requestJson);
+
+            switch ($webHookVersion) {
+                case "v2":
+                    $case->updateCase($requestJson);
+                    break;
+                case "v3":
+                    $case->updateCaseV3($requestJson);
+                    break;
+            }
+
             $newCaseHash = sha1(implode(',', $case->getData()));
 
             if ($currentCaseHash == $newCaseHash) {
                 $httpCode = Http::STATUS_CODE_200;
                 throw new LocalizedException(
-                    __("Case {$requestJson->caseId} already update with this data, no action will be taken")
+                    __("Case {$caseId} already update with this data, no action will be taken")
                 );
             }
 

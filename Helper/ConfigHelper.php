@@ -8,12 +8,14 @@
 namespace Signifyd\Connect\Helper;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Sales\Model\Order;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Core\Api\SaleApiFactory;
 use Signifyd\Core\Api\CaseApiFactory;
 use Signifyd\Core\Api\CheckoutApiFactory;
 use Signifyd\Core\Api\GuaranteeApiFactory;
 use Signifyd\Core\Api\WebhooksApiFactory;
+use Signifyd\Core\Api\WebhooksV2ApiFactory;
 use Magento\Framework\Filesystem\DirectoryList;
 
 class ConfigHelper
@@ -67,6 +69,11 @@ class ConfigHelper
     protected $webhooksApiFactory;
 
     /**
+     * @var WebhooksV2ApiFactory
+     */
+    protected $webhooksV2ApiFactory;
+
+    /**
      * @var DirectoryList
      */
     protected $directory;
@@ -80,6 +87,7 @@ class ConfigHelper
      * @param SaleApiFactory $saleApiFactory
      * @param GuaranteeApiFactory $guaranteeApiFactory
      * @param WebhooksApiFactory $webhooksApiFactory
+     * @param WebhooksV2ApiFactory $webhooksV2ApiFactory
      * @param DirectoryList $directory
      */
     public function __construct(
@@ -90,6 +98,7 @@ class ConfigHelper
         CheckoutApiFactory $checkoutApiFactory,
         GuaranteeApiFactory $guaranteeApiFactory,
         WebhooksApiFactory $webhooksApiFactory,
+        WebhooksV2ApiFactory $webhooksV2ApiFactory,
         DirectoryList $directory
     ) {
         $this->scopeConfigInterface = $scopeConfigInterface;
@@ -99,6 +108,7 @@ class ConfigHelper
         $this->checkoutApiFactory = $checkoutApiFactory;
         $this->guaranteeApiFactory = $guaranteeApiFactory;
         $this->webhooksApiFactory = $webhooksApiFactory;
+        $this->webhooksV2ApiFactory = $webhooksV2ApiFactory;
         $this->directory = $directory;
     }
 
@@ -214,6 +224,10 @@ class ConfigHelper
                 case 'webhook':
                     $this->signifydAPI[$apiId] = $this->webhooksApiFactory->create(['args' => $args]);
                     break;
+
+                case 'webhookv2':
+                    $this->signifydAPI[$apiId] = $this->webhooksV2ApiFactory->create(['args' => $args]);
+                    break;
             }
         }
 
@@ -267,6 +281,15 @@ class ConfigHelper
 
     /**
      * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @return \Signifyd\Core\Api\WebhooksV2Api
+     */
+    public function getSignifydWebhookV2Api(\Magento\Framework\Model\AbstractModel $entity = null)
+    {
+        return $this->getSignifydApi('webhookV2', $entity);
+    }
+
+    /**
+     * @param \Magento\Framework\Model\AbstractModel|null $entity
      * @return mixed
      */
     public function isEnabled(\Magento\Framework\Model\AbstractModel $entity = null)
@@ -306,6 +329,11 @@ class ConfigHelper
         return $this->scopeConfigInterface->getValue('signifyd/advanced/guarantees_reviewed_action');
     }
 
+    public function getCronBatchSize()
+    {
+        return $this->scopeConfigInterface->getValue('signifyd/advanced/cron_batch_size');
+    }
+
     /**
      * Get restricted payment methods from store configs
      *
@@ -341,5 +369,23 @@ class ConfigHelper
         }
 
         return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsOrderProcessedByAmazon(Order $order)
+    {
+        $paymentAction =  $this->scopeConfigInterface->getValue(
+            'payment/amazon_payment_v2/payment_action',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $order->getStoreId()
+        );
+
+        if ($paymentAction === 'authorize_capture' && $order->hasInvoices() === false) {
+            return false;
+        }
+
+        return true;
     }
 }
