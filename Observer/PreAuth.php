@@ -197,6 +197,9 @@ class PreAuth implements ObserverInterface
 
             $checkoutPaymentDetails = [];
 
+            //TODO: REMOVER
+            $this->logger->info("ADYEN ONECLICK: {$paymentMethod} =-=-=-=-=-=-=-=-=-=-=-=-=-");
+
             if (isset($dataArray['paymentMethod']) &&
                     isset($dataArray['paymentMethod']['additional_data'])
             ) {
@@ -212,10 +215,9 @@ class PreAuth implements ObserverInterface
                             \Adyen\Payment\Model\Api\PaymentRequest::class
                         );
 
-                        if ($quote->getCustomer()->getId() < 10) {
-                            $shopperReference = '00' . $quote->getCustomer()->getId();
-                        } elseif ($quote->getCustomer()->getId() >= 10 && $quote->getCustomer()->getId() <= 100) {
-                            $shopperReference = '0' . $quote->getCustomer()->getId();
+                        if ($quote->getCustomer()->getId() < 100) {
+                            $shopperReference =
+                                str_pad($quote->getCustomer()->getId(), 3, 0, STR_PAD_LEFT);
                         } else {
                             $shopperReference = $quote->getCustomer()->getId();
                         }
