@@ -45,8 +45,6 @@ The extension is prepared to receive these values through the request with the f
    }
 ```
 
-
-
 ### Pre auth for Braintree payment
 
 In order to have Braintree integrated to the pre auth process, its needed to apply a patch to add the code modifications needed.
@@ -65,3 +63,63 @@ cp vendor/signifyd/module-connect/Patch/pre-auth-braintree-magento-2.X.patch .
 ```
 git apply pre-auth-braintree-magento-2.X.patch
 ```
+
+## Compatible methods
+
+### Adyen
+
+- Call transaction API on failure: yes
+- Payment data available:
+    - Bin: yes
+    - Last4: yes
+    - Expiry date: no
+    - Cardholder name: no
+
+### Adyen One-click (saved cards)
+
+- Call transaction API on failure: yes
+- Payment data available:
+    - Bin: yes
+    - Last4: yes
+    - Expiry date: yes
+    - Cardholder name: no
+
+### Braintree
+
+- Call transaction API on failure: yes
+- Payment data available:
+    - Bin: yes
+    - Last4: yes
+    - Expiry date: no
+    - Cardholder name: no
+
+### OpenPay
+
+- Call transaction API on failure: yes
+- Payment data available:
+    - Bin: yes
+    - Last4: yes
+    - Expiry date: yes
+    - Cardholder name: no
+
+### Holocash
+
+- Call transaction API on failure: yes
+- Payment data available:
+    - Bin: yes
+    - Last4: yes
+    - Expiry date: yes
+    - Cardholder name: no
+
+### Stripe
+
+- Call transaction API on failure: yes
+- Payment data available:
+    - Bin: no
+    - Last4: no
+    - Expiry date: no
+    - Cardholder name: no
+
+### Amazon Pay / PayPal Express
+
+Not compatible with any pre auth flows, not even the basic behavior to block the customer on pre auth decline. Needs custom work on checkout as it has a specific behavior on checkout process.
