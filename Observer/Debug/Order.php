@@ -93,6 +93,8 @@ class Order implements ObserverInterface
             }
         } catch (\Exception $e) {
             $this->logger->debug("State debug failed: " . $e->getMessage());
+        } catch (\Error $e) {
+            $this->logger->debug("State debug failed: " . $e->getMessage());
         }
     }
 
@@ -106,7 +108,7 @@ class Order implements ObserverInterface
             $debugBacktraceLog[$i] = [];
             $function = '';
 
-            if (isset($step['class'])) {
+            if (isset($step['class']) && is_array($step['class'])) {
                 $function .= $step['class'];
                 list($vendor, $module, $class) = explode('\\', $step['class'], 3);
 
