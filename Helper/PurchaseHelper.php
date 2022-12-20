@@ -1014,7 +1014,7 @@ class PurchaseHelper
         $lastTransaction['parentTransactionId'] = $this->getParentTransactionId();
         $lastTransaction['scaExemptionRequested'] = $this->makeScaExemptionRequested($order->getQuoteId());
         $lastTransaction['verifications'] = $this->getVerifications($order);
-        $lastTransaction['threeDsResult'] = $this->makeThreeDsResult();
+        $lastTransaction['threeDsResult'] = $this->makeThreeDsResult($order->getQuoteId());
         $lastTransaction['paypalPendingReasonCode'] = $this->getPaypalPendingReasonCode();
         $lastTransaction['paypalProtectionEligibility'] = $this->getPaypalProtectionEligibility();
         $lastTransaction['paypalProtectionEligibilityType'] = $this->getPaypalProtectionEligibilityType();
@@ -1059,7 +1059,7 @@ class PurchaseHelper
         $transaction['gatewayErrorCode'] = $errorCode;
         $transaction['gatewayStatusMessage'] = $statusMessage;
         $transaction['scaExemptionRequested'] = $this->makeScaExemptionRequested($quote->getId());
-        $transaction['threeDsResult'] = $this->makeThreeDsResult();
+        $transaction['threeDsResult'] = $this->makeThreeDsResult($quote->getId());
         $transaction['paypalPendingReasonCode'] = $this->getPaypalPendingReasonCode();
         $transaction['paypalProtectionEligibility'] = $this->getPaypalProtectionEligibility();
         $transaction['paypalProtectionEligibilityType'] = $this->getPaypalProtectionEligibilityType();
@@ -2215,11 +2215,19 @@ class PurchaseHelper
      * These are details about the result of the 3D Secure authentication
      * This method should be extended/intercepted by plugin to add value to it
      *
-     * @return null
+     * @param $quoteId
+     * @return array|bool|float|int|mixed|string|null
      */
-    public function makeThreeDsResult()
+    public function makeThreeDsResult($quoteId)
     {
-        return null;
+        $case = $this->casedataFactory->create();
+        $this->casedataResourceModel->load($case, $quoteId, 'quote_id');
+
+        if (empty($case->getEntries('threeDs'))) {
+            return null;
+        }
+
+        return $this->jsonSerializer->unserialize($case->getEntries('threeDs'));
     }
 
     /**

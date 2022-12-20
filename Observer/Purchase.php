@@ -175,6 +175,7 @@ class Purchase implements ObserverInterface
             /** @var \Signifyd\Connect\Model\ResourceModel\Casedata\Collection $casesFromQuotes */
             $casesFromQuotes = $this->casedataCollectionFactory->create();
             $casesFromQuotes->addFieldToFilter('quote_id', ['eq' => $order->getQuoteId()]);
+            $casesFromQuotes->addFieldToFilter('policy_name', ['eq' => Casedata::PRE_AUTH]);
 
             if ($casesFromQuotes->count() > 0 &&
                 $casesFromQuotes->getFirstItem()->getMagentoStatus() != 'completed'
@@ -254,6 +255,7 @@ class Purchase implements ObserverInterface
             $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
 
             if ($case->isEmpty()) {
+                $this->casedataResourceModel->load($case, $order->getQuoteId(), 'quote_id');
                 $recipient = $this->purchaseHelper->makeRecipient($order);
                 $recipientJson = $this->jsonSerializer->serialize($recipient);
                 $hash = sha1($recipientJson);
@@ -262,6 +264,7 @@ class Purchase implements ObserverInterface
                 $case->setData('magento_status', Casedata::NEW);
                 $case->setData('order_increment', $order->getIncrementId());
                 $case->setData('order_id', $order->getId());
+                $case->setData('quote_id', $order->getQuoteId());
                 $case->setData('policy_name', Casedata::POST_AUTH);
 
                 if (is_object($this->storeManager)) {
