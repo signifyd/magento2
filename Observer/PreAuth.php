@@ -182,7 +182,7 @@ class PreAuth implements ObserverInterface
                 $case = $this->casedataFactory->create();
                 $this->casedataResourceModel->load($case, $quote->getId(), 'quote_id');
 
-                if ($case->isEmpty() === false) {
+                if ($case->isEmpty() === false && $case->getPolicyName() === Casedata::PRE_AUTH) {
                     $this->casedataResourceModel->delete($case);
                 }
 
@@ -196,9 +196,6 @@ class PreAuth implements ObserverInterface
             );
 
             $checkoutPaymentDetails = [];
-
-            //TODO: REMOVER
-            $this->logger->info("ADYEN ONECLICK: {$paymentMethod} =-=-=-=-=-=-=-=-=-=-=-=-=-");
 
             if (isset($dataArray['paymentMethod']) &&
                     isset($dataArray['paymentMethod']['additional_data'])
