@@ -210,8 +210,7 @@ class ThreeDsIntegration
 
         if (empty($invalidFields) === false) {
             $this->logger->info("The following invalid fields have been removed: " .
-                implode(',', $invalidFields)
-            );
+                implode(',', $invalidFields));
         }
 
         return $threeDsData;

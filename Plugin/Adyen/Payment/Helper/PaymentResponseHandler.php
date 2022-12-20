@@ -65,14 +65,12 @@ class PaymentResponseHandler
         $content = $this->httpRequest->getContent();
         $contentArray = $this->jsonSerializer->unserialize($content);
 
-        if (isset($contentArray['payload']) ) {
+        if (isset($contentArray['payload'])) {
             $payload = $this->jsonSerializer->unserialize($contentArray['payload']);
 
             if (isset($payload['orderId'])) {
                 $order = $this->orderRepository->get($payload['orderId']);
                 $quoteId = $order->getQuoteId();
-            } else {
-                return;
             }
         } else {
             return;

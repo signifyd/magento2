@@ -131,7 +131,7 @@ class Service
                 break;
         }
 
-        if (isset($signifydReason) === false){
+        if (isset($signifydReason) === false) {
             return;
         }
 
