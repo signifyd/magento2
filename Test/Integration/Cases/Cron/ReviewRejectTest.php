@@ -20,7 +20,7 @@ class ReviewRejectTest extends CreateTest
         $case = $this->getCase();
 
         $this->assertEquals(Casedata::COMPLETED_STATUS, $case->getData('magento_status'));
-        $this->assertEquals('REJECT', $case->getData('guarantee'));
+        $this->assertEquals('DECLINED', $case->getData('guarantee'));
         $this->assertNotEmpty($case->getData('score'));
     }
 }

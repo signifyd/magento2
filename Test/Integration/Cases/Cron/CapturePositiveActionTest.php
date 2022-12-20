@@ -25,7 +25,7 @@ class CapturePositiveActionTest extends CreateTest
         $order = $this->getOrder();
 
         $this->assertEquals(Casedata::COMPLETED_STATUS, $case->getData('magento_status'));
-        $this->assertEquals('ACCEPT', $case->getData('guarantee'));
+        $this->assertEquals('APPROVED', $case->getData('guarantee'));
         $this->assertNotEmpty($case->getData('score'));
         $this->assertTrue($order->hasInvoices());
     }
