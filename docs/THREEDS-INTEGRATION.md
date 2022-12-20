@@ -2,11 +2,11 @@
 
 ### Implementation
 
-First it is necessary to find where the payment method ThreeDs response is received, then create a plugin/preference and inject the class Signifyd\Connect\Model\ThreeDsIntegration to set the gateway data and use the method setThreeDsData to store the data to be sent to Signifyd.
+First it is necessary to find where the payment method ThreeDs response is received, then create a plugin/preference/observer and inject the class Signifyd\Connect\Model\ThreeDsIntegration. On the injected class, use the method setThreeDsData to store the data to be sent to Signifyd.
 
 To set gateway data it is necessary to map the data according to the Signifyd documentation (https://docs.signifyd.com/#operation/Transaction in transactions > threeDsResult). Note: Before accessing array elements, assert that you're accessing an array to avoid fatal errors.
 
-The final plugin/preference class should look like the bellow one:
+The final plugin/preference/observer class should look like the bellow one:
 
 ```php
 <?php
@@ -86,4 +86,8 @@ class PaymentResponseHandler
 ```
 ### Troubleshoot
 
-if the message "Quote id not found" is displayed in the logs, it means that the extension did not find the quoteId in the checkout session and needs to be sent in the setThreeDsData function as the second parameter.
+If the message "Quote id not found" is displayed in the log file signifyd_connect.log, it means that the extension did not find the quote ID in the checkout session. In this case it's necessary to send the quote ID on the setThreeDsData method, as the second parameter.
+
+```php
+$this->threeDsIntegration->setThreeDsData($threeDsData, $quoteId);
+```
