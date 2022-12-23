@@ -21,7 +21,7 @@ trait MapperTrait
             if (is_object($charge)) {
                 return $charge;
             } else {
-                $this->logger->debug('No Stripe charge on registry, fetching from Strupe API', ['entity' => $order]);
+                $this->logger->debug('No Stripe charge on registry, fetching from Stripe API', ['entity' => $order]);
 
                 $lastTransactionId = $order->getPayment()->getLastTransId();
 
@@ -44,6 +44,10 @@ trait MapperTrait
                     \Stripe\ApiRequestor::setHttpClient($curl);
 
                     $customCurlClient = true;
+                }
+
+                if (class_exists('StripeIntegration\Payments\Model\Config')) {
+                    $this->objectManagerInterface->get('StripeIntegration\Payments\Model\Config')->getStripeClient();
                 }
 
                 $paymentIntent = \Stripe\PaymentIntent::retrieve($lastTransactionId);

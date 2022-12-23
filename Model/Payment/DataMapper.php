@@ -3,6 +3,7 @@
 namespace Signifyd\Connect\Model\Payment;
 
 use Adyen\Config;
+use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\Registry;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Signifyd\Connect\Api\PaymentVerificationInterface;
@@ -50,25 +51,33 @@ abstract class DataMapper implements PaymentVerificationInterface
     protected $configHelper;
 
     /**
+     * @var ObjectManagerInterface
+     */
+    protected $objectManagerInterface;
+
+    /**
      * DataMapper constructor.
      * @param Registry $registry
      * @param JsonSerializer $jsonSerializer
      * @param PaymentGatewayFactory $paymentGatewayFactory
      * @param Logger $logger
      * @param ConfigHelper $configHelper
+     * @param ObjectManagerInterface $objectManagerInterface
      */
     public function __construct(
         Registry $registry,
         JsonSerializer $jsonSerializer,
         PaymentGatewayFactory $paymentGatewayFactory,
         Logger $logger,
-        ConfigHelper $configHelper
+        ConfigHelper $configHelper,
+        ObjectManagerInterface $objectManagerInterface
     ) {
         $this->registry = $registry;
         $this->jsonSerializer = $jsonSerializer;
         $this->paymentGatewayFactory = $paymentGatewayFactory;
         $this->logger = $logger;
         $this->configHelper = $configHelper;
+        $this->objectManagerInterface = $objectManagerInterface;
     }
 
     /**
