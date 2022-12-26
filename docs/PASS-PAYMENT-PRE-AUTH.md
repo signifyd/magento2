@@ -102,7 +102,7 @@ git apply pre-auth-braintree-magento-2.X.patch
     - Expiry date: yes
     - Cardholder name: no
 
-### Holocash
+### Hola Cash
 
 - Call transaction API on failure: yes
 - Payment data available:
