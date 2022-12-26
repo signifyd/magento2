@@ -713,34 +713,7 @@ class Casedata extends AbstractModel
         $order = $this->getOrder(true);
 
         // Reviewed Cases
-        if (($requestGuarantee == 'ACCEPT' || $requestGuarantee == 'APPROVED') &&
-            $requestGuarantee != $caseGuarantee
-        ) {
-            $guaranteeReviewedAction = $this->configHelper->getGuaranteesReviewedAction();
-
-            switch ($guaranteeReviewedAction) {
-                case 'refund':
-                    $shipments = $order->getShipmentsCollection()->getData();
-                    $invoices = $order->getInvoiceCollection()->getData();
-
-                    if (empty($shipments) && !empty($invoices)) {
-                        $result =  ["action" => 'refund', "reason" => 'approved guarantees reviewed to declined'];
-                    } else {
-                        $result = ["action" => 'nothing', "reason" => 'approved guarantees reviewed to declined'];
-                    }
-                    break;
-
-                case 'nothing':
-                    $result = ["action" => 'nothing', "reason" => 'approved guarantees reviewed to declined'];
-                    break;
-
-                case 'hold':
-                    $result = ["action" => 'hold', "reason" => 'approved guarantees reviewed to declined'];
-                    break;
-            }
-
-            return $result;
-        } elseif (($requestGuarantee == 'REJECT' || $requestGuarantee == 'DECLINED') &&
+        if (($requestGuarantee == 'REJECT' || $requestGuarantee == 'DECLINED') &&
             $requestGuarantee != $caseGuarantee &&
             $order->getState() === Order::STATE_CANCELED
         ) {

@@ -106,11 +106,12 @@ class SalesOrderAddressSave implements ObserverInterface
             $this->logger->info("Send case update for order {$order->getIncrementId()}");
 
             $shipments = $this->purchaseHelper->makeShipments($order);
-            $shipmentsJson = $this->jsonSerializer->serialize($shipments);
-            $newHash = sha1($shipmentsJson);
-            $currentHash = $case->getEntries('hash');
+            $recipient = $shipments[0]['destination'];
+            $recipientJson = $this->jsonSerializer->serialize($recipient);
+            $newHashToValidateReroute = sha1($recipientJson);
+            $currentHashToValidateReroute = $case->getEntries('hash');
 
-            if ($newHash == $currentHash) {
+            if ($newHashToValidateReroute == $currentHashToValidateReroute) {
                 $this->logger->info("No data changes, will not update order {$order->getIncrementId()}");
                 return;
             }
@@ -124,7 +125,7 @@ class SalesOrderAddressSave implements ObserverInterface
             $this->logger->info("Case updated for order {$order->getIncrementId()}");
             $this->logger->info($this->jsonSerializer->serialize($updateResponse));
 
-            $case->setEntries('hash', $newHash);
+            $case->setEntries('hash', $newHashToValidateReroute);
             $case->updateCase($updateResponse);
 
             if ($case->getOrigData('signifyd_status') !== $case->getData('signifyd_status')) {

@@ -258,9 +258,9 @@ class Purchase implements ObserverInterface
                 $this->casedataResourceModel->load($case, $order->getQuoteId(), 'quote_id');
                 $recipient = $this->purchaseHelper->makeRecipient($order);
                 $recipientJson = $this->jsonSerializer->serialize($recipient);
-                $hash = sha1($recipientJson);
+                $hashToValidateReroute = sha1($recipientJson);
 
-                $case->setEntries('hash', $hash);
+                $case->setEntries('hash', $hashToValidateReroute);
                 $case->setData('magento_status', Casedata::NEW);
                 $case->setData('order_increment', $order->getIncrementId());
                 $case->setData('order_id', $order->getId());
