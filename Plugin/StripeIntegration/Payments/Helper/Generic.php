@@ -13,7 +13,6 @@ use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
-use StripeIntegration\Payments\Helper\Webhooks;
 use StripeIntegration\Payments\Helper\Generic as StripeIntegrationGeneric;
 
 /**
@@ -25,11 +24,6 @@ class Generic
      * @var Logger
      */
     protected $logger;
-
-    /**
-     * @var Webhooks
-     */
-    protected $webhooksHelper;
 
     /**
      * @var OrderHelper
@@ -54,7 +48,6 @@ class Generic
     /**
      * Cancel constructor.
      * @param Logger $logger
-     * @param Webhooks $webhooksHelper
      * @param OrderHelper $orderHelper
      * @param OrderResourceModel $orderResourceModel
      * @param CasedataFactory $casedataFactory
@@ -62,14 +55,12 @@ class Generic
      */
     public function __construct(
         Logger $logger,
-        Webhooks $webhooksHelper,
         OrderHelper $orderHelper,
         OrderResourceModel $orderResourceModel,
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel
     ) {
         $this->logger = $logger;
-        $this->webhooksHelper = $webhooksHelper;
         $this->orderHelper = $orderHelper;
         $this->orderResourceModel = $orderResourceModel;
         $this->casedataFactory = $casedataFactory;
