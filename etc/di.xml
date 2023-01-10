@@ -124,6 +124,10 @@
         <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Helper_PaymentResponseHandler" type="\Signifyd\Connect\Plugin\Adyen\Payment\Helper\PaymentResponseHandler" />
     </type>
 
+    <type name="Magento\Sales\Api\OrderRepositoryInterface">
+        <plugin name="Signifyd_Connect_Plugin_Magento_Sales_Api_OrderRepositoryInterface" type="\Signifyd\Connect\Plugin\Magento\Sales\Api\OrderRepositoryInterface" />
+    </type>
+
     <!-- Preferences -->
     <preference for="Magento\Sales\Model\ResourceModel\Order\Grid\Collection" type="Signifyd\Connect\Model\ResourceModel\Order\Grid\Collection" />
 
