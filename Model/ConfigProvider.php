@@ -7,6 +7,7 @@
  */
 
 namespace Signifyd\Connect\Model;
+
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Magento\Framework\Module\ModuleListInterface;
