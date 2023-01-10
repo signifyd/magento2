@@ -89,6 +89,14 @@ class Cancel implements ObserverInterface
             }
 
             $this->logger->error($ex->getMessage(), $context);
+        } catch (\Error $ex) {
+            $context = [];
+
+            if (isset($order) && $order instanceof Order) {
+                $context['entity'] = $order;
+            }
+
+            $this->logger->error($ex->getMessage(), $context);
         }
     }
 }
