@@ -140,13 +140,19 @@ class RetryCaseJob
                 ['entity' => $case]
             );
 
+            if (empty($case->getEntries('async_action')) === false &&
+                $case->getEntries('async_action') === 'delete'
+            ) {
+                $this->casedataResourceModel->delete($case);
+            }
+
             $case->getOrder()->setData('origin_store_code', $case->getData('origin_store_code'));
             $caseModel = $this->purchaseHelper->processOrderData($case->getOrder());
-            $avsCode = $caseModel['transactions'][0]['avsResponseCode'];
-            $cvvCode = $caseModel['transactions'][0]['cvvResponseCode'];
+            $avsCode = $caseModel['transactions'][0]['verifications']['avsResponseCode'];
+            $cvvCode = $caseModel['transactions'][0]['verifications']['cvvResponseCode'];
             $retries = $case->getData('retries');
 
-            if ($retries >= 5 || empty($avsCode) == false && empty($cvvCode) == false) {
+            if ($retries >= 5 || empty($avsCode) === false && empty($cvvCode) === false) {
                 try {
                     $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
 

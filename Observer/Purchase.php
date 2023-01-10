@@ -310,9 +310,17 @@ class Purchase implements ObserverInterface
             $case->setSignifydStatus("PENDING");
             $case->setCreated(date('Y-m-d H:i:s', time()));
             $case->setUpdated();
+            $order->setData('origin_store_code', $case->getData('origin_store_code'));
+            $orderData = $this->purchaseHelper->processOrderData($order);
 
             // Stop case sending if order has an async payment method
-            if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig())) {
+            if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig()) &&
+                isset($orderData['transactions']) &&
+                isset($orderData['transactions'][0]) &&
+                isset($orderData['transactions'][0]['verifications']) &&
+                isset($orderData['transactions'][0]['verifications']['avsResponseCode']) === false &&
+                isset($orderData['transactions'][0]['verifications']['cvvResponseCode']) === false
+            ) {
                 $case->setMagentoStatus(Casedata::ASYNC_WAIT);
 
                 try {
@@ -331,8 +339,6 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            $order->setData('origin_store_code', $case->getData('origin_store_code'));
-            $orderData = $this->purchaseHelper->processOrderData($order);
             $saleResponse = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
 
             if ($saleResponse === false) {

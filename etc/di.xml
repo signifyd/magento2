@@ -128,6 +128,10 @@
         <plugin name="Signifyd_Connect_Plugin_Magento_Sales_Api_OrderRepositoryInterface" type="\Signifyd\Connect\Plugin\Magento\Sales\Api\OrderRepositoryInterface" />
     </type>
 
+    <type name="StripeIntegration\Payments\Helper\Generic">
+        <plugin name="Signifyd_Connect_Plugin_StripeIntegration_Payments_Helper_Generic" type="\Signifyd\Connect\Plugin\StripeIntegration\Payments\Helper\Generic" />
+    </type>
+
     <!-- Preferences -->
     <preference for="Magento\Sales\Model\ResourceModel\Order\Grid\Collection" type="Signifyd\Connect\Model\ResourceModel\Order\Grid\Collection" />
 
