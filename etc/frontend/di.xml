@@ -21,4 +21,12 @@
             </argument>
         </arguments>
     </type>
+
+    <type name="Magento\Checkout\Model\CompositeConfigProvider">
+        <arguments>
+            <argument name="configProviders" xsi:type="array">
+                <item name="template_vars" xsi:type="object">\Signifyd\Connect\Model\ConfigProvider</item>
+            </argument>
+        </arguments>
+    </type>
 </config>
