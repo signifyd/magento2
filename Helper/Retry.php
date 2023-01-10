@@ -90,6 +90,7 @@ class Retry extends AbstractHelper
 
         if (isset($cronBatchSize) && is_numeric($cronBatchSize)) {
             $casesCollection->setPageSize((int)$cronBatchSize);
+            $casesCollection->setOrder('updated', 'ASC');
         }
 
         $casesToRetry = [];
