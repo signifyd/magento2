@@ -64,6 +64,21 @@ cp vendor/signifyd/module-connect/Patch/pre-auth-braintree-magento-2.X.patch .
 git apply pre-auth-braintree-magento-2.X.patch
 ```
 
+### Pre auth for AuthorizeNet payment
+
+In order to have AuthorizeNet integrated to the pre auth process, it is needed to apply a patch to add the code modifications needed.
+
+1. Copy the patch to the root directory of your Magento installation
+```
+cd [MAGENTO_ROOT]
+cp vendor/signifyd/module-connect/Patch/pre-auth-authorizenet.patch .
+```
+
+2. Apply the path
+```
+git apply pre-auth-authorizenet.patch
+```
+
 ## Compatible methods
 
 ### Adyen
