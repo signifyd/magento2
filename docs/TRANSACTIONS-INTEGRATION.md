@@ -11,13 +11,13 @@ For each payment method that want to integrate with the transaction endpoint, it
 It is necessary to add the payment method to the mapped list in the etc/config.xml file:
 
 ```xml
-<payment_methods_config>{"CREDIT_CARD":["payflow_link", "payflow_advanced", "authorizenet_acceptjs", "adyen_cc", "adyen_oneclick", "adyen_hpp", "braintree", "cybersource", "stripe_payments", "anet_creditcard", "authorizenet_directpost", "openpay_cards", "holacash", "stripe_payments"],"CHECK":["checkmo"]}</payment_methods_config>
+<payment_methods_config>{"CREDIT_CARD":["payflow_link", "payflow_advanced", "authorizenet_acceptjs", "adyen_cc", "adyen_oneclick", "adyen_hpp", "braintree", "cybersource", "stripe_payments", "anet_creditcard", "authorizenet_directpost", "openpay_cards", "holacash", "stripe_payments", "authnetcim"],"CHECK":["checkmo"]}</payment_methods_config>
 ```
 
 Likewise, it is necessary to update the payment method mapping doc on docs/PAYMENT-MAPPING.md file:
 
 ```sql
-INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/payment_methods_config', '{"CREDIT_CARD":["payflow_link", "payflow_advanced", "authorizenet_acceptjs", "adyen_cc", "braintree", "cybersource", "stripe_payments", "anet_creditcard", "authorizenet_directpost", "openpay_cards", "holacash"],"CHECK":["checkmo"], "SIGNIFYD-PAYMENT-CODE": ["magento-payment-code"]}');
+INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/payment_methods_config', '{"CREDIT_CARD":["payflow_link", "payflow_advanced", "authorizenet_acceptjs", "adyen_cc", "adyen_oneclick", "adyen_hpp", "braintree", "cybersource", "stripe_payments", "anet_creditcard", "authorizenet_directpost", "openpay_cards", "holacash", "stripe_payments", "authnetcim"],"CHECK":["checkmo"]}');
 ```
 
 ### Implementation of card data

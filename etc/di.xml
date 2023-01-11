@@ -138,4 +138,6 @@
     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
 
     <preference for="Magento\Sales\Model\Order\Payment" type="Signifyd\Connect\Model\Magento\Sales\Model\Order\Payment" />
+
+    <preference for="ParadoxLabs\Authnetcim\Model\Gateway" type="Signifyd\Connect\Model\ParadoxLabs\Authnetcim\Model\Gateway" />
 </config>

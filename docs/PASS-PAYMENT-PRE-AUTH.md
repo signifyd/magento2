@@ -120,6 +120,15 @@ git apply pre-auth-braintree-magento-2.X.patch
     - Expiry date: no
     - Cardholder name: no
 
+### Authorize.net
+
+- Call transaction API on failure: yes
+- Payment data available:
+  - Bin: yes (not available for saved cards)
+  - Last4: yes
+  - Expiry date: yes
+  - Cardholder name: yes
+
 ### Amazon Pay / PayPal Express
 
 Not compatible with any pre auth flows, not even the basic behavior to block the customer on pre auth decline. Needs custom work on checkout as it has a specific behavior on checkout process.
