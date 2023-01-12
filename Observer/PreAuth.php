@@ -325,6 +325,11 @@ class PreAuth implements ObserverInterface
         }
     }
 
+    /**
+     * @param $caseResponse
+     * @param $caseAction
+     * @return bool
+     */
     public function getStopCheckoutProcess($caseResponse, $caseAction)
     {
         return isset($caseResponse) &&
