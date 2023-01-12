@@ -327,17 +327,17 @@ class PreAuth implements ObserverInterface
             return;
         }
 
-        $stopCheckoutProcess = isset($caseResponse) &&
-            is_object($caseResponse) &&
-            $caseAction == 'REJECT';
-
-        $this->eventManager->dispatch('signifyd_pre_auth_result', [
-            'case' => $caseResponse,
-            'stop_checkout_process' => $stopCheckoutProcess
-        ]);
+        $stopCheckoutProcess = $this->getStopCheckoutProcess($caseResponse, $caseAction);
 
         if ($stopCheckoutProcess) {
             throw new LocalizedException(__($policyRejectMessage));
         }
+    }
+
+    public function getStopCheckoutProcess($caseResponse, $caseAction)
+    {
+        return isset($caseResponse) &&
+            is_object($caseResponse) &&
+            $caseAction == 'REJECT';
     }
 }
