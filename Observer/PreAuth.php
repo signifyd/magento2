@@ -2,7 +2,6 @@
 
 namespace Signifyd\Connect\Observer;
 
-use Magento\Framework\Event\ManagerInterface as EventManager;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\LocalizedException;
@@ -96,11 +95,6 @@ class PreAuth implements ObserverInterface
     protected $objectManagerInterface;
 
     /**
-     * @var EventManager
-     */
-    protected $eventManager;
-
-    /**
      * PreAuth constructor.
      * @param Logger $logger
      * @param PurchaseHelper $purchaseHelper
@@ -116,7 +110,6 @@ class PreAuth implements ObserverInterface
      * @param JsonSerializer $jsonSerializer
      * @param ConfigHelper $configHelper
      * @param ObjectManagerInterface $objectManagerInterface
-     * @param EventManager $eventManager
      */
     public function __construct(
         Logger $logger,
@@ -132,8 +125,7 @@ class PreAuth implements ObserverInterface
         RequestHttp $requestHttp,
         JsonSerializer $jsonSerializer,
         ConfigHelper $configHelper,
-        ObjectManagerInterface $objectManagerInterface,
-        EventManager $eventManager
+        ObjectManagerInterface $objectManagerInterface
     ) {
         $this->logger = $logger;
         $this->purchaseHelper = $purchaseHelper;
@@ -149,7 +141,6 @@ class PreAuth implements ObserverInterface
         $this->jsonSerializer = $jsonSerializer;
         $this->configHelper = $configHelper;
         $this->objectManagerInterface = $objectManagerInterface;
-        $this->eventManager = $eventManager;
     }
 
     public function execute(Observer $observer)
@@ -327,17 +318,22 @@ class PreAuth implements ObserverInterface
             return;
         }
 
-        $stopCheckoutProcess = isset($caseResponse) &&
-            is_object($caseResponse) &&
-            $caseAction == 'REJECT';
-
-        $this->eventManager->dispatch('signifyd_pre_auth_result', [
-            'case' => $caseResponse,
-            'stop_checkout_process' => $stopCheckoutProcess
-        ]);
+        $stopCheckoutProcess = $this->getStopCheckoutProcess($caseResponse, $caseAction);
 
         if ($stopCheckoutProcess) {
             throw new LocalizedException(__($policyRejectMessage));
         }
+    }
+
+    /**
+     * @param $caseResponse
+     * @param $caseAction
+     * @return bool
+     */
+    public function getStopCheckoutProcess($caseResponse, $caseAction)
+    {
+        return isset($caseResponse) &&
+            is_object($caseResponse) &&
+            $caseAction == 'REJECT';
     }
 }
