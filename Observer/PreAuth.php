@@ -287,11 +287,7 @@ class PreAuth implements ObserverInterface
                 $case->setCheckoutToken($caseFromQuote['checkoutId']);
                 $case->setQuoteId($quote->getId());
                 $case->setOrderIncrement($quote->getReservedOrderId());
-                $entries = $case->getEntriesText();
-
-                if (isset($entries) === false) {
-                    $case->setEntriesText("");
-                }
+                $case->setEntriesText("");
 
                 if (isset($caseResponse->scaEvaluation)) {
                     $case->setEntries(

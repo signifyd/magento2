@@ -256,6 +256,12 @@ class Purchase implements ObserverInterface
 
             if ($case->isEmpty()) {
                 $this->casedataResourceModel->load($case, $order->getQuoteId(), 'quote_id');
+
+                if (empty($case->getData('order_id')) === false &&
+                    $case->getData('order_id') !== $order->getId()) {
+                    $case = $this->casedataFactory->create();
+                }
+
                 $recipient = $this->purchaseHelper->makeRecipient($order);
                 $recipientJson = $this->jsonSerializer->serialize($recipient);
                 $hashToValidateReroute = sha1($recipientJson);
