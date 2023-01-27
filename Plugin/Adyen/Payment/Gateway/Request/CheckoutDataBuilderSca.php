@@ -166,7 +166,22 @@ class CheckoutDataBuilderSca
         }
 
         if (isset($executeThreeD) && isset($scaExemption)) {
-            $request['body']['authenticationData']['attemptAuthentication'] = $executeThreeD;
+            if (\Adyen\Client::API_CHECKOUT_VERSION === "v69") {
+                $request['body']['authenticationData']['attemptAuthentication'] = $executeThreeD;
+            } else {
+                switch ($executeThreeD) {
+                    case 'always':
+                        $executeThreeD = 'True';
+                        break;
+
+                    case 'never';
+                        $executeThreeD = 'False';
+                        break;
+                }
+
+                $request['body']['additionalData']['executeThreeD'] = $executeThreeD;
+            }
+
             $request['body']['additionalData']['scaExemption'] = $scaExemption;
         }
 
