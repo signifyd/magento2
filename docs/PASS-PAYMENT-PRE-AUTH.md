@@ -117,7 +117,7 @@ git apply pre-auth-authorizenet.patch
     - Expiry date: yes
     - Cardholder name: no
 
-### Holocash
+### Hola Cash
 
 - Call transaction API on failure: yes
 - Payment data available:
