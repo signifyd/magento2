@@ -6,6 +6,8 @@
 
 namespace Signifyd\Connect\Plugin\StripeIntegration\Payments\Helper;
 
+use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\CasedataFactory;
@@ -30,22 +32,38 @@ class Order
     protected $casedataResourceModel;
 
     /**
+     * @var OrderResourceModel
+     */
+    protected $orderResourceModel;
+
+    /**
+     * @var OrderHelper
+     */
+    protected $orderHelper;
+
+    /**
      * Cancel constructor.
      * @param Logger $logger
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
+     * @param OrderResourceModel $orderResourceModel
+     * @param OrderHelper $orderHelper
      */
     public function __construct(
         Logger $logger,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel
+        CasedataResourceModel $casedataResourceModel,
+        OrderResourceModel $orderResourceModel,
+        OrderHelper $orderHelper
     ) {
         $this->logger = $logger;
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
+        $this->orderResourceModel = $orderResourceModel;
+        $this->orderHelper = $orderHelper;
     }
 
-    public function beforeOnTransaction(StripeIntegrationOrder $subject, $order, $object, $transactionId) {
+    public function aroundOnTransaction(StripeIntegrationOrder $subject, callable $proceed, $order, $object, $transactionId) {
         try {
             $orderId = $order->getId();
             $case = $this->casedataFactory->create();
@@ -58,6 +76,23 @@ class Order
             if ($case->getData('magento_status') === Casedata::ASYNC_WAIT && empty($case->getData('code'))) {
                 $case->setEntries('stripe_status', 'approved');
                 $this->casedataResourceModel->save($case);
+            }
+
+            $isHoldedBeforeStripeTransaction = $order->canUnhold();
+            $proceed($order, $object, $transactionId);
+
+            //Setting order to hold after stripe remove on transaction flow
+            if ($isHoldedBeforeStripeTransaction && $order->canHold()) {
+                $order->hold();
+                $this->orderResourceModel->save($order);
+                $this->logger->info(
+                    "Hold order {$order->getIncrementId()} after stripe remove"
+                );
+
+                $this->orderHelper->addCommentToStatusHistory(
+                    $order,
+                    "Signifyd: hold order after stripe remove"
+                );
             }
         } catch (\Exception $ex) {
             $context = [];
