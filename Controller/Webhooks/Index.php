@@ -22,6 +22,7 @@ use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\App\ResourceConnection;
+use Signifyd\Connect\Model\SignifydFlags;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
@@ -74,6 +75,11 @@ class Index extends Action
     protected $storeManagerInterface;
 
     /**
+     * @var SignifydFlags
+     */
+    protected $signifydFlags;
+
+    /**
      * Index constructor.
      * @param Context $context
      * @param DateTime $dateTime
@@ -87,7 +93,7 @@ class Index extends Action
      * @param JsonSerializer $jsonSerializer
      * @param ResourceConnection $resourceConnection
      * @param StoreManagerInterface $storeManagerInterface
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @param SignifydFlags $signifydFlags
      */
     public function __construct(
         Context $context,
@@ -101,7 +107,8 @@ class Index extends Action
         OrderResourceModel $orderResourceModel,
         JsonSerializer $jsonSerializer,
         ResourceConnection $resourceConnection,
-        StoreManagerInterface $storeManagerInterface
+        StoreManagerInterface $storeManagerInterface,
+        SignifydFlags $signifydFlags
     ) {
         parent::__construct($context);
 
@@ -114,6 +121,7 @@ class Index extends Action
         $this->jsonSerializer = $jsonSerializer;
         $this->resourceConnection = $resourceConnection;
         $this->storeManagerInterface = $storeManagerInterface;
+        $this->signifydFlags = $signifydFlags;
 
         // Compatibility with Magento 2.3+ which required form_key on every request
         // Magento expects class to implement \Magento\Framework\App\CsrfAwareActionInterface but this causes
@@ -292,5 +300,6 @@ class Index extends Action
 
         $httpCode = empty($httpCode) ? 200 : $httpCode;
         $this->getResponse()->setStatusCode($httpCode);
+        $this->signifydFlags->updateWebhookFlag();
     }
 }

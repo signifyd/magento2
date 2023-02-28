@@ -12,6 +12,7 @@ use Signifyd\Connect\Model\ResourceModel\Fulfillment\CollectionFactory as Fulfil
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Sales\Model\OrderFactory;
 use Signifyd\Connect\Helper\RetryFulfillment;
+use Signifyd\Connect\Model\SignifydFlags;
 
 class RetryFulfillmentJob
 {
@@ -61,6 +62,11 @@ class RetryFulfillmentJob
     protected $jsonSerializer;
 
     /**
+     * @var SignifydFlags
+     */
+    protected $signifydFlags;
+
+    /**
      * RetryFulfillmentJob constructor.
      * @param FulfillmentCollectionFactory $fulfillmentCollectionFactory
      * @param ConfigHelper $configHelper
@@ -71,6 +77,7 @@ class RetryFulfillmentJob
      * @param OrderResourceModel $orderResourceModel
      * @param OrderFactory $orderFactory
      * @param JsonSerializer $jsonSerializer
+     * @param SignifydFlags $signifydFlags
      */
     public function __construct(
         FulfillmentCollectionFactory $fulfillmentCollectionFactory,
@@ -81,7 +88,8 @@ class RetryFulfillmentJob
         RetryFulfillment $fulfillmentRetryObj,
         OrderResourceModel $orderResourceModel,
         OrderFactory $orderFactory,
-        JsonSerializer $jsonSerializer
+        JsonSerializer $jsonSerializer,
+        SignifydFlags $signifydFlags
     ) {
         $this->fulfillmentCollectionFactory = $fulfillmentCollectionFactory;
         $this->configHelper = $configHelper;
@@ -92,6 +100,7 @@ class RetryFulfillmentJob
         $this->orderResourceModel = $orderResourceModel;
         $this->orderFactory = $orderFactory;
         $this->jsonSerializer = $jsonSerializer;
+        $this->signifydFlags = $signifydFlags;
     }
 
     /**
@@ -126,7 +135,7 @@ class RetryFulfillmentJob
             $this->logger->debug($message);
             $this->orderHelper->addCommentToStatusHistory($order, $message);
         }
-
+        $this->signifydFlags->updateCronFlag();
         $this->logger->debug("CRON: Retry fulfillment method ended");
     }
 

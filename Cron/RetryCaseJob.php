@@ -19,6 +19,7 @@ use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Store\Model\StoreManagerInterface;
+use Signifyd\Connect\Model\SignifydFlags;
 
 class RetryCaseJob
 {
@@ -83,6 +84,11 @@ class RetryCaseJob
     protected $storeManagerInterface;
 
     /**
+     * @var SignifydFlags
+     */
+    protected $signifydFlags;
+
+    /**
      * RetryCaseJob constructor.
      * @param ObjectManagerInterface $objectManager
      * @param PurchaseHelper $purchaseHelper
@@ -95,6 +101,7 @@ class RetryCaseJob
      * @param CasedataFactory $casedataFactory
      * @param ResourceConnection $resourceConnection
      * @param StoreManagerInterface $storeManagerInterface
+     * @param SignifydFlags $signifydFlags
      */
     public function __construct(
         ObjectManagerInterface $objectManager,
@@ -107,7 +114,8 @@ class RetryCaseJob
         CasedataResourceModel $casedataResourceModel,
         CasedataFactory $casedataFactory,
         ResourceConnection $resourceConnection,
-        StoreManagerInterface $storeManagerInterface
+        StoreManagerInterface $storeManagerInterface,
+        SignifydFlags $signifydFlags
     ) {
         $this->objectManager = $objectManager;
         $this->purchaseHelper = $purchaseHelper;
@@ -120,6 +128,7 @@ class RetryCaseJob
         $this->casedataFactory = $casedataFactory;
         $this->resourceConnection = $resourceConnection;
         $this->storeManagerInterface = $storeManagerInterface;
+        $this->signifydFlags = $signifydFlags;
     }
 
     /**
@@ -249,6 +258,7 @@ class RetryCaseJob
             }
         }
 
+        $this->signifydFlags->updateCronFlag();
         $this->logger->debug("CRON: Main retry method ended");
     }
 

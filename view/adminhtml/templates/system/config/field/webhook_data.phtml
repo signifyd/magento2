@@ -1,0 +1,8 @@
+<?php
+/** @var \Signifyd\Connect\Block\Adminhtml\System\Config\Field\WebhookData $block */
+?>
+<?php if ($webhookData = $block->getLastWebhookData()): ?>
+    <div><?= $block->escapeHtml($webhookData) ?></div>
+<?php else: ?>
+    <div>No webhook data available.</div>
+<?php endif; ?>

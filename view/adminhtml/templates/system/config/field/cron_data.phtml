@@ -1,0 +1,8 @@
+<?php
+/** @var \Signifyd\Connect\Block\Adminhtml\System\Config\Field\CronData $block */
+?>
+<?php if ($cronData = $block->getLastCronData()): ?>
+    <div><?= $block->escapeHtml($cronData) ?></div>
+<?php else: ?>
+    <div>No cron data available.</div>
+<?php endif; ?>
