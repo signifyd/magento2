@@ -100,6 +100,10 @@
         <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Gateway_Request_CheckoutDataBuilderSca" type="\Signifyd\Connect\Plugin\Adyen\Payment\Gateway\Request\CheckoutDataBuilderSca" />
     </type>
 
+    <type name="PayPal\Braintree\Gateway\Request\PaymentDataBuilder">
+        <plugin name="PayPal_Braintree_Gateway_Request_PaymentDataBuilder" type="\Signifyd\Connect\Plugin\Braintree\Gateway\Request\PaymentDataBuilder" />
+    </type>
+
     <type name="Adyen\Payment\Controller\Process\Json">
         <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Controller_Process_Json" type="\Signifyd\Connect\Plugin\Adyen\Payment\Controller\Process\Json" />
     </type>

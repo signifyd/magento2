@@ -10,6 +10,8 @@ use Signifyd\Connect\Model\Casedata;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
+use Signifyd\Connect\Model\ScaPreAuth\ScaEvaluation;
+use Signifyd\Connect\Model\ScaPreAuth\ScaEvaluationConfig;
 
 class GeneralResponseValidator
 {
@@ -51,6 +53,16 @@ class GeneralResponseValidator
     protected $subjectReader;
 
     /**
+     * @var ScaEvaluation
+     */
+    protected $scaEvaluation;
+
+    /**
+     * @var ScaEvaluationConfig
+     */
+    protected $scaEvaluationConfig;
+
+    /**
      * CheckoutPaymentsDetailsHandler constructor.
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
@@ -59,6 +71,8 @@ class GeneralResponseValidator
      * @param StoreManagerInterface $storeManager
      * @param QuoteFactory $quoteFactory
      * @param QuoteResourceModel $quoteResourceModel
+     * @param ScaEvaluation $scaEvaluation
+     * @param ScaEvaluationConfig $scaEvaluationConfig
      */
     public function __construct(
         CasedataFactory $casedataFactory,
@@ -67,7 +81,9 @@ class GeneralResponseValidator
         PurchaseHelper $purchaseHelper,
         StoreManagerInterface $storeManager,
         QuoteFactory $quoteFactory,
-        QuoteResourceModel $quoteResourceModel
+        QuoteResourceModel $quoteResourceModel,
+        ScaEvaluation $scaEvaluation,
+        ScaEvaluationConfig $scaEvaluationConfig
     ) {
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
@@ -76,6 +92,8 @@ class GeneralResponseValidator
         $this->storeManager = $storeManager;
         $this->quoteFactory = $quoteFactory;
         $this->quoteResourceModel = $quoteResourceModel;
+        $this->scaEvaluation = $scaEvaluation;
+        $this->scaEvaluationConfig = $scaEvaluationConfig;
     }
 
     public function beforeValidate($subject, array $validationSubject)
@@ -87,19 +105,30 @@ class GeneralResponseValidator
             $this->storeManager->getStore()->getId()
         );
 
-        $isPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, 'braintree');
-
-        if ($isPreAuth === false) {
-            return null;
-        }
-
         $response = $this->subjectReader->readResponseObject($validationSubject);
 
         if ($response->success == 1) {
-            return;
+            return [$validationSubject];
         }
 
         $responseBraintree = $response->jsonSerialize()['transaction']->jsonSerialize() ?? [];
+        $isScaEnabled = $this->scaEvaluationConfig->isScaEnabled($this->storeManager->getStore()->getId(), 'braintree');
+
+        if (isset($responseBraintree['processorResponseCode']) &&
+            (int)$responseBraintree['processorResponseCode'] === 2099 &&
+            $isScaEnabled
+        ) {
+            $this->logger->info("Registering adyen soft decline response");
+            $this->scaEvaluation->setIsSoftDecline(true);
+
+            return [$validationSubject];
+        }
+
+        $isPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, 'braintree');
+
+        if ($isPreAuth === false) {
+            return [$validationSubject];
+        }
 
         if (isset($responseBraintree['orderId']) &&
             isset($responseBraintree['cvvResponseCode']) &&
@@ -148,7 +177,7 @@ class GeneralResponseValidator
                 }
 
                 if ($case->getEntries('BraintreeRefusedReason') == $signifydReason) {
-                    return null;
+                    return [$validationSubject];
                 }
 
                 $this->logger->info(
