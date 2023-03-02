@@ -118,7 +118,7 @@ class GeneralResponseValidator
             (int)$responseBraintree['processorResponseCode'] === 2099 &&
             $isScaEnabled
         ) {
-            $this->logger->info("Registering adyen soft decline response");
+            $this->logger->info("Registering braintree soft decline response");
             $this->scaEvaluation->setIsSoftDecline(true);
 
             return [$validationSubject];
