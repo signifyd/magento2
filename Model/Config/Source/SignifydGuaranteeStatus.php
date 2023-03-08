@@ -10,10 +10,10 @@ class SignifydGuaranteeStatus extends AbstractSource implements ArrayInterface
     public function toOptionArray()
     {
         $guaranteeStatus = [
-            ['label' => 'Declined', 'value' => 'DECLINED'],
-            ['label' => 'Approved', 'value' => 'APPROVED'],
+            ['label' => 'Reject', 'value' => 'REJECT'],
+            ['label' => 'Accepted', 'value' => 'ACCEPT'],
             ['label' => 'Canceled', 'value' => 'CANCELED'],
-            ['label' => 'Pending', 'value' => 'PENDING']
+            ['label' => 'Hold', 'value' => 'HOLD']
         ];
 
         return $guaranteeStatus;

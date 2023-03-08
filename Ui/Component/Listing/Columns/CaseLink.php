@@ -106,10 +106,12 @@ class CaseLink extends Column
      */
     public function getNameSignifydGuarantee($case, $name)
     {
-        if ($case->getGuarantee() == "ACCEPT") {
-            $labelGuarantee = 'APPROVED';
-        } elseif ($case->getGuarantee() == "REJECT") {
-            $labelGuarantee = 'DECLINED';
+        if ($case->getGuarantee() == "APPROVED") {
+            $labelGuarantee = 'ACCEPT';
+        } elseif ($case->getGuarantee() == "DECLINED") {
+            $labelGuarantee = 'REJECT';
+        } elseif ($case->getGuarantee() == "PENDING") {
+            $labelGuarantee = 'HOLD';
         } else {
             $labelGuarantee = $case->getGuarantee();
         }
