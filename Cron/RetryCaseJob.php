@@ -217,12 +217,11 @@ class RetryCaseJob
             $this->reInitStripe($case->getOrder());
 
             try {
-                $response = $this->configHelper->getSignifydCaseApi($case)->getCase($case->getData('code'));
-
+                $response = $this->configHelper->getSignifydSaleApi($case)->getCase($case->getData('order_increment'));
                 $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
 
                 $currentCaseHash = sha1(implode(',', $case->getData()));
-                $case->updateCase($response);
+                $case->updateCaseV3($response);
                 $newCaseHash = sha1(implode(',', $case->getData()));
 
                 if ($currentCaseHash == $newCaseHash) {

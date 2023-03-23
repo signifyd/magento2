@@ -292,25 +292,35 @@ class Casedata extends AbstractModel
     public function updateCaseV3($response)
     {
         try {
-            if (isset($response->decision['score']) && $this->getScore() !== $response->decision['score']) {
-                $this->setScore(floor($response->decision['score']));
-            }
-
             $isScoreOnly = $this->configHelper->isScoreOnly();
             $caseScore = $this->getScore();
+
+            if (isset($response->decision)) {
+                if (is_array($response->decision)) {
+                    $score = $response->decision['score'] ?? null;
+                    $checkpointAction = $response->decision['checkpointAction'] ?? null;
+                    $checkpointActionReason = $response->decision['checkpointActionReason'] ?? null;
+                } else {
+                    $score = $response->decision->score ?? null;
+                    $checkpointAction = $response->decision->checkpointAction ?? null;
+                    $checkpointActionReason = $response->decision->checkpointActionReason ?? null;
+                }
+            }
 
             if (isset($caseScore) && $isScoreOnly) {
                 $this->setMagentoStatus(Casedata::COMPLETED_STATUS);
             }
 
-            if (isset($response->decision['checkpointAction']) &&
-                $this->getGuarantee() != $response->decision['checkpointAction']) {
-                $this->setGuarantee($response->decision['checkpointAction']);
+            if (isset($score) && $this->getScore() !== $score) {
+                $this->setScore(floor($score));
             }
 
-            if (isset($response->decision['checkpointActionReason']) &&
-                $this->getCheckpointActionReason() != $response->decision['checkpointActionReason']) {
-                $this->setCheckpointActionReason($response->decision['checkpointActionReason']);
+            if (isset($checkpointAction) && $this->getGuarantee() != $checkpointAction) {
+                $this->setGuarantee($checkpointAction);
+            }
+
+            if (isset($checkpointActionReason) && $this->getCheckpointActionReason() != $checkpointActionReason) {
+                $this->setCheckpointActionReason($checkpointActionReason);
             }
 
             if (isset($response->signifydId)) {
