@@ -12,5 +12,14 @@
             <label>Signifyd API Key</label>
             <comment><![CDATA[Your API key can be found on the <a href="https://app.signifyd.com/settings" target="_blank" title="This external link will open in a new window">settings page</a> in the Signifyd console. Don't have an account? <a href="https://www.signifyd.com/contact/" target="_blank" title="This external link will open in a new window">Contact us</a>]]></comment>
         </field>
+        <field id="policy_name" type="select" sortOrder="30" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+            <label>Signifyd Policy</label>
+            <source_model>Signifyd\Connect\Model\System\Config\Source\Options\PolicyName</source_model>
+        </field>
+        <field id="policy_exceptions" type="select" sortOrder="30" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+            <label>Policy exceptions</label>
+            <frontend_model>Signifyd\Connect\Block\Adminhtml\Form\Field\PolicyExceptions</frontend_model>
+            <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+        </field>
     </group>
 </include>

@@ -21,11 +21,11 @@
                 <lock_timeout>20</lock_timeout>
                 <enable_transaction>0</enable_transaction>
                 <decision_request>FRAUD</decision_request>
+                <policy_name>POST_AUTH</policy_name>
             </general>
             <advanced>
                 <guarantee_negative_action>nothing</guarantee_negative_action>
                 <guarantee_positive_action>nothing</guarantee_positive_action>
-                <policy_name>POST_AUTH</policy_name>
                 <policy_pre_auth_reject_message>Your order cannot be processed, please contact our support team</policy_pre_auth_reject_message>
                 <cron_batch_size>20</cron_batch_size>
             </advanced>

@@ -88,7 +88,12 @@ class TransactionIntegration
             $this->storeManager->getStore()->getId()
         );
 
-        $isPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, $paymentMethod);
+        $isPreAuth = $this->purchaseHelper->getIsPreAuth(
+            $policyName,
+            $paymentMethod,
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $this->storeManager->getStore()->getId()
+        );
 
         if ($isPreAuth === false) {
             return null;

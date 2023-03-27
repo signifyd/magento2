@@ -1674,7 +1674,12 @@ class PurchaseHelper
             $quote->getStore()->getScopeType(),
             $quote->getStoreId()
         );
-        $policyFromMethod = $this->getPolicyFromMethod($policyConfig, $paymentMethod);
+        $policyFromMethod = $this->getPolicyFromMethod(
+            $policyConfig,
+            $paymentMethod,
+            $quote->getStore()->getScopeType(),
+            $quote->getStoreId()
+        );
         $evalRequest = ($policyFromMethod == 'SCA_PRE_AUTH') ? ['SCA_EVALUATION'] : null;
         $case['additionalEvalRequests'] = $evalRequest;
 
@@ -1723,13 +1728,48 @@ class PurchaseHelper
         return $case;
     }
 
-    public function getPolicyName($scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
+    public function getDefaultPolicy($scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
     {
         return $this->scopeConfigInterface->getValue(
-            'signifyd/advanced/policy_name',
+            'signifyd/general/policy_name',
             $scopeType,
             $scopeCode
         );
+    }
+
+    public function getPolicyName($scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
+    {
+        $policyName = $this->getDefaultPolicy($scopeType, $scopeCode);
+        $policyExceptionsData = $this->scopeConfigInterface->getValue(
+            'signifyd/general/policy_exceptions',
+            $scopeType,
+            $scopeCode
+        );
+
+        try {
+            $policyExceptions = $this->jsonSerializer->unserialize($policyExceptionsData);
+        } catch (\InvalidArgumentException $e) {
+            return $policyName;
+        }
+
+        if (empty($policyExceptions)) {
+            return $policyName;
+        }
+
+        $mergePolicy = [];
+        $mergePolicy[$policyName] = [];
+
+        foreach ($policyExceptions as $key => $value) {
+            if (is_array($value) && isset($value['policy']) && isset($value['payment_method'])) {
+                if (in_array($value['policy'], array_keys($mergePolicy)) === false) {
+                    $mergePolicy[$value['policy']] = [];
+                }
+
+                $mergePolicy[$value['policy']][] = $value['payment_method'];
+            }
+        }
+
+        return $this->jsonSerializer->serialize($mergePolicy);
     }
 
     public function makePurchaseFromQuote(Quote $quote)
@@ -1966,21 +2006,34 @@ class PurchaseHelper
         }
     }
 
-    public function getIsPreAuth($policyName, $paymentMethod)
-    {
-        $policyFromMethod = $this->getPolicyFromMethod($policyName, $paymentMethod);
+    public function getIsPreAuth(
+        $policyName,
+        $paymentMethod,
+        $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
+        $scopeCode = null
+    ) {
+        $policyFromMethod = $this->getPolicyFromMethod(
+            $policyName,
+            $paymentMethod,
+            $scopeType,
+            $scopeCode
+        );
 
         return ($policyFromMethod == 'PRE_AUTH' || $policyFromMethod == 'SCA_PRE_AUTH');
     }
 
-    public function getPolicyFromMethod($policyName, $paymentMethod)
-    {
+    public function getPolicyFromMethod(
+        $policyName,
+        $paymentMethod,
+        $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
+        $scopeCode = null
+    ) {
         if (isset($paymentMethod) === false) {
-            return 'POST_AUTH';
+            return $this->getDefaultPolicy($scopeType, $scopeCode);
         }
 
         if ($this->configHelper->isPaymentRestricted($paymentMethod)) {
-            return 'POST_AUTH';
+            return $this->getDefaultPolicy($scopeType, $scopeCode);
         }
 
         try {
@@ -1990,7 +2043,7 @@ class PurchaseHelper
         }
 
         foreach ($configPolicy as $key => $value) {
-            if ($key == 'PRE_AUTH' || $key == 'SCA_PRE_AUTH') {
+            if ($key == 'PRE_AUTH' || $key == 'SCA_PRE_AUTH' || $key == 'POST_AUTH') {
                 if (is_array($value) === false) {
                     continue;
                 }
@@ -2001,7 +2054,7 @@ class PurchaseHelper
             }
         }
 
-        return 'POST_AUTH';
+        return $this->getDefaultPolicy($scopeType, $scopeCode);
     }
 
     public function getFulfillmentMethodMapping(

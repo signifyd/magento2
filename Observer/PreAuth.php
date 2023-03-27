@@ -175,7 +175,12 @@ class PreAuth implements ObserverInterface
                 $paymentMethod = $dataArray['paymentMethod']['method'];
             }
 
-            $isPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, $paymentMethod);
+            $isPreAuth = $this->purchaseHelper->getIsPreAuth(
+                $policyName,
+                $paymentMethod,
+                $quote->getStore()->getScopeType(),
+                $quote->getStoreId()
+            );
 
             if ($isPreAuth === false) {
                 /** @var $case \Signifyd\Connect\Model\Casedata */

@@ -58,7 +58,12 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
             $isAdyenGreaterThanEightEleven = version_compare($adyenVersion, '8.11.0') >= 0;
         }
 
-        $isAdyenPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, 'adyen_cc');
+        $isAdyenPreAuth = $this->purchaseHelper->getIsPreAuth(
+            $policyName,
+            'adyen_cc',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $this->storeManager->getStore()->getCode()
+        );
 
         return [ 'signifyd' => [
             'isAdyenPreAuth' => $isAdyenPreAuth,
