@@ -842,7 +842,12 @@ class PurchaseHelper
         }
 
         $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/shipper_config');
-        $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
+
+        try {
+            $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
+        } catch (\InvalidArgumentException $e) {
+            return null;
+        }
 
         foreach ($allowMethods as $i => $allowMethod) {
             if (in_array($shippingCarrier, $allowMethod)) {
@@ -868,7 +873,12 @@ class PurchaseHelper
         }
 
         $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/shipping_method_config');
-        $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
+
+        try {
+            $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
+        } catch (\InvalidArgumentException $e) {
+            return null;
+        }
 
         foreach ($allowMethods as $i => $allowMethod) {
             if (in_array($shippingMethodCode, $allowMethod)) {
@@ -1109,7 +1119,12 @@ class PurchaseHelper
     public function makePaymentMethod($paymentMethod)
     {
         $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/payment_methods_config');
-        $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
+
+        try {
+            $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
+        } catch (\InvalidArgumentException $e) {
+            return null;
+        }
 
         foreach ($allowMethods as $i => $allowMethod) {
             if (in_array($paymentMethod, $allowMethod)) {
@@ -2227,7 +2242,11 @@ class PurchaseHelper
             return null;
         }
 
-        return $this->jsonSerializer->unserialize($case->getEntries('threeDs'));
+        try {
+            return $this->jsonSerializer->unserialize($case->getEntries('threeDs'));
+        } catch (\InvalidArgumentException $e) {
+            return null;
+        }
     }
 
     /**
