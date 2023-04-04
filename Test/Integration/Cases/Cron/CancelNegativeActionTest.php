@@ -25,7 +25,7 @@ class CancelNegativeActionTest extends CreateTest
         $order = $this->getOrder();
 
         $this->assertEquals(Casedata::COMPLETED_STATUS, $case->getData('magento_status'));
-        $this->assertEquals('DECLINED', $case->getData('guarantee'));
+        $this->assertEquals('REJECT', $case->getData('guarantee'));
         $this->assertTrue($order->isCanceled());
     }
 }
