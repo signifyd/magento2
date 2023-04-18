@@ -24,6 +24,7 @@ use Magento\Customer\Model\ResourceModel\Customer as CustomerResourceModel;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
 use Magento\Store\Model\ScopeInterface;
 use Signifyd\Connect\Model\PaymentVerificationFactory;
+use Signifyd\Connect\Model\MappingVerificationFactory;
 use Magento\Framework\Registry;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
@@ -102,6 +103,11 @@ class PurchaseHelper
      * @var PaymentVerificationFactory
      */
     protected $paymentVerificationFactory;
+
+    /**
+     * @var MappingVerificationFactory
+     */
+    protected $mappingVerificationFactory;
 
     /**
      * @var Registry
@@ -221,6 +227,7 @@ class PurchaseHelper
      * @param ModuleListInterface $moduleList
      * @param DeviceHelper $deviceHelper
      * @param PaymentVerificationFactory $paymentVerificationFactory
+     * @param MappingVerificationFactory $mappingVerificationFactory
      * @param Registry $registry
      * @param OrderHelper $orderHelper
      * @param CasedataFactory $casedataFactory
@@ -255,6 +262,7 @@ class PurchaseHelper
         ModuleListInterface $moduleList,
         DeviceHelper $deviceHelper,
         PaymentVerificationFactory $paymentVerificationFactory,
+        MappingVerificationFactory $mappingVerificationFactory,
         Registry $registry,
         OrderHelper $orderHelper,
         CasedataFactory $casedataFactory,
@@ -287,6 +295,7 @@ class PurchaseHelper
         $this->moduleList = $moduleList;
         $this->deviceHelper = $deviceHelper;
         $this->paymentVerificationFactory = $paymentVerificationFactory;
+        $this->mappingVerificationFactory = $mappingVerificationFactory;
         $this->registry = $registry;
         $this->configHelper = $configHelper;
         $this->orderHelper = $orderHelper;
@@ -1001,7 +1010,7 @@ class PurchaseHelper
         $transactionId = $this->getTransactionId($order);
 
         $lastTransaction['gatewayStatusCode'] = 'SUCCESS';
-        $lastTransaction['paymentMethod'] = $this->makePaymentMethod($order->getPayment()->getMethod());
+        $lastTransaction['paymentMethod'] = $this->makePaymentMethod($order);
         $lastTransaction['checkoutPaymentDetails'] = $this->makeCheckoutPaymentDetails($order);
         $lastTransaction['amount'] = $order->getGrandTotal();
         $lastTransaction['currency'] = $order->getOrderCurrencyCode();
@@ -1049,7 +1058,7 @@ class PurchaseHelper
         $transactions = [];
         $transaction = [];
         $transaction['gatewayStatusCode'] = 'FAILURE';
-        $transaction['paymentMethod'] = $this->makePaymentMethod($quote->getPayment()->getMethod());
+        $transaction['paymentMethod'] = $this->makePaymentMethod($quote);
         $transaction['checkoutPaymentDetails'] = $this->makeCheckoutPaymentDetailsFromQuote($quote, $methodData);
         $transaction['amount'] = $quote->getGrandTotal();
         $transaction['currency'] = $quote->getBaseCurrencyCode();
@@ -1106,18 +1115,13 @@ class PurchaseHelper
         }
     }
 
-    public function makePaymentMethod($paymentMethod)
+    public function makePaymentMethod($entity)
     {
-        $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/payment_methods_config');
-        $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
+        $paymentMethodAdapter = $this->mappingVerificationFactory->createPaymentMethod($entity->getPayment()->getMethod());
 
-        foreach ($allowMethods as $i => $allowMethod) {
-            if (in_array($paymentMethod, $allowMethod)) {
-                return $i;
-            }
-        }
+        $this->logger->debug('Getting payment method using ' . get_class($paymentMethodAdapter));
 
-        return $paymentMethod;
+        return $paymentMethodAdapter->getData($entity);
     }
 
     /**
@@ -1691,7 +1695,7 @@ class PurchaseHelper
             $transaction['amount'] = $quote->getGrandTotal();
             $transaction['sourceAccountDetails'] = $this->makeSourceAccountDetails();
             $transaction['acquirerDetails'] = $this->makeAcquirerDetails();
-            $transaction['paymentMethod'] = $this->makePaymentMethod($paymentMethod);
+            $transaction['paymentMethod'] = $this->makePaymentMethod($quote);
             $transaction['gateway'] = $paymentMethod;
 
             if (is_array($checkoutPaymentDetails) && empty($checkoutPaymentDetails) === false
