@@ -12,5 +12,17 @@
             <label>Signifyd API Key</label>
             <comment><![CDATA[Your API key can be found on the <a href="https://app.signifyd.com/settings" target="_blank" title="This external link will open in a new window">settings page</a> in the Signifyd console. Don't have an account? <a href="https://www.signifyd.com/contact/" target="_blank" title="This external link will open in a new window">Contact us</a>]]></comment>
         </field>
+                <field id="restrict_payment_methods" translate="label comment" type="multiselect" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Restricted Payment Methods</label>
+            <comment>Orders placed using selected payment methods will be excluded from being sent to Signifyd. These orders will not be created in Signifyd and the extension will not interfere with the order workflow i.e. place the order on hold or capture the payment.</comment>
+            <source_model>Signifyd\Connect\Model\Config\Source\PaymentMethods</source_model>
+            <can_be_empty>1</can_be_empty>
+        </field>
+        <field id="restrict_states_create" translate="label comment" type="multiselect" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Restricted Order States</label>
+            <comment>Orders with these states will be excluded from being sent to Signifyd. E.g. by default, the extension restricts any action on payment_review state, to ensure the extension does not interfere with the payment workflow.</comment>
+            <source_model>Signifyd\Connect\Model\Config\Source\OrderStates</source_model>
+            <can_be_empty>1</can_be_empty>
+        </field>
     </group>
 </include>
