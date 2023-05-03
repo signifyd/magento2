@@ -19,6 +19,9 @@ use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Store\Model\StoreManagerInterface;
+use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
+use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
+use Signifyd\Connect\Model\UpdateOrderFactory;
 
 class RetryCaseJob
 {
@@ -58,6 +61,21 @@ class RetryCaseJob
     protected $orderFactory;
 
     /**
+     * @var SignifydOrderResourceModel
+     */
+    protected $signifydOrderResourceModel;
+
+    /**
+     * @var UpdateCaseFactory
+     */
+    protected $updateCaseFactory;
+
+    /**
+     * @var UpdateOrderFactory
+     */
+    protected $updateOrderFactory;
+
+    /**
      * @var CasedataResourceModel
      */
     protected $casedataResourceModel;
@@ -91,6 +109,9 @@ class RetryCaseJob
      * @param Retry $caseRetryObj
      * @param OrderResourceModel $orderResourceModel
      * @param OrderFactory $orderFactory
+     * @param SignifydOrderResourceModel $signifydOrderResourceModel
+     * @param UpdateCaseFactory $updateCaseFactory
+     * @param UpdateOrderFactory $updateOrderFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param CasedataFactory $casedataFactory
      * @param ResourceConnection $resourceConnection
@@ -104,6 +125,9 @@ class RetryCaseJob
         Retry $caseRetryObj,
         OrderResourceModel $orderResourceModel,
         OrderFactory $orderFactory,
+        SignifydOrderResourceModel $signifydOrderResourceModel,
+        UpdateCaseFactory $updateCaseFactory,
+        UpdateOrderFactory $updateOrderFactory,
         CasedataResourceModel $casedataResourceModel,
         CasedataFactory $casedataFactory,
         ResourceConnection $resourceConnection,
@@ -116,6 +140,9 @@ class RetryCaseJob
         $this->caseRetryObj = $caseRetryObj;
         $this->orderResourceModel = $orderResourceModel;
         $this->orderFactory = $orderFactory;
+        $this->signifydOrderResourceModel = $signifydOrderResourceModel;
+        $this->updateCaseFactory = $updateCaseFactory;
+        $this->updateOrderFactory = $updateOrderFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->casedataFactory = $casedataFactory;
         $this->resourceConnection = $resourceConnection;
@@ -133,7 +160,9 @@ class RetryCaseJob
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($asyncWaitingCases as $case) {
-            $this->storeManagerInterface->setCurrentStore($case->getOrder()->getStore()->getStoreId());
+            $order = $this->orderFactory->create();
+            $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
+            $this->storeManagerInterface->setCurrentStore($order->getStore()->getStoreId());
 
             $this->logger->debug(
                 "CRON: preparing for send case no: {$case->getOrderIncrement()}",
@@ -146,8 +175,8 @@ class RetryCaseJob
                 $this->casedataResourceModel->delete($case);
             }
 
-            $case->getOrder()->setData('origin_store_code', $case->getData('origin_store_code'));
-            $caseModel = $this->purchaseHelper->processOrderData($case->getOrder());
+            $order->setData('origin_store_code', $case->getData('origin_store_code'));
+            $caseModel = $this->purchaseHelper->processOrderData($order);
             $avsCode = $caseModel['transactions'][0]['verifications']['avsResponseCode'];
             $cvvCode = $caseModel['transactions'][0]['verifications']['cvvResponseCode'];
             $retries = $case->getData('retries');
@@ -173,21 +202,23 @@ class RetryCaseJob
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($waitingCases as $case) {
-            $this->storeManagerInterface->setCurrentStore($case->getOrder()->getStore()->getStoreId());
+            $order = $this->orderFactory->create();
+            $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
+            $this->storeManagerInterface->setCurrentStore($order->getStore()->getStoreId());
 
             $this->logger->debug(
                 "CRON: preparing for send case no: {$case['order_increment']}",
                 ['entity' => $case]
             );
 
-            $this->reInitStripe($case->getOrder());
+            $this->reInitStripe($order);
 
             try {
                 $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
 
-                $caseModel = $this->purchaseHelper->processOrderData($case->getOrder());
+                $caseModel = $this->purchaseHelper->processOrderData($order);
                 /** @var \Signifyd\Core\Response\SaleResponse $caseResponse */
-                $caseResponse = $this->purchaseHelper->postCaseToSignifyd($caseModel, $case->getOrder());
+                $caseResponse = $this->purchaseHelper->postCaseToSignifyd($caseModel, $order);
                 $investigationId = $caseResponse->getSignifydId();
 
                 if (empty($investigationId) === false) {
@@ -207,21 +238,24 @@ class RetryCaseJob
         $inReviewCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::IN_REVIEW_STATUS);
 
         foreach ($inReviewCases as $case) {
-            $this->storeManagerInterface->setCurrentStore($case->getOrder()->getStore()->getStoreId());
+            $order = $this->orderFactory->create();
+            $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
+            $this->storeManagerInterface->setCurrentStore($order->getStore()->getStoreId());
 
             $this->logger->debug(
                 "CRON: preparing for review case no: {$case['order_increment']}",
                 ['entity' => $case]
             );
 
-            $this->reInitStripe($case->getOrder());
+            $this->reInitStripe($order);
 
             try {
                 $response = $this->configHelper->getSignifydSaleApi($case)->getCase($case->getData('order_increment'));
                 $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
 
                 $currentCaseHash = sha1(implode(',', $case->getData()));
-                $case->updateCaseV3($response);
+                $updateCase = $this->updateCaseFactory->create();
+                $case = $updateCase($case, $response);
                 $newCaseHash = sha1(implode(',', $case->getData()));
 
                 if ($currentCaseHash == $newCaseHash) {
@@ -235,7 +269,8 @@ class RetryCaseJob
                     continue;
                 }
 
-                $case->updateOrder();
+                $updateOrder = $this->updateOrderFactory->create();
+                $case = $updateOrder($case);
 
                 $this->casedataResourceModel->save($case);
             } catch (\Exception $e) {

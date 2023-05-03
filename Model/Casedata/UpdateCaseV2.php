@@ -5,10 +5,12 @@
  */
 namespace Signifyd\Connect\Model\Casedata;
 
+use Magento\Sales\Model\OrderFactory;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Casedata;
+use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 
 /**
  * Defines link data for the comment field in the config page
@@ -31,20 +33,41 @@ class UpdateCaseV2
     protected $logger;
 
     /**
+     * @var OrderFactory
+     */
+    protected $orderFactory;
+
+    /**
+     * @var SignifydOrderResourceModel
+     */
+    protected $signifydOrderResourceModel;
+
+    /**
      * @param ConfigHelper $configHelper
      * @param OrderHelper $orderHelper
      * @param Logger $logger
+     * @param OrderFactory $orderFactory
+     * @param SignifydOrderResourceModel $signifydOrderResourceModel
      */
     public function __construct(
         ConfigHelper $configHelper,
         OrderHelper $orderHelper,
-        Logger $logger
+        Logger $logger,
+        OrderFactory $orderFactory,
+        SignifydOrderResourceModel $signifydOrderResourceModel
     ) {
         $this->configHelper = $configHelper;
         $this->orderHelper = $orderHelper;
         $this->logger = $logger;
+        $this->orderFactory = $orderFactory;
+        $this->signifydOrderResourceModel = $signifydOrderResourceModel;
     }
 
+    /**
+     * @param $case
+     * @param $response
+     * @return mixed
+     */
     public function __invoke($case, $response)
     {
         try {
@@ -100,13 +123,16 @@ class UpdateCaseV2
                 $message = "Signifyd: case reviewed " .
                     "from {$origGuarantee} ({$origScore}) " .
                     "to {$newGuarantee} ({$newScore})";
-                $this->orderHelper->addCommentToStatusHistory($case->getOrder(), $message);
+
+                $order = $this->orderFactory->create();
+                $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
+                $this->orderHelper->addCommentToStatusHistory($order, $message);
             }
         } catch (\Exception $e) {
             $this->logger->critical($e->__toString(), ['entity' => $case]);
-            return false;
+            return $case;
         }
 
-        return true;
+        return $case;
     }
 }

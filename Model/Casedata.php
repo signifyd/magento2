@@ -16,8 +16,8 @@ use Signifyd\Connect\Logger\Logger;
 use Magento\Framework\Serialize\SerializerInterface;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\Casedata\UpdateCaseV2Factory;
-use Signifyd\Connect\Model\Casedata\UpdateCaseV3Factory;
-use Signifyd\Connect\Model\Casedata\UpdateOrderFactory;
+use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
+use Signifyd\Connect\Model\UpdateOrderFactory;
 
 /**
  * ORM model declaration for case data
@@ -89,9 +89,9 @@ class Casedata extends AbstractModel
     protected $updateCaseV2Factory;
 
     /**
-     * @var UpdateCaseV3Factory
+     * @var UpdateCaseFactory
      */
-    protected $updateCaseV3Factory;
+    protected $updateCaseFactory;
 
     /**
      * @var UpdateOrderFactory
@@ -110,7 +110,7 @@ class Casedata extends AbstractModel
      * @param SerializerInterface $serializer
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param UpdateCaseV2Factory $updateCaseV2Factory
-     * @param UpdateCaseV3Factory $updateCaseV3Factory
+     * @param UpdateCaseFactory $updateCaseFactory
      * @param UpdateOrderFactory $updateOrderFactory
      */
     public function __construct(
@@ -123,7 +123,7 @@ class Casedata extends AbstractModel
         SerializerInterface $serializer,
         SignifydOrderResourceModel $signifydOrderResourceModel,
         UpdateCaseV2Factory $updateCaseV2Factory,
-        UpdateCaseV3Factory $updateCaseV3Factory,
+        UpdateCaseFactory $updateCaseFactory,
         UpdateOrderFactory $updateOrderFactory
     ) {
         $this->configHelper = $configHelper;
@@ -133,7 +133,7 @@ class Casedata extends AbstractModel
         $this->serializer = $serializer;
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
         $this->updateCaseV2Factory = $updateCaseV2Factory;
-        $this->updateCaseV3Factory = $updateCaseV3Factory;
+        $this->updateCaseFactory = $updateCaseFactory;
         $this->updateOrderFactory = $updateOrderFactory;
 
         parent::__construct($context, $registry);
@@ -161,43 +161,12 @@ class Casedata extends AbstractModel
                 if ($loadForUpdate === true) {
                     $this->signifydOrderResourceModel->loadForUpdate($this->order, $orderId);
                 } else {
-                    $this->orderResourceModel->load($this->order, $orderId);
+                    $this->signifydOrderResourceModel->load($this->order, $orderId);
                 }
             }
         }
 
         return $this->order;
-    }
-
-    /**
-     * @param $caseData
-     * @return bool
-     */
-    public function updateCase($response)
-    {
-        $updateCaseV2 = $this->updateCaseV2Factory->create();
-        return $updateCaseV2($this, $response);
-    }
-
-    /**
-     * @param $caseData
-     * @return bool
-     */
-    public function updateCaseV3($response)
-    {
-        $updateCaseV3 = $this->updateCaseV3Factory->create();
-        return $updateCaseV3($this, $response);
-    }
-
-    /**
-     * @param $orderAction
-     * @return bool
-     * @throws \Magento\Framework\Exception\LocalizedException
-     */
-    public function updateOrder()
-    {
-        $updateOrder = $this->updateOrderFactory->create();
-        return $updateOrder($this);
     }
 
     /**
@@ -280,36 +249,6 @@ class Casedata extends AbstractModel
     }
 
     /**
-     * @return bool
-     */
-    public function isHoldReleased()
-    {
-        $holdReleased = $this->getEntries('hold_released');
-        return (($holdReleased == 1) ? true : false);
-    }
-
-    public function getPositiveAction()
-    {
-        if ($this->isHoldReleased()) {
-            return 'nothing';
-        } else {
-            return $this->configHelper->getConfigData('signifyd/advanced/guarantee_positive_action', $this);
-        }
-    }
-
-    /**
-     * @return mixed|string
-     */
-    public function getNegativeAction()
-    {
-        if ($this->isHoldReleased()) {
-            return 'nothing';
-        } else {
-            return $this->configHelper->getConfigData('signifyd/advanced/guarantee_negative_action', $this);
-        }
-    }
-
-    /**
      * Everytime a update is triggered reset retries
      *
      * @param $updated
@@ -324,18 +263,5 @@ class Casedata extends AbstractModel
         $this->setRetries(0);
 
         return parent::setUpdated($updated);
-    }
-
-    /**
-     * @param $order
-     * @return void
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
-     */
-    public function holdOrder($order)
-    {
-        if ($order->canHold()) {
-            $order->hold();
-            $this->orderResourceModel->save($order);
-        }
     }
 }

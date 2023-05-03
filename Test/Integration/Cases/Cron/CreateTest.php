@@ -4,6 +4,8 @@ namespace Signifyd\Connect\Test\Integration\Cases\Cron;
 
 use Signifyd\Connect\Test\Integration\OrderTestCase;
 use Signifyd\Connect\Model\Casedata;
+use Signifyd\Connect\Model\Casedata\UpdateCaseV2Factory;
+use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
 
 class CreateTest extends OrderTestCase
 {
@@ -19,6 +21,8 @@ class CreateTest extends OrderTestCase
         parent::setUp();
 
         $this->retryCaseJob = $this->objectManager->create(\Signifyd\Connect\Cron\RetryCaseJob::class);
+        $this->updateCaseV2Factory = $this->objectManager->create(UpdateCaseV2Factory::class)->create();
+        $this->updateCaseFactory = $this->objectManager->create(UpdateCaseFactory::class)->create();
     }
 
     /**

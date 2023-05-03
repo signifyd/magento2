@@ -9,9 +9,9 @@ use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Fulfillment;
 use Signifyd\Connect\Model\ResourceModel\Fulfillment as FulfillmentResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Fulfillment\CollectionFactory as FulfillmentCollectionFactory;
-use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Sales\Model\OrderFactory;
 use Signifyd\Connect\Helper\RetryFulfillment;
+use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 
 class RetryFulfillmentJob
 {
@@ -46,9 +46,9 @@ class RetryFulfillmentJob
     protected $fulfillmentRetryObj;
 
     /**
-     * @var OrderResourceModel
+     * @var SignifydOrderResourceModel
      */
-    protected $orderResourceModel;
+    protected $signifydOrderResourceModel;
 
     /**
      * @var OrderFactory
@@ -68,7 +68,7 @@ class RetryFulfillmentJob
      * @param Logger $logger
      * @param OrderHelper $orderHelper
      * @param RetryFulfillment $fulfillmentRetryObj
-     * @param OrderResourceModel $orderResourceModel
+     * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param OrderFactory $orderFactory
      * @param JsonSerializer $jsonSerializer
      */
@@ -79,7 +79,7 @@ class RetryFulfillmentJob
         Logger $logger,
         OrderHelper $orderHelper,
         RetryFulfillment $fulfillmentRetryObj,
-        OrderResourceModel $orderResourceModel,
+        SignifydOrderResourceModel $signifydOrderResourceModel,
         OrderFactory $orderFactory,
         JsonSerializer $jsonSerializer
     ) {
@@ -89,7 +89,7 @@ class RetryFulfillmentJob
         $this->logger = $logger;
         $this->orderHelper = $orderHelper;
         $this->fulfillmentRetryObj = $fulfillmentRetryObj;
-        $this->orderResourceModel = $orderResourceModel;
+        $this->signifydOrderResourceModel = $signifydOrderResourceModel;
         $this->orderFactory = $orderFactory;
         $this->jsonSerializer = $jsonSerializer;
     }
@@ -108,7 +108,7 @@ class RetryFulfillmentJob
         foreach ($fulfillments as $fulfillment) {
             $orderId = $fulfillment->getOrderId();
             $order = $this->orderFactory->create();
-            $this->orderResourceModel->load($order, $orderId, 'increment_id');
+            $this->signifydOrderResourceModel->load($order, $orderId, 'increment_id');
             $fulfillmentData = $this->generateFulfillmentData($fulfillment);
 
             $fulfillmentBulkResponse = $this->configHelper

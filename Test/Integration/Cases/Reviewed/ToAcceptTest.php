@@ -20,8 +20,8 @@ class ToAcceptTest extends CreateTest
         $this->processReviewCase(true);
         $case = $this->getCase();
         $requestJson = $this->getRequestJson($case);
-
-        $case->updateCase($requestJson);
+        $updateCaseV2 = $this->updateCaseV2Factory->create();
+        $case = $updateCaseV2($this, $requestJson);
 
         $this->assertEquals(Casedata::COMPLETED_STATUS, $case->getData('magento_status'));
         $this->assertEquals('ACCEPT', $case->getData('guarantee'));

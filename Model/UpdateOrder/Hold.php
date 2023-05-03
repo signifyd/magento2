@@ -3,7 +3,7 @@
  * Copyright 2015 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
-namespace Signifyd\Connect\Model\Casedata\UpdateOrder;
+namespace Signifyd\Connect\Model\UpdateOrder;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\Order;
@@ -11,12 +11,11 @@ use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Model\Casedata;
 
 /**
  * Defines link data for the comment field in the config page
  */
-class Unhold
+class Hold
 {
     /**
      * @var ConfigHelper
@@ -58,44 +57,35 @@ class Unhold
 
     public function __invoke($order, $case, $orderAction, $completeCase)
     {
-        if ($order->canUnhold()) {
-            $this->logger->debug('Unhold order action', ['entity' => $order]);
-
+        if ($order->canHold()) {
             try {
-                $order->unhold();
+                $order->hold();
                 $this->orderResourceModel->save($order);
 
                 $completeCase = true;
-
                 $this->orderHelper->addCommentToStatusHistory(
                     $order,
-                    "Signifyd: order status updated, {$orderAction["reason"]}"
+                    "Signifyd: {$orderAction["reason"]}"
                 );
             } catch (\Exception $e) {
                 $this->logger->debug($e->__toString(), ['entity' => $order]);
                 $case->setEntries('fail', 1);
 
-                $this->orderHelper->addCommentToStatusHistory(
-                    $order,
-                    "Signifyd: order status cannot be updated, {$e->getMessage()}"
-                );
+                $message = "Signifyd: order cannot be updated to on hold, {$e->getMessage()}";
+                $this->orderHelper->addCommentToStatusHistory($order, $message);
                 throw new LocalizedException(__($e->getMessage()));
             }
         } else {
-            $reason = $this->orderHelper->getCannotUnholdReason($order);
-
-            $message = "Order {$order->getIncrementId()} ({$order->getState()} > {$order->getStatus()}) " .
-                "can not be removed from hold because {$reason}. " .
-                "Case status: {$case->getSignifydStatus()}";
+            $reason = $this->orderHelper->getCannotHoldReason($order);
+            $message = "Order {$order->getIncrementId()} can not be held because {$reason}";
             $this->logger->debug($message, ['entity' => $order]);
             $case->setEntries('fail', 1);
-
             $this->orderHelper->addCommentToStatusHistory(
                 $order,
-                "Signifyd: order status cannot be updated, {$reason}"
+                "Signifyd: order cannot be updated to on hold, {$reason}"
             );
 
-            if ($reason == "order is not holded") {
+            if ($order->getState() == Order::STATE_HOLDED) {
                 $completeCase = true;
             }
         }

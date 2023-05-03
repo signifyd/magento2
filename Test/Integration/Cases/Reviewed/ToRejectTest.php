@@ -20,8 +20,8 @@ class ToRejectTest extends CreateTest
         $this->processReviewCase();
         $case = $this->getCase();
         $requestJson = $this->getRequestJson($case, false);
-
-        $case->updateCase($requestJson);
+        $updateCaseV2 = $this->updateCaseV2Factory->create();
+        $case = $updateCaseV2($this, $requestJson);
 
         $this->assertEquals(Casedata::COMPLETED_STATUS, $case->getData('magento_status'));
         $this->assertEquals('REJECT', $case->getData('guarantee'));

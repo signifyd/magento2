@@ -3,22 +3,23 @@
  * Copyright 2015 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
-namespace Signifyd\Connect\Model\Casedata;
+namespace Signifyd\Connect\Model;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Model\Casedata;
-use Signifyd\Connect\Model\Casedata\UpdateOrder\HoldFactory;
-use Signifyd\Connect\Model\Casedata\UpdateOrder\UnholdFactory;
-use Signifyd\Connect\Model\Casedata\UpdateOrder\CancelFactory;
-use Signifyd\Connect\Model\Casedata\UpdateOrder\CaptureFactory;
-use Signifyd\Connect\Model\Casedata\UpdateOrder\RefundFactory;
+use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
+use Signifyd\Connect\Model\UpdateOrder\CancelFactory;
+use Signifyd\Connect\Model\UpdateOrder\CaptureFactory;
+use Signifyd\Connect\Model\UpdateOrder\HoldFactory;
+use Signifyd\Connect\Model\UpdateOrder\RefundFactory;
+use Signifyd\Connect\Model\UpdateOrder\UnholdFactory;
+use Signifyd\Connect\Model\UpdateOrder\Action as UpdateOrderAction;
 
 /**
  * Defines link data for the comment field in the config page
@@ -81,6 +82,21 @@ class UpdateOrder
     protected $refundFactory;
 
     /**
+     * @var UpdateOrderAction
+     */
+    protected $updateOrderAction;
+
+    /**
+     * @var OrderFactory
+     */
+    protected $orderFactory;
+
+    /**
+     * @var SignifydOrderResourceModel
+     */
+    protected $signifydOrderResourceModel;
+
+    /**
      * @param ConfigHelper $configHelper
      * @param OrderHelper $orderHelper
      * @param Logger $logger
@@ -92,6 +108,9 @@ class UpdateOrder
      * @param CancelFactory $cancelFactory
      * @param CaptureFactory $captureFactory
      * @param RefundFactory $refundFactory
+     * @param UpdateOrderAction $updateOrderAction
+     * @param OrderFactory $orderFactory
+     * @param SignifydOrderResourceModel $signifydOrderResourceModel
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -104,7 +123,10 @@ class UpdateOrder
         UnholdFactory $unholdFactory,
         CancelFactory $cancelFactory,
         CaptureFactory $captureFactory,
-        RefundFactory $refundFactory
+        RefundFactory $refundFactory,
+        UpdateOrderAction $updateOrderAction,
+        OrderFactory $orderFactory,
+        SignifydOrderResourceModel $signifydOrderResourceModel
     ) {
         $this->configHelper = $configHelper;
         $this->orderHelper = $orderHelper;
@@ -117,11 +139,14 @@ class UpdateOrder
         $this->cancelFactory = $cancelFactory;
         $this->captureFactory = $captureFactory;
         $this->refundFactory = $refundFactory;
+        $this->updateOrderAction = $updateOrderAction;
+        $this->orderFactory = $orderFactory;
+        $this->signifydOrderResourceModel = $signifydOrderResourceModel;
     }
 
     public function __invoke($case)
     {
-        $orderAction = $this->handleGuaranteeChange($case);
+        $orderAction = $this->updateOrderAction->handleGuaranteeChange($case);
 
         $this->logger->debug(
             $message = "Updating order with action: " . $this->serializer->serialize($orderAction),
@@ -138,7 +163,14 @@ class UpdateOrder
         }
 
         try {
-            $order = $case->getOrder(true, $loadForUpdate);
+            $order = $this->orderFactory->create();
+
+            if ($loadForUpdate) {
+                $this->signifydOrderResourceModel->loadForUpdate($order, $case->getData('order_id'));
+            } else {
+                $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
+            }
+
             $completeCase = false;
 
             if (in_array($order->getState(), [Order::STATE_CANCELED, Order::STATE_COMPLETE, Order::STATE_CLOSED])) {
@@ -230,7 +262,7 @@ class UpdateOrder
                 $this->orderResourceModel->getConnection()->commit();
             }
 
-            return true;
+            return $case;
         } catch (\Exception $e) {
             $this->logger->debug($e->getMessage());
 
@@ -238,50 +270,7 @@ class UpdateOrder
                 $this->orderResourceModel->getConnection()->rollBack();
             }
 
-            return false;
+            return $case;
         }
-    }
-
-    /**
-     * @param $guaranteeDisposition
-     * @return array|string[]
-     */
-    protected function handleGuaranteeChange($case)
-    {
-        $requestGuarantee = $case->getOrigData('guarantee');
-        $caseGuarantee = $case->getData('guarantee');
-        /** @var \Magento\Sales\Model\Order $order */
-        $order = $case->getOrder(true);
-
-        // Reviewed Cases
-        if (($requestGuarantee == 'REJECT' || $requestGuarantee == 'DECLINED') &&
-            $requestGuarantee != $caseGuarantee &&
-            $order->getState() === Order::STATE_CANCELED
-        ) {
-            return ["action" => 'nothing', "reason" => 'declined guarantees reviewed to approved'];
-        }
-
-        switch ($case->getGuarantee()) {
-            case "REJECT":
-            case "DECLINED":
-                $result = ["action" => $case->getNegativeAction(), "reason" => "guarantee declined"];
-                break;
-
-            case 'ACCEPT':
-            case "APPROVED":
-                $result = ["action" => $case->getPositiveAction(), "reason" => "guarantee approved"];
-                break;
-
-            case 'PENDING':
-                $result = ["action" => 'wait', "reason" => 'case in manual review'];
-                break;
-
-            default:
-                $result = ["action" => '', "reason" => ''];
-        }
-
-        $this->logger->debug("Action for {$case->getOrderIncrement()}: {$result['action']}", ['entity' => $case]);
-
-        return $result;
     }
 }

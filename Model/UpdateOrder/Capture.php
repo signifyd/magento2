@@ -3,19 +3,18 @@
  * Copyright 2015 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
-namespace Signifyd\Connect\Model\Casedata\UpdateOrder;
+namespace Signifyd\Connect\Model\UpdateOrder;
 
 use Magento\Framework\DB\TransactionFactory;
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
+use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Sales\Model\ResourceModel\Order\Invoice as InvoiceResourceModel;
 use Magento\Sales\Model\Service\InvoiceService;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Model\Casedata;
+use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 
 /**
  * Defines link data for the comment field in the config page
@@ -63,6 +62,16 @@ class Capture
     protected $transactionFactory;
 
     /**
+     * @var OrderFactory
+     */
+    protected $orderFactory;
+
+    /**
+     * @var SignifydOrderResourceModel
+     */
+    protected $signifydOrderResourceModel;
+
+    /**
      * @param ConfigHelper $configHelper
      * @param OrderHelper $orderHelper
      * @param Logger $logger
@@ -71,6 +80,8 @@ class Capture
      * @param InvoiceSender $invoiceSender
      * @param InvoiceResourceModel $invoiceResourceModel
      * @param TransactionFactory $transactionFactory
+     * @param OrderFactory $orderFactory
+     * @param SignifydOrderResourceModel $signifydOrderResourceModel
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -80,7 +91,9 @@ class Capture
         InvoiceService $invoiceService,
         InvoiceSender $invoiceSender,
         InvoiceResourceModel $invoiceResourceModel,
-        TransactionFactory $transactionFactory
+        TransactionFactory $transactionFactory,
+        OrderFactory $orderFactory,
+        SignifydOrderResourceModel $signifydOrderResourceModel
     ) {
         $this->configHelper = $configHelper;
         $this->orderHelper = $orderHelper;
@@ -90,6 +103,8 @@ class Capture
         $this->invoiceSender = $invoiceSender;
         $this->invoiceResourceModel = $invoiceResourceModel;
         $this->transactionFactory = $transactionFactory;
+        $this->orderFactory = $orderFactory;
+        $this->signifydOrderResourceModel = $signifydOrderResourceModel;
     }
 
     public function __invoke($order, $case, $enableTransaction, $completeCase)
@@ -100,7 +115,8 @@ class Capture
                 $this->orderResourceModel->save($order);
             }
 
-            $order = $case->getOrder(true);
+            $order = $this->orderFactory->create();
+            $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
 
             if ($order->canInvoice()) {
                 /** @var \Magento\Sales\Model\Order\Invoice $invoice */
@@ -145,15 +161,23 @@ class Capture
                 );
 
                 $completeCase = $this->validateReason($reason);
-                $case->holdOrder($order);
+
+                if ($order->canHold()) {
+                    $order->hold();
+                    $this->signifydOrderResourceModel->save($order);
+                }
             }
         } catch (\Exception $e) {
             $this->logger->debug('Exception creating invoice: ' . $e->__toString(), ['entity' => $order]);
             $case->setEntries('fail', 1);
 
-            $order = $case->getOrder(true);
+            $order = $this->orderFactory->create();
+            $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
 
-            $case->holdOrder($order);
+            if ($order->canHold()) {
+                $order->hold();
+                $this->signifydOrderResourceModel->save($order);
+            }
 
             $this->orderHelper->addCommentToStatusHistory(
                 $order,

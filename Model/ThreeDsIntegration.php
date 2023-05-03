@@ -4,7 +4,6 @@ namespace Signifyd\Connect\Model;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Sales\Model\OrderFactory;
-use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\PurchaseHelper;
@@ -12,6 +11,7 @@ use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Quote\Api\CartRepositoryInterface;
+use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 
 class ThreeDsIntegration
 {
@@ -56,11 +56,6 @@ class ThreeDsIntegration
     protected $cartRepositoryInterface;
 
     /**
-     * @var OrderResourceModel
-     */
-    protected $orderResourceModel;
-
-    /**
      * @var OrderFactory
      */
     protected $orderFactory;
@@ -69,6 +64,11 @@ class ThreeDsIntegration
      * @var PurchaseHelper
      */
     protected $purchaseHelper;
+
+    /**
+     * @var SignifydOrderResourceModel
+     */
+    protected $signifydOrderResourceModel;
 
     protected $signifydFields = ['eci', 'cavv', 'version', 'transStatus', 'transStatusReason', 'acsOperatorId',
         'dsTransId', 'threeDsServerTransId', 'cavvAlgorithm', 'exemptionIndicator', 'timestamp'];
@@ -83,9 +83,9 @@ class ThreeDsIntegration
      * @param CheckoutSession $checkoutSession
      * @param JsonSerializer $jsonSerializer
      * @param CartRepositoryInterface $cartRepositoryInterface
-     * @param OrderResourceModel $orderResourceModel
      * @param OrderFactory $orderFactory
      * @param PurchaseHelper $purchaseHelper
+     * @param SignifydOrderResourceModel $signifydOrderResourceModel
      */
     public function __construct(
         CasedataFactory $casedataFactory,
@@ -96,9 +96,9 @@ class ThreeDsIntegration
         CheckoutSession $checkoutSession,
         JsonSerializer $jsonSerializer,
         CartRepositoryInterface $cartRepositoryInterface,
-        OrderResourceModel $orderResourceModel,
         OrderFactory $orderFactory,
-        PurchaseHelper $purchaseHelper
+        PurchaseHelper $purchaseHelper,
+        SignifydOrderResourceModel $signifydOrderResourceModel
     ) {
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
@@ -108,9 +108,9 @@ class ThreeDsIntegration
         $this->checkoutSession = $checkoutSession;
         $this->jsonSerializer = $jsonSerializer;
         $this->cartRepositoryInterface = $cartRepositoryInterface;
-        $this->orderResourceModel = $orderResourceModel;
         $this->orderFactory = $orderFactory;
         $this->purchaseHelper = $purchaseHelper;
+        $this->signifydOrderResourceModel = $signifydOrderResourceModel;
     }
 
 
@@ -176,7 +176,7 @@ class ThreeDsIntegration
                 isset($orderIncrementId)
             ) {
                 $order = $this->orderFactory->create();
-                $this->orderResourceModel->load($order, $orderId);
+                $this->signifydOrderResourceModel->load($order, $orderId);
 
                 if (isset($order) === false) {
                     return;

@@ -10,6 +10,7 @@ use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\OrderFactory;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
@@ -17,11 +18,12 @@ use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata\CollectionFactory as CasedataCollectionFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
-use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\App\State as AppState;
+use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
+use Signifyd\Connect\Model\UpdateOrder\Action as UpdateOrderAction;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -54,9 +56,14 @@ class Purchase implements ObserverInterface
     protected $casedataResourceModel;
 
     /**
-     * @var OrderResourceModel
+     * @var SignifydOrderResourceModel
      */
-    protected $orderResourceModel;
+    protected $signifydOrderResourceModel;
+
+    /**
+     * @var OrderFactory
+     */
+    protected $orderFactory;
 
     /**
      * Methods that should wait e-mail sent to hold order
@@ -104,13 +111,20 @@ class Purchase implements ObserverInterface
     protected $jsonSerializer;
 
     /**
+     * @var UpdateOrderAction
+     */
+    protected $updateOrderAction;
+
+    /**
      * Purchase constructor.
      * @param Logger $logger
      * @param PurchaseHelper $purchaseHelper
      * @param ConfigHelper $configHelper
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
-     * @param OrderResourceModel $orderResourceModel
+     * @param SignifydOrderResourceModel $signifydOrderResourceModel
+     * @param OrderFactory $orderFactory
+     * @param UpdateOrderAction $updateOrderAction
      * @param DateTime $dateTime
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param StoreManagerInterface $storeManager
@@ -124,7 +138,9 @@ class Purchase implements ObserverInterface
         ConfigHelper $configHelper,
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
-        OrderResourceModel $orderResourceModel,
+        SignifydOrderResourceModel $signifydOrderResourceModel,
+        OrderFactory $orderFactory,
+        UpdateOrderAction $updateOrderAction,
         DateTime $dateTime,
         ScopeConfigInterface $scopeConfigInterface,
         StoreManagerInterface $storeManager,
@@ -137,7 +153,9 @@ class Purchase implements ObserverInterface
         $this->configHelper = $configHelper;
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
-        $this->orderResourceModel = $orderResourceModel;
+        $this->signifydOrderResourceModel = $signifydOrderResourceModel;
+        $this->orderFactory = $orderFactory;
+        $this->updateOrderAction = $updateOrderAction;
         $this->dateTime = $dateTime;
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->storeManager = $storeManager;
@@ -375,7 +393,7 @@ class Purchase implements ObserverInterface
             $this->holdOrder($order, $case, $isPassive);
 
             if ($isPassive === false) {
-                $this->orderResourceModel->save($order);
+                $this->signifydOrderResourceModel->save($order);
             }
         } catch (\Exception $ex) {
             $context = [];
@@ -476,8 +494,8 @@ class Purchase implements ObserverInterface
      */
     public function holdOrder(Order $order, Casedata $case, $isPassive = false)
     {
-        $positiveAction = $case->getPositiveAction();
-        $negativeAction = $case->getNegativeAction();
+        $positiveAction = $this->updateOrderAction->getPositiveAction($case);
+        $negativeAction = $this->updateOrderAction->getNegativeAction($case);
 
         if (($positiveAction != 'nothing' || $negativeAction != 'nothing')) {
             if (!$order->canHold()) {
@@ -534,7 +552,7 @@ class Purchase implements ObserverInterface
             }
 
             $order->addCommentToStatusHistory("Signifyd: after order place");
-            $this->orderResourceModel->save($order);
+            $this->signifydOrderResourceModel->save($order);
         }
 
         return true;

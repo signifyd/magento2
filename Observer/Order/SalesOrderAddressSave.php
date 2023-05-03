@@ -8,10 +8,12 @@ use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Model\Order;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
+use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
 use Signifyd\Models\PaymentUpdateFactory;
 use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
+use Signifyd\Connect\Model\UpdateOrderFactory;
 
 class SalesOrderAddressSave implements ObserverInterface
 {
@@ -51,6 +53,16 @@ class SalesOrderAddressSave implements ObserverInterface
     protected $logger;
 
     /**
+     * @var UpdateCaseFactory
+     */
+    protected $updateCaseFactory;
+
+    /**
+     * @var UpdateOrderFactory
+     */
+    protected $updateOrderFactory;
+
+    /**
      * @param PaymentUpdateFactory $paymentUpdateFactory
      * @param PurchaseHelper $purchaseHelper
      * @param CasedataFactory $casedataFactory
@@ -58,6 +70,8 @@ class SalesOrderAddressSave implements ObserverInterface
      * @param ConfigHelper $configHelper
      * @param JsonSerializer $jsonSerializer
      * @param Logger $logger
+     * @param UpdateCaseFactory $updateCaseFactory
+     * @param UpdateOrderFactory $updateOrderFactory
      */
     public function __construct(
         PaymentUpdateFactory $paymentUpdateFactory,
@@ -66,7 +80,9 @@ class SalesOrderAddressSave implements ObserverInterface
         CasedataResourceModel $casedataResourceModel,
         ConfigHelper $configHelper,
         JsonSerializer $jsonSerializer,
-        Logger $logger
+        Logger $logger,
+        UpdateCaseFactory $updateCaseFactory,
+        UpdateOrderFactory $updateOrderFactory
     ) {
         $this->paymentUpdateFactory = $paymentUpdateFactory;
         $this->purchaseHelper = $purchaseHelper;
@@ -75,6 +91,8 @@ class SalesOrderAddressSave implements ObserverInterface
         $this->configHelper = $configHelper;
         $this->jsonSerializer = $jsonSerializer;
         $this->logger = $logger;
+        $this->updateCaseFactory = $updateCaseFactory;
+        $this->updateOrderFactory = $updateOrderFactory;
     }
 
     public function execute(Observer $observer)
@@ -126,11 +144,13 @@ class SalesOrderAddressSave implements ObserverInterface
             $this->logger->info($this->jsonSerializer->serialize($updateResponse));
 
             $case->setEntries('hash', $newHashToValidateReroute);
-            $case->updateCase($updateResponse);
+            $updateCase = $this->updateCaseFactory->create();
+            $case = $updateCase($case, $updateResponse);
 
             if ($case->getOrigData('signifyd_status') !== $case->getData('signifyd_status')) {
                 $case->setStatus(\Signifyd\Connect\Model\Casedata::IN_REVIEW_STATUS);
-                $case->updateOrder();
+                $updateOrder = $this->updateOrderFactory->create();
+                $case = $updateOrder($case);
             }
 
             $this->casedataResourceModel->save($case);

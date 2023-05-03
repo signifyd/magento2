@@ -3,17 +3,16 @@
  * Copyright 2015 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
-namespace Signifyd\Connect\Model\Casedata\UpdateOrder;
+namespace Signifyd\Connect\Model\UpdateOrder;
 
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\CreditmemoFactory;
+use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Sales\Model\Service\CreditmemoService;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Model\Casedata;
+use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 
 /**
  * Defines link data for the comment field in the config page
@@ -51,12 +50,24 @@ class Refund
     protected $creditmemoService;
 
     /**
+     * @var OrderFactory
+     */
+    protected $orderFactory;
+
+    /**
+     * @var SignifydOrderResourceModel
+     */
+    protected $signifydOrderResourceModel;
+
+    /**
      * @param ConfigHelper $configHelper
      * @param OrderHelper $orderHelper
      * @param Logger $logger
      * @param OrderResourceModel $orderResourceModel
      * @param CreditmemoFactory $creditmemoFactory
      * @param CreditmemoService $creditmemoService
+     * @param OrderFactory $orderFactory
+     * @param SignifydOrderResourceModel $signifydOrderResourceModel
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -64,7 +75,9 @@ class Refund
         Logger $logger,
         OrderResourceModel $orderResourceModel,
         CreditmemoFactory $creditmemoFactory,
-        CreditmemoService $creditmemoService
+        CreditmemoService $creditmemoService,
+        OrderFactory $orderFactory,
+        SignifydOrderResourceModel $signifydOrderResourceModel
     ) {
         $this->configHelper = $configHelper;
         $this->orderHelper = $orderHelper;
@@ -72,6 +85,8 @@ class Refund
         $this->orderResourceModel = $orderResourceModel;
         $this->creditmemoFactory = $creditmemoFactory;
         $this->creditmemoService = $creditmemoService;
+        $this->orderFactory = $orderFactory;
+        $this->signifydOrderResourceModel = $signifydOrderResourceModel;
     }
 
     public function __invoke($order, $case, $completeCase)
@@ -82,14 +97,19 @@ class Refund
                 $this->orderResourceModel->save($order);
             }
 
-            $order = $case->getOrder(true);
+            $order = $this->orderFactory->create();
+            $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
 
             $invoices = $order->getInvoiceCollection();
 
             if ($invoices->getTotalCount() > 0) {
                 $this->createInvoicesCreditMemo($invoices, $order);
             } else {
-                $case->holdOrder($order);
+                if ($order->canHold()) {
+                    $order->hold();
+                    $this->signifydOrderResourceModel->save($order);
+                }
+
                 $message = "Signifyd: tried to refund, but there is no invoice to add credit memo";
                 $this->orderHelper->addCommentToStatusHistory($order, $message);
                 $this->logger->debug(
@@ -100,9 +120,14 @@ class Refund
 
             $completeCase = true;
         } catch (\Exception $e) {
-            $order = $case->getOrder(true);
+            $order = $this->orderFactory->create();
+            $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
             $case->setEntries('fail', 1);
-            $case->holdOrder($order);
+
+            if ($order->canHold()) {
+                $order->hold();
+                $this->signifydOrderResourceModel->save($order);
+            }
 
             $this->logger->debug(
                 'Exception creating creditmemo: ' . $e->__toString(),

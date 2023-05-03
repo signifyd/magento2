@@ -20,7 +20,7 @@ class AuthorizenetDirectpost extends Purchase
         if (!empty($orderIncrementId)) {
             /** @var \Magento\Sales\Model\Order $order */
             $order = $this->orderFactory->create();
-            $this->orderResourceModel->load($order, $orderIncrementId, 'increment_id');
+            $this->signifydOrderResourceModel->load($order, $orderIncrementId, 'increment_id');
 
             if ($order instanceof \Magento\Sales\Model\Order) {
                 $observer->getEvent()->setOrder($order);

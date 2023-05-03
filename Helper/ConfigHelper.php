@@ -9,7 +9,9 @@ namespace Signifyd\Connect\Helper;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\OrderFactory;
 use Magento\Store\Model\StoreManagerInterface;
+use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Core\Api\SaleApiFactory;
 use Signifyd\Core\Api\CaseApiFactory;
 use Signifyd\Core\Api\CheckoutApiFactory;
@@ -79,6 +81,16 @@ class ConfigHelper
     protected $directory;
 
     /**
+     * @var OrderFactory
+     */
+    protected $orderFactory;
+
+    /**
+     * @var SignifydOrderResourceModel
+     */
+    protected $signifydOrderResourceModel;
+
+    /**
      * ConfigHelper constructor.
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param StoreManagerInterface $storeManager
@@ -89,6 +101,8 @@ class ConfigHelper
      * @param WebhooksApiFactory $webhooksApiFactory
      * @param WebhooksV2ApiFactory $webhooksV2ApiFactory
      * @param DirectoryList $directory
+     * @param OrderFactory $orderFactory
+     * @param SignifydOrderResourceModel $signifydOrderResourceModel
      */
     public function __construct(
         ScopeConfigInterface $scopeConfigInterface,
@@ -99,7 +113,9 @@ class ConfigHelper
         GuaranteeApiFactory $guaranteeApiFactory,
         WebhooksApiFactory $webhooksApiFactory,
         WebhooksV2ApiFactory $webhooksV2ApiFactory,
-        DirectoryList $directory
+        DirectoryList $directory,
+        OrderFactory $orderFactory,
+        SignifydOrderResourceModel $signifydOrderResourceModel
     ) {
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->storeManager = $storeManager;
@@ -110,6 +126,8 @@ class ConfigHelper
         $this->webhooksApiFactory = $webhooksApiFactory;
         $this->webhooksV2ApiFactory = $webhooksV2ApiFactory;
         $this->directory = $directory;
+        $this->orderFactory = $orderFactory;
+        $this->signifydOrderResourceModel = $signifydOrderResourceModel;
     }
 
     /**
@@ -152,7 +170,12 @@ class ConfigHelper
             if (isset($this->storeCodes['order_' . $orderId])) {
                 return $this->storeCodes['order_' . $orderId];
             } else {
-                $order = $entity instanceof \Signifyd\Connect\Model\Casedata ? $entity->getOrder() : $entity;
+                if ($entity instanceof \Signifyd\Connect\Model\Casedata) {
+                    $order = $this->orderFactory->create();
+                    $this->signifydOrderResourceModel->load($order, $entity->getData('order_id'));
+                } else {
+                    $order = $entity;
+                }
 
                 if ($order instanceof \Magento\Sales\Model\Order && $order->isEmpty() == false) {
                     $store = $this->storeManager->getStore($order->getStoreId());
@@ -173,7 +196,12 @@ class ConfigHelper
             if (isset($this->storeCodes['quote_' . $quoteId])) {
                 return $this->storeCodes['quote_' . $quoteId];
             } else {
-                $order = $entity instanceof \Signifyd\Connect\Model\Casedata ? $entity->getOrder() : $entity;
+                if ($entity instanceof \Signifyd\Connect\Model\Casedata) {
+                    $order = $this->orderFactory->create();
+                    $this->signifydOrderResourceModel->load($order, $entity->getData('order_id'));
+                } else {
+                    $order = $entity;
+                }
 
                 if ($order instanceof \Magento\Sales\Model\Order && $order->isEmpty() == false) {
                     $store = $this->storeManager->getStore($order->getStoreId());

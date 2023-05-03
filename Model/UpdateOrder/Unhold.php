@@ -3,7 +3,7 @@
  * Copyright 2015 SIGNIFYD Inc. All rights reserved.
  * See LICENSE.txt for license details.
  */
-namespace Signifyd\Connect\Model\Casedata\UpdateOrder;
+namespace Signifyd\Connect\Model\UpdateOrder;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
@@ -14,7 +14,7 @@ use Signifyd\Connect\Logger\Logger;
 /**
  * Defines link data for the comment field in the config page
  */
-class Cancel
+class Unhold
 {
     /**
      * @var ConfigHelper
@@ -57,53 +57,45 @@ class Cancel
     public function __invoke($order, $case, $orderAction, $completeCase)
     {
         if ($order->canUnhold()) {
-            $order = $order->unhold();
-            $this->orderResourceModel->save($order);
-        }
+            $this->logger->debug('Unhold order action', ['entity' => $order]);
 
-        if ($order->canCancel()) {
             try {
-                $order->cancel();
+                $order->unhold();
                 $this->orderResourceModel->save($order);
+
                 $completeCase = true;
 
                 $this->orderHelper->addCommentToStatusHistory(
                     $order,
-                    "Signifyd: order canceled, {$orderAction["reason"]}"
+                    "Signifyd: order status updated, {$orderAction["reason"]}"
                 );
             } catch (\Exception $e) {
                 $this->logger->debug($e->__toString(), ['entity' => $order]);
                 $case->setEntries('fail', 1);
-                $case->holdOrder($order);
-                $orderAction['action'] = false;
 
                 $this->orderHelper->addCommentToStatusHistory(
                     $order,
-                    "Signifyd: order cannot be canceled, {$e->getMessage()}"
+                    "Signifyd: order status cannot be updated, {$e->getMessage()}"
                 );
                 throw new LocalizedException(__($e->getMessage()));
             }
         } else {
-            $reason = $this->orderHelper->getCannotCancelReason($order);
-            $message = "Order {$order->getIncrementId()} cannot be canceled because {$reason}";
+            $reason = $this->orderHelper->getCannotUnholdReason($order);
+
+            $message = "Order {$order->getIncrementId()} ({$order->getState()} > {$order->getStatus()}) " .
+                "can not be removed from hold because {$reason}. " .
+                "Case status: {$case->getSignifydStatus()}";
             $this->logger->debug($message, ['entity' => $order]);
             $case->setEntries('fail', 1);
-            $orderAction['action'] = false;
+
             $this->orderHelper->addCommentToStatusHistory(
                 $order,
-                "Signifyd: order cannot be canceled, {$reason}"
+                "Signifyd: order status cannot be updated, {$reason}"
             );
 
-            if ($reason == "all order items are invoiced") {
+            if ($reason == "order is not holded") {
                 $completeCase = true;
             }
-        }
-
-        $order = $case->getOrder(true);
-
-        if ($orderAction['action'] === false && $order->canHold()) {
-            $order->hold();
-            $this->orderResourceModel->save($order);
         }
 
         return $completeCase;

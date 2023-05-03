@@ -1344,7 +1344,7 @@ class PurchaseHelper
             try {
                 $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: guarantee canceled");
                 $order->setSignifydGuarantee($disposition);
-                $this->orderResourceModel->save($case->getOrder());
+                $this->orderResourceModel->save($order);
                 $isCaseLocked = $this->casedataResourceModel->isCaseLocked($case);
 
                 // Some other process already locked the case, will not load or save

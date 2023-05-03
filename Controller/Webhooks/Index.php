@@ -9,6 +9,7 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Response\Http;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Stdlib\DateTime\DateTime;
+use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Logger\Logger;
@@ -18,10 +19,14 @@ use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Filesystem\Driver\File;
 use Signifyd\Connect\Model\Casedata;
+use Signifyd\Connect\Model\Casedata\UpdateCaseV2Factory;
+use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\App\ResourceConnection;
+use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
+use Signifyd\Connect\Model\UpdateOrderFactory;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
@@ -74,6 +79,31 @@ class Index extends Action
     protected $storeManagerInterface;
 
     /**
+     * @var OrderFactory
+     */
+    protected $orderFactory;
+
+    /**
+     * @var SignifydOrderResourceModel
+     */
+    protected $signifydOrderResourceModel;
+
+    /**
+     * @var UpdateCaseV2Factory
+     */
+    protected $updateCaseV2Factory;
+
+    /**
+     * @var UpdateCaseFactory
+     */
+    protected $updateCaseFactory;
+
+    /**
+     * @var UpdateOrderFactory
+     */
+    protected $updateOrderFactory;
+
+    /**
      * Index constructor.
      * @param Context $context
      * @param DateTime $dateTime
@@ -87,6 +117,11 @@ class Index extends Action
      * @param JsonSerializer $jsonSerializer
      * @param ResourceConnection $resourceConnection
      * @param StoreManagerInterface $storeManagerInterface
+     * @param OrderFactory $orderFactory
+     * @param SignifydOrderResourceModel $signifydOrderResourceModel
+     * @param UpdateCaseV2Factory $updateCaseV2Factory
+     * @param UpdateCaseFactory $updateCaseFactory
+     * @param UpdateOrderFactory $updateOrderFactory
      * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function __construct(
@@ -101,6 +136,11 @@ class Index extends Action
         OrderResourceModel $orderResourceModel,
         JsonSerializer $jsonSerializer,
         ResourceConnection $resourceConnection,
+        OrderFactory $orderFactory,
+        SignifydOrderResourceModel $signifydOrderResourceModel,
+        UpdateCaseV2Factory $updateCaseV2Factory,
+        UpdateCaseFactory $updateCaseFactory,
+        UpdateOrderFactory $updateOrderFactory,
         StoreManagerInterface $storeManagerInterface
     ) {
         parent::__construct($context);
@@ -114,6 +154,11 @@ class Index extends Action
         $this->jsonSerializer = $jsonSerializer;
         $this->resourceConnection = $resourceConnection;
         $this->storeManagerInterface = $storeManagerInterface;
+        $this->orderFactory = $orderFactory;
+        $this->signifydOrderResourceModel = $signifydOrderResourceModel;
+        $this->updateCaseV2Factory = $updateCaseV2Factory;
+        $this->updateCaseFactory = $updateCaseFactory;
+        $this->updateOrderFactory = $updateOrderFactory;
 
         // Compatibility with Magento 2.3+ which required form_key on every request
         // Magento expects class to implement \Magento\Framework\App\CsrfAwareActionInterface but this causes
@@ -247,7 +292,8 @@ class Index extends Action
                 );
             }
 
-            $order = $case->getOrder();
+            $order = $this->orderFactory->create();
+            $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
 
             if (isset($order) === false) {
                 $httpCode = Http::STATUS_CODE_400;
@@ -260,10 +306,12 @@ class Index extends Action
 
             switch ($webHookVersion) {
                 case "v2":
-                    $case->updateCase($requestJson);
+                    $updateCaseV2 = $this->updateCaseV2Factory->create();
+                    $case = $updateCaseV2($case, $requestJson);
                     break;
                 case "v3":
-                    $case->updateCaseV3($requestJson);
+                    $updateCase = $this->updateCaseFactory->create();
+                    $case = $updateCase($case, $requestJson);
                     break;
             }
 
@@ -276,7 +324,8 @@ class Index extends Action
                 );
             }
 
-            $case->updateOrder();
+            $updateOrder = $this->updateOrderFactory->create();
+            $case = $updateOrder($case);
 
             $this->casedataResourceModel->save($case);
         } catch (\Exception $e) {
