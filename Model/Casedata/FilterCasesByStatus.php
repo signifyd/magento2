@@ -1,6 +1,6 @@
 <?php
 
-namespace Signifyd\Connect\Helper;
+namespace Signifyd\Connect\Model\Casedata;
 
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
@@ -8,8 +8,9 @@ use Signifyd\Connect\Model\ResourceModel\Casedata\CollectionFactory as CasedataC
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
+use Signifyd\Connect\Helper\ConfigHelper;
 
-class Retry extends AbstractHelper
+class FilterCasesByStatus extends AbstractHelper
 {
     /**
      * @var CasedataCollectionFactory
@@ -66,7 +67,7 @@ class Retry extends AbstractHelper
      * @param $status
      * @return mixed
      */
-    public function getRetryCasesByStatus($status)
+    public function __invoke($status)
     {
         $retryTimes = $this->calculateRetryTimes();
 
@@ -119,7 +120,7 @@ class Retry extends AbstractHelper
      *
      * @return array
      */
-    public function calculateRetryTimes()
+    protected function calculateRetryTimes()
     {
         $retryTimes = [];
 

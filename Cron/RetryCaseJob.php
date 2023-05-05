@@ -7,21 +7,12 @@
 
 namespace Signifyd\Connect\Cron;
 
-use Magento\Framework\ObjectManagerInterface;
-use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
-use Magento\Sales\Model\OrderFactory;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Helper\PurchaseHelper;
-use Signifyd\Connect\Helper\ConfigHelper;
-use Signifyd\Connect\Helper\Retry;
+use Signifyd\Connect\Model\Casedata\FilterCasesByStatusFactory;
+use Signifyd\Connect\Model\ProcessCron\CaseData\InReviewFactory;
+use Signifyd\Connect\Model\ProcessCron\CaseData\WaitingSubmissionFactory;
+use Signifyd\Connect\Model\ProcessCron\CaseData\AsyncWaitingFactory;
 use Signifyd\Connect\Model\Casedata;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
-use Signifyd\Connect\Model\CasedataFactory;
-use Magento\Framework\App\ResourceConnection;
-use Magento\Store\Model\StoreManagerInterface;
-use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
-use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
-use Signifyd\Connect\Model\UpdateOrderFactory;
 
 class RetryCaseJob
 {
@@ -31,122 +22,45 @@ class RetryCaseJob
     protected $logger;
 
     /**
-     * @var \Magento\Framework\ObjectManagerInterface
+     * @var FilterCasesByStatusFactory
      */
-    protected $objectManager;
+    protected $filterCasesByStatusFactory;
 
     /**
-     * @var PurchaseHelper
+     * @var InReviewFactory
      */
-    protected $purchaseHelper;
+    protected $inReviewFactory;
 
     /**
-     * @var ConfigHelper
+     * @var WaitingSubmissionFactory
      */
-    protected $configHelper;
+    protected $waitingSubmissionFactory;
 
     /**
-     * @var \Signifyd\Connect\Helper\Retry
+     * @var AsyncWaitingFactory
      */
-    protected $caseRetryObj;
-
-    /**
-     * @var OrderResourceModel
-     */
-    protected $orderResourceModel;
-
-    /**
-     * @var OrderFactory
-     */
-    protected $orderFactory;
-
-    /**
-     * @var SignifydOrderResourceModel
-     */
-    protected $signifydOrderResourceModel;
-
-    /**
-     * @var UpdateCaseFactory
-     */
-    protected $updateCaseFactory;
-
-    /**
-     * @var UpdateOrderFactory
-     */
-    protected $updateOrderFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    protected $casedataResourceModel;
-
-    /**
-     * @var CasedataFactory
-     */
-    protected $casedataFactory;
-
-    /**
-     * @var ResourceConnection
-     */
-    protected $resourceConnection;
-
-    /**
-     * @var \StripeIntegration\Payments\Model\Config
-     */
-    protected $stripeConfig;
-
-    /**
-     * @var StoreManagerInterface
-     */
-    protected $storeManagerInterface;
+    protected $asyncWaitingFactory;
 
     /**
      * RetryCaseJob constructor.
-     * @param ObjectManagerInterface $objectManager
-     * @param PurchaseHelper $purchaseHelper
-     * @param ConfigHelper $configHelper
      * @param Logger $logger
-     * @param Retry $caseRetryObj
-     * @param OrderResourceModel $orderResourceModel
-     * @param OrderFactory $orderFactory
-     * @param SignifydOrderResourceModel $signifydOrderResourceModel
-     * @param UpdateCaseFactory $updateCaseFactory
-     * @param UpdateOrderFactory $updateOrderFactory
-     * @param CasedataResourceModel $casedataResourceModel
-     * @param CasedataFactory $casedataFactory
-     * @param ResourceConnection $resourceConnection
-     * @param StoreManagerInterface $storeManagerInterface
+     * @param FilterCasesByStatusFactory $filterCasesByStatusFactory
+     * @param InReviewFactory $inReviewFactory
+     * @param WaitingSubmissionFactory $waitingSubmissionFactory
+     * @param AsyncWaitingFactory $asyncWaitingFactory
      */
     public function __construct(
-        ObjectManagerInterface $objectManager,
-        PurchaseHelper $purchaseHelper,
-        ConfigHelper $configHelper,
         Logger $logger,
-        Retry $caseRetryObj,
-        OrderResourceModel $orderResourceModel,
-        OrderFactory $orderFactory,
-        SignifydOrderResourceModel $signifydOrderResourceModel,
-        UpdateCaseFactory $updateCaseFactory,
-        UpdateOrderFactory $updateOrderFactory,
-        CasedataResourceModel $casedataResourceModel,
-        CasedataFactory $casedataFactory,
-        ResourceConnection $resourceConnection,
-        StoreManagerInterface $storeManagerInterface
+        FilterCasesByStatusFactory $filterCasesByStatusFactory,
+        InReviewFactory $inReviewFactory,
+        WaitingSubmissionFactory $waitingSubmissionFactory,
+        AsyncWaitingFactory $asyncWaitingFactory
     ) {
-        $this->objectManager = $objectManager;
-        $this->purchaseHelper = $purchaseHelper;
-        $this->configHelper = $configHelper;
         $this->logger = $logger;
-        $this->caseRetryObj = $caseRetryObj;
-        $this->orderResourceModel = $orderResourceModel;
-        $this->orderFactory = $orderFactory;
-        $this->signifydOrderResourceModel = $signifydOrderResourceModel;
-        $this->updateCaseFactory = $updateCaseFactory;
-        $this->updateOrderFactory = $updateOrderFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
-        $this->casedataFactory = $casedataFactory;
-        $this->resourceConnection = $resourceConnection;
-        $this->storeManagerInterface = $storeManagerInterface;
+        $this->filterCasesByStatusFactory = $filterCasesByStatusFactory;
+        $this->inReviewFactory = $inReviewFactory;
+        $this->waitingSubmissionFactory = $waitingSubmissionFactory;
+        $this->asyncWaitingFactory = $asyncWaitingFactory;
     }
 
     /**
@@ -156,157 +70,30 @@ class RetryCaseJob
     {
         $this->logger->debug("CRON: Main retry method called");
 
-        $asyncWaitingCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::ASYNC_WAIT);
+        $filterCasesByStatusFactory = $this->filterCasesByStatusFactory->create();
+        $asyncWaitingCases = $filterCasesByStatusFactory(Casedata::ASYNC_WAIT);
 
-        /** @var \Signifyd\Connect\Model\Casedata $case */
-        foreach ($asyncWaitingCases as $case) {
-            $order = $this->orderFactory->create();
-            $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
-            $this->storeManagerInterface->setCurrentStore($order->getStore()->getStoreId());
-
-            $this->logger->debug(
-                "CRON: preparing for send case no: {$case->getOrderIncrement()}",
-                ['entity' => $case]
-            );
-
-            if (empty($case->getEntries('async_action')) === false &&
-                $case->getEntries('async_action') === 'delete'
-            ) {
-                $this->casedataResourceModel->delete($case);
-            }
-
-            $order->setData('origin_store_code', $case->getData('origin_store_code'));
-            $caseModel = $this->purchaseHelper->processOrderData($order);
-            $avsCode = $caseModel['transactions'][0]['verifications']['avsResponseCode'];
-            $cvvCode = $caseModel['transactions'][0]['verifications']['cvvResponseCode'];
-            $retries = $case->getData('retries');
-
-            if ($retries >= 5 || empty($avsCode) === false && empty($cvvCode) === false) {
-                try {
-                    $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
-
-                    $case->setMagentoStatus(Casedata::WAITING_SUBMISSION_STATUS);
-                    $case->setUpdated();
-
-                    $this->casedataResourceModel->save($case);
-                } catch (\Exception $e) {
-                    $this->logger->error('CRON: Failed to save case data to database: ' . $e->getMessage());
-                }
-            }
-        }
+        $processAsyncWaitingCases = $this->asyncWaitingFactory->create();
+        $processAsyncWaitingCases($asyncWaitingCases);
 
         /**
          * Getting all the cases that were not submitted to Signifyd
          */
-        $waitingCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::WAITING_SUBMISSION_STATUS);
+        $filterCasesByStatusFactory = $this->filterCasesByStatusFactory->create();
+        $waitingCases = $filterCasesByStatusFactory(Casedata::WAITING_SUBMISSION_STATUS);
 
-        /** @var \Signifyd\Connect\Model\Casedata $case */
-        foreach ($waitingCases as $case) {
-            $order = $this->orderFactory->create();
-            $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
-            $this->storeManagerInterface->setCurrentStore($order->getStore()->getStoreId());
-
-            $this->logger->debug(
-                "CRON: preparing for send case no: {$case['order_increment']}",
-                ['entity' => $case]
-            );
-
-            $this->reInitStripe($order);
-
-            try {
-                $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
-
-                $caseModel = $this->purchaseHelper->processOrderData($order);
-                /** @var \Signifyd\Core\Response\SaleResponse $caseResponse */
-                $caseResponse = $this->purchaseHelper->postCaseToSignifyd($caseModel, $order);
-                $investigationId = $caseResponse->getSignifydId();
-
-                if (empty($investigationId) === false) {
-                    $case->setCode($investigationId);
-                    $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
-                    $case->setUpdated();
-                    $this->casedataResourceModel->save($case);
-                }
-            } catch (\Exception $e) {
-                $this->logger->error('CRON: Failed to save case data to database: ' . $e->getMessage());
-            }
-        }
+        $processWaitingSubmission = $this->waitingSubmissionFactory->create();
+        $processWaitingSubmission($waitingCases);
 
         /**
          * Getting all the cases that are awaiting review from Signifyd
          */
-        $inReviewCases = $this->caseRetryObj->getRetryCasesByStatus(Casedata::IN_REVIEW_STATUS);
+        $filterCasesByStatusFactory = $this->filterCasesByStatusFactory->create();
+        $inReviewCases = $filterCasesByStatusFactory(Casedata::IN_REVIEW_STATUS);
 
-        foreach ($inReviewCases as $case) {
-            $order = $this->orderFactory->create();
-            $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
-            $this->storeManagerInterface->setCurrentStore($order->getStore()->getStoreId());
-
-            $this->logger->debug(
-                "CRON: preparing for review case no: {$case['order_increment']}",
-                ['entity' => $case]
-            );
-
-            $this->reInitStripe($order);
-
-            try {
-                $response = $this->configHelper->getSignifydSaleApi($case)->getCase($case->getData('order_increment'));
-                $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
-
-                $currentCaseHash = sha1(implode(',', $case->getData()));
-                $updateCase = $this->updateCaseFactory->create();
-                $case = $updateCase($case, $response);
-                $newCaseHash = sha1(implode(',', $case->getData()));
-
-                if ($currentCaseHash == $newCaseHash) {
-                    $this->logger->info(
-                        "CRON: Case {$case->getId()} already update with this data, no action will be taken"
-                    );
-
-                    // Triggering case save to unlock case
-                    $this->casedataResourceModel->save($case);
-
-                    continue;
-                }
-
-                $updateOrder = $this->updateOrderFactory->create();
-                $case = $updateOrder($case);
-
-                $this->casedataResourceModel->save($case);
-            } catch (\Exception $e) {
-                // Triggering case save to unlock case
-                if ($case instanceof \Signifyd\Connect\Model\Casedata) {
-                    $this->casedataResourceModel->save($case);
-                }
-
-                $this->logger->error('CRON: Failed to save case data to database: ' . $e->getMessage());
-            }
-        }
+        $processInReview = $this->inReviewFactory->create();
+        $processInReview($inReviewCases);
 
         $this->logger->debug("CRON: Main retry method ended");
-    }
-
-    /**
-     * On background tasks Stripe must be reinitialized
-     *
-     * @param \Magento\Sales\Model\Order $order
-     * @return bool
-     */
-    public function reInitStripe(\Magento\Sales\Model\Order $order)
-    {
-        if (class_exists(\StripeIntegration\Payments\Model\Config::class) === false) {
-            return false;
-        }
-
-        if ($this->stripeConfig === null) {
-            $this->stripeConfig = $this->objectManager->get(\StripeIntegration\Payments\Model\Config::class);
-        }
-
-        if (version_compare(\StripeIntegration\Payments\Model\Config::$moduleVersion, '1.8.8') >= 0 &&
-            method_exists($this->stripeConfig, 'reInitStripe')) {
-            $this->stripeConfig->reInitStripe($order->getStoreId(), $order->getBaseCurrencyCode(), null);
-        }
-
-        return true;
     }
 }

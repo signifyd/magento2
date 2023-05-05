@@ -2,173 +2,56 @@
 
 namespace Signifyd\Connect\Cron;
 
-use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
-use Signifyd\Connect\Helper\ConfigHelper;
-use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Model\Fulfillment;
-use Signifyd\Connect\Model\ResourceModel\Fulfillment as FulfillmentResourceModel;
-use Signifyd\Connect\Model\ResourceModel\Fulfillment\CollectionFactory as FulfillmentCollectionFactory;
-use Magento\Sales\Model\OrderFactory;
-use Signifyd\Connect\Helper\RetryFulfillment;
-use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
+use Signifyd\Connect\Model\Fulfillment\FulfillmentsToRetryFactory;
+use Signifyd\Connect\Model\ProcessCron\FulfillmentFactory;
 
 class RetryFulfillmentJob
 {
-    /**
-     * @var FulfillmentCollectionFactory
-     */
-    protected $fulfillmentCollectionFactory;
-
-    /**
-     * @var ConfigHelper
-     */
-    protected $configHelper;
-
-    /**
-     * @var FulfillmentResourceModel
-     */
-    protected $fulfillmentResourceModel;
-
     /**
      * @var Logger
      */
     protected $logger;
 
     /**
-     * @var OrderHelper
+     * @var FulfillmentsToRetryFactory
      */
-    protected $orderHelper;
+    protected $fulfillmentsToRetryFactory;
 
     /**
-     * @var RetryFulfillment
+     * @var FulfillmentFactory
      */
-    protected $fulfillmentRetryObj;
-
-    /**
-     * @var SignifydOrderResourceModel
-     */
-    protected $signifydOrderResourceModel;
-
-    /**
-     * @var OrderFactory
-     */
-    protected $orderFactory;
-
-    /**
-     * @var JsonSerializer
-     */
-    protected $jsonSerializer;
+    protected $fulfillmentFactory;
 
     /**
      * RetryFulfillmentJob constructor.
-     * @param FulfillmentCollectionFactory $fulfillmentCollectionFactory
-     * @param ConfigHelper $configHelper
-     * @param FulfillmentResourceModel $fulfillmentResourceModel
      * @param Logger $logger
-     * @param OrderHelper $orderHelper
-     * @param RetryFulfillment $fulfillmentRetryObj
-     * @param SignifydOrderResourceModel $signifydOrderResourceModel
-     * @param OrderFactory $orderFactory
-     * @param JsonSerializer $jsonSerializer
+     * @param FulfillmentsToRetryFactory $fulfillmentsToRetryFactory
+     * @param FulfillmentFactory $fulfillmentFactory
      */
     public function __construct(
-        FulfillmentCollectionFactory $fulfillmentCollectionFactory,
-        ConfigHelper $configHelper,
-        FulfillmentResourceModel $fulfillmentResourceModel,
         Logger $logger,
-        OrderHelper $orderHelper,
-        RetryFulfillment $fulfillmentRetryObj,
-        SignifydOrderResourceModel $signifydOrderResourceModel,
-        OrderFactory $orderFactory,
-        JsonSerializer $jsonSerializer
+        FulfillmentsToRetryFactory $fulfillmentsToRetryFactory,
+        FulfillmentFactory $fulfillmentFactory
     ) {
-        $this->fulfillmentCollectionFactory = $fulfillmentCollectionFactory;
-        $this->configHelper = $configHelper;
-        $this->fulfillmentResourceModel = $fulfillmentResourceModel;
         $this->logger = $logger;
-        $this->orderHelper = $orderHelper;
-        $this->fulfillmentRetryObj = $fulfillmentRetryObj;
-        $this->signifydOrderResourceModel = $signifydOrderResourceModel;
-        $this->orderFactory = $orderFactory;
-        $this->jsonSerializer = $jsonSerializer;
+        $this->fulfillmentsToRetryFactory = $fulfillmentsToRetryFactory;
+        $this->fulfillmentFactory = $fulfillmentFactory;
     }
 
     /**
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
-     * @throws \Signifyd\Core\Exceptions\FulfillmentException
-     * @throws \Signifyd\Core\Exceptions\InvalidClassException
+     * @return void
      */
     public function execute()
     {
         $this->logger->debug("CRON: Retry fulfillment method called");
 
-        $fulfillments = $this->fulfillmentRetryObj->getRetryFulfillment();
+        $fulfillmentsToRetry = $this->fulfillmentsToRetryFactory->create();
+        $fulfillments = $fulfillmentsToRetry();
 
-        foreach ($fulfillments as $fulfillment) {
-            $orderId = $fulfillment->getOrderId();
-            $order = $this->orderFactory->create();
-            $this->signifydOrderResourceModel->load($order, $orderId, 'increment_id');
-            $fulfillmentData = $this->generateFulfillmentData($fulfillment);
-
-            $fulfillmentBulkResponse = $this->configHelper
-                ->getSignifydSaleApi($order)->addFulfillment($fulfillmentData);
-            $fulfillmentOrderId = $fulfillmentBulkResponse->getOrderId();
-
-            if (isset($fulfillmentOrderId) === false) {
-                $message = "CRON: Fullfilment failed to send";
-            } else {
-                $message = "CRON: Fullfilment sent";
-                $fulfillment->setMagentoStatus(Fulfillment::COMPLETED_STATUS);
-                $this->fulfillmentResourceModel->save($fulfillment);
-            }
-
-            $this->logger->debug($message);
-            $this->orderHelper->addCommentToStatusHistory($order, $message);
-        }
+        $processFulfillment = $this->fulfillmentFactory->create();
+        $processFulfillment($fulfillments);
 
         $this->logger->debug("CRON: Retry fulfillment method ended");
-    }
-
-    /**
-     * @param $fulfillment
-     * @return array
-     */
-    public function generateFulfillmentData($fulfillment)
-    {
-        $fulfillmentData = [];
-        $fulfillmentData['orderId'] = $fulfillment->getData('order_id');
-        $fulfillmentData['fulfillmentStatus'] = $fulfillment->getData('fulfillment_status');
-        $fulfillmentData['fulfillments'] = $this->makeFulfillments($fulfillment);
-
-        return $fulfillmentData;
-    }
-
-    public function makeFulfillments($fulfillmentData)
-    {
-        $fulfillments = [];
-        $fulfillment = [];
-        $fulfillment['shipmentId'] = $fulfillmentData->getData('id');
-        $fulfillment['shippedAt'] = $fulfillmentData->getData('shipped_at');
-        $fulfillment['products'] = $this->getFulfillmentsProducts($fulfillmentData);
-        $fulfillment['shipmentStatus'] = $fulfillmentData->getData('shipment_status');
-        $fulfillment['trackingUrls'] = $fulfillmentData->getData('tracking_urls');
-        $fulfillment['trackingNumbers'] = $fulfillmentData->getData('tracking_numbers');
-        $fulfillment['destination'] = $this->jsonSerializer->unserialize($fulfillmentData->getData('destination'));
-        $fulfillment['origin'] = $this->jsonSerializer->unserialize($fulfillmentData->getData('origin'));
-        $fulfillment['carrier'] = $fulfillmentData->getData('carrier');
-
-        $fulfillments[] = $fulfillment;
-        return $fulfillments;
-    }
-
-    /**
-     * @param $fulfillment
-     * @return array|bool|float|int|mixed|string|null
-     */
-    public function getFulfillmentsProducts($fulfillment)
-    {
-        $productsArray = $this->jsonSerializer->unserialize($fulfillment->getProducts());
-        return $productsArray;
     }
 }

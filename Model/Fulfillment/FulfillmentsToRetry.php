@@ -1,6 +1,6 @@
 <?php
 
-namespace Signifyd\Connect\Helper;
+namespace Signifyd\Connect\Model\Fulfillment;
 
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
@@ -8,7 +8,7 @@ use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\ResourceModel\Fulfillment\CollectionFactory as FulfillmentCollectionFactory;
 use Signifyd\Connect\Model\ResourceModel\Fulfillment as FulfillmentResourceModel;
 
-class RetryFulfillment extends AbstractHelper
+class FulfillmentsToRetry extends AbstractHelper
 {
     /**
      * @var Logger
@@ -49,7 +49,7 @@ class RetryFulfillment extends AbstractHelper
      * @param $status
      * @return mixed
      */
-    public function getRetryFulfillment()
+    public function __invoke()
     {
         $retryTimes = $this->calculateRetryTimes();
 
@@ -90,7 +90,7 @@ class RetryFulfillment extends AbstractHelper
      *
      * @return array
      */
-    public function calculateRetryTimes()
+    protected function calculateRetryTimes()
     {
         $retryTimes = [];
 
