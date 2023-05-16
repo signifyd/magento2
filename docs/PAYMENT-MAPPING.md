@@ -15,7 +15,7 @@ Payment method code is defined by payment extension developer and usually can be
 Add the desired payment method Signifyd and Magento codes to the JSON string on command below and run it on your databse:
 
 ```sql
-INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/payment_methods_config', '{"CREDIT_CARD":["payflow_link", "payflow_advanced", "authorizenet_acceptjs", "adyen_cc", "braintree", "cybersource", "stripe_payments", "anet_creditcard", "authorizenet_directpost", "openpay_cards", "holacash", "stripe_payments"],"CHECK":["checkmo"], "SIGNIFYD-PAYMENT-CODE": ["magento-payment-code"]}');
+INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/payment_methods_config', '{"CREDIT_CARD":["payflow_link", "payflow_advanced", "authorizenet_acceptjs", "adyen_cc", "braintree", "cybersource", "stripe_payments", "anet_creditcard", "authorizenet_directpost", "openpay_cards", "holacash", "stripe_payments", "chcybersource"],"CHECK":["checkmo"], "SIGNIFYD-PAYMENT-CODE": ["magento-payment-code"]}');
 ```
 
 A list of the possible values for SIGNIFYD-PAYMENT-CODE can be founded on Signifyd API docs, look for transactions.paymentMethod field.

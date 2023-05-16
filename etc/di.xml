@@ -132,6 +132,10 @@
         <plugin name="Signifyd_Connect_Plugin_StripeIntegration_Payments_Helper_Generic" type="\Signifyd\Connect\Plugin\StripeIntegration\Payments\Helper\Generic" />
     </type>
 
+    <type name="CyberSource\SecureAcceptance\Gateway\Http\Client\SOAPClient">
+        <plugin name="Signifyd_Connect_Plugin_CyberSource_Gateway_Http_Client_SOAPClient" type="\Signifyd\Connect\Plugin\CyberSource\Gateway\Http\Client\SOAPClient" />
+    </type>
+
     <!-- Preferences -->
     <preference for="Magento\Sales\Model\ResourceModel\Order\Grid\Collection" type="Signifyd\Connect\Model\ResourceModel\Order\Grid\Collection" />
 
