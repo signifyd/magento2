@@ -474,6 +474,7 @@ class PurchaseHelper
         return $this->getDecisionForMethod($configDecision, $paymentMethod);
     }
 
+    //TODO: COMO FAZER? criar na pasta api um arquivo com os metodos para serem interceptados?
     /**
      * getReceivedBy method should be extended/intercepted by plugin to add value to it.
      * If the order was was placed on-behalf of a customer service or sales agent, his or her name.
@@ -1210,6 +1211,7 @@ class PurchaseHelper
         return $user;
     }
 
+    //TODO: CERTO
     /**
      * Construct a new case object
      * @param $order Order
@@ -2230,6 +2232,7 @@ class PurchaseHelper
         return $this->jsonSerializer->unserialize($case->getEntries('threeDs'));
     }
 
+    //TODO: RESOLVER
     /**
      * If this product is being delivered as part of a subscription, then you can include these fields
      * to include data about the subscription itself. The entire itemQuantity on this
