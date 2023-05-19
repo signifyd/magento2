@@ -4,14 +4,14 @@ namespace Signifyd\Connect\Plugin\OrderGrid;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\ResourceModel\Order\Grid\Collection;
+use Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult;
 
 class SalesOrderGridPlugin
 {
     public function aroundGetSelect(
-        \Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult $subject,
-        \Closure                                                              $proceed
-    )
-    {
+        SearchResult $subject,
+        \Closure $proceed
+    ) {
         $select = $proceed();
         $connection = $subject->getResource()->getConnection();
 
@@ -29,11 +29,10 @@ class SalesOrderGridPlugin
     }
 
     public function beforeAddFieldToFilter(
-        \Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult $subject,
-                                                                              $field,
-                                                                              $condition = null
-    )
-    {
+        SearchResult $subject,
+                     $field,
+                     $condition = null
+    ) {
         if ($field === 'signifyd_guarantee') {
             if (isset($condition['eq']) && $condition['eq'] === 'ACCEPT') {
                 return [$field, ['in' => ['ACCEPT', 'APPROVED']]];
