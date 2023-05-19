@@ -27,4 +27,24 @@ class SalesOrderGridPlugin
         }
         return $select;
     }
+
+    public function beforeAddFieldToFilter(
+        \Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult $subject,
+                                                                              $field,
+                                                                              $condition = null
+    )
+    {
+        if ($field === 'signifyd_guarantee') {
+            if (isset($condition['eq']) && $condition['eq'] === 'ACCEPT') {
+                return [$field, ['in' => ['ACCEPT', 'APPROVED']]];
+            }
+            if (isset($condition['eq']) && $condition['eq'] === 'REJECT') {
+                return [$field, ['in' => ['REJECT', 'DECLINED']]];
+            }
+            if (isset($condition['eq']) && $condition['eq'] === 'HOLD') {
+                return [$field, ['in' => ['HOLD', 'PENDING']]];
+            }
+        }
+        return [$field, $condition];
+    }
 }
