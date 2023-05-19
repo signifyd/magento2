@@ -132,8 +132,8 @@
         <plugin name="Signifyd_Connect_Plugin_StripeIntegration_Payments_Helper_Generic" type="\Signifyd\Connect\Plugin\StripeIntegration\Payments\Helper\Generic" />
     </type>
 
-    <type name="Magento\Sales\Model\ResourceModel\Order\Grid\Collection">
-        <plugin name="signifydSalesOrderGrid" type="\Signifyd\Connect\Plugin\OrderGrid\SalesOrderGridPlugin" />
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <plugin name="signifydSalesOrderGrid" type="\Signifyd\Connect\Plugin\OrderGrid\SalesOrderGridPlugin"/>
     </type>
 
     <!-- Preferences -->
