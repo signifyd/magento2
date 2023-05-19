@@ -72,6 +72,11 @@
                     <signifyd_transaction_id_adapter>Signifyd\Connect\Model\Payment\Cybersource\TransactionIdMapper</signifyd_transaction_id_adapter>
                 </cybersource>
 
+                <chcybersource>
+                    <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Cybersource\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
+                    <signifyd_bin_adapter>Signifyd\Connect\Model\Payment\Cybersource\BinMapper</signifyd_bin_adapter>
+                </chcybersource>
+
                 <payflowpro>
                     <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Payflow\Pro\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
                     <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Payflow\Pro\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>

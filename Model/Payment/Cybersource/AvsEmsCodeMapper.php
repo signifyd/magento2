@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\AvsEmsCodeMapper as Base_AvsEmsCodeMappe
 
 class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
 {
-    protected $allowedMethods = ['cybersource'];
+    protected $allowedMethods = ['cybersource', 'chcybersource'];
 
     /**
      * List of mapping AVS codes
@@ -34,11 +34,17 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $additionalInfo = $order->getPayment()->getAdditionalInformation();
+        $apiResponse = $this->getSignifydPaymentData();
 
         if (isset($additionalInfo['auth_avs_code']) &&
             isset(self::$avsMap[$additionalInfo['auth_avs_code']]) &&
             $this->validate(self::$avsMap[$additionalInfo['auth_avs_code']])) {
             $avsStatus = self::$avsMap[$additionalInfo['auth_avs_code']];
+        } elseif (is_array($apiResponse) &&
+            isset($apiResponse['ccAuthReply']) &&
+            isset($apiResponse['ccAuthReply']->avsCode)
+        ) {
+            $avsStatus = $apiResponse['ccAuthReply']->avsCode;
         }
 
         $message = 'AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
