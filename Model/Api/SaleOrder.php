@@ -33,6 +33,8 @@ class SaleOrder
         $signifydOrder['orderId'] = $order->getIncrementId();
         $signifydOrder['purchase'] = $this->makePurchase($order);
         $signifydOrder['userAccount'] = $this->makeUserAccount($order);
+        //TODO: CONTINUAR
+        //TODO: FAZER O SHIPS
         $signifydOrder['memberships'] = $this->makeMemberships();
         $signifydOrder['coverageRequests'] = $this->getDecisionRequest($order->getPayment()->getMethod());
         $signifydOrder['merchantCategoryCode'] = $this->makeMerchantCategoryCode();

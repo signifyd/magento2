@@ -22,6 +22,7 @@ class Fulfillments
     }
 
     /**
+     * Construct a new Fulfillments object
      * @param $fulfillmentData
      * @return array
      */

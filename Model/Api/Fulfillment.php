@@ -20,6 +20,7 @@ class Fulfillment
     }
 
     /**
+     * Construct a new Fulfillment object
      * @param $fulfillment
      * @return array
      */

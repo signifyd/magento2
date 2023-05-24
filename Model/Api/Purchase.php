@@ -14,12 +14,28 @@ class Purchase
     protected $dateTimeFactory;
 
     /**
+     * @var ProductFactory
+     */
+    protected $productFactory;
+
+    /**
+     * @var ShipmentsFactory
+     */
+    protected $shipmentsFactory;
+
+    /**
      * @param DateTimeFactory $dateTimeFactory
+     * @param ProductFactory $productFactory
+     * @param ShipmentsFactory $shipmentsFactory
      */
     public function __construct(
-        DateTimeFactory $dateTimeFactory
+        DateTimeFactory $dateTimeFactory,
+        ProductFactory $productFactory,
+        ShipmentsFactory $shipmentsFactory
     ) {
         $this->dateTimeFactory = $dateTimeFactory;
+        $this->productFactory = $productFactory;
+        $this->shipmentsFactory = $shipmentsFactory;
     }
 
     /**
@@ -67,11 +83,13 @@ class Purchase
             $children = $item->getChildrenItems();
 
             if (is_array($children) == false || empty($children)) {
-                $purchase['products'][] = $this->makeProduct($item);
+                $makeProduct = $this->productFactory->create();
+                $purchase['products'][] = $makeProduct($item);
             }
         }
 
-        $purchase['shipments'] = $this->makeShipments($order);
+        $makeShipments = $this->shipmentsFactory->create();
+        $purchase['shipments'] = $makeShipments($order);
         $purchase['confirmationPhone'] = $order->getBillingAddress()->getTelephone();
         $purchase['totalShippingCost'] = $order->getShippingAmount();
         $couponCode = $order->getCouponCode();
@@ -111,12 +129,14 @@ class Purchase
             $children = $item->getChildren();
 
             if (is_array($children) == false || empty($children)) {
-                $purchase['products'][] = $this->makeProductFromQuote($item);
+                $makeProduct = $this->productFactory->create();
+                $purchase['products'][] = $makeProduct($item);
             }
         }
 
+        $makeShipments = $this->shipmentsFactory->create();
         $shippingAmount = $quote->getShippingAddress()->getShippingAmount();
-        $purchase['shipments'] = $this->makeShipmentsFromQuote($quote);
+        $purchase['shipments'] = $makeShipments($quote);
         $purchase['confirmationPhone'] = $quote->getBillingAddress()->getTelephone();
         $purchase['totalShippingCost'] = is_numeric($shippingAmount) ? floatval($shippingAmount) : null;
         $purchase['discountCodes'] = null;
