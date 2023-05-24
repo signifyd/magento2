@@ -880,6 +880,7 @@ class PurchaseHelper
         return false;
     }
 
+    //TODO: VALIDAR A ONDE SERA COLOCADO
     /**
      * @param $mageAddress
      * @return array
@@ -2315,6 +2316,7 @@ class PurchaseHelper
         return null;
     }
 
+    //TODO: RESOLVER
     /**
      * This method should be extended/intercepted by plugin to add value to it
      *
