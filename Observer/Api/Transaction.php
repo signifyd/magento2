@@ -4,6 +4,7 @@ namespace Signifyd\Connect\Observer\Api;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\PurchaseHelper;
@@ -39,25 +40,33 @@ class Transaction implements ObserverInterface
     protected $configHelper;
 
     /**
+     * @var JsonSerializer
+     */
+    protected $jsonSerializer;
+
+    /**
      * Transaction constructor.
      * @param Logger $logger
      * @param PurchaseHelper $purchaseHelper
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param ConfigHelper $configHelper
+     * @param JsonSerializer $jsonSerializer
      */
     public function __construct(
         Logger $logger,
         PurchaseHelper $purchaseHelper,
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
-        ConfigHelper $configHelper
+        ConfigHelper $configHelper,
+        JsonSerializer $jsonSerializer
     ) {
         $this->logger = $logger;
         $this->purchaseHelper = $purchaseHelper;
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->configHelper = $configHelper;
+        $this->jsonSerializer = $jsonSerializer;
     }
 
     public function execute(Observer $observer)
@@ -87,7 +96,22 @@ class Transaction implements ObserverInterface
                     $saleTransaction['checkoutId'] = $case->getCheckoutToken();
                     $saleTransaction['orderId'] = $order->getIncrementId();
                     $saleTransaction['transactions'] = $this->purchaseHelper->makeTransactions($order);
+
+                    $saleTransactionJson = $this->jsonSerializer->serialize($saleTransaction);
+                    $newHashToValidateReroute = sha1($saleTransactionJson);
+                    $currentHashToValidateReroute = $case->getEntries('transaction_hash');
+
+                    if ($newHashToValidateReroute == $currentHashToValidateReroute) {
+                        $this->logger->info(
+                            'No data changes, will not send transaction ' .
+                            $order->getIncrementId()
+                        );
+                        return;
+                    }
+                    
                     $this->purchaseHelper->postTransactionToSignifyd($saleTransaction, $order);
+                    $case->setEntries('transaction_hash', $newHashToValidateReroute);
+                    $this->casedataResourceModel->save($case);
                 }
             } catch (\Exception $e) {
                 $this->logger->debug($e->getMessage());
