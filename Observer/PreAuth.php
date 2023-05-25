@@ -256,6 +256,7 @@ class PreAuth implements ObserverInterface
             }
 
             $this->logger->info("Creating case for quote {$quote->getId()}");
+            $this->addSignifydDataToPayment($quote,$checkoutPaymentDetails);
             $caseFromQuote = $this->purchaseHelper->processQuoteData($quote, $checkoutPaymentDetails, $paymentMethod);
             $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
             $validActions = ['ACCEPT', 'REJECT', 'HOLD', 'PENDING'];
@@ -331,5 +332,42 @@ class PreAuth implements ObserverInterface
         return isset($caseResponse) &&
             is_object($caseResponse) &&
             $caseAction == 'REJECT';
+    }
+
+    /**
+     * @param \Magento\Quote\Model\Quote $quote
+     * @param array $checkoutPaymentDetails
+     * @return void
+     */
+    public function addSignifydDataToPayment($quote,$checkoutPaymentDetails)
+    {
+        if (empty($checkoutPaymentDetails)) {
+            return;
+        }
+
+        if (isset($checkoutPaymentDetails['cardBin'])) {
+            $quote->getPayment()->setData(
+                'cc_number',
+                $checkoutPaymentDetails['cardBin'] .
+                000000 .
+                $checkoutPaymentDetails['cardLast4'] ?? 0000
+            );
+        }
+
+        if (isset($checkoutPaymentDetails['holderName'])) {
+            $quote->getPayment()->setCcOwner($checkoutPaymentDetails['holderName']);
+        }
+
+        if (isset($checkoutPaymentDetails['cardLast4'])) {
+            $quote->getPayment()->setCcLast4($checkoutPaymentDetails['cardLast4']);
+        }
+
+        if (isset($checkoutPaymentDetails['cardExpiryMonth'])) {
+            $quote->getPayment()->setCcExpMonth($checkoutPaymentDetails['cardExpiryMonth']);
+        }
+
+        if (isset($checkoutPaymentDetails['cardExpiryYear'])) {
+            $quote->getPayment()->setCcExpYear($checkoutPaymentDetails['cardExpiryYear']);
+        }
     }
 }
