@@ -81,7 +81,93 @@ define(
         },
         //Mixin for adyen extension 8.x.x version
         renderCCPaymentMethod: function () {
-             if (window.checkoutConfig.signifyd.isAdyenGreaterThanEightEleven) {
+            if (window.checkoutConfig.signifyd.isAdyenGreaterThanEightEighteen) {
+                let self = this;
+                if (!self.getClientKey) {
+                    return false;
+                }
+
+                self.installments(0);
+
+                // installments
+                let allInstallments = self.getAllInstallments();
+
+                let componentConfig = {
+                    enableStoreDetails: self.getEnableStoreDetails(),
+                    brands: self.getBrands(),
+                    hasHolderName: adyenConfiguration.getHasHolderName(),
+                    holderNameRequired: adyenConfiguration.getHasHolderName() &&
+                        adyenConfiguration.getHolderNameRequired(),
+                    onChange: function(state, component) {
+                        self.placeOrderAllowed(!!state.isValid);
+                        self.storeCc = !!state.data.storePaymentMethod;
+                    },
+                    // Keep onBrand as is until checkout component supports installments
+                    onBrand: function(state) {
+                        // Define the card type
+                        // translate adyen card type to magento card type
+                        let creditCardType = self.getCcCodeByAltCode(
+                            state.brand);
+                        if (creditCardType) {
+                            // If the credit card type is already set, check if it changed or not
+                            if (!self.creditCardType() ||
+                                self.creditCardType() &&
+                                self.creditCardType() != creditCardType) {
+                                let numberOfInstallments = [];
+
+                                if (creditCardType in allInstallments) {
+                                    // get for the creditcard the installments
+                                    let cardInstallments = allInstallments[creditCardType];
+                                    let grandTotal = self.grandTotal();
+                                    let precision = quote.getPriceFormat().precision;
+                                    let currencyCode = quote.totals().quote_currency_code;
+
+                                    numberOfInstallments = installmentsHelper.getInstallmentsWithPrices(
+                                        cardInstallments, grandTotal,
+                                        precision, currencyCode);
+                                }
+
+                                if (numberOfInstallments) {
+                                    self.installments(numberOfInstallments);
+                                } else {
+                                    self.installments(0);
+                                }
+                            }
+
+                            self.creditCardType(creditCardType);
+                        } else {
+                            self.creditCardType('');
+                            self.installments(0);
+                        }
+                    },
+                    onBinValue: function (binData) {
+                        if (binData.binValue.length == 6) {
+                            binValue = binData.binValue;
+                        }
+                    },
+                    onFieldValid: function (onFieldValid) {
+                        if (onFieldValid.fieldType === 'encryptedCardNumber') {
+                            cardLast4 = onFieldValid.endDigits;
+                        }
+                    }
+                }
+
+                if (self.isClickToPayEnabled()) {
+                    componentConfig.clickToPayConfiguration = {
+                        merchantDisplayName: adyenConfiguration.getMerchantAccount(),
+                        shopperEmail: self.getShopperEmail()
+                    };
+                }
+
+                self.cardComponent = adyenCheckout.mountPaymentMethodComponent(
+                    this.checkoutComponent,
+                    'card',
+                    componentConfig,
+                    '#cardContainer'
+                )
+
+                return true
+            } else if (window.checkoutConfig.signifyd.isAdyenGreaterThanEight) {
                 let self = this;
                 if (!self.getClientKey) {
                     return false;
