@@ -8,6 +8,7 @@
 namespace Signifyd\Connect\Helper;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Store\Model\StoreManagerInterface;
@@ -91,6 +92,11 @@ class ConfigHelper
     protected $signifydOrderResourceModel;
 
     /**
+     * @var JsonSerializer
+     */
+    protected $jsonSerializer;
+
+    /**
      * ConfigHelper constructor.
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param StoreManagerInterface $storeManager
@@ -103,6 +109,7 @@ class ConfigHelper
      * @param DirectoryList $directory
      * @param OrderFactory $orderFactory
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
+     * @param JsonSerializer $jsonSerializer
      */
     public function __construct(
         ScopeConfigInterface $scopeConfigInterface,
@@ -115,7 +122,8 @@ class ConfigHelper
         WebhooksV2ApiFactory $webhooksV2ApiFactory,
         DirectoryList $directory,
         OrderFactory $orderFactory,
-        SignifydOrderResourceModel $signifydOrderResourceModel
+        SignifydOrderResourceModel $signifydOrderResourceModel,
+        JsonSerializer $jsonSerializer
     ) {
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->storeManager = $storeManager;
@@ -128,6 +136,7 @@ class ConfigHelper
         $this->directory = $directory;
         $this->orderFactory = $orderFactory;
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
+        $this->jsonSerializer = $jsonSerializer;
     }
 
     /**
@@ -212,108 +221,6 @@ class ConfigHelper
         }
 
         return null;
-    }
-
-    /**
-     * @param string $type
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
-     * @return mixed
-     */
-    public function getSignifydApi($type, \Magento\Framework\Model\AbstractModel $entity = null)
-    {
-        $type = strtolower($type);
-        $apiId = $type . $this->getStoreCode($entity, true);
-
-        if (isset($this->signifydAPI[$apiId]) === false ||
-            is_object($this->signifydAPI[$apiId]) === false) {
-            $apiKey = $this->getConfigData('signifyd/general/key', $entity);
-            $args = [
-                'apiKey' => $apiKey,
-                'logLocation' => $this->directory->getPath('log')
-            ];
-
-            switch ($type) {
-                case 'case':
-                    $this->signifydAPI[$apiId] = $this->caseApiFactory->create(['args' => $args]);
-                    break;
-
-                case 'sale':
-                    $this->signifydAPI[$apiId] = $this->saleApiFactory->create(['args' => $args]);
-                    break;
-
-                case 'checkout':
-                    $this->signifydAPI[$apiId] = $this->checkoutApiFactory->create(['args' => $args]);
-                    break;
-
-                case 'guarantee':
-                    $this->signifydAPI[$apiId] = $this->guaranteeApiFactory->create(['args' => $args]);
-                    break;
-
-                case 'webhook':
-                    $this->signifydAPI[$apiId] = $this->webhooksApiFactory->create(['args' => $args]);
-                    break;
-
-                case 'webhookv2':
-                    $this->signifydAPI[$apiId] = $this->webhooksV2ApiFactory->create(['args' => $args]);
-                    break;
-            }
-        }
-
-        return $this->signifydAPI[$apiId];
-    }
-
-    /**
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
-     * @return \Signifyd\Core\Api\CaseApi
-     */
-    public function getSignifydCaseApi(\Magento\Framework\Model\AbstractModel $entity = null)
-    {
-        return $this->getSignifydApi('case', $entity);
-    }
-
-    /**
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
-     * @return \Signifyd\Core\Api\CheckoutApi
-     */
-    public function getSignifydCheckoutApi(\Magento\Framework\Model\AbstractModel $entity = null)
-    {
-        return $this->getSignifydApi('checkout', $entity);
-    }
-
-    /**
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
-     * @return \Signifyd\Core\Api\ApiModel
-     */
-    public function getSignifydSaleApi(\Magento\Framework\Model\AbstractModel $entity = null)
-    {
-        return $this->getSignifydApi('sale', $entity);
-    }
-
-    /**
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
-     * @return \Signifyd\Core\Api\GuaranteeApi
-     */
-    public function getSignifydGuaranteeApi(\Magento\Framework\Model\AbstractModel $entity = null)
-    {
-        return $this->getSignifydApi('guarantee', $entity);
-    }
-
-    /**
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
-     * @return \Signifyd\Core\Api\WebhooksApi
-     */
-    public function getSignifydWebhookApi(\Magento\Framework\Model\AbstractModel $entity = null)
-    {
-        return $this->getSignifydApi('webhook', $entity);
-    }
-
-    /**
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
-     * @return \Signifyd\Core\Api\WebhooksV2Api
-     */
-    public function getSignifydWebhookV2Api(\Magento\Framework\Model\AbstractModel $entity = null)
-    {
-        return $this->getSignifydApi('webhookV2', $entity);
     }
 
     /**
@@ -406,6 +313,87 @@ class ConfigHelper
         );
 
         if ($paymentAction === 'authorize_capture' && $order->hasInvoices() === false) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param $scopeType
+     * @param $scopeCode
+     * @return mixed
+     */
+    public function getPolicyName($scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
+    {
+        return $this->scopeConfigInterface->getValue(
+            'signifyd/advanced/policy_name',
+            $scopeType,
+            $scopeCode
+        );
+    }
+
+    /**
+     * @param $policyName
+     * @param $paymentMethod
+     * @return bool
+     */
+    public function getIsPreAuth($policyName, $paymentMethod)
+    {
+        $policyFromMethod = $this->getPolicyFromMethod($policyName, $paymentMethod);
+
+        return ($policyFromMethod == 'PRE_AUTH' || $policyFromMethod == 'SCA_PRE_AUTH');
+    }
+
+    /**
+     * @param $policyName
+     * @param $paymentMethod
+     * @return int|mixed|string
+     */
+    public function getPolicyFromMethod($policyName, $paymentMethod)
+    {
+        if (isset($paymentMethod) === false) {
+            return 'POST_AUTH';
+        }
+
+        if ($this->isPaymentRestricted($paymentMethod)) {
+            return 'POST_AUTH';
+        }
+
+        try {
+            $configPolicy = $this->jsonSerializer->unserialize($policyName);
+        } catch (\InvalidArgumentException $e) {
+            return $policyName;
+        }
+
+        foreach ($configPolicy as $key => $value) {
+            if ($key == 'PRE_AUTH' || $key == 'SCA_PRE_AUTH') {
+                if (is_array($value) === false) {
+                    continue;
+                }
+
+                if (in_array($paymentMethod, $value)) {
+                    return $key;
+                }
+            }
+        }
+
+        return 'POST_AUTH';
+    }
+
+    /**
+     * @param $policyName
+     * @return bool
+     */
+    public function getIsPreAuthInUse($policyName)
+    {
+        try {
+            $configPolicy = $this->jsonSerializer->unserialize($policyName);
+        } catch (\InvalidArgumentException $e) {
+            return ($policyName == 'PRE_AUTH');
+        }
+
+        if (isset($configPolicy['PRE_AUTH']) === false || is_array($configPolicy['PRE_AUTH']) === false) {
             return false;
         }
 

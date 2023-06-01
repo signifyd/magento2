@@ -2,7 +2,9 @@
 
 namespace Signifyd\Connect\Plugin\Openpay\Cards\Model;
 
-use Signifyd\Connect\Helper\PurchaseHelper;
+use Signifyd\Connect\Helper\ConfigHelper;
+use Signifyd\Connect\Model\Api\Core\Client;
+use Signifyd\Connect\Model\Api\TransactionsFactory;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
@@ -28,11 +30,6 @@ class Payment
     protected $logger;
 
     /**
-     * @var PurchaseHelper
-     */
-    protected $purchaseHelper;
-
-    /**
      * @var StoreManagerInterface
      */
     protected $storeManager;
@@ -43,28 +40,49 @@ class Payment
     protected $checkoutCart;
 
     /**
+     * @var TransactionsFactory
+     */
+    protected $transactionsFactory;
+
+    /**
+     * @var ConfigHelper
+     */
+    protected $configHelper;
+
+    /**
+     * @var Client
+     */
+    protected $client;
+
+    /**
      * CheckoutPaymentsDetailsHandler constructor.
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
-     * @param PurchaseHelper $purchaseHelper
      * @param StoreManagerInterface $storeManager
      * @param CheckoutCart $checkoutCart
+     * @param TransactionsFactory $transactionsFactory
+     * @param ConfigHelper $configHelper
+     * @param Client $client
      */
     public function __construct(
-        CasedataFactory       $casedataFactory,
+        CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
-        Logger                $logger,
-        PurchaseHelper        $purchaseHelper,
+        Logger $logger,
         StoreManagerInterface $storeManager,
-        CheckoutCart $checkoutCart
+        CheckoutCart $checkoutCart,
+        TransactionsFactory $transactionsFactory,
+        ConfigHelper $configHelper,
+        Client $client
     ) {
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
-        $this->purchaseHelper = $purchaseHelper;
         $this->storeManager = $storeManager;
         $this->checkoutCart = $checkoutCart;
+        $this->transactionsFactory = $transactionsFactory;
+        $this->configHelper = $configHelper;
+        $this->client = $client;
     }
 
     /**
@@ -76,12 +94,12 @@ class Payment
      */
     public function beforeError(OpenpayPayment $subject, $e)
     {
-        $policyName = $this->purchaseHelper->getPolicyName(
+        $policyName = $this->configHelper->getPolicyName(
             \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
             $this->storeManager->getStore()->getId()
         );
 
-        $isPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, 'openpay_cards');
+        $isPreAuth = $this->configHelper->getIsPreAuth($policyName, 'openpay_cards');
 
         $quote = $this->checkoutCart->getQuote();
 
@@ -157,14 +175,10 @@ class Payment
 
         $case->setEntries("OpenPayRefusedReason", $signifydReason);
         $this->casedataResourceModel->save($case);
+        $makeTransactions = $this->transactionsFactory->create();
+        $transaction = $makeTransactions($quote, $case->getCheckoutToken(), $openPayData);
 
-        $transaction = $this->purchaseHelper->makeCheckoutTransactions(
-            $quote,
-            $case->getCheckoutToken(),
-            $openPayData
-        );
-
-        $this->purchaseHelper->postTransactionToSignifyd($transaction, $quote);
+        $this->client->postTransactionToSignifyd($transaction, $quote);
         return null;
     }
 }

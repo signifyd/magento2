@@ -2,14 +2,16 @@
 
 namespace Signifyd\Connect\Plugin\Braintree;
 
-use Signifyd\Connect\Helper\PurchaseHelper;
+use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
+use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\Casedata;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
+use Signifyd\Connect\Model\Api\TransactionsFactory;
 
 class GeneralResponseValidator
 {
@@ -29,11 +31,6 @@ class GeneralResponseValidator
     protected $logger;
 
     /**
-     * @var PurchaseHelper
-     */
-    protected $purchaseHelper;
-
-    /**
      * @var StoreManagerInterface
      */
     protected $storeManager;
@@ -48,6 +45,21 @@ class GeneralResponseValidator
      */
     protected $quoteResourceModel;
 
+    /**
+     * @var TransactionsFactory
+     */
+    protected $transactionsFactory;
+
+    /**
+     * @var ConfigHelper
+     */
+    protected $configHelper;
+
+    /**
+     * @var Client
+     */
+    protected $client;
+
     protected $subjectReader;
 
     /**
@@ -55,39 +67,45 @@ class GeneralResponseValidator
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
-     * @param PurchaseHelper $purchaseHelper
      * @param StoreManagerInterface $storeManager
      * @param QuoteFactory $quoteFactory
      * @param QuoteResourceModel $quoteResourceModel
+     * @param TransactionsFactory $transactionsFactory
+     * @param ConfigHelper $configHelper
+     * @param Client $client
      */
     public function __construct(
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
         Logger $logger,
-        PurchaseHelper $purchaseHelper,
         StoreManagerInterface $storeManager,
         QuoteFactory $quoteFactory,
-        QuoteResourceModel $quoteResourceModel
+        QuoteResourceModel $quoteResourceModel,
+        TransactionsFactory $transactionsFactory,
+        ConfigHelper $configHelper,
+        Client $client
     ) {
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
-        $this->purchaseHelper = $purchaseHelper;
         $this->storeManager = $storeManager;
         $this->quoteFactory = $quoteFactory;
         $this->quoteResourceModel = $quoteResourceModel;
+        $this->transactionsFactory = $transactionsFactory;
+        $this->configHelper = $configHelper;
+        $this->client = $client;
     }
 
     public function beforeValidate($subject, array $validationSubject)
     {
         $this->logger->info("Braintree pre-authorization transaction validator");
 
-        $policyName = $this->purchaseHelper->getPolicyName(
+        $policyName = $this->configHelper->getPolicyName(
             \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
             $this->storeManager->getStore()->getId()
         );
 
-        $isPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, 'braintree');
+        $isPreAuth = $this->configHelper->getIsPreAuth($policyName, 'braintree');
 
         if ($isPreAuth === false) {
             return null;
@@ -171,12 +189,9 @@ class GeneralResponseValidator
                 $quote = $this->quoteFactory->create();
                 $this->quoteResourceModel->load($quote, $case->getQuoteId());
 
-                $transaction = $this->purchaseHelper->makeCheckoutTransactions(
-                    $quote,
-                    $case->getCheckoutToken(),
-                    $branitreeData
-                );
-                $this->purchaseHelper->postTransactionToSignifyd($transaction, $quote);
+                $makeTransactions = $this->transactionsFactory->create();
+                $transaction = $makeTransactions($quote, $case->getCheckoutToken(), $branitreeData);
+                $this->client->postTransactionToSignifyd($transaction, $quote);
             }
         }
     }

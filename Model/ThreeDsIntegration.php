@@ -6,12 +6,13 @@ use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
-use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Logger\Logger;
+use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
+use Signifyd\Connect\Model\Api\TransactionsFactory;
 
 class ThreeDsIntegration
 {
@@ -61,14 +62,19 @@ class ThreeDsIntegration
     protected $orderFactory;
 
     /**
-     * @var PurchaseHelper
-     */
-    protected $purchaseHelper;
-
-    /**
      * @var SignifydOrderResourceModel
      */
     protected $signifydOrderResourceModel;
+
+    /**
+     * @var TransactionsFactory
+     */
+    protected $transactionsFactory;
+
+    /**
+     * @var Client
+     */
+    protected $client;
 
     protected $signifydFields = ['eci', 'cavv', 'version', 'transStatus', 'transStatusReason', 'acsOperatorId',
         'dsTransId', 'threeDsServerTransId', 'cavvAlgorithm', 'exemptionIndicator', 'timestamp'];
@@ -84,8 +90,9 @@ class ThreeDsIntegration
      * @param JsonSerializer $jsonSerializer
      * @param CartRepositoryInterface $cartRepositoryInterface
      * @param OrderFactory $orderFactory
-     * @param PurchaseHelper $purchaseHelper
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
+     * @param TransactionsFactory $transactionsFactory
+     * @param Client $client
      */
     public function __construct(
         CasedataFactory $casedataFactory,
@@ -97,8 +104,9 @@ class ThreeDsIntegration
         JsonSerializer $jsonSerializer,
         CartRepositoryInterface $cartRepositoryInterface,
         OrderFactory $orderFactory,
-        PurchaseHelper $purchaseHelper,
-        SignifydOrderResourceModel $signifydOrderResourceModel
+        SignifydOrderResourceModel $signifydOrderResourceModel,
+        TransactionsFactory $transactionsFactory,
+        Client $client
     ) {
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
@@ -109,8 +117,9 @@ class ThreeDsIntegration
         $this->jsonSerializer = $jsonSerializer;
         $this->cartRepositoryInterface = $cartRepositoryInterface;
         $this->orderFactory = $orderFactory;
-        $this->purchaseHelper = $purchaseHelper;
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
+        $this->transactionsFactory = $transactionsFactory;
+        $this->client = $client;
     }
 
 
@@ -184,11 +193,12 @@ class ThreeDsIntegration
 
                 $this->logger->info("Sending pre_auth transaction with ThreeDs data to Signifyd for order
                             {$case->getOrderIncrement()}");
+                $makeTransactions = $this->transactionsFactory->create();
                 $saleTransaction = [];
                 $saleTransaction['checkoutId'] = $case->getCheckoutToken();
                 $saleTransaction['orderId'] = $orderIncrementId;
-                $saleTransaction['transactions'] = $this->purchaseHelper->makeTransactions($order);
-                $this->purchaseHelper->postTransactionToSignifyd($saleTransaction, $order);
+                $saleTransaction['transactions'] = $makeTransactions($order);
+                $this->client->postTransactionToSignifyd($saleTransaction, $order);
             }
         } catch (\Exception $e) {
             $this->logger->info("Failed to send transaction: " . $e->getMessage());

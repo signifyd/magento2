@@ -24,18 +24,26 @@ class Purchase
     protected $shipmentsFactory;
 
     /**
+     * @var ReceivedByFactory
+     */
+    protected $receivedByFactory;
+
+    /**
      * @param DateTimeFactory $dateTimeFactory
      * @param ProductFactory $productFactory
      * @param ShipmentsFactory $shipmentsFactory
+     * @param ReceivedByFactory $receivedByFactory
      */
     public function __construct(
         DateTimeFactory $dateTimeFactory,
         ProductFactory $productFactory,
-        ShipmentsFactory $shipmentsFactory
+        ShipmentsFactory $shipmentsFactory,
+        ReceivedByFactory $receivedByFactory
     ) {
         $this->dateTimeFactory = $dateTimeFactory;
         $this->productFactory = $productFactory;
         $this->shipmentsFactory = $shipmentsFactory;
+        $this->receivedByFactory = $receivedByFactory;
     }
 
     /**
@@ -93,6 +101,7 @@ class Purchase
         $purchase['confirmationPhone'] = $order->getBillingAddress()->getTelephone();
         $purchase['totalShippingCost'] = $order->getShippingAmount();
         $couponCode = $order->getCouponCode();
+        $receivedBy = $this->receivedByFactory->create();
 
         if (empty($couponCode) === false) {
             $purchase['discountCodes'] = [
@@ -101,7 +110,7 @@ class Purchase
             ];
         }
 
-        $purchase['receivedBy'] = $this->getReceivedBy();
+        $purchase['receivedBy'] = $receivedBy();
 
         return $purchase;
     }
@@ -136,11 +145,12 @@ class Purchase
 
         $makeShipments = $this->shipmentsFactory->create();
         $shippingAmount = $quote->getShippingAddress()->getShippingAmount();
+        $receivedBy = $this->receivedByFactory->create();
         $purchase['shipments'] = $makeShipments($quote);
         $purchase['confirmationPhone'] = $quote->getBillingAddress()->getTelephone();
         $purchase['totalShippingCost'] = is_numeric($shippingAmount) ? floatval($shippingAmount) : null;
         $purchase['discountCodes'] = null;
-        $purchase['receivedBy'] = $this->getReceivedBy();
+        $purchase['receivedBy'] = $receivedBy();
 
         return $purchase;
     }

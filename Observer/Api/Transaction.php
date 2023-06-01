@@ -6,10 +6,11 @@ use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Helper\PurchaseHelper;
+use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
+use Signifyd\Connect\Model\Api\TransactionsFactory;
 
 class Transaction implements ObserverInterface
 {
@@ -17,11 +18,6 @@ class Transaction implements ObserverInterface
      * @var Logger
      */
     protected $logger;
-
-    /**
-     * @var PurchaseHelper
-     */
-    protected $purchaseHelper;
 
     /**
      * @var CasedataFactory
@@ -39,25 +35,38 @@ class Transaction implements ObserverInterface
     protected $configHelper;
 
     /**
+     * @var TransactionsFactory
+     */
+    protected $transactionsFactory;
+
+    /**
+     * @var Client
+     */
+    protected $client;
+
+    /**
      * Transaction constructor.
      * @param Logger $logger
-     * @param PurchaseHelper $purchaseHelper
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param ConfigHelper $configHelper
+     * @param TransactionsFactory $transactionsFactory
+     * @param Client $client
      */
     public function __construct(
         Logger $logger,
-        PurchaseHelper $purchaseHelper,
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
-        ConfigHelper $configHelper
+        ConfigHelper $configHelper,
+        TransactionsFactory $transactionsFactory,
+        Client $client
     ) {
         $this->logger = $logger;
-        $this->purchaseHelper = $purchaseHelper;
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->configHelper = $configHelper;
+        $this->transactionsFactory = $transactionsFactory;
+        $this->client = $client;
     }
 
     public function execute(Observer $observer)
@@ -83,11 +92,12 @@ class Transaction implements ObserverInterface
                 if ($case->isEmpty() == false && $case->getPolicyName() == Casedata::PRE_AUTH) {
                     $this->logger->info("Sending pre_auth transaction to Signifyd for order
                         {$case->getOrderIncrement()}");
+                    $makeTransactions = $this->transactionsFactory->create();
                     $saleTransaction = [];
                     $saleTransaction['checkoutId'] = $case->getCheckoutToken();
                     $saleTransaction['orderId'] = $order->getIncrementId();
-                    $saleTransaction['transactions'] = $this->purchaseHelper->makeTransactions($order);
-                    $this->purchaseHelper->postTransactionToSignifyd($saleTransaction, $order);
+                    $saleTransaction['transactions'] = $makeTransactions($order);
+                    $this->client->postTransactionToSignifyd($saleTransaction, $order);
                 }
             } catch (\Exception $e) {
                 $this->logger->debug($e->getMessage());

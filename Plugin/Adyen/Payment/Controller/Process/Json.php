@@ -3,14 +3,16 @@
 namespace Signifyd\Connect\Plugin\Adyen\Payment\Controller\Process;
 
 use Adyen\Payment\Controller\Process\Json as AdyenJson;
-use Signifyd\Connect\Helper\PurchaseHelper;
+use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
+use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\Casedata;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
+use Signifyd\Connect\Model\Api\TransactionsFactory;
 
 class Json
 {
@@ -30,11 +32,6 @@ class Json
     protected $logger;
 
     /**
-     * @var PurchaseHelper
-     */
-    protected $purchaseHelper;
-
-    /**
      * @var StoreManagerInterface
      */
     protected $storeManager;
@@ -50,41 +47,62 @@ class Json
     protected $quoteResourceModel;
 
     /**
+     * @var TransactionsFactory
+     */
+    protected $transactionsFactory;
+
+    /**
+     * @var ConfigHelper
+     */
+    protected $configHelper;
+
+    /**
+     * @var Client
+     */
+    protected $client;
+
+    /**
      * CheckoutPaymentsDetailsHandler constructor.
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
-     * @param PurchaseHelper $purchaseHelper
      * @param StoreManagerInterface $storeManager
      * @param QuoteFactory $quoteFactory
      * @param QuoteResourceModel $quoteResourceModel
+     * @param TransactionsFactory $transactionsFactory
+     * @param ConfigHelper $configHelper
+     * @param Client $client
      */
     public function __construct(
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
         Logger $logger,
-        PurchaseHelper $purchaseHelper,
         StoreManagerInterface $storeManager,
         QuoteFactory $quoteFactory,
-        QuoteResourceModel $quoteResourceModel
+        QuoteResourceModel $quoteResourceModel,
+        TransactionsFactory $transactionsFactory,
+        ConfigHelper $configHelper,
+        Client $client
     ) {
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
-        $this->purchaseHelper = $purchaseHelper;
         $this->storeManager = $storeManager;
         $this->quoteFactory = $quoteFactory;
         $this->quoteResourceModel = $quoteResourceModel;
+        $this->transactionsFactory = $transactionsFactory;
+        $this->configHelper = $configHelper;
+        $this->client = $client;
     }
 
     public function beforeExecute(AdyenJson $subject)
     {
-        $policyName = $this->purchaseHelper->getPolicyName(
+        $policyName = $this->configHelper->getPolicyName(
             \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
             $this->storeManager->getStore()->getId()
         );
 
-        $isPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, 'adyen_cc');
+        $isPreAuth = $this->configHelper->getIsPreAuth($policyName, 'adyen_cc');
         $notificationItems = json_decode(file_get_contents('php://input'), true);
 
         if ($isPreAuth === false && empty($notificationItems) === true) {
@@ -173,14 +191,10 @@ class Json
 
                 $quote = $this->quoteFactory->create();
                 $this->quoteResourceModel->load($quote, $case->getQuoteId());
+                $makeTransactions = $this->transactionsFactory->create();
+                $transaction = $makeTransactions($quote, $case->getCheckoutToken(), $adyenData);
 
-                $transaction = $this->purchaseHelper->makeCheckoutTransactions(
-                    $quote,
-                    $case->getCheckoutToken(),
-                    $adyenData
-                );
-
-                $this->purchaseHelper->postTransactionToSignifyd($transaction, $quote);
+                $this->client->postTransactionToSignifyd($transaction, $quote);
             }
         }
     }

@@ -10,7 +10,6 @@ new file mode 100644
 +namespace Signifyd\Connect\Plugin\Braintree\Gateway\Validator;
 +
 +use Magento\Braintree\Gateway\SubjectReader;
-+use Signifyd\Connect\Helper\PurchaseHelper;
 +use Signifyd\Connect\Logger\Logger;
 +use Signifyd\Connect\Model\CasedataFactory;
 +use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
@@ -37,11 +36,6 @@ new file mode 100644
 +    protected $logger;
 +
 +    /**
-+     * @var PurchaseHelper
-+     */
-+    protected $purchaseHelper;
-+
-+    /**
 +     * @var StoreManagerInterface
 +     */
 +    protected $storeManager;
@@ -66,7 +60,6 @@ new file mode 100644
 +     * @param CasedataFactory $casedataFactory
 +     * @param CasedataResourceModel $casedataResourceModel
 +     * @param Logger $logger
-+     * @param PurchaseHelper $purchaseHelper
 +     * @param StoreManagerInterface $storeManager
 +     * @param QuoteFactory $quoteFactory
 +     * @param QuoteResourceModel $quoteResourceModel
@@ -76,7 +69,6 @@ new file mode 100644
 +        CasedataFactory $casedataFactory,
 +        CasedataResourceModel $casedataResourceModel,
 +        Logger $logger,
-+        PurchaseHelper $purchaseHelper,
 +        StoreManagerInterface $storeManager,
 +        QuoteFactory $quoteFactory,
 +        QuoteResourceModel $quoteResourceModel,
@@ -86,7 +78,6 @@ new file mode 100644
 +            $casedataFactory,
 +            $casedataResourceModel,
 +            $logger,
-+            $purchaseHelper,
 +            $storeManager,
 +            $quoteFactory,
 +            $quoteResourceModel

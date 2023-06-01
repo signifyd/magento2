@@ -4,39 +4,39 @@ namespace Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned;
 
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Store\Model\ScopeInterface;
-use Signifyd\Connect\Helper\PurchaseHelper;
+use Signifyd\Connect\Helper\ConfigHelper;
 
 class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
 {
-    /**
-     * @var PurchaseHelper
-     */
-    protected $purchaseHelper;
-
     /**
      * @var JsonSerializer
      */
     protected $jsonSerializer;
 
     /**
+     * @var ConfigHelper
+     */
+    protected $configHelper;
+
+    /**
      * Grid constructor.
      * @param \Magento\Backend\Block\Template\Context $context
      * @param \Magento\Backend\Helper\Data $backendHelper
      * @param \Magento\Reports\Model\ResourceModel\Quote\CollectionFactory $quotesFactory
-     * @param PurchaseHelper $purchaseHelper
      * @param JsonSerializer $jsonSerializer
+     * @param ConfigHelper $configHelper
      * @param array $data
      */
     public function __construct(
         \Magento\Backend\Block\Template\Context $context,
         \Magento\Backend\Helper\Data $backendHelper,
         \Magento\Reports\Model\ResourceModel\Quote\CollectionFactory $quotesFactory,
-        PurchaseHelper $purchaseHelper,
         JsonSerializer $jsonSerializer,
+        ConfigHelper $configHelper,
         array $data = []
     ) {
-        $this->purchaseHelper = $purchaseHelper;
         $this->jsonSerializer = $jsonSerializer;
+        $this->configHelper = $configHelper;
         parent::__construct($context, $backendHelper, $quotesFactory, $data);
     }
 
@@ -52,12 +52,12 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
 
         if ($this->getRequest()->getParam('store')) {
             $storeId = (int)$this->getRequest()->getParam('store');
-            $policyName = $this->purchaseHelper->getPolicyName(ScopeInterface::SCOPE_STORES, $storeId);
+            $policyName = $this->configHelper->getPolicyName(ScopeInterface::SCOPE_STORES, $storeId);
         } else {
-            $policyName = $this->purchaseHelper->getPolicyName();
+            $policyName = $this->configHelper->getPolicyName();
         }
 
-        $isPreAuthInUse = $this->purchaseHelper->getIsPreAuthInUse($policyName);
+        $isPreAuthInUse = $this->configHelper->getIsPreAuthInUse($policyName);
 
         if ($isPreAuthInUse) {
             $this->addColumn(

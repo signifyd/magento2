@@ -5,6 +5,7 @@ namespace Signifyd\Connect\Model\ProcessCron;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
+use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\ResourceModel\Fulfillment as FulfillmentResourceModel;
 use Magento\Sales\Model\OrderFactory;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
@@ -48,6 +49,11 @@ class Fulfillment
     protected $fulfillmentFactory;
 
     /**
+     * @var Client
+     */
+    protected $client;
+
+    /**
      * Fulfillment constructor.
      * @param ConfigHelper $configHelper
      * @param FulfillmentResourceModel $fulfillmentResourceModel
@@ -56,6 +62,7 @@ class Fulfillment
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param OrderFactory $orderFactory
      * @param FulfillmentFactory $fulfillmentFactory
+     * @param Client $client
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -64,7 +71,8 @@ class Fulfillment
         OrderHelper $orderHelper,
         SignifydOrderResourceModel $signifydOrderResourceModel,
         OrderFactory $orderFactory,
-        FulfillmentFactory $fulfillmentFactory
+        FulfillmentFactory $fulfillmentFactory,
+        Client $client
     ) {
         $this->configHelper = $configHelper;
         $this->fulfillmentResourceModel = $fulfillmentResourceModel;
@@ -73,6 +81,7 @@ class Fulfillment
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
         $this->orderFactory = $orderFactory;
         $this->fulfillmentFactory = $fulfillmentFactory;
+        $this->client = $client;
     }
 
     /**
@@ -89,7 +98,7 @@ class Fulfillment
                 $fulfillmentApi = $this->fulfillmentFactory->create();
                 $fulfillmentData = $fulfillmentApi($fulfillment);
 
-                $fulfillmentBulkResponse = $this->configHelper
+                $fulfillmentBulkResponse = $this->client
                     ->getSignifydSaleApi($order)->addFulfillment($fulfillmentData);
                 $fulfillmentOrderId = $fulfillmentBulkResponse->getOrderId();
 

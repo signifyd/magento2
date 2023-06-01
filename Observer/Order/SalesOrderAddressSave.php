@@ -10,10 +10,12 @@ use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
 use Signifyd\Models\PaymentUpdateFactory;
-use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\UpdateOrderFactory;
+use Signifyd\Connect\Model\Api\ShipmentsFactory;
+use Signifyd\Connect\Model\Api\DeviceFactory;
+use Signifyd\Connect\Model\Api\Core\Client;
 
 class SalesOrderAddressSave implements ObserverInterface
 {
@@ -21,11 +23,6 @@ class SalesOrderAddressSave implements ObserverInterface
      * @var PaymentUpdateFactory
      */
     protected $paymentUpdateFactory;
-
-    /**
-     * @var PurchaseHelper
-     */
-    protected $purchaseHelper;
 
     /**
      * @var CasedataFactory
@@ -63,8 +60,22 @@ class SalesOrderAddressSave implements ObserverInterface
     protected $updateOrderFactory;
 
     /**
+     * @var ShipmentsFactory
+     */
+    protected $shipmentsFactory;
+
+    /**
+     * @var Client
+     */
+    protected $client;
+
+    /**
+     * @var DeviceFactory
+     */
+    protected $deviceFactory;
+
+    /**
      * @param PaymentUpdateFactory $paymentUpdateFactory
-     * @param PurchaseHelper $purchaseHelper
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param ConfigHelper $configHelper
@@ -72,20 +83,24 @@ class SalesOrderAddressSave implements ObserverInterface
      * @param Logger $logger
      * @param UpdateCaseFactory $updateCaseFactory
      * @param UpdateOrderFactory $updateOrderFactory
+     * @param ShipmentsFactory $shipmentsFactory
+     * @param Client $client
+     * @param DeviceFactory $deviceFactory
      */
     public function __construct(
         PaymentUpdateFactory $paymentUpdateFactory,
-        PurchaseHelper $purchaseHelper,
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
         ConfigHelper $configHelper,
         JsonSerializer $jsonSerializer,
         Logger $logger,
         UpdateCaseFactory $updateCaseFactory,
-        UpdateOrderFactory $updateOrderFactory
+        UpdateOrderFactory $updateOrderFactory,
+        ShipmentsFactory $shipmentsFactory,
+        Client $client,
+        DeviceFactory $deviceFactory
     ) {
         $this->paymentUpdateFactory = $paymentUpdateFactory;
-        $this->purchaseHelper = $purchaseHelper;
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->configHelper = $configHelper;
@@ -93,6 +108,9 @@ class SalesOrderAddressSave implements ObserverInterface
         $this->logger = $logger;
         $this->updateCaseFactory = $updateCaseFactory;
         $this->updateOrderFactory = $updateOrderFactory;
+        $this->shipmentsFactory = $shipmentsFactory;
+        $this->client = $client;
+        $this->deviceFactory = $deviceFactory;
     }
 
     public function execute(Observer $observer)
@@ -123,7 +141,8 @@ class SalesOrderAddressSave implements ObserverInterface
 
             $this->logger->info("Send case update for order {$order->getIncrementId()}");
 
-            $shipments = $this->purchaseHelper->makeShipments($order);
+            $makeShipments = $this->shipmentsFactory->create();
+            $shipments = $makeShipments($order);
             $recipient = $shipments[0]['destination'];
             $recipientJson = $this->jsonSerializer->serialize($recipient);
             $newHashToValidateReroute = sha1($recipientJson);
@@ -134,11 +153,12 @@ class SalesOrderAddressSave implements ObserverInterface
                 return;
             }
 
+            $device = $this->deviceFactory->create();
             $rerout = [];
             $rerout['orderId'] = $order->getIncrementId();
-            $rerout['device'] = $this->purchaseHelper->makeDevice($order->getQuoteId(), $order->getStoreId());
+            $rerout['device'] = $device($order->getQuoteId(), $order->getStoreId());
             $rerout['shipments'] = $shipments;
-            $updateResponse = $this->purchaseHelper->createReroute($rerout, $order);
+            $updateResponse = $this->client->createReroute($rerout, $order);
 
             $this->logger->info("Case updated for order {$order->getIncrementId()}");
             $this->logger->info($this->jsonSerializer->serialize($updateResponse));

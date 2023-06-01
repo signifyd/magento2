@@ -32,21 +32,29 @@ class Product
     protected $storeManagerInterface;
 
     /**
+     * @var SubscriptionFactory
+     */
+    protected $subscriptionFactory;
+
+    /**
      * @param CategoryCollectionFactory $categoryCollectionFactory
      * @param CategoryFactory $categoryFactory
      * @param CategoryResourceModel $categoryResourceModel
      * @param StoreManagerInterface $storeManagerInterface
+     * @param SubscriptionFactory $subscriptionFactory
      */
     public function __construct(
         CategoryCollectionFactory $categoryCollectionFactory,
         CategoryFactory $categoryFactory,
         CategoryResourceModel $categoryResourceModel,
-        StoreManagerInterface $storeManagerInterface
+        StoreManagerInterface $storeManagerInterface,
+        SubscriptionFactory $subscriptionFactory
     ) {
         $this->categoryCollectionFactory = $categoryCollectionFactory;
         $this->categoryFactory = $categoryFactory;
         $this->categoryResourceModel = $categoryResourceModel;
         $this->storeManagerInterface = $storeManagerInterface;
+        $this->subscriptionFactory = $subscriptionFactory;
     }
 
     /**
@@ -134,6 +142,7 @@ class Product
             }
         }
 
+        $subscription = $this->subscriptionFactory->create();
         $product = [];
         $product['itemName'] = $item->getName();
         $product['itemPrice'] = $itemPrice;
@@ -146,8 +155,7 @@ class Product
         $product['itemUrl'] = $item->getProduct()->getProductUrl();
         $product['itemWeight'] = $item->getProduct()->getWeight();
         $product['shipmentId'] = null;
-        //TODO: AJUSTAR
-        $product['subscription'] = $this->makeSubscription();
+        $product['subscription'] = $subscription();
 
         return $product;
     }
@@ -218,6 +226,7 @@ class Product
             }
         }
 
+        $subscription = $this->subscriptionFactory->create();
         $product = [];
         $product['itemName'] = $item->getName();
         $product['itemPrice'] = $itemPrice;
@@ -230,8 +239,7 @@ class Product
         $product['itemUrl'] = $item->getProduct()->getProductUrl();
         $product['itemWeight'] = $item->getProduct()->getWeight();
         $product['shipmentId'] = null;
-        //TODO: AJUSTAR
-        $product['subscription'] = $this->makeSubscription();
+        $product['subscription'] = $subscription();
 
         return $product;
     }

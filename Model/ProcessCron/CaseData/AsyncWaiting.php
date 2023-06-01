@@ -6,13 +6,13 @@ use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
-use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\UpdateOrderFactory;
+use Signifyd\Connect\Model\Api\SaleOrderFactory;
 
 class AsyncWaiting
 {
@@ -67,9 +67,9 @@ class AsyncWaiting
     protected $storeManagerInterface;
 
     /**
-     * @var PurchaseHelper
+     * @var SaleOrderFactory
      */
-    protected $purchaseHelper;
+    protected $saleOrderFactory;
 
     /**
      * AsyncWaiting constructor.
@@ -82,7 +82,7 @@ class AsyncWaiting
      * @param UpdateOrderFactory $updateOrderFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param StoreManagerInterface $storeManagerInterface
-     * @param PurchaseHelper $purchaseHelper
+     * @param SaleOrderFactory $saleOrderFactory
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -94,7 +94,7 @@ class AsyncWaiting
         UpdateOrderFactory $updateOrderFactory,
         CasedataResourceModel $casedataResourceModel,
         StoreManagerInterface $storeManagerInterface,
-        PurchaseHelper $purchaseHelper
+        SaleOrderFactory $saleOrderFactory
     ) {
         $this->configHelper = $configHelper;
         $this->logger = $logger;
@@ -105,7 +105,7 @@ class AsyncWaiting
         $this->updateOrderFactory = $updateOrderFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->storeManagerInterface = $storeManagerInterface;
-        $this->purchaseHelper = $purchaseHelper;
+        $this->saleOrderFactory = $saleOrderFactory;
     }
 
     /**
@@ -133,7 +133,8 @@ class AsyncWaiting
                 }
 
                 $order->setData('origin_store_code', $case->getData('origin_store_code'));
-                $caseModel = $this->purchaseHelper->processOrderData($order);
+                $saleOrder = $this->saleOrderFactory->create();
+                $caseModel = $saleOrder($order);
                 $avsCode = $caseModel['transactions'][0]['verifications']['avsResponseCode'];
                 $cvvCode = $caseModel['transactions'][0]['verifications']['cvvResponseCode'];
                 $retries = $case->getData('retries');

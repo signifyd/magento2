@@ -7,6 +7,7 @@ use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
+use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
@@ -71,6 +72,11 @@ class InReview
     protected $reInitStripeFactory;
 
     /**
+     * @var Client
+     */
+    protected $client;
+
+    /**
      * InReview constructor.
      * @param ConfigHelper $configHelper
      * @param Logger $logger
@@ -82,6 +88,7 @@ class InReview
      * @param CasedataResourceModel $casedataResourceModel
      * @param StoreManagerInterface $storeManagerInterface
      * @param ReInitStripeFactory $reInitStripeFactory
+     * @param Client $client
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -93,7 +100,8 @@ class InReview
         UpdateOrderFactory $updateOrderFactory,
         CasedataResourceModel $casedataResourceModel,
         StoreManagerInterface $storeManagerInterface,
-        ReInitStripeFactory $reInitStripeFactory
+        ReInitStripeFactory $reInitStripeFactory,
+        Client $client
     ) {
         $this->configHelper = $configHelper;
         $this->logger = $logger;
@@ -105,6 +113,7 @@ class InReview
         $this->casedataResourceModel = $casedataResourceModel;
         $this->storeManagerInterface = $storeManagerInterface;
         $this->reInitStripeFactory = $reInitStripeFactory;
+        $this->client = $client;
     }
 
     /**
@@ -129,7 +138,7 @@ class InReview
                 $reInitStripe($order);
 
                 try {
-                    $response = $this->configHelper->getSignifydSaleApi($case)->getCase($case->getData('order_increment'));
+                    $response = $this->client->getSignifydSaleApi($case)->getCase($case->getData('order_increment'));
                     $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
 
                     $currentCaseHash = sha1(implode(',', $case->getData()));

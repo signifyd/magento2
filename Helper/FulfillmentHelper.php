@@ -2,15 +2,14 @@
 
 namespace Signifyd\Connect\Helper;
 
-use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\Fulfillment;
 use Signifyd\Connect\Model\FulfillmentFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Fulfillment as FulfillmentResourceModel;
 use Signifyd\Connect\Logger\Logger;
+use Signifyd\Connect\Model\Api\CarrierFactory;
+use Signifyd\Connect\Model\Api\OriginFactory;
 use Magento\Framework\Serialize\SerializerInterface;
-use Signifyd\Connect\Helper\OrderHelper;
 
 class FulfillmentHelper
 {
@@ -55,9 +54,14 @@ class FulfillmentHelper
     protected $orderHelper;
 
     /**
-     * @var PurchaseHelper
+     * @var CarrierFactory
      */
-    protected $purchaseHelper;
+    protected $carrierFactory;
+
+    /**
+     * @var OriginFactory
+     */
+    protected $originFactory;
 
     /**
      * FulfillmentHelper constructor.
@@ -69,7 +73,8 @@ class FulfillmentHelper
      * @param ConfigHelper $configHelper
      * @param SerializerInterface $serializer
      * @param OrderHelper $orderHelper
-     * @param PurchaseHelper $purchaseHelper
+     * @param CarrierFactory $carrierFactory
+     * @param OriginFactory $originFactory
      */
     public function __construct(
         CasedataFactory $casedataFactory,
@@ -80,19 +85,19 @@ class FulfillmentHelper
         ConfigHelper $configHelper,
         SerializerInterface $serializer,
         OrderHelper $orderHelper,
-        PurchaseHelper $purchaseHelper
+        CarrierFactory $carrierFactory,
+        OriginFactory $originFactory
     ) {
         $this->casedataFactory = $casedataFactory;
         $this->fulfillmentFactory = $fulfillmentFactory;
-
         $this->casedataResourceModel = $casedataResourceModel;
         $this->fulfillmentResourceModel = $fulfillmentResourceModel;
-
         $this->logger = $logger;
         $this->configHelper = $configHelper;
         $this->serializer = $serializer;
         $this->orderHelper = $orderHelper;
-        $this->purchaseHelper = $purchaseHelper;
+        $this->carrierFactory = $carrierFactory;
+        $this->originFactory = $originFactory;
     }
 
     public function postFulfillmentToSignifyd(\Magento\Sales\Model\Order\Shipment $shipment)
@@ -209,6 +214,8 @@ class FulfillmentHelper
             return false;
         }
 
+        $makeCarrier = $this->carrierFactory->create();
+        $makeOrigin = $this->originFactory->create();
         $fulfillment = [];
         $fulfillment['orderId'] = $shipment->getOrder()->getIncrementId();
         $fulfillment['fulfillmentStatus'] = $this->getFulfillmentStatus($shipment);
@@ -219,9 +226,8 @@ class FulfillmentHelper
         $fulfillment['trackingUrls'] = $this->getTrackingUrls($shipment);
         $fulfillment['trackingNumbers'] = $trackingNumbers;
         $fulfillment['destination'] = $this->makeDestination($shipment);
-        $fulfillment['origin'] = $this->purchaseHelper->makeOrigin($shipment->getOrder()->getStoreId());
-        $fulfillment['carrier'] = $this->purchaseHelper
-            ->makeShipper($shipment->getOrder()->getShippingMethod());
+        $fulfillment['origin'] = $makeOrigin($shipment->getOrder()->getStoreId());
+        $fulfillment['carrier'] = $makeCarrier($shipment->getOrder()->getShippingMethod());
 
         return $fulfillment;
     }

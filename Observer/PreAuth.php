@@ -8,13 +8,14 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Store\Model\ScopeInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Helper\PurchaseHelper;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Framework\App\ResponseFactory;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Controller\Result\RedirectFactory;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Signifyd\Connect\Model\Api\CheckoutOrderFactory;
+use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
@@ -33,11 +34,6 @@ class PreAuth implements ObserverInterface
      * @var CartRepositoryInterface
      */
     protected $quoteRepository;
-
-    /**
-     * @var PurchaseHelper
-     */
-    protected $purchaseHelper;
 
     /**
      * @var ResponseFactory
@@ -95,9 +91,18 @@ class PreAuth implements ObserverInterface
     protected $objectManagerInterface;
 
     /**
+     * @var CheckoutOrderFactory
+     */
+    protected $checkoutOrderFactory;
+
+    /**
+     * @var Client
+     */
+    protected $client;
+
+    /**
      * PreAuth constructor.
      * @param Logger $logger
-     * @param PurchaseHelper $purchaseHelper
      * @param CartRepositoryInterface $quoteRepository
      * @param ResponseFactory $responseFactory
      * @param UrlInterface $url
@@ -110,10 +115,11 @@ class PreAuth implements ObserverInterface
      * @param JsonSerializer $jsonSerializer
      * @param ConfigHelper $configHelper
      * @param ObjectManagerInterface $objectManagerInterface
+     * @param CheckoutOrderFactory $checkoutOrderFactory
+     * @param Client $client
      */
     public function __construct(
         Logger $logger,
-        PurchaseHelper $purchaseHelper,
         CartRepositoryInterface $quoteRepository,
         ResponseFactory $responseFactory,
         UrlInterface $url,
@@ -125,10 +131,11 @@ class PreAuth implements ObserverInterface
         RequestHttp $requestHttp,
         JsonSerializer $jsonSerializer,
         ConfigHelper $configHelper,
-        ObjectManagerInterface $objectManagerInterface
+        ObjectManagerInterface $objectManagerInterface,
+        CheckoutOrderFactory $checkoutOrderFactory,
+        Client $client
     ) {
         $this->logger = $logger;
-        $this->purchaseHelper = $purchaseHelper;
         $this->quoteRepository = $quoteRepository;
         $this->responseFactory = $responseFactory;
         $this->url = $url;
@@ -141,6 +148,8 @@ class PreAuth implements ObserverInterface
         $this->jsonSerializer = $jsonSerializer;
         $this->configHelper = $configHelper;
         $this->objectManagerInterface = $objectManagerInterface;
+        $this->checkoutOrderFactory = $checkoutOrderFactory;
+        $this->client = $client;
     }
 
     public function execute(Observer $observer)
@@ -155,7 +164,7 @@ class PreAuth implements ObserverInterface
 
             $this->logger->info("policy validation");
 
-            $policyName = $this->purchaseHelper->getPolicyName(
+            $policyName = $this->configHelper->getPolicyName(
                 $quote->getStore()->getScopeType(),
                 $quote->getStoreId()
             );
@@ -175,7 +184,7 @@ class PreAuth implements ObserverInterface
                 $paymentMethod = $dataArray['paymentMethod']['method'];
             }
 
-            $isPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, $paymentMethod);
+            $isPreAuth = $this->configHelper->getIsPreAuth($policyName, $paymentMethod);
 
             if ($isPreAuth === false) {
                 /** @var $case \Signifyd\Connect\Model\Casedata */
@@ -256,8 +265,9 @@ class PreAuth implements ObserverInterface
             }
 
             $this->logger->info("Creating case for quote {$quote->getId()}");
-            $caseFromQuote = $this->purchaseHelper->processQuoteData($quote, $checkoutPaymentDetails, $paymentMethod);
-            $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
+            $checkoutOrder = $this->checkoutOrderFactory->create();
+            $caseFromQuote = $checkoutOrder($quote, $checkoutPaymentDetails, $paymentMethod);
+            $caseResponse = $this->client->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
             $validActions = ['ACCEPT', 'REJECT', 'HOLD', 'PENDING'];
             $caseAction = false;
 

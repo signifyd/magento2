@@ -6,14 +6,15 @@ use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
-use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Logger\Logger;
+use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\Stripe\ReInitFactory as ReInitStripeFactory;
 use Signifyd\Connect\Model\UpdateOrderFactory;
+use Signifyd\Connect\Model\Api\SaleOrderFactory;
 
 class WaitingSubmission
 {
@@ -73,9 +74,14 @@ class WaitingSubmission
     protected $reInitStripeFactory;
 
     /**
-     * @var PurchaseHelper
+     * @var SaleOrderFactory
      */
-    protected $purchaseHelper;
+    protected $saleOrderFactory;
+
+    /**
+     * @var Client
+     */
+    protected $client;
 
     /**
      * WaitingSubmission constructor.
@@ -89,7 +95,8 @@ class WaitingSubmission
      * @param CasedataResourceModel $casedataResourceModel
      * @param StoreManagerInterface $storeManagerInterface
      * @param ReInitStripeFactory $reInitStripeFactory
-     * @param PurchaseHelper $purchaseHelper
+     * @param SaleOrderFactory $saleOrderFactory
+     * @param Client $client
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -102,7 +109,8 @@ class WaitingSubmission
         CasedataResourceModel $casedataResourceModel,
         StoreManagerInterface $storeManagerInterface,
         ReInitStripeFactory $reInitStripeFactory,
-        PurchaseHelper $purchaseHelper
+        SaleOrderFactory $saleOrderFactory,
+        Client $client
     ) {
         $this->configHelper = $configHelper;
         $this->logger = $logger;
@@ -114,7 +122,8 @@ class WaitingSubmission
         $this->casedataResourceModel = $casedataResourceModel;
         $this->storeManagerInterface = $storeManagerInterface;
         $this->reInitStripeFactory = $reInitStripeFactory;
-        $this->purchaseHelper = $purchaseHelper;
+        $this->saleOrderFactory = $saleOrderFactory;
+        $this->client = $client;
     }
 
     /**
@@ -140,10 +149,10 @@ class WaitingSubmission
 
                 try {
                     $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
-
-                    $caseModel = $this->purchaseHelper->processOrderData($order);
+                    $saleOrder = $this->saleOrderFactory->create();
+                    $caseModel = $saleOrder($order);
                     /** @var \Signifyd\Core\Response\SaleResponse $caseResponse */
-                    $caseResponse = $this->purchaseHelper->postCaseToSignifyd($caseModel, $order);
+                    $caseResponse = $this->client->postCaseToSignifyd($caseModel, $order);
                     $investigationId = $caseResponse->getSignifydId();
 
                     if (empty($investigationId) === false) {

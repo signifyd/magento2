@@ -4,11 +4,11 @@ namespace Signifyd\Connect\Controller\Adminhtml\Webhooks;
 
 use Magento\Backend\App\Action;
 use Magento\Framework\Exception\LocalizedException;
+use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\WebhookLink;
 use Signifyd\Core\Api\WebhooksApiFactory;
 use Signifyd\Models\WebhookFactory;
 use Signifyd\Models\WebhookV2Factory;
-use Signifyd\Connect\Helper\ConfigHelper;
 
 class Register extends Action
 {
@@ -38,9 +38,9 @@ class Register extends Action
     protected $webhookV2Factory;
 
     /**
-     * @var ConfigHelper
+     * @var Client
      */
-    protected $configHelper;
+    protected $client;
 
     /**
      * Register constructor.
@@ -50,7 +50,7 @@ class Register extends Action
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param WebhookFactory $webhookFactory
      * @param WebhookV2Factory $webhookV2Factory
-     * @param ConfigHelper $configHelper
+     * @param Client $client
      */
     public function __construct(
         Action\Context $context,
@@ -59,7 +59,7 @@ class Register extends Action
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         WebhookFactory $webhookFactory,
         WebhookV2Factory $webhookV2Factory,
-        ConfigHelper $configHelper
+        Client $client
     ) {
         parent::__construct($context);
         $this->webhookLink = $webhookLink;
@@ -67,7 +67,7 @@ class Register extends Action
         $this->storeManager = $storeManager;
         $this->webhookFactory = $webhookFactory;
         $this->webhookV2Factory = $webhookV2Factory;
-        $this->configHelper = $configHelper;
+        $this->client = $client;
     }
 
     public function execute()
@@ -76,7 +76,7 @@ class Register extends Action
             $url = $this->webhookLink->getUrl();
             $isWebhookRegistered = false;
             $webhooksV2ToDelete = [];
-            $webhooksV2Api = $this->configHelper->getSignifydWebhookV2Api();
+            $webhooksV2Api = $this->client->getSignifydWebhookV2Api();
             $webhooksV2 = $webhooksV2Api->getWebhooks();
 
             if (isset($webhooksV2->getObjects()[0])) {
@@ -90,7 +90,7 @@ class Register extends Action
                     }
                 }
             } else {
-                $webhooksV2ApiCreate = $this->configHelper->getSignifydWebhookV2Api();
+                $webhooksV2ApiCreate = $this->client->getSignifydWebhookV2Api();
                 $webHookGuaranteeCompletion = $this->webhookV2Factory->create();
                 $webHookGuaranteeCompletion->setEvent('CASE_CREATION');
                 $webHookGuaranteeCompletion->setUrl($url);
@@ -109,7 +109,7 @@ class Register extends Action
                 throw new LocalizedException(__("Failed to get team id"));
             }
 
-            $webhooksApi = $this->configHelper->getSignifydWebhookApi();
+            $webhooksApi = $this->client->getSignifydWebhookApi();
             $webhookResponse = $webhooksApi->getWebhooks($teamId);
 
             foreach ($webhookResponse->getObjects() as $webhook) {
@@ -133,7 +133,7 @@ class Register extends Action
             if ($isWebhookRegistered) {
                 if (empty($webhooksV2ToDelete) === false) {
                     foreach ($webhooksV2ToDelete as $webhookV2ToDelete) {
-                        $webhooksV2Api = $this->configHelper->getSignifydWebhookV2Api();
+                        $webhooksV2Api = $this->client->getSignifydWebhookV2Api();
                         $webhooksV2Api->deleteWebhook($webhookV2ToDelete);
                     }
                 }

@@ -9,8 +9,8 @@ namespace Signifyd\Connect\Observer;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order;
-use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Logger\Logger;
+use Signifyd\Connect\Model\Api\Core\Client;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -23,29 +23,29 @@ class Cancel implements ObserverInterface
     protected $logger;
 
     /**
-     * @var \Signifyd\Connect\Helper\PurchaseHelper
-     */
-    protected $purchaseHelper;
-
-    /**
      * @var \Signifyd\Connect\Helper\ConfigHelper
      */
     protected $configHelper;
 
     /**
+     * @var Client
+     */
+    protected $client;
+
+    /**
      * Cancel constructor.
      * @param Logger $logger
-     * @param PurchaseHelper $purchaseHelper
      * @param \Signifyd\Connect\Helper\ConfigHelper $configHelper
+     * @param Client $client
      */
     public function __construct(
         Logger $logger,
-        PurchaseHelper $purchaseHelper,
-        \Signifyd\Connect\Helper\ConfigHelper $configHelper
+        \Signifyd\Connect\Helper\ConfigHelper $configHelper,
+        Client $client
     ) {
         $this->logger = $logger;
-        $this->purchaseHelper = $purchaseHelper;
         $this->configHelper = $configHelper;
+        $this->client = $client;
     }
 
     public function execute(Observer $observer)
@@ -80,7 +80,7 @@ class Cancel implements ObserverInterface
                 return;
             }
 
-            $this->purchaseHelper->cancelCaseOnSignifyd($order);
+            $this->client->cancelCaseOnSignifyd($order);
         } catch (\Exception $ex) {
             $context = [];
 

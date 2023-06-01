@@ -4,16 +4,10 @@ namespace Signifyd\Connect\Model\ScaPreAuth;
 use Magento\Framework\Model\AbstractModel;
 use Magento\Framework\Model\Context;
 use Signifyd\Connect\Helper\ConfigHelper;
-use Signifyd\Connect\Helper\PurchaseHelper;
 use Magento\Framework\Registry;
 
 class ScaEvaluationConfig extends AbstractModel
 {
-    /**
-     * @var PurchaseHelper
-     */
-    protected $purchaseHelper;
-
     /**
      * @var ConfigHelper
      */
@@ -22,7 +16,6 @@ class ScaEvaluationConfig extends AbstractModel
     /**
      * @param Context $context
      * @param Registry $registry
-     * @param PurchaseHelper $purchaseHelper
      * @param ConfigHelper $configHelper
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
@@ -31,14 +24,12 @@ class ScaEvaluationConfig extends AbstractModel
     public function __construct(
         Context $context,
         Registry $registry,
-        PurchaseHelper $purchaseHelper,
         ConfigHelper $configHelper,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = []
     ) {
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
-        $this->purchaseHelper = $purchaseHelper;
         $this->configHelper = $configHelper;
     }
 
@@ -49,11 +40,11 @@ class ScaEvaluationConfig extends AbstractModel
      */
     public function isScaEnabled($storeId, $paymentMethod)
     {
-        $policyName = $this->purchaseHelper->getPolicyName(
+        $policyName = $this->configHelper->getPolicyName(
             \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
             $storeId
         );
-        $policyFromMethod = $this->purchaseHelper->getPolicyFromMethod($policyName, $paymentMethod);
+        $policyFromMethod = $this->configHelper->getPolicyFromMethod($policyName, $paymentMethod);
         $isScaPreAuth = ($policyFromMethod == 'SCA_PRE_AUTH');
 
         if ($this->configHelper->getEnabledByStoreId($storeId) === false ||

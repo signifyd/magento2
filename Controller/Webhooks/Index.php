@@ -18,6 +18,7 @@ use Magento\Framework\Data\Form\FormKey;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Filesystem\Driver\File;
+use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\Casedata\UpdateCaseV2Factory;
 use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
@@ -104,6 +105,11 @@ class Index extends Action
     protected $updateOrderFactory;
 
     /**
+     * @var Client
+     */
+    protected $client;
+
+    /**
      * Index constructor.
      * @param Context $context
      * @param DateTime $dateTime
@@ -122,6 +128,7 @@ class Index extends Action
      * @param UpdateCaseV2Factory $updateCaseV2Factory
      * @param UpdateCaseFactory $updateCaseFactory
      * @param UpdateOrderFactory $updateOrderFactory
+     * @param Client $client
      * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function __construct(
@@ -141,7 +148,8 @@ class Index extends Action
         UpdateCaseV2Factory $updateCaseV2Factory,
         UpdateCaseFactory $updateCaseFactory,
         UpdateOrderFactory $updateOrderFactory,
-        StoreManagerInterface $storeManagerInterface
+        StoreManagerInterface $storeManagerInterface,
+        Client $client
     ) {
         parent::__construct($context);
 
@@ -159,6 +167,7 @@ class Index extends Action
         $this->updateCaseV2Factory = $updateCaseV2Factory;
         $this->updateCaseFactory = $updateCaseFactory;
         $this->updateOrderFactory = $updateOrderFactory;
+        $this->client = $client;
 
         // Compatibility with Magento 2.3+ which required form_key on every request
         // Magento expects class to implement \Magento\Framework\App\CsrfAwareActionInterface but this causes
@@ -272,7 +281,7 @@ class Index extends Action
                 throw new LocalizedException(__("Case {$caseId} on request not found on Magento"));
             }
 
-            $signifydWebhookApi = $this->configHelper->getSignifydWebhookApi($case);
+            $signifydWebhookApi = $this->client->getSignifydWebhookApi($case);
 
             if ($signifydWebhookApi->validWebhookRequest($request, $hash, $topic) == false) {
                 $httpCode = Http::STATUS_CODE_403;

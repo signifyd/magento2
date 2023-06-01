@@ -21,9 +21,10 @@ class TransactionTest extends OrderTestCase
         $saleTransaction = [];
         $saleTransaction['checkoutId'] = $tokenSent;
         $saleTransaction['orderId'] = $caseFromQuote['orderId'];
-        $saleTransaction['transactions'] = $this->purchaseHelper->makeTransactions($order);
+        $makeTransactions = $this->transactionsFactory->create();
+        $saleTransaction['transactions'] = $makeTransactions($order);
 
-        $transactionResponse = $this->purchaseHelper->postTransactionToSignifyd($saleTransaction, $order);
+        $transactionResponse = $this->client->postTransactionToSignifyd($saleTransaction, $order);
         $tokenReceived = $transactionResponse->getCheckoutId();
         
         $this->assertNotEmpty($caseFromQuote['checkoutId']);

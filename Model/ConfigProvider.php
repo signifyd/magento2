@@ -9,15 +9,15 @@
 namespace Signifyd\Connect\Model;
 
 use Magento\Store\Model\StoreManagerInterface;
-use Signifyd\Connect\Helper\PurchaseHelper;
+use Signifyd\Connect\Helper\ConfigHelper;
 use Magento\Framework\Module\ModuleListInterface;
 
 class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
 {
     /**
-     * @var PurchaseHelper
+     * @var ConfigHelper
      */
-    protected $purchaseHelper;
+    protected $configHelper;
 
     /**
      * @var StoreManagerInterface
@@ -30,22 +30,22 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
     protected $moduleListInterface;
 
     /**
-     * @param PurchaseHelper $purchaseHelper
+     * @param ConfigHelper $configHelper
      * @param StoreManagerInterface $storeManager
      * @param ModuleListInterface $moduleListInterface
      */
     public function __construct(
-        PurchaseHelper $purchaseHelper,
+        ConfigHelper $configHelper,
         StoreManagerInterface $storeManager,
         ModuleListInterface $moduleListInterface
     ) {
-        $this->purchaseHelper = $purchaseHelper;
         $this->storeManager = $storeManager;
         $this->moduleListInterface = $moduleListInterface;
+        $this->configHelper = $configHelper;
     }
     public function getConfig()
     {
-        $policyName = $this->purchaseHelper->getPolicyName(
+        $policyName = $this->configHelper->getPolicyName(
             \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
             $this->storeManager->getStore()->getCode()
         );
@@ -58,7 +58,7 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
             $isAdyenGreaterThanEightEleven = version_compare($adyenVersion, '8.11.0') >= 0;
         }
 
-        $isAdyenPreAuth = $this->purchaseHelper->getIsPreAuth($policyName, 'adyen_cc');
+        $isAdyenPreAuth = $this->configHelper->getIsPreAuth($policyName, 'adyen_cc');
 
         return [ 'signifyd' => [
             'isAdyenPreAuth' => $isAdyenPreAuth,

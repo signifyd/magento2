@@ -11,7 +11,6 @@ use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
-use Signifyd\Connect\Helper\PurchaseHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Model\Casedata;
@@ -24,6 +23,9 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\App\State as AppState;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\UpdateOrder\Action as UpdateOrderAction;
+use Signifyd\Connect\Model\Api\RecipientFactory;
+use Signifyd\Connect\Model\Api\SaleOrderFactory;
+use Signifyd\Connect\Model\Api\Core\Client;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -34,11 +36,6 @@ class Purchase implements ObserverInterface
      * @var Logger;
      */
     protected $logger;
-
-    /**
-     * @var PurchaseHelper
-     */
-    protected $purchaseHelper;
 
     /**
      * @var ConfigHelper
@@ -116,9 +113,23 @@ class Purchase implements ObserverInterface
     protected $updateOrderAction;
 
     /**
+     * @var RecipientFactory
+     */
+    protected $recipientFactory;
+
+    /**
+     * @var SaleOrderFactory
+     */
+    protected $saleOrderFactory;
+
+    /**
+     * @var Client
+     */
+    protected $client;
+
+    /**
      * Purchase constructor.
      * @param Logger $logger
-     * @param PurchaseHelper $purchaseHelper
      * @param ConfigHelper $configHelper
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
@@ -131,10 +142,12 @@ class Purchase implements ObserverInterface
      * @param AppState $appState
      * @param CasedataCollectionFactory $casedataCollectionFactory
      * @param JsonSerializer $jsonSerializer
+     * @param RecipientFactory $recipientFactory
+     * @param SaleOrderFactory $saleOrderFactory
+     * @param Client $client
      */
     public function __construct(
         Logger $logger,
-        PurchaseHelper $purchaseHelper,
         ConfigHelper $configHelper,
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
@@ -146,10 +159,12 @@ class Purchase implements ObserverInterface
         StoreManagerInterface $storeManager,
         AppState $appState,
         CasedataCollectionFactory $casedataCollectionFactory,
-        JsonSerializer $jsonSerializer
+        JsonSerializer $jsonSerializer,
+        RecipientFactory $recipientFactory,
+        SaleOrderFactory $saleOrderFactory,
+        Client $client
     ) {
         $this->logger = $logger;
-        $this->purchaseHelper = $purchaseHelper;
         $this->configHelper = $configHelper;
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
@@ -162,6 +177,9 @@ class Purchase implements ObserverInterface
         $this->appState = $appState;
         $this->casedataCollectionFactory = $casedataCollectionFactory;
         $this->jsonSerializer = $jsonSerializer;
+        $this->recipientFactory = $recipientFactory;
+        $this->saleOrderFactory = $saleOrderFactory;
+        $this->client = $client;
     }
 
     /**
@@ -280,7 +298,8 @@ class Purchase implements ObserverInterface
                     $case = $this->casedataFactory->create();
                 }
 
-                $recipient = $this->purchaseHelper->makeRecipient($order);
+                $makeRecipient = $this->recipientFactory->create();
+                $recipient = $makeRecipient($order);
                 $recipientJson = $this->jsonSerializer->serialize($recipient);
                 $hashToValidateReroute = sha1($recipientJson);
 
@@ -335,7 +354,8 @@ class Purchase implements ObserverInterface
             $case->setCreated(date('Y-m-d H:i:s', time()));
             $case->setUpdated();
             $order->setData('origin_store_code', $case->getData('origin_store_code'));
-            $orderData = $this->purchaseHelper->processOrderData($order);
+            $saleOrder = $this->saleOrderFactory->create();
+            $orderData = $saleOrder($order);
 
             // Stop case sending if order has an async payment method
             if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig()) &&
@@ -363,7 +383,7 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            $saleResponse = $this->purchaseHelper->postCaseToSignifyd($orderData, $order);
+            $saleResponse = $this->client->postCaseToSignifyd($orderData, $order);
 
             if ($saleResponse === false) {
                 return;

@@ -20,11 +20,6 @@ class OrderTestCase extends TestCase
     protected $quoteIdMaskFactory;
 
     /**
-     * @var \Signifyd\Connect\Helper\PurchaseHelper
-     */
-    protected $purchaseHelper;
-
-    /**
      * @inheritdoc
      */
     protected function setUp(): void
@@ -32,7 +27,9 @@ class OrderTestCase extends TestCase
         parent::setUp();
 
         $this->quoteIdMaskFactory = $this->objectManager->get(QuoteIdMaskFactory::class);
-        $this->purchaseHelper = $this->objectManager->create(\Signifyd\Connect\Helper\PurchaseHelper::class);
+        $this->transactionsFactory = $this->objectManager->create(\Signifyd\Connect\Model\Api\TransactionsFactory::class);
+        $this->checkoutOrderFactory = $this->objectManager->create(\Signifyd\Connect\Model\Api\CheckoutOrderFactory::class);
+        $this->client = $this->objectManager->create(\Signifyd\Connect\Model\Api\Core\Client::class);
     }
 
     /**
@@ -161,8 +158,9 @@ class OrderTestCase extends TestCase
         $quote->assignCustomer($customer);
         $quote->save();
 
-        $caseFromQuote = $this->purchaseHelper->processQuoteData($quote);
-        $caseResponse = $this->purchaseHelper->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
+        $checkoutOrder = $this->checkoutOrderFactory->create();
+        $caseFromQuote = $checkoutOrder($quote);
+        $caseResponse = $this->client->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
 
         return [$caseFromQuote, $caseResponse, $quote];
     }

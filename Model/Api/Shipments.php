@@ -36,24 +36,32 @@ class Shipments
     protected $originFactory;
 
     /**
+     * @var MinDeliveryDateFactory
+     */
+    protected $minDeliveryDateFactory;
+
+    /**
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param JsonSerializer $jsonSerializer
      * @param CarrierFactory $carrierFactory
      * @param RecipientFactory $recipientFactory
      * @param OriginFactory $originFactory
+     * @param MinDeliveryDateFactory $minDeliveryDateFactory
      */
     public function __construct(
         ScopeConfigInterface $scopeConfigInterface,
         JsonSerializer $jsonSerializer,
         CarrierFactory $carrierFactory,
         RecipientFactory $recipientFactory,
-        OriginFactory $originFactory
+        OriginFactory $originFactory,
+        MinDeliveryDateFactory $minDeliveryDateFactory
     ) {
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->jsonSerializer = $jsonSerializer;
         $this->carrierFactory = $carrierFactory;
         $this->recipientFactory = $recipientFactory;
         $this->originFactory = $originFactory;
+        $this->minDeliveryDateFactory = $minDeliveryDateFactory;
     }
 
     /**
@@ -85,13 +93,13 @@ class Shipments
         $carrier = $this->carrierFactory->create();
         $recipientFactory = $this->recipientFactory->create();
         $originFactory = $this->originFactory->create();
+        $minDeliveryDate = $this->minDeliveryDateFactory->create();
 
         $shipment = [];
         $shipment['destination'] = $recipientFactory($order);
         $shipment['origin'] = $originFactory($order->getStoreId());
         $shipment['carrier'] = $carrier($shippingMethod);
-        //TODO: RESOLVER
-        $shipment['minDeliveryDate'] = $this->makeMinDeliveryDate();
+        $shipment['minDeliveryDate'] = $minDeliveryDate();
         $shipment['maxDeliveryDate'] = null;
         $shipment['shipmentId'] = null;
         $shipment['fulfillmentMethod'] = $this->getFulfillmentMethodMapping(
@@ -128,13 +136,13 @@ class Shipments
         $carrier = $this->carrierFactory->create();
         $recipientFactory = $this->recipientFactory->create();
         $originFactory = $this->originFactory->create();
+        $minDeliveryDate = $this->minDeliveryDateFactory->create();
 
         $shipment = [];
         $shipment['destination'] = $recipientFactory($quote);
         $shipment['origin'] = $originFactory($quote->getStoreId());
         $shipment['carrier'] = $carrier($shippingMethod);
-        //TODO: RESOLVER
-        $shipment['minDeliveryDate'] = $this->makeMinDeliveryDate();
+        $shipment['minDeliveryDate'] = $minDeliveryDate();
         $shipment['maxDeliveryDate'] = null;
         $shipment['shipmentId'] = null;
         $shipment['fulfillmentMethod'] = $this->getFulfillmentMethodMapping(

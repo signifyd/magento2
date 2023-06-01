@@ -17,18 +17,15 @@ class OrderAddressTest extends OrderTestCase
      */
     protected $orderRepository;
 
-    /**
-     * @var \Signifyd\Connect\Helper\PurchaseHelper
-     */
-    protected $purchaseHelper;
-
     public function setUp(): void
     {
         parent::setUp();
 
         $this->addressRepository = $this->objectManager->create(\Magento\Sales\Model\Order\AddressRepository::class);
         $this->orderRepository = $this->objectManager->create(\Magento\Sales\Model\OrderRepository::class);
-        $this->purchaseHelper = $this->objectManager->create(\Signifyd\Connect\Helper\PurchaseHelper::class);
+        $this->shipmentsFactory = $this->objectManager->create(\Signifyd\Connect\Model\Api\ShipmentsFactory::class);
+        $this->client = $this->objectManager->create(\Signifyd\Connect\Model\Api\Core\Client::class);
+        $this->deviceFactory = $this->objectManager->create(\Signifyd\Connect\Model\Api\DeviceFactory::class);
     }
 
     /**
@@ -50,14 +47,16 @@ class OrderAddressTest extends OrderTestCase
         }
 
         $updatedOrder = $this->orderRepository->get($order->getId());
-        $shipments = $this->purchaseHelper->makeShipments($updatedOrder);
+        $makeShipments = $this->shipmentsFactory->create();
+        $shipments = $makeShipments($updatedOrder);
+        $device = $this->deviceFactory->create();
 
         $rerout = [];
         $rerout['orderId'] = $updatedOrder->getIncrementId();
-        $rerout['device'] = $this->purchaseHelper->makeDevice($updatedOrder->getQuoteId(), $updatedOrder->getStoreId());
+        $rerout['device'] = $device($updatedOrder->getQuoteId(), $updatedOrder->getStoreId());
         $rerout['shipments'] = $shipments;
 
-        $updateResponse = $this->purchaseHelper->createReroute($rerout, $updatedOrder);
+        $updateResponse = $this->client->createReroute($rerout, $updatedOrder);
 
         $this->assertNotEmpty($updateResponse->decision);
         $this->assertNotEmpty($updateResponse->decision->checkpointAction);
