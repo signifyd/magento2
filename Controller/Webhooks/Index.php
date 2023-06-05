@@ -28,6 +28,7 @@ use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\App\ResourceConnection;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\UpdateOrderFactory;
+use Signifyd\Connect\Model\SignifydFlags;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
@@ -110,6 +111,11 @@ class Index extends Action
     protected $client;
 
     /**
+     * @var SignifydFlags
+     */
+    protected $signifydFlags;
+
+    /**
      * Index constructor.
      * @param Context $context
      * @param DateTime $dateTime
@@ -129,7 +135,7 @@ class Index extends Action
      * @param UpdateCaseFactory $updateCaseFactory
      * @param UpdateOrderFactory $updateOrderFactory
      * @param Client $client
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @param SignifydFlags $signifydFlags
      */
     public function __construct(
         Context $context,
@@ -149,7 +155,8 @@ class Index extends Action
         UpdateCaseFactory $updateCaseFactory,
         UpdateOrderFactory $updateOrderFactory,
         StoreManagerInterface $storeManagerInterface,
-        Client $client
+        Client $client,
+        SignifydFlags $signifydFlags
     ) {
         parent::__construct($context);
 
@@ -168,6 +175,7 @@ class Index extends Action
         $this->updateCaseFactory = $updateCaseFactory;
         $this->updateOrderFactory = $updateOrderFactory;
         $this->client = $client;
+        $this->signifydFlags = $signifydFlags;
 
         // Compatibility with Magento 2.3+ which required form_key on every request
         // Magento expects class to implement \Magento\Framework\App\CsrfAwareActionInterface but this causes

@@ -5,6 +5,7 @@ namespace Signifyd\Connect\Cron;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Fulfillment\FulfillmentsToRetryFactory;
 use Signifyd\Connect\Model\ProcessCron\FulfillmentFactory;
+use Signifyd\Connect\Model\SignifydFlags;
 
 class RetryFulfillmentJob
 {
@@ -33,15 +34,18 @@ class RetryFulfillmentJob
      * @param Logger $logger
      * @param FulfillmentsToRetryFactory $fulfillmentsToRetryFactory
      * @param FulfillmentFactory $fulfillmentFactory
+     * @param SignifydFlags $signifydFlags
      */
     public function __construct(
         Logger $logger,
         FulfillmentsToRetryFactory $fulfillmentsToRetryFactory,
-        FulfillmentFactory $fulfillmentFactory
+        FulfillmentFactory $fulfillmentFactory,
+        SignifydFlags $signifydFlags
     ) {
         $this->logger = $logger;
         $this->fulfillmentsToRetryFactory = $fulfillmentsToRetryFactory;
         $this->fulfillmentFactory = $fulfillmentFactory;
+        $this->signifydFlags = $signifydFlags;
     }
 
     /**
@@ -57,6 +61,7 @@ class RetryFulfillmentJob
         $processFulfillment = $this->fulfillmentFactory->create();
         $processFulfillment($fulfillments);
 
+        $this->signifydFlags->updateCronFlag();
         $this->logger->debug("CRON: Retry fulfillment method ended");
     }
 }

@@ -13,6 +13,7 @@ use Signifyd\Connect\Model\ProcessCron\CaseData\InReviewFactory;
 use Signifyd\Connect\Model\ProcessCron\CaseData\WaitingSubmissionFactory;
 use Signifyd\Connect\Model\ProcessCron\CaseData\AsyncWaitingFactory;
 use Signifyd\Connect\Model\Casedata;
+use Signifyd\Connect\Model\SignifydFlags;
 
 class RetryCaseJob
 {
@@ -53,19 +54,22 @@ class RetryCaseJob
      * @param InReviewFactory $inReviewFactory
      * @param WaitingSubmissionFactory $waitingSubmissionFactory
      * @param AsyncWaitingFactory $asyncWaitingFactory
+     * @param SignifydFlags $signifydFlags
      */
     public function __construct(
         Logger $logger,
         FilterCasesByStatusFactory $filterCasesByStatusFactory,
         InReviewFactory $inReviewFactory,
         WaitingSubmissionFactory $waitingSubmissionFactory,
-        AsyncWaitingFactory $asyncWaitingFactory
+        AsyncWaitingFactory $asyncWaitingFactory,
+        SignifydFlags $signifydFlags
     ) {
         $this->logger = $logger;
         $this->filterCasesByStatusFactory = $filterCasesByStatusFactory;
         $this->inReviewFactory = $inReviewFactory;
         $this->waitingSubmissionFactory = $waitingSubmissionFactory;
         $this->asyncWaitingFactory = $asyncWaitingFactory;
+        $this->signifydFlags = $signifydFlags;
     }
 
     /**
