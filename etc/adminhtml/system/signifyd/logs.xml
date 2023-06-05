@@ -12,5 +12,15 @@
             <frontend_model>Signifyd\Connect\Block\Adminhtml\System\Config\Field\Version</frontend_model>
             <comment>The version number of the Signifyd extension.</comment>
         </field>
+        <field id="cron_data" translate="label comment" type="text" sortOrder="38" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Cron last run</label>
+            <comment>Displays the last time the cron was run.</comment>
+            <frontend_model>Signifyd\Connect\Block\Adminhtml\System\Config\Field\CronData</frontend_model>
+        </field>
+        <field id="webhook_data" translate="label comment" type="text" sortOrder="39" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Last webhook received</label>
+            <comment>Displays the last time the webhook was triggered.</comment>
+            <frontend_model>Signifyd\Connect\Block\Adminhtml\System\Config\Field\WebhookData</frontend_model>
+        </field>
     </group>
 </include>

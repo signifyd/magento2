@@ -24,6 +24,11 @@ class RetryFulfillmentJob
     protected $fulfillmentFactory;
 
     /**
+     * @var SignifydFlags
+     */
+    protected $signifydFlags;
+
+    /**
      * RetryFulfillmentJob constructor.
      * @param Logger $logger
      * @param FulfillmentsToRetryFactory $fulfillmentsToRetryFactory

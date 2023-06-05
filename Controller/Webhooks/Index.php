@@ -350,5 +350,6 @@ class Index extends Action
 
         $httpCode = empty($httpCode) ? 200 : $httpCode;
         $this->getResponse()->setStatusCode($httpCode);
+        $this->signifydFlags->updateWebhookFlag();
     }
 }

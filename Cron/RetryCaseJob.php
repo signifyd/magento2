@@ -42,6 +42,11 @@ class RetryCaseJob
     protected $asyncWaitingFactory;
 
     /**
+     * @var SignifydFlags
+     */
+    protected $signifydFlags;
+
+    /**
      * RetryCaseJob constructor.
      * @param Logger $logger
      * @param FilterCasesByStatusFactory $filterCasesByStatusFactory
@@ -94,6 +99,7 @@ class RetryCaseJob
         $processInReview = $this->inReviewFactory->create();
         $processInReview($inReviewCases);
 
+        $this->signifydFlags->updateCronFlag();
         $this->logger->debug("CRON: Main retry method ended");
     }
 }
