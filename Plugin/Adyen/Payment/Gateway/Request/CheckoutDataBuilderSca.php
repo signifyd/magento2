@@ -137,13 +137,12 @@ class CheckoutDataBuilderSca
                 $this->logger->info("Signifyd's recommendation is to request exemption");
 
                 $placement = $scaEvaluation->exemptionDetails->placement;
+                $scaExemption = 'tra';
 
                 if ($placement === 'AUTHENTICATION') {
-                    $executeThreeD = 'True';
-                    $scaExemption = 'tra';
+                    $executeThreeD = 'always';
                 } elseif ($placement === 'AUTHORIZATION') {
-                    $executeThreeD = 'False';
-                    $scaExemption = 'tra';
+                    $executeThreeD = 'never';
                 }
                 break;
 
@@ -161,13 +160,28 @@ class CheckoutDataBuilderSca
             case 'SOFT_DECLINE':
                 $this->logger->info("Processor responds back with a soft decline");
 
-                $executeThreeD = 'True';
+                $executeThreeD = 'always';
                 $scaExemption = '';
                 break;
         }
 
         if (isset($executeThreeD) && isset($scaExemption)) {
-            $request['body']['additionalData']['executeThreeD'] = $executeThreeD;
+            if (\Adyen\Client::API_CHECKOUT_VERSION === "v69") {
+                $request['body']['authenticationData']['attemptAuthentication'] = $executeThreeD;
+            } else {
+                switch ($executeThreeD) {
+                    case 'always':
+                        $executeThreeD = 'True';
+                        break;
+
+                    case 'never';
+                        $executeThreeD = 'False';
+                        break;
+                }
+
+                $request['body']['additionalData']['executeThreeD'] = $executeThreeD;
+            }
+
             $request['body']['additionalData']['scaExemption'] = $scaExemption;
         }
 

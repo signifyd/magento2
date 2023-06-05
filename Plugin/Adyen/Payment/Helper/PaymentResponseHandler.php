@@ -58,7 +58,13 @@ class PaymentResponseHandler
             return;
         }
 
-        if (isset($additionalData['threeDAuthenticated']) === false || $additionalData['threeDAuthenticated'] === 'false') {
+        if (isset($additionalData['threeDAuthenticated']) === false) {
+            return;
+        }
+
+        if ($additionalData['threeDAuthenticated'] === 'false' &&
+            isset($additionalData['scaExemptionRequested']) === false
+        ) {
             return;
         }
 
@@ -69,28 +75,36 @@ class PaymentResponseHandler
             $payload = $this->jsonSerializer->unserialize($contentArray['payload']);
 
             if (isset($payload['orderId'])) {
-                $order = $this->orderRepository->get($payload['orderId']);
-                $quoteId = $order->getQuoteId();
+                $orderId = $payload['orderId'];
+            } else {
+                return;
             }
+        } elseif (isset($contentArray['orderId'])) {
+            $orderId = $contentArray['orderId'];
         } else {
             return;
         }
 
+        $order = $this->orderRepository->get($orderId);
+        $quoteId = $order->getQuoteId();
+
         $threeDsData = [];
 
-        if (isset($additionalData['eci'])) {
+        if (isset($additionalData['eci']) && $additionalData['eci'] != "N/A") {
             $threeDsData['eci'] = $additionalData['eci'];
         }
 
-        if (isset($additionalData['cavv'])) {
+        if (isset($additionalData['cavv']) && $additionalData['cavv'] != "N/A") {
             $threeDsData['cavv'] = $additionalData['cavv'];
         }
 
-        if (isset($additionalData['threeDSVersion'])) {
+        if (isset($additionalData['threeDSVersion']) && $additionalData['threeDSVersion'] != "N/A") {
             $threeDsData['version'] = $additionalData['threeDSVersion'];
         }
 
-        if (isset($additionalData['threeDAuthenticatedResponse'])) {
+        if (isset($additionalData['threeDAuthenticatedResponse']) &&
+            $additionalData['threeDAuthenticatedResponse'] != "N/A"
+        ) {
             switch ($additionalData['threeDAuthenticatedResponse']) {
                 case 'Y':
                     $threeDAuthenticatedResponse = 'AUTHENTICATION_SUCCESS';
@@ -112,8 +126,36 @@ class PaymentResponseHandler
             $threeDsData['transStatus'] = $threeDAuthenticatedResponse;
         }
 
-        if (isset($additionalData['dsTransID'])) {
+        if (isset($additionalData['dsTransID']) && $additionalData['dsTransID'] != "N/A") {
             $threeDsData['dsTransId'] = $additionalData['dsTransID'];
+        }
+
+        if (isset($additionalData['scaExemptionRequested']) && $additionalData['scaExemptionRequested'] != "N/A") {
+            $signifydScaExemption = null;
+
+            switch ($additionalData['scaExemptionRequested']) {
+                case 'lowValue':
+                    $signifydScaExemption = 'LOW_VALUE';
+                    break;
+
+                case 'secureCorporate':
+                    $signifydScaExemption = 'SECURE_CORPORATE';
+                    break;
+
+                case 'trustedBeneficiary':
+                    $signifydScaExemption = 'TRUSTED_BENEFICIARY';
+                    break;
+
+                case 'transactionRiskAnalysis':
+                    $signifydScaExemption = 'TRA';
+                    break;
+            }
+
+            $threeDsData['exemptionIndicator'] = $signifydScaExemption;
+
+            //Version is a mandatory field for Signifyd, as in the case of exemption Adyen does not return a value,
+            // it is necessary to fill it in
+            $threeDsData['version'] = $threeDsData['version'] ?? "N/A";
         }
 
         $this->threeDsIntegration->setThreeDsData($threeDsData, $quoteId);
