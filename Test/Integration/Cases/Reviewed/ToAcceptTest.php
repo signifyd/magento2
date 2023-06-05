@@ -25,6 +25,6 @@ class ToAcceptTest extends CreateTest
 
         $this->assertEquals(Casedata::COMPLETED_STATUS, $case->getData('magento_status'));
         $this->assertEquals('ACCEPT', $case->getData('guarantee'));
-        $this->assertEquals('DECLINED', $case->getOrigData('guarantee'));
+        $this->assertEquals('REJECT', $case->getOrigData('guarantee'));
     }
 }

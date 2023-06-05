@@ -1,8 +1,9 @@
 <?php
 
-namespace Signifyd\Connect\Test\Integration\Cases\Cron;
+namespace Signifyd\Connect\Test\Integration\Cases\Order;
 
 use Signifyd\Connect\Model\Casedata;
+use Signifyd\Connect\Test\Integration\Cases\Cron\CreateTest;
 
 class PassiveMode extends CreateTest
 {

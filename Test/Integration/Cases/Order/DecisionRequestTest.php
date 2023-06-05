@@ -1,10 +1,11 @@
 <?php
 
-namespace Signifyd\Connect\Test\Integration\Cases\Cron;
+namespace Signifyd\Connect\Test\Integration\Cases\Order;
 
 use Signifyd\Connect\Model\Casedata;
+use Signifyd\Connect\Test\Integration\Cases\Cron\CreateTest;
 
-class CapturePositiveActionTest extends CreateTest
+class DecisionRequestTest extends CreateTest
 {
     public function testCronCreateCase()
     {
@@ -14,19 +15,16 @@ class CapturePositiveActionTest extends CreateTest
     /**
      * @magentoDataFixture configFixture
      */
-    public function testCapturePositiveAction()
+    public function testDecisionRequestTestAction()
     {
         /** @var \Magento\Framework\App\Config\Storage\WriterInterface $writerInterface */
         $writerInterface = $this->objectManager->create(\Magento\Framework\App\Config\Storage\WriterInterface::class);
-        $writerInterface->save('signifyd/advanced/guarantee_positive_action', 'capture');
+        $writerInterface->save('signifyd/general/decision_request', 'NONE');
 
         $this->processReviewCase();
         $case = $this->getCase();
-        $order = $this->getOrder();
 
-        $this->assertEquals(Casedata::COMPLETED_STATUS, $case->getData('magento_status'));
-        $this->assertEquals('ACCEPT', $case->getData('guarantee'));
+        $this->assertTrue($case->getData('guarantee') === 'N/A');
         $this->assertNotEmpty($case->getData('score'));
-        $this->assertTrue($order->hasInvoices());
     }
 }
