@@ -139,6 +139,16 @@ class AsyncWaiting
                 $cvvCode = $caseModel['transactions'][0]['verifications']['cvvResponseCode'];
                 $retries = $case->getData('retries');
 
+                if ($case->getOrder()->getPayment()->getMethod() === 'stripe_payments' &&
+                    $case->getEntries('stripe_status') !== 'approved'
+                ) {
+                    $this->logger->info(
+                        "CRON: case no: {$case->getOrderIncrement()}" .
+                        " will not be sent because the stripe hasn't approved it yet",
+                        ['entity' => $case]);
+                    continue;
+                }
+
                 if ($retries >= 5 || empty($avsCode) === false && empty($cvvCode) === false) {
                     try {
                         $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
