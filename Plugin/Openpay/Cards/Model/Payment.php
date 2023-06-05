@@ -99,7 +99,12 @@ class Payment
             $this->storeManager->getStore()->getId()
         );
 
-        $isPreAuth = $this->configHelper->getIsPreAuth($policyName, 'openpay_cards');
+        $isPreAuth = $this->configHelper->getIsPreAuth(
+            $policyName,
+            'openpay_cards',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $this->storeManager->getStore()->getId()
+        );
 
         $quote = $this->checkoutCart->getQuote();
 

@@ -105,7 +105,12 @@ class GeneralResponseValidator
             $this->storeManager->getStore()->getId()
         );
 
-        $isPreAuth = $this->configHelper->getIsPreAuth($policyName, 'braintree');
+        $isPreAuth = $this->configHelper->getIsPreAuth(
+            $policyName,
+            'braintree',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $this->storeManager->getStore()->getId()
+        );
 
         if ($isPreAuth === false) {
             return null;

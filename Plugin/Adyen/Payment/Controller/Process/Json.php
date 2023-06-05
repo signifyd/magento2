@@ -102,7 +102,12 @@ class Json
             $this->storeManager->getStore()->getId()
         );
 
-        $isPreAuth = $this->configHelper->getIsPreAuth($policyName, 'adyen_cc');
+        $isPreAuth = $this->configHelper->getIsPreAuth(
+            $policyName,
+            'adyen_cc',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $this->storeManager->getStore()->getId()
+        );
         $notificationItems = json_decode(file_get_contents('php://input'), true);
 
         if ($isPreAuth === false && empty($notificationItems) === true) {

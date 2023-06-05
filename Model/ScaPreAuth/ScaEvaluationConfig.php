@@ -44,7 +44,12 @@ class ScaEvaluationConfig extends AbstractModel
             \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
             $storeId
         );
-        $policyFromMethod = $this->configHelper->getPolicyFromMethod($policyName, $paymentMethod);
+        $policyFromMethod = $this->configHelper->getPolicyFromMethod(
+            $policyName,
+            $paymentMethod,
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
+            $storeId
+        );
         $isScaPreAuth = ($policyFromMethod == 'SCA_PRE_AUTH');
 
         if ($this->configHelper->getEnabledByStoreId($storeId) === false ||
