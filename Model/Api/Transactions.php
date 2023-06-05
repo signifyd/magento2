@@ -411,6 +411,10 @@ class Transactions
             return null;
         }
 
-        return $this->jsonSerializer->unserialize($case->getEntries('threeDs'));
+        try {
+            return $this->jsonSerializer->unserialize($case->getEntries('threeDs'));
+        } catch (\InvalidArgumentException $e) {
+            return null;
+        }
     }
 }
