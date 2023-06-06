@@ -4,6 +4,7 @@ namespace Signifyd\Connect\Observer\Api;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\Core\Client;
@@ -45,6 +46,11 @@ class Transaction implements ObserverInterface
     protected $client;
 
     /**
+     * @var JsonSerializer
+     */
+    protected $jsonSerializer;
+
+    /**
      * Transaction constructor.
      * @param Logger $logger
      * @param CasedataFactory $casedataFactory
@@ -52,6 +58,7 @@ class Transaction implements ObserverInterface
      * @param ConfigHelper $configHelper
      * @param TransactionsFactory $transactionsFactory
      * @param Client $client
+     * @param JsonSerializer $jsonSerializer
      */
     public function __construct(
         Logger $logger,
@@ -59,7 +66,8 @@ class Transaction implements ObserverInterface
         CasedataResourceModel $casedataResourceModel,
         ConfigHelper $configHelper,
         TransactionsFactory $transactionsFactory,
-        Client $client
+        Client $client,
+        JsonSerializer $jsonSerializer
     ) {
         $this->logger = $logger;
         $this->casedataFactory = $casedataFactory;
@@ -67,6 +75,7 @@ class Transaction implements ObserverInterface
         $this->configHelper = $configHelper;
         $this->transactionsFactory = $transactionsFactory;
         $this->client = $client;
+        $this->jsonSerializer = $jsonSerializer;
     }
 
     public function execute(Observer $observer)
