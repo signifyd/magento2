@@ -121,6 +121,8 @@ class Payment
             return null;
         }
 
+        $signifydReason = null;
+
         switch ($e->getCode()) {
             case '2004':
                 $signifydReason = 'INVALID_NUMBER';

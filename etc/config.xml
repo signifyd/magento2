@@ -49,6 +49,10 @@
                     <signifyd_transaction_id_adapter>Signifyd\Connect\Model\Payment\AdyenCc\TransactionIdMapper</signifyd_transaction_id_adapter>
                 </adyen_cc>
 
+                <adyen_hpp>
+                    <signifyd_payment_method_adapter>Signifyd\Connect\Model\Api\CaseData\Transactions\PaymentMethod\AdyenHpp</signifyd_payment_method_adapter>
+                </adyen_hpp>
+
                 <authorizenet_directpost>
                     <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Authorizenet\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
                     <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\Authorizenet\Last4Mapper</signifyd_last4_adapter>
