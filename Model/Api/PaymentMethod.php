@@ -2,54 +2,44 @@
 
 namespace Signifyd\Connect\Model\Api;
 
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
+use Signifyd\Connect\Logger\Logger;
+use Signifyd\Connect\Model\MappingVerificationFactory;
 
 class PaymentMethod
 {
     /**
-     * @var ScopeConfigInterface
+     * @var MappingVerificationFactory
      */
-    protected $scopeConfigInterface;
+    protected $mappingVerificationFactory;
 
     /**
-     * @var JsonSerializer
+     * @var Logger
      */
-    protected $jsonSerializer;
+    protected $logger;
 
     /**
-     * @param ScopeConfigInterface $scopeConfigInterface
-     * @param JsonSerializer $jsonSerializer
+     * @param MappingVerificationFactory $mappingVerificationFactory
+     * @param Logger $logger
      */
     public function __construct(
-        ScopeConfigInterface $scopeConfigInterface,
-        JsonSerializer $jsonSerializer
+        MappingVerificationFactory $mappingVerificationFactory,
+        Logger $logger
     ) {
-        $this->scopeConfigInterface = $scopeConfigInterface;
-        $this->jsonSerializer = $jsonSerializer;
+        $this->mappingVerificationFactory = $mappingVerificationFactory;
+        $this->logger = $logger;
     }
 
     /**
      * Construct a new PaymentMethod object
-     * @param $paymentMethod
+     * @param $entity
      * @return int|mixed|string
      */
-    public function __invoke($paymentMethod)
+    public function __invoke($entity)
     {
-        $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/payment_methods_config');
+        $paymentMethodAdapter = $this->mappingVerificationFactory->createPaymentMethod($entity->getPayment()->getMethod());
 
-        try {
-            $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
-        } catch (\InvalidArgumentException $e) {
-            return $paymentMethod;
-        }
+        $this->logger->debug('Getting payment method using ' . get_class($paymentMethodAdapter));
 
-        foreach ($allowMethods as $i => $allowMethod) {
-            if (in_array($paymentMethod, $allowMethod)) {
-                return $i;
-            }
-        }
-
-        return $paymentMethod;
+        return $paymentMethodAdapter->getData($entity);
     }
 }
