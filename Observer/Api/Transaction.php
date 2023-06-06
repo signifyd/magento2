@@ -106,7 +106,22 @@ class Transaction implements ObserverInterface
                     $saleTransaction['checkoutId'] = $case->getCheckoutToken();
                     $saleTransaction['orderId'] = $order->getIncrementId();
                     $saleTransaction['transactions'] = $makeTransactions($order);
+
+                    $saleTransactionJson = $this->jsonSerializer->serialize($saleTransaction);
+                    $newHashToValidateReroute = sha1($saleTransactionJson);
+                    $currentHashToValidateReroute = $case->getEntries('transaction_hash');
+
+                    if ($newHashToValidateReroute == $currentHashToValidateReroute) {
+                        $this->logger->info(
+                            'No data changes, will not send transaction ' .
+                            $order->getIncrementId()
+                        );
+                        return;
+                    }
+
                     $this->client->postTransactionToSignifyd($saleTransaction, $order);
+                    $case->setEntries('transaction_hash', $newHashToValidateReroute);
+                    $this->casedataResourceModel->save($case);
                 }
             } catch (\Exception $e) {
                 $this->logger->debug($e->getMessage());
