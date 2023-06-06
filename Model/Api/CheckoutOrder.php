@@ -215,7 +215,12 @@ class CheckoutOrder
             $quote->getStore()->getScopeType(),
             $quote->getStoreId()
         );
-        $policyFromMethod = $this->configHelper->getPolicyFromMethod($policyConfig, $paymentMethod);
+        $policyFromMethod = $this->configHelper->getPolicyFromMethod(
+            $policyConfig,
+            $paymentMethod,
+            $quote->getStore()->getScopeType(),
+            $quote->getStoreId()
+        );
         $evalRequest = ($policyFromMethod == 'SCA_PRE_AUTH') ? ['SCA_EVALUATION'] : null;
         $signifydOrder['additionalEvalRequests'] = $evalRequest;
         $signifydOrder['checkoutId'] = sha1($this->jsonSerializer->serialize($signifydOrder));

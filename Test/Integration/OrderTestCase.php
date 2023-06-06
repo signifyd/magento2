@@ -29,6 +29,7 @@ class OrderTestCase extends TestCase
         $this->quoteIdMaskFactory = $this->objectManager->get(QuoteIdMaskFactory::class);
         $this->transactionsFactory = $this->objectManager->create(\Signifyd\Connect\Model\Api\TransactionsFactory::class);
         $this->checkoutOrderFactory = $this->objectManager->create(\Signifyd\Connect\Model\Api\CheckoutOrderFactory::class);
+        $this->saleOrderFactory = $this->objectManager->create(\Signifyd\Connect\Model\Api\SaleOrderFactory::class);
         $this->client = $this->objectManager->create(\Signifyd\Connect\Model\Api\Core\Client::class);
     }
 

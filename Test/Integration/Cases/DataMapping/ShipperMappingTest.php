@@ -24,7 +24,8 @@ class ShipperMappingTest extends CreateTest
 
         $this->processReviewCase();
         $order = $this->getOrder();
-        $orderData = $this->purchaseHelper->processOrderData($order);
+        $saleOrder = $this->saleOrderFactory->create();
+        $orderData = $saleOrder($order);
 
         $this->assertEquals($orderData['purchase']['shipments'][0]['carrier'], 'FEDEX');
     }

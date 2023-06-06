@@ -24,7 +24,8 @@ class PaymentMappingTest extends CreateTest
 
         $this->processReviewCase();
         $order = $this->getOrder();
-        $orderData = $this->purchaseHelper->processOrderData($order);
+        $saleOrder = $this->saleOrderFactory->create();
+        $orderData = $saleOrder($order);
 
         $this->assertEquals($orderData['transactions'][0]['paymentMethod'], 'CREDIT_CARD');
     }
