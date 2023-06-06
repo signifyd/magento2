@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\BinMapper as Base_BinMapper;
 
 class BinMapper extends Base_BinMapper
 {
-    protected $allowedMethods = ['cybersource'];
+    protected $allowedMethods = ['cybersource', 'chcybersource'];
 
     /**
      * @param \Magento\Sales\Model\Order $order
@@ -14,12 +14,18 @@ class BinMapper extends Base_BinMapper
      */
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
+        $apiResponse = $this->getSignifydPaymentData();
         $additionalInfo = $order->getPayment()->getAdditionalInformation();
 
         if (isset($additionalInfo['card_bin']) &&
             empty($additionalInfo['card_bin']) === false &&
             strlen($additionalInfo['card_bin']) === 6) {
             $bin = $additionalInfo['card_bin'];
+        } elseif (is_array($apiResponse) &&
+            isset($apiResponse['afsReply']) &&
+            isset($apiResponse['afsReply']->cardBin)
+        ) {
+            $bin = $apiResponse['afsReply']->cardBin;
         }
 
         $message = 'Bin found on payment mapper: ' . (empty($bin) ? 'false' : 'true');

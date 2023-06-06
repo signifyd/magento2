@@ -156,6 +156,10 @@
         <plugin name="signifydSalesOrderGrid" type="\Signifyd\Connect\Plugin\OrderGrid\SalesOrderGridPlugin"/>
     </type>
 
+    <type name="CyberSource\SecureAcceptance\Gateway\Http\Client\SOAPClient">
+        <plugin name="Signifyd_Connect_Plugin_CyberSource_Gateway_Http_Client_SOAPClient" type="\Signifyd\Connect\Plugin\CyberSource\Gateway\Http\Client\SOAPClient" />
+    </type>
+
     <!-- Preferences -->
 
     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />

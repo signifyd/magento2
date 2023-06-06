@@ -262,11 +262,18 @@ class PreAuth implements ObserverInterface
                 $checkoutPaymentDetails['cardLast4'] =
                     $dataArray['paymentMethod']['additional_data']['cardLast4'] ?? null;
 
-                $checkoutPaymentDetails['cardExpiryMonth'] =
-                    $dataArray['paymentMethod']['additional_data']['cardExpiryMonth'] ?? null;
+                if (isset($dataArray['paymentMethod']['additional_data']['expDate'])) {
+                    $expDate = explode('-', $dataArray['paymentMethod']['additional_data']['expDate']);
+                    $checkoutPaymentDetails['cardExpiryMonth'] = $expDate[0];
 
-                $checkoutPaymentDetails['cardExpiryYear'] =
-                    $dataArray['paymentMethod']['additional_data']['cardExpiryYear'] ?? null;
+                    $checkoutPaymentDetails['cardExpiryYear'] = $expDate[1];
+                } else {
+                    $checkoutPaymentDetails['cardExpiryMonth'] =
+                        $dataArray['paymentMethod']['additional_data']['cardExpiryMonth'] ?? null;
+
+                    $checkoutPaymentDetails['cardExpiryYear'] =
+                        $dataArray['paymentMethod']['additional_data']['cardExpiryYear'] ?? null;
+                }
             }
 
             $this->logger->info("Creating case for quote {$quote->getId()}");
