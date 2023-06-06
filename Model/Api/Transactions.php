@@ -246,7 +246,7 @@ class Transactions
         $acquirerDetails = $this->acquirerDetailsFactory->create();
 
         $lastTransaction['gatewayStatusCode'] = 'SUCCESS';
-        $lastTransaction['paymentMethod'] = $makePaymentMethod($order->getPayment()->getMethod());
+        $lastTransaction['paymentMethod'] = $makePaymentMethod($order);
         $lastTransaction['checkoutPaymentDetails'] = $checkoutPaymentDetails($order);
         $lastTransaction['amount'] = $order->getGrandTotal();
         $lastTransaction['currency'] = $order->getOrderCurrencyCode();
@@ -308,7 +308,7 @@ class Transactions
         $transactions = [];
         $transaction = [];
         $transaction['gatewayStatusCode'] = 'FAILURE';
-        $transaction['paymentMethod'] = $makePaymentMethod($quote->getPayment()->getMethod());
+        $transaction['paymentMethod'] = $makePaymentMethod($quote);
         $transaction['checkoutPaymentDetails'] = $checkoutPaymentDetails($quote, $methodData);
         $transaction['amount'] = $quote->getGrandTotal();
         $transaction['currency'] = $quote->getBaseCurrencyCode();

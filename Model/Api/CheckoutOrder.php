@@ -7,6 +7,7 @@ use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
 use Signifyd\Connect\Helper\ConfigHelper;
+use Signifyd\Connect\Logger\Logger;
 
 class CheckoutOrder
 {
@@ -106,6 +107,11 @@ class CheckoutOrder
     protected $configHelper;
 
     /**
+     * @var Logger
+     */
+    protected $logger;
+
+    /**
      * @param Registry $registry
      * @param PurchaseFactory $purchaseFactory
      * @param UserAccountFactory $userAccountFactory
@@ -125,6 +131,7 @@ class CheckoutOrder
      * @param MerchantCategoryCodeFactory $merchantCategoryCodeFactory
      * @param PaymentMethodFactory $paymentMethodFactory
      * @param ConfigHelper $configHelper
+     * @param Logger $logger
      */
     public function __construct(
         Registry $registry,
@@ -145,7 +152,8 @@ class CheckoutOrder
         MembershipsFactory $membershipsFactory,
         MerchantCategoryCodeFactory $merchantCategoryCodeFactory,
         PaymentMethodFactory $paymentMethodFactory,
-        ConfigHelper $configHelper
+        ConfigHelper $configHelper,
+        Logger $logger
     ) {
         $this->registry = $registry;
         $this->purchaseFactory = $purchaseFactory;
@@ -166,6 +174,7 @@ class CheckoutOrder
         $this->merchantCategoryCodeFactory = $merchantCategoryCodeFactory;
         $this->paymentMethodFactory = $paymentMethodFactory;
         $this->configHelper = $configHelper;
+        $this->logger = $logger;
     }
 
     /**
@@ -178,93 +187,100 @@ class CheckoutOrder
     public function __invoke(Quote $quote, $checkoutPaymentDetails = null, $paymentMethod = null)
     {
         $signifydOrder = [];
-        $reservedOrderId = $quote->getReservedOrderId();
-        $purchase = $this->purchaseFactory->create();
-        $userAccount = $this->userAccountFactory->create();
-        $coverageRequests = $this->coverageRequestsFactory->create();
-        $device = $this->deviceFactory->create();
-        $merchantPlatform = $this->merchantPlatformFactory->create();
-        $signifydClient = $this->signifydClientFactory->create();
-        $tags = $this->tagsFactory->create();
-        $address = $this->addressFactory->create();
-        $sellers = $this->sellersFactory->create();
-        $customerOrderRecommendation = $this->customerOrderRecommendationFactory->create();
-        $memberships = $this->membershipsFactory->create();
-        $merchantCategoryCode = $this->merchantCategoryCodeFactory->create();
 
-        if (empty($reservedOrderId)) {
-            $quote->reserveOrderId();
+        try {
             $reservedOrderId = $quote->getReservedOrderId();
-            $this->quoteResourceModel->save($quote);
-        }
+            $purchase = $this->purchaseFactory->create();
+            $userAccount = $this->userAccountFactory->create();
+            $coverageRequests = $this->coverageRequestsFactory->create();
+            $device = $this->deviceFactory->create();
+            $merchantPlatform = $this->merchantPlatformFactory->create();
+            $signifydClient = $this->signifydClientFactory->create();
+            $tags = $this->tagsFactory->create();
+            $address = $this->addressFactory->create();
+            $sellers = $this->sellersFactory->create();
+            $customerOrderRecommendation = $this->customerOrderRecommendationFactory->create();
+            $memberships = $this->membershipsFactory->create();
+            $merchantCategoryCode = $this->merchantCategoryCodeFactory->create();
 
-        $signifydOrder['orderId'] = $reservedOrderId;
-        $signifydOrder['purchase'] = $purchase($quote);
-        $signifydOrder['userAccount'] = $userAccount($quote);
-        $signifydOrder['memberships'] = $memberships();
-        $signifydOrder['coverageRequests'] = $coverageRequests($paymentMethod);
-        $signifydOrder['merchantCategoryCode'] = $merchantCategoryCode();
-        $signifydOrder['device'] = $device($quote->getId(), $quote->getStore());
-        $signifydOrder['merchantPlatform'] = $merchantPlatform();
-        $signifydOrder['signifydClient'] = $signifydClient();
-        $signifydOrder['sellers'] = $sellers();
-        $signifydOrder['tags'] = $tags($quote->getStoreId());
-        $signifydOrder['customerOrderRecommendation'] = $customerOrderRecommendation;
-
-        $policyConfig = $this->configHelper->getPolicyName(
-            $quote->getStore()->getScopeType(),
-            $quote->getStoreId()
-        );
-        $policyFromMethod = $this->configHelper->getPolicyFromMethod(
-            $policyConfig,
-            $paymentMethod,
-            $quote->getStore()->getScopeType(),
-            $quote->getStoreId()
-        );
-        $evalRequest = ($policyFromMethod == 'SCA_PRE_AUTH') ? ['SCA_EVALUATION'] : null;
-        $signifydOrder['additionalEvalRequests'] = $evalRequest;
-        $signifydOrder['checkoutId'] = sha1($this->jsonSerializer->serialize($signifydOrder));
-        $transactions = [];
-        $sourceAccountDetails = $this->sourceAccountDetailsFactory->create();
-        $acquirerDetails = $this->acquirerDetailsFactory->create();
-
-        if (isset($paymentMethod)) {
-            $transaction = [];
-            $billingAddres = $quote->getBillingAddress();
-            $makePaymentMethod = $this->paymentMethodFactory->create();
-            $transaction['checkoutPaymentDetails']['billingAddress'] = $address($billingAddres);
-            $transaction['currency'] = $quote->getBaseCurrencyCode();
-            $transaction['amount'] = $quote->getGrandTotal();
-            $transaction['sourceAccountDetails'] = $sourceAccountDetails();
-            $transaction['acquirerDetails'] = $acquirerDetails();
-            $transaction['paymentMethod'] = $makePaymentMethod($paymentMethod);
-            $transaction['gateway'] = $paymentMethod;
-
-            if (is_array($checkoutPaymentDetails) && empty($checkoutPaymentDetails) === false
-            ) {
-                $transaction['checkoutPaymentDetails']['cardBin'] =
-                    $checkoutPaymentDetails['cardBin'];
-                $transaction['checkoutPaymentDetails']['accountHolderName'] =
-                    $checkoutPaymentDetails['holderName'];
-                $transaction['checkoutPaymentDetails']['cardLast4'] =
-                    $checkoutPaymentDetails['cardLast4'];
-                $transaction['checkoutPaymentDetails']['cardExpiryMonth'] =
-                    $checkoutPaymentDetails['cardExpiryMonth'];
-                $transaction['checkoutPaymentDetails']['cardExpiryYear'] =
-                    $checkoutPaymentDetails['cardExpiryYear'];
+            if (empty($reservedOrderId)) {
+                $quote->reserveOrderId();
+                $reservedOrderId = $quote->getReservedOrderId();
+                $this->quoteResourceModel->save($quote);
             }
 
-            $transactions[] = $transaction;
+            $signifydOrder['orderId'] = $reservedOrderId;
+            $signifydOrder['purchase'] = $purchase($quote);
+            $signifydOrder['userAccount'] = $userAccount($quote);
+            $signifydOrder['memberships'] = $memberships();
+            $signifydOrder['coverageRequests'] = $coverageRequests($paymentMethod);
+            $signifydOrder['merchantCategoryCode'] = $merchantCategoryCode();
+            $signifydOrder['device'] = $device($quote->getId(), $quote->getStore());
+            $signifydOrder['merchantPlatform'] = $merchantPlatform();
+            $signifydOrder['signifydClient'] = $signifydClient();
+            $signifydOrder['sellers'] = $sellers();
+            $signifydOrder['tags'] = $tags($quote->getStoreId());
+            $signifydOrder['customerOrderRecommendation'] = $customerOrderRecommendation();
+
+            $policyConfig = $this->configHelper->getPolicyName(
+                $quote->getStore()->getScopeType(),
+                $quote->getStoreId()
+            );
+            $policyFromMethod = $this->configHelper->getPolicyFromMethod(
+                $policyConfig,
+                $paymentMethod,
+                $quote->getStore()->getScopeType(),
+                $quote->getStoreId()
+            );
+            $evalRequest = ($policyFromMethod == 'SCA_PRE_AUTH') ? ['SCA_EVALUATION'] : null;
+            $signifydOrder['additionalEvalRequests'] = $evalRequest;
+            $signifydOrder['checkoutId'] = sha1($this->jsonSerializer->serialize($signifydOrder));
+            $transactions = [];
+            $sourceAccountDetails = $this->sourceAccountDetailsFactory->create();
+            $acquirerDetails = $this->acquirerDetailsFactory->create();
+
+            if (isset($paymentMethod)) {
+                $transaction = [];
+                $billingAddres = $quote->getBillingAddress();
+                $makePaymentMethod = $this->paymentMethodFactory->create();
+                $transaction['checkoutPaymentDetails']['billingAddress'] = $address($billingAddres);
+                $transaction['currency'] = $quote->getBaseCurrencyCode();
+                $transaction['amount'] = $quote->getGrandTotal();
+                $transaction['sourceAccountDetails'] = $sourceAccountDetails();
+                $transaction['acquirerDetails'] = $acquirerDetails();
+                $transaction['paymentMethod'] = $makePaymentMethod($quote);
+                $transaction['gateway'] = $paymentMethod;
+
+                if (is_array($checkoutPaymentDetails) && empty($checkoutPaymentDetails) === false
+                ) {
+                    $transaction['checkoutPaymentDetails']['cardBin'] =
+                        $checkoutPaymentDetails['cardBin'];
+                    $transaction['checkoutPaymentDetails']['accountHolderName'] =
+                        $checkoutPaymentDetails['holderName'];
+                    $transaction['checkoutPaymentDetails']['cardLast4'] =
+                        $checkoutPaymentDetails['cardLast4'];
+                    $transaction['checkoutPaymentDetails']['cardExpiryMonth'] =
+                        $checkoutPaymentDetails['cardExpiryMonth'];
+                    $transaction['checkoutPaymentDetails']['cardExpiryYear'] =
+                        $checkoutPaymentDetails['cardExpiryYear'];
+                }
+
+                $transactions[] = $transaction;
+            }
+
+            $signifydOrder['transactions'] = $transactions;
+
+            /**
+             * This registry entry it's used to collect data from some payment methods like Payflow Link
+             * It must be unregistered after use
+             * @see \Signifyd\Connect\Plugin\Magento\Paypal\Model\Payflowlink
+             */
+            $this->registry->unregister('signifyd_payment_data');
+        } catch (\Exception $e) {
+            $this->logger->info("Failed to create checkout order " . $e->getMessage());
+        } catch (\Error $e) {
+            $this->logger->info("Failed to create checkout order " . $e->getMessage());
         }
-
-        $signifydOrder['transactions'] = $transactions;
-
-        /**
-         * This registry entry it's used to collect data from some payment methods like Payflow Link
-         * It must be unregistered after use
-         * @see \Signifyd\Connect\Plugin\Magento\Paypal\Model\Payflowlink
-         */
-        $this->registry->unregister('signifyd_payment_data');
 
         return $signifydOrder;
     }
