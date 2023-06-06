@@ -144,6 +144,15 @@ git apply pre-auth-authorizenet.patch
   - Expiry date: yes
   - Cardholder name: yes
 
+### Mercado Pago - Custom Checkout
+
+- Call transaction API on failure: yes
+- Payment data available:
+  - Bin: no
+  - Last4: no
+  - Expiry date: no
+  - Cardholder name: no
+
 ### Amazon Pay / PayPal Express
 
 Not compatible with any pre auth flows, not even the basic behavior to block the customer on pre auth decline. Needs custom work on checkout as it has a specific behavior on checkout process.

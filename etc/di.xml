@@ -140,6 +140,10 @@
         <plugin name="signifydSalesOrderGrid" type="\Signifyd\Connect\Plugin\OrderGrid\SalesOrderGridPlugin"/>
     </type>
 
+    <type name="MercadoPago\Core\Model\Core">
+        <plugin name="Signifyd_Connect_Plugin_MercadoPago_Model_Core" type="\Signifyd\Connect\Plugin\MercadoPago\Model\Core" />
+    </type>
+
     <!-- Preferences -->
 
     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
