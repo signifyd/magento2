@@ -4,7 +4,6 @@ namespace Signifyd\Connect\Model\Api\Core;
 
 use Magento\Framework\Filesystem\DirectoryList;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
-use Magento\Quote\Model\Quote;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Signifyd\Connect\Helper\ConfigHelper;
@@ -12,9 +11,7 @@ use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
-use Signifyd\Core\Api\CaseApiFactory;
 use Signifyd\Core\Api\CheckoutApiFactory;
-use Signifyd\Core\Api\GuaranteeApiFactory;
 use Signifyd\Core\Api\SaleApiFactory;
 use Signifyd\Core\Api\WebhooksApiFactory;
 use Signifyd\Core\Api\WebhooksV2ApiFactory;
@@ -68,11 +65,6 @@ class Client
     protected $directory;
 
     /**
-     * @var CaseApiFactory
-     */
-    protected $caseApiFactory;
-
-    /**
      * @var SaleApiFactory
      */
     protected $saleApiFactory;
@@ -81,11 +73,6 @@ class Client
      * @var CheckoutApiFactory
      */
     protected $checkoutApiFactory;
-
-    /**
-     * @var GuaranteeApiFactory
-     */
-    protected $guaranteeApiFactory;
 
     /**
      * @var WebhooksApiFactory
@@ -109,7 +96,6 @@ class Client
      * @param DirectoryList $directory
      * @param SaleApiFactory $saleApiFactory
      * @param CheckoutApiFactory $checkoutApiFactory
-     * @param GuaranteeApiFactory $guaranteeApiFactory
      * @param WebhooksApiFactory $webhooksApiFactory
      * @param WebhooksV2ApiFactory $webhooksV2ApiFactory
      */
@@ -125,7 +111,6 @@ class Client
         DirectoryList $directory,
         SaleApiFactory $saleApiFactory,
         CheckoutApiFactory $checkoutApiFactory,
-        GuaranteeApiFactory $guaranteeApiFactory,
         WebhooksApiFactory $webhooksApiFactory,
         WebhooksV2ApiFactory $webhooksV2ApiFactory
     ) {
@@ -140,7 +125,6 @@ class Client
         $this->directory = $directory;
         $this->saleApiFactory = $saleApiFactory;
         $this->checkoutApiFactory = $checkoutApiFactory;
-        $this->guaranteeApiFactory = $guaranteeApiFactory;
         $this->webhooksApiFactory = $webhooksApiFactory;
         $this->webhooksV2ApiFactory = $webhooksV2ApiFactory;
     }
@@ -309,29 +293,11 @@ class Client
 
     /**
      * @param \Magento\Framework\Model\AbstractModel|null $entity
-     * @return \Signifyd\Core\Api\CaseApi
-     */
-    public function getSignifydCaseApi(\Magento\Framework\Model\AbstractModel $entity = null)
-    {
-        return $this->getSignifydApi('case', $entity);
-    }
-
-    /**
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
      * @return \Signifyd\Core\Api\CheckoutApi
      */
     public function getSignifydCheckoutApi(\Magento\Framework\Model\AbstractModel $entity = null)
     {
         return $this->getSignifydApi('checkout', $entity);
-    }
-
-    /**
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
-     * @return \Signifyd\Core\Api\GuaranteeApi
-     */
-    public function getSignifydGuaranteeApi(\Magento\Framework\Model\AbstractModel $entity = null)
-    {
-        return $this->getSignifydApi('guarantee', $entity);
     }
 
     /**
@@ -371,20 +337,12 @@ class Client
             ];
 
             switch ($type) {
-                case 'case':
-                    $this->signifydAPI[$apiId] = $this->caseApiFactory->create(['args' => $args]);
-                    break;
-
                 case 'sale':
                     $this->signifydAPI[$apiId] = $this->saleApiFactory->create(['args' => $args]);
                     break;
 
                 case 'checkout':
                     $this->signifydAPI[$apiId] = $this->checkoutApiFactory->create(['args' => $args]);
-                    break;
-
-                case 'guarantee':
-                    $this->signifydAPI[$apiId] = $this->guaranteeApiFactory->create(['args' => $args]);
                     break;
 
                 case 'webhook':
