@@ -213,14 +213,14 @@ class Index extends Action
         $case = $this->casedataFactory->create();
 
         try {
-            $this->casedataResourceModel->loadForUpdate($case, (string) $caseId, 'code');
-        } catch (\Exception $e) {
-            $this->logger->error($e->getMessage());
-            return;
-        }
-
-        try {
             $httpCode = null;
+
+            try {
+                $this->casedataResourceModel->loadForUpdate($case, (string) $caseId, 'code');
+            } catch (\Exception $e) {
+                $httpCode = Http::STATUS_CODE_423;
+                throw new LocalizedException(__($e->getMessage()));
+            }
 
             if ($case->isEmpty()) {
                 $httpCode = Http::STATUS_CODE_400;
