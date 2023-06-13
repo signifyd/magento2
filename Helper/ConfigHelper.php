@@ -13,13 +13,6 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
-use Signifyd\Core\Api\SaleApiFactory;
-use Signifyd\Core\Api\CaseApiFactory;
-use Signifyd\Core\Api\CheckoutApiFactory;
-use Signifyd\Core\Api\GuaranteeApiFactory;
-use Signifyd\Core\Api\WebhooksApiFactory;
-use Signifyd\Core\Api\WebhooksV2ApiFactory;
-use Magento\Framework\Filesystem\DirectoryList;
 
 class ConfigHelper
 {
@@ -47,41 +40,6 @@ class ConfigHelper
     protected $storeManager;
 
     /**
-     * @var CaseApiFactory
-     */
-    protected $caseApiFactory;
-
-    /**
-     * @var SaleApiFactory
-     */
-    protected $saleApiFactory;
-
-    /**
-     * @var CheckoutApiFactory
-     */
-    protected $checkoutApiFactory;
-
-    /**
-     * @var GuaranteeApiFactory
-     */
-    protected $guaranteeApiFactory;
-
-    /**
-     * @var WebhooksApiFactory
-     */
-    protected $webhooksApiFactory;
-
-    /**
-     * @var WebhooksV2ApiFactory
-     */
-    protected $webhooksV2ApiFactory;
-
-    /**
-     * @var DirectoryList
-     */
-    protected $directory;
-
-    /**
      * @var OrderFactory
      */
     protected $orderFactory;
@@ -100,13 +58,6 @@ class ConfigHelper
      * ConfigHelper constructor.
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param StoreManagerInterface $storeManager
-     * @param CaseApiFactory $caseApiFactory
-     * @param CheckoutApiFactory $checkoutApiFactory
-     * @param SaleApiFactory $saleApiFactory
-     * @param GuaranteeApiFactory $guaranteeApiFactory
-     * @param WebhooksApiFactory $webhooksApiFactory
-     * @param WebhooksV2ApiFactory $webhooksV2ApiFactory
-     * @param DirectoryList $directory
      * @param OrderFactory $orderFactory
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param JsonSerializer $jsonSerializer
@@ -114,26 +65,12 @@ class ConfigHelper
     public function __construct(
         ScopeConfigInterface $scopeConfigInterface,
         StoreManagerInterface $storeManager,
-        CaseApiFactory $caseApiFactory,
-        SaleApiFactory $saleApiFactory,
-        CheckoutApiFactory $checkoutApiFactory,
-        GuaranteeApiFactory $guaranteeApiFactory,
-        WebhooksApiFactory $webhooksApiFactory,
-        WebhooksV2ApiFactory $webhooksV2ApiFactory,
-        DirectoryList $directory,
         OrderFactory $orderFactory,
         SignifydOrderResourceModel $signifydOrderResourceModel,
         JsonSerializer $jsonSerializer
     ) {
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->storeManager = $storeManager;
-        $this->caseApiFactory = $caseApiFactory;
-        $this->saleApiFactory = $saleApiFactory;
-        $this->checkoutApiFactory = $checkoutApiFactory;
-        $this->guaranteeApiFactory = $guaranteeApiFactory;
-        $this->webhooksApiFactory = $webhooksApiFactory;
-        $this->webhooksV2ApiFactory = $webhooksV2ApiFactory;
-        $this->directory = $directory;
         $this->orderFactory = $orderFactory;
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
         $this->jsonSerializer = $jsonSerializer;

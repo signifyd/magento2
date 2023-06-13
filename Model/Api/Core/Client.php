@@ -18,7 +18,7 @@ use Signifyd\Core\Api\GuaranteeApiFactory;
 use Signifyd\Core\Api\SaleApiFactory;
 use Signifyd\Core\Api\WebhooksApiFactory;
 use Signifyd\Core\Api\WebhooksV2ApiFactory;
-use Signifyd\Models\GuaranteeFactory as GuaranteeModelFactory;
+use Signifyd\Connect\Model\Api\RecordReturnFactory;
 
 class Client
 {
@@ -58,9 +58,9 @@ class Client
     protected $orderResourceModel;
 
     /**
-     * @var GuaranteeModelFactory
+     * @var RecordReturnFactory
      */
-    protected $guaranteeModelFactory;
+    protected $recordReturnFactory;
 
     /**
      * @var DirectoryList
@@ -105,7 +105,7 @@ class Client
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
-     * @param GuaranteeModelFactory $guaranteeModelFactory
+     * @param RecordReturnFactory $recordReturnFactory
      * @param DirectoryList $directory
      * @param SaleApiFactory $saleApiFactory
      * @param CheckoutApiFactory $checkoutApiFactory
@@ -121,7 +121,7 @@ class Client
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
-        GuaranteeModelFactory $guaranteeModelFactory,
+        RecordReturnFactory $recordReturnFactory,
         DirectoryList $directory,
         SaleApiFactory $saleApiFactory,
         CheckoutApiFactory $checkoutApiFactory,
@@ -136,7 +136,7 @@ class Client
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
-        $this->guaranteeModelFactory = $guaranteeModelFactory;
+        $this->recordReturnFactory = $recordReturnFactory;
         $this->directory = $directory;
         $this->saleApiFactory = $saleApiFactory;
         $this->checkoutApiFactory = $checkoutApiFactory;
@@ -228,44 +228,18 @@ class Client
             }
         }
 
-        $this->logger->debug('Cancelling case ' . $case->getData('order_id'), ['entity' => $order]);
-        $signifydGuarantee = $this->guaranteeModelFactory->create();
-        $signifydGuarantee->setCaseId($case->getCode());
-        $guaranteeResponse = $this->getSignifydGuaranteeApi($order)->cancelGuarantee($signifydGuarantee);
-        $disposition = $guaranteeResponse->getDisposition();
+        $this->logger->debug('Return case ' . $case->getData('order_id'), ['entity' => $order]);
+        $recordReturn = $this->recordReturnFactory->create();
+        $recordReturnResponse = $this->getSignifydSaleApi($order)->recordReturn($recordReturn($order));
+        $returnId = $recordReturnResponse->getReturnId();
 
-        $this->logger->debug("Cancel disposition result {$disposition}", ['entity' => $order]);
-
-        if ($disposition == 'CANCELED') {
-            try {
-                $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: guarantee canceled");
-                $order->setSignifydGuarantee($disposition);
-                $this->orderResourceModel->save($order);
-                $isCaseLocked = $this->casedataResourceModel->isCaseLocked($case);
-
-                // Some other process already locked the case, will not load or save
-                if ($isCaseLocked === false) {
-                    $this->casedataResourceModel->loadForUpdate($case, $case->getId(), null, 2);
-                }
-
-                $case->setData('guarantee', $disposition);
-
-                // Some other process already locked the case, will not load or save
-                if ($isCaseLocked === false) {
-                    $this->casedataResourceModel->save($case);
-                }
-            } catch (\Exception $e) {
-                // Triggering case save to unlock case
-                if ($case instanceof \Signifyd\Connect\Model\Casedata) {
-                    $this->casedataResourceModel->save($case);
-                }
-
-                $this->logger->error('Failed to save case data to database: ' . $e->getMessage());
-            }
+        if (isset($returnId)) {
+            $this->logger->debug("Return recorded with id {$returnId}", ['entity' => $order]);
+            $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: Return recorded with id {$returnId}");
 
             return true;
         } else {
-            $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: failed to cancel guarantee");
+            $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: failed to record a return");
 
             return false;
         }

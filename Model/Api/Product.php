@@ -65,14 +65,14 @@ class Product
     public function __invoke($entity)
     {
         if ($entity instanceof OrderItem) {
-            $purchase = $this->makeProductFromOrder($entity);
+            $product = $this->makeProductFromOrder($entity);
         } elseif ($entity instanceof QuoteItem) {
-            $purchase = $this->makeProductFromQuote($entity);
+            $product = $this->makeProductFromQuote($entity);
         } else {
-            $purchase = [];
+            $product = [];
         }
 
-        return $purchase;
+        return $product;
     }
 
     /**
@@ -127,15 +127,14 @@ class Product
             $subCategoryName = null;
         }
 
-        $itemPriceInclTax = is_float($item->getPriceInclTax()) ? $item->getPriceInclTax() : 0;
+        $itemPriceInclTax = $item->getPriceInclTax() ?? 0;
 
         $itemPrice = floatval(number_format($itemPriceInclTax, 2, '.', ''));
 
         if ($itemPrice <= 0) {
             if ($item->getParentItem()) {
                 if ($item->getParentItem()->getProductType() === 'configurable') {
-                    $parentItemPriceInclTax = is_float($item->getParentItem()->getPriceInclTax()) ?
-                        $item->getParentItem()->getPriceInclTax() : 0;
+                    $parentItemPriceInclTax = $item->getParentItem()->getPriceInclTax() ?? 0;
 
                     $itemPrice = floatval(number_format($parentItemPriceInclTax, 2, '.', ''));
                 }
@@ -212,14 +211,14 @@ class Product
             $subCategoryName = null;
         }
 
-        $itemPriceInclTax = is_float($item->getPriceInclTax()) ? $item->getPriceInclTax() : 0;
+        $itemPriceInclTax = $item->getPriceInclTax() ?? 0;
 
         $itemPrice = floatval(number_format($itemPriceInclTax, 2, '.', ''));
 
         if ($itemPrice <= 0) {
             if ($item->getParentItem()) {
                 if ($item->getParentItem()->getProductType() === 'configurable') {
-                    $itemPriceInclTax = is_float($item->getParentItem()->getPriceInclTax()) ? $item->getParentItem()->getPriceInclTax() : 0;
+                    $itemPriceInclTax = $item->getParentItem()->getPriceInclTax() ?? 0;
 
                     $itemPrice = floatval(number_format($itemPriceInclTax, 2, '.', ''));
                 }
