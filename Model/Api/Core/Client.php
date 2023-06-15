@@ -218,10 +218,26 @@ class Client
         $returnId = $recordReturnResponse->getReturnId();
 
         if (isset($returnId)) {
-            $this->logger->debug("Return recorded with id {$returnId}", ['entity' => $order]);
-            $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: Return recorded with id {$returnId}");
+            try {
+                $case->setData('guarantee', 'CANCELED');
+                $this->logger->debug("Return recorded with id {$returnId}", ['entity' => $order]);
+                $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: Return recorded with id {$returnId}");
 
-            return true;
+                // Some other process already locked the case, will not load or save
+                if ($isCaseLocked === false) {
+                    $this->casedataResourceModel->save($case);
+                }
+
+                return true;
+            } catch (\Exception $e) {
+                // Triggering case save to unlock case
+                if ($case instanceof \Signifyd\Connect\Model\Casedata) {
+                    $this->casedataResourceModel->save($case);
+                }
+
+                $this->logger->error('Failed to save case data to database: ' . $e->getMessage());
+                return false;
+            }
         } else {
             $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: failed to record a return");
 

@@ -20,12 +20,17 @@ class ShipperMappingTest extends CreateTest
         /** @var \Magento\Framework\App\Config\Storage\WriterInterface $writerInterface */
         $writerInterface = $this->objectManager->create(\Magento\Framework\App\Config\Storage\WriterInterface::class);
         $arrayMapping = ["FEDEX" => ["flatrate"]];
-        $writerInterface->save('signifyd/general/shipping_method_config', json_encode($arrayMapping));
+        $writerInterface->save('signifyd/general/shipper_config', json_encode($arrayMapping));
 
         $this->processReviewCase();
         $order = $this->getOrder();
         $saleOrder = $this->saleOrderFactory->create();
         $orderData = $saleOrder($order);
+
+        //TODO: REMOVER
+        \Magento\Framework\App\ObjectManager::getInstance()
+            ->get('Signifyd\Connect\Logger\Logger')
+            ->info("RESPOTA DO TRANSACTION" . print_r($orderData['purchase']['shipments'],true));
 
         $this->assertEquals($orderData['purchase']['shipments'][0]['carrier'], 'FEDEX');
     }

@@ -21,8 +21,7 @@ class CreateTest extends OrderTestCase
         parent::setUp();
 
         $this->retryCaseJob = $this->objectManager->create(\Signifyd\Connect\Cron\RetryCaseJob::class);
-        $this->updateCaseV2Factory = $this->objectManager->create(UpdateCaseV2Factory::class)->create();
-        $this->updateCaseFactory = $this->objectManager->create(UpdateCaseFactory::class)->create();
+        $this->updateCaseFactory = $this->objectManager->create(UpdateCaseFactory::class);
     }
 
     /**
@@ -64,13 +63,14 @@ class CreateTest extends OrderTestCase
             $score = 999.0;
         }
 
-        $arrayToUpdateCase = ["createdAt" => "2021-06-21T14:12:47+0000",
-            "updatedAt" => "2021-06-21T14:12:47+0000",
-            "isTest" => true,
-            "score" => $score,
-            "customerCaseId" => $case->getOrderIncrement(),
-            "checkpointAction" => $checkpointAction,
-            "caseId" => $case->getCode()
+        $arrayToUpdateCase = [
+            "signifydId" => $case->getCode(),
+            "orderId" => "XGR-1840823423",
+            "decision" => [
+                "createdAt" => "2021-06-21T14:12:47+0000",
+                "checkpointAction" => $checkpointAction,
+                "score" => $score
+            ]
         ];
 
         /** @var \Magento\Framework\Serialize\Serializer\Json $jsonSerializer */
