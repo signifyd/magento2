@@ -277,7 +277,7 @@ class PreAuth implements ObserverInterface
             }
 
             $this->logger->info("Creating case for quote {$quote->getId()}");
-            $this->addSignifydDataToPayment($quote,$checkoutPaymentDetails);
+            $this->addSignifydDataToPayment($quote, $checkoutPaymentDetails);
             $checkoutOrder = $this->checkoutOrderFactory->create();
             $caseFromQuote = $checkoutOrder($quote, $checkoutPaymentDetails, $paymentMethod);
             $caseResponse = $this->client->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
@@ -361,7 +361,7 @@ class PreAuth implements ObserverInterface
      * @param array $checkoutPaymentDetails
      * @return void
      */
-    public function addSignifydDataToPayment($quote,$checkoutPaymentDetails)
+    public function addSignifydDataToPayment($quote, $checkoutPaymentDetails)
     {
         if (empty($checkoutPaymentDetails)) {
             return;

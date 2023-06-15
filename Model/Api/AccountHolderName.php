@@ -83,7 +83,8 @@ class AccountHolderName
             $cardholderAdapter = $this->paymentVerificationFactory->createPaymentCardholder($paymentMethod);
 
             $this->logger->debug(
-                'Getting card holder using ' . get_class($cardholderAdapter), ['entity' => $order]
+                'Getting card holder using ' . get_class($cardholderAdapter),
+                ['entity' => $order]
             );
 
             $cardholder = $cardholderAdapter->getData($order);
@@ -101,7 +102,8 @@ class AccountHolderName
             return $cardholder;
         } catch (Exception $e) {
             $this->logger->error(
-                'Error fetching cardholder: ' . $e->getMessage(), ['entity' => $order]
+                'Error fetching cardholder: ' . $e->getMessage(),
+                ['entity' => $order]
             );
             return '';
         }

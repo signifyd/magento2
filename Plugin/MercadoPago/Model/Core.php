@@ -32,7 +32,7 @@ class Core
             ((int) $response['status'] == 200 ||
             (int) $response['status'] == 201)
         ) {
-            if(isset($response['response']['status']) &&
+            if (isset($response['response']['status']) &&
                 $response['response']['status'] == 'rejected'
             ) {
                 switch ($response['response']['status_detail']) {

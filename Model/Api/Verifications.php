@@ -58,7 +58,8 @@ class Verifications
             );
 
             $this->logger->debug(
-                'Getting AVS code using ' . get_class($avsAdapter), ['entity' => $order]
+                'Getting AVS code using ' . get_class($avsAdapter),
+                ['entity' => $order]
             );
 
             $avsCode = $avsAdapter->getData($order);
@@ -76,7 +77,8 @@ class Verifications
             }
         } catch (Exception $e) {
             $this->logger->error(
-                'Error fetching AVS code: ' . $e->getMessage(), ['entity' => $order]
+                'Error fetching AVS code: ' . $e->getMessage(),
+                ['entity' => $order]
             );
             return '';
         }
@@ -96,7 +98,8 @@ class Verifications
             );
 
             $this->logger->debug(
-                'Getting CVV code using ' . get_class($cvvAdapter), ['entity' => $order]
+                'Getting CVV code using ' . get_class($cvvAdapter),
+                ['entity' => $order]
             );
 
             $cvvCode = $cvvAdapter->getData($order);
@@ -114,7 +117,8 @@ class Verifications
             }
         } catch (Exception $e) {
             $this->logger->error(
-                'Error fetching CVV code: ' . $e->getMessage(), ['entity' => $order]
+                'Error fetching CVV code: ' . $e->getMessage(),
+                ['entity' => $order]
             );
             return null;
         }

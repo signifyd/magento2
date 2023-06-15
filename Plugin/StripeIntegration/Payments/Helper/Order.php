@@ -63,7 +63,8 @@ class Order
         $this->orderHelper = $orderHelper;
     }
 
-    public function aroundOnTransaction(StripeIntegrationOrder $subject, callable $proceed, $order, $object, $transactionId) {
+    public function aroundOnTransaction(StripeIntegrationOrder $subject, callable $proceed, $order, $object, $transactionId)
+    {
         try {
             $orderId = $order->getId();
             $case = $this->casedataFactory->create();

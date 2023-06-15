@@ -145,7 +145,8 @@ class AsyncWaiting
                     $this->logger->info(
                         "CRON: case no: {$case->getOrderIncrement()}" .
                         " will not be sent because the stripe hasn't approved it yet",
-                        ['entity' => $case]);
+                        ['entity' => $case]
+                    );
                     continue;
                 }
 
