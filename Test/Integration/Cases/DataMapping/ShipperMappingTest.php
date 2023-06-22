@@ -27,11 +27,6 @@ class ShipperMappingTest extends CreateTest
         $saleOrder = $this->saleOrderFactory->create();
         $orderData = $saleOrder($order);
 
-        //TODO: REMOVER
-        \Magento\Framework\App\ObjectManager::getInstance()
-            ->get('Signifyd\Connect\Logger\Logger')
-            ->info("RESPOTA DO TRANSACTION" . print_r($orderData['purchase']['shipments'],true));
-
         $this->assertEquals($orderData['purchase']['shipments'][0]['carrier'], 'FEDEX');
     }
 }

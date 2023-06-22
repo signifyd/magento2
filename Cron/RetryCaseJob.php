@@ -12,6 +12,7 @@ use Signifyd\Connect\Model\Casedata\FilterCasesByStatusFactory;
 use Signifyd\Connect\Model\ProcessCron\CaseData\InReviewFactory;
 use Signifyd\Connect\Model\ProcessCron\CaseData\WaitingSubmissionFactory;
 use Signifyd\Connect\Model\ProcessCron\CaseData\AsyncWaitingFactory;
+use Signifyd\Connect\Model\ProcessCron\CaseData\PreAuthTransactionFactory;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\SignifydFlags;
 
@@ -48,6 +49,11 @@ class RetryCaseJob
     protected $signifydFlags;
 
     /**
+     * @var PreAuthTransactionFactory
+     */
+    protected $preAuthTransactionFactory;
+
+    /**
      * RetryCaseJob constructor.
      * @param Logger $logger
      * @param FilterCasesByStatusFactory $filterCasesByStatusFactory
@@ -55,6 +61,7 @@ class RetryCaseJob
      * @param WaitingSubmissionFactory $waitingSubmissionFactory
      * @param AsyncWaitingFactory $asyncWaitingFactory
      * @param SignifydFlags $signifydFlags
+     * @param PreAuthTransactionFactory $preAuthTransactionFactory
      */
     public function __construct(
         Logger $logger,
@@ -62,7 +69,8 @@ class RetryCaseJob
         InReviewFactory $inReviewFactory,
         WaitingSubmissionFactory $waitingSubmissionFactory,
         AsyncWaitingFactory $asyncWaitingFactory,
-        SignifydFlags $signifydFlags
+        SignifydFlags $signifydFlags,
+        PreAuthTransactionFactory $preAuthTransactionFactory
     ) {
         $this->logger = $logger;
         $this->filterCasesByStatusFactory = $filterCasesByStatusFactory;
@@ -70,6 +78,7 @@ class RetryCaseJob
         $this->waitingSubmissionFactory = $waitingSubmissionFactory;
         $this->asyncWaitingFactory = $asyncWaitingFactory;
         $this->signifydFlags = $signifydFlags;
+        $this->preAuthTransactionFactory = $preAuthTransactionFactory;
     }
 
     /**
@@ -102,6 +111,15 @@ class RetryCaseJob
 
         $processInReview = $this->inReviewFactory->create();
         $processInReview($inReviewCases);
+
+        /**
+         * Getting all the cases that are using pre_auth
+         */
+        $filterCasesByStatusFactory = $this->filterCasesByStatusFactory->create();
+        $preAuthCases = $filterCasesByStatusFactory(Casedata::COMPLETED_STATUS, 'pre_auth');
+
+        $processPreAuth = $this->preAuthTransactionFactory->create();
+        $processPreAuth($preAuthCases);
 
         $this->signifydFlags->updateCronFlag();
         $this->logger->debug("CRON: Main retry method ended");

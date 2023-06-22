@@ -67,7 +67,7 @@ class FilterCasesByStatus extends AbstractHelper
      * @param $status
      * @return mixed
      */
-    public function __invoke($status)
+    public function __invoke($status, $policyName = 'post_auth')
     {
         $retryTimes = $this->calculateRetryTimes();
 
@@ -79,6 +79,7 @@ class FilterCasesByStatus extends AbstractHelper
         /** @var  \Signifyd\Connect\Model\ResourceModel\Casedata\Collection $casesCollection */
         $casesCollection = $this->casedataCollectionFactory->create();
         $casesCollection->addFieldToFilter('updated', ['gteq' => $from]);
+        $casesCollection->addFieldToFilter('policy_name', ['eq' => $policyName]);
         $casesCollection->addFieldToFilter('magento_status', ['eq' => $status]);
         $casesCollection->addFieldToFilter('retries', ['lt' => count($retryTimes)]);
         $casesCollection->addExpressionFieldToSelect(
