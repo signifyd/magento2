@@ -222,6 +222,7 @@ class Client
                 $case->setData('guarantee', 'CANCELED');
                 $this->logger->debug("Return recorded with id {$returnId}", ['entity' => $order]);
                 $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: Return recorded with id {$returnId}");
+                $isCaseLocked = $this->casedataResourceModel->isCaseLocked($case);
 
                 // Some other process already locked the case, will not load or save
                 if ($isCaseLocked === false) {
