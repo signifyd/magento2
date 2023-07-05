@@ -85,6 +85,13 @@ class Client
     protected $webhooksV2ApiFactory;
 
     /**
+     * Array of SignifydAPI, one for each store code
+     *
+     * @var array
+     */
+    protected $signifydAPI = [];
+
+    /**
      * @param ConfigHelper $configHelper
      * @param Logger $logger
      * @param OrderHelper $orderHelper

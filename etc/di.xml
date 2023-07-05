@@ -160,6 +160,10 @@
         <plugin name="Signifyd_Connect_Plugin_CyberSource_Gateway_Http_Client_SOAPClient" type="\Signifyd\Connect\Plugin\CyberSource\Gateway\Http\Client\SOAPClient" />
     </type>
 
+    <type name="Signifyd\Connect\Logger\Logger">
+        <plugin name="Signifyd_Connect_Plugin_Logger_Logger" type="\Signifyd\Connect\Plugin\Logger\Logger" />
+    </type>
+
     <!-- Preferences -->
 
     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
