@@ -267,37 +267,18 @@ class ConfigHelper
 
     public function getPolicyName($scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
     {
-        $policyName = $this->getDefaultPolicy($scopeType, $scopeCode);
-        $policyExceptionsData = $this->scopeConfigInterface->getValue(
-            'signifyd/general/policy_exceptions',
+        $defaultPolicyName = $this->getDefaultPolicy($scopeType, $scopeCode);
+        $policyName = $this->scopeConfigInterface->getValue(
+            'signifyd/advanced/policy_name',
             $scopeType,
             $scopeCode
         );
 
-        try {
-            $policyExceptions = $this->jsonSerializer->unserialize($policyExceptionsData);
-        } catch (\InvalidArgumentException $e) {
+        if (isset($policyName)) {
             return $policyName;
         }
 
-        if (empty($policyExceptions)) {
-            return $policyName;
-        }
-
-        $mergePolicy = [];
-        $mergePolicy[$policyName] = [];
-
-        foreach ($policyExceptions as $key => $value) {
-            if (is_array($value) && isset($value['policy']) && isset($value['payment_method'])) {
-                if (in_array($value['policy'], array_keys($mergePolicy)) === false) {
-                    $mergePolicy[$value['policy']] = [];
-                }
-
-                $mergePolicy[$value['policy']][] = $value['payment_method'];
-            }
-        }
-
-        return $this->jsonSerializer->serialize($mergePolicy);
+        return $defaultPolicyName;
     }
 
     /**
