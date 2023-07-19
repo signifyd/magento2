@@ -8,6 +8,7 @@ use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Helper\OrderHelper;
 use Magento\Framework\App\ResourceConnection;
+use Signifyd\Connect\Model\UpdateOrder\Action as UpdateOrderAction;
 
 class Unhold
 {
@@ -42,6 +43,11 @@ class Unhold
     protected $resourceConnection;
 
     /**
+     * @var UpdateOrderAction
+     */
+    protected $updateOrderAction;
+
+    /**
      * Unhold constructor.
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderHelper $orderHelper
@@ -49,6 +55,7 @@ class Unhold
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param ResourceConnection $resourceConnection
+     * @param UpdateOrderAction $updateOrderAction
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -56,7 +63,8 @@ class Unhold
         Session $authSession,
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
-        ResourceConnection $resourceConnection
+        ResourceConnection $resourceConnection,
+        UpdateOrderAction $updateOrderAction
     ) {
         $this->orderRepository = $orderRepository;
         $this->orderHelper = $orderHelper;
@@ -64,6 +72,7 @@ class Unhold
         $this->casedataResourceModel = $casedataResourceModel;
         $this->casedataFactory = $casedataFactory;
         $this->resourceConnection = $resourceConnection;
+        $this->updateOrderAction = $updateOrderAction;
     }
 
     /**
@@ -97,7 +106,7 @@ class Unhold
 
             $this->casedataResourceModel->loadForUpdate($case, $order->getId(), 'order_id', 2);
 
-            if ($case->isHoldReleased() === false) {
+            if ($this->updateOrderAction->isHoldReleased($case) === false) {
                 $case->setEntries('hold_released', 1);
             }
 

@@ -5,6 +5,7 @@ namespace Signifyd\Connect\Plugin\Magento\Sales\Block\Adminhtml\Order;
 use Magento\Sales\Block\Adminhtml\Order\View as MagentoOrderView;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
+use Signifyd\Connect\Model\UpdateOrder\Action as UpdateOrderAction;
 
 class View
 {
@@ -19,16 +20,24 @@ class View
     protected $casedataResourceModel;
 
     /**
+     * @var UpdateOrderAction
+     */
+    protected $updateOrderAction;
+
+    /**
      * View constructor.
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
+     * @param UpdateOrderAction $updateOrderAction
      */
     public function __construct(
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel
+        CasedataResourceModel $casedataResourceModel,
+        UpdateOrderAction $updateOrderAction
     ) {
         $this->casedataResourceModel = $casedataResourceModel;
         $this->casedataFactory = $casedataFactory;
+        $this->updateOrderAction = $updateOrderAction;
     }
 
     public function beforeAddButton(
@@ -47,7 +56,7 @@ class View
             if (!$case->isEmpty()) {
                 $guarantee = $case->getData('guarantee');
 
-                if (!$case->isHoldReleased() && $guarantee == 'N/A') {
+                if (!$this->updateOrderAction->isHoldReleased($case) && $guarantee == 'N/A') {
                     $url = $subject->getUrl('sales/*/unhold', ['signifyd_unhold' => 1]);
 
                     $data['class'] = $data['class'] . ' confirm-unhold';
