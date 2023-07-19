@@ -164,6 +164,10 @@
         <plugin name="Signifyd_Connect_Plugin_Logger_Logger" type="\Signifyd\Connect\Plugin\Logger\Logger" />
     </type>
 
+    <type name="CyberSource\SecureAcceptance\Gateway\Helper\SubjectReader">
+        <plugin name="Signifyd_Connect_Plugin_CyberSource_Command_HandleResponseCommand" type="\Signifyd\Connect\Plugin\CyberSource\Gateway\Command\HandleResponseCommand" />
+    </type>
+
     <!-- Preferences -->
 
     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />

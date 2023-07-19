@@ -79,6 +79,11 @@
                 <chcybersource>
                     <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Cybersource\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
                     <signifyd_bin_adapter>Signifyd\Connect\Model\Payment\Cybersource\BinMapper</signifyd_bin_adapter>
+                    <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Cybersource\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
+                    <signifyd_exp_month_adapter>Signifyd\Connect\Model\Payment\Cybersource\ExpMonthMapper</signifyd_exp_month_adapter>
+                    <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\Cybersource\ExpYearMapper</signifyd_exp_year_adapter>
+                    <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\Cybersource\Last4Mapper</signifyd_last4_adapter>
+                    <signifyd_transaction_id_adapter>Signifyd\Connect\Model\Payment\Cybersource\TransactionIdMapper</signifyd_transaction_id_adapter>
                 </chcybersource>
 
                 <payflowpro>

@@ -45,6 +45,10 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
             isset($apiResponse['ccAuthReply']->avsCode)
         ) {
             $avsStatus = $apiResponse['ccAuthReply']->avsCode;
+        } elseif (is_array($apiResponse) &&
+            isset($apiResponse['auth_avs_code'])
+        ) {
+            $avsStatus = $apiResponse['auth_avs_code'];
         }
 
         $message = 'AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);

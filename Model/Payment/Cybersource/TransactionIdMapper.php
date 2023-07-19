@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\TransactionIdMapper as Base_TransactionI
 
 class TransactionIdMapper extends Base_TransactionIdMapper
 {
-    protected $allowedMethods = ['cybersource'];
+    protected $allowedMethods = ['cybersource', 'chcybersource'];
 
     /**
      * Get transaction ID from database for Authorize.Net
@@ -17,9 +17,14 @@ class TransactionIdMapper extends Base_TransactionIdMapper
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $additionalInfo = $order->getPayment()->getAdditionalInformation();
+        $apiResponse = $this->getSignifydPaymentData();
 
         if (isset($additionalInfo['transaction_id']) && empty($additionalInfo['transaction_id']) === false) {
             $transactionId = $additionalInfo['transaction_id'];
+        } elseif (is_array($apiResponse) &&
+            isset($apiResponse['transaction_id'])
+        ) {
+            $transactionId = $apiResponse['transaction_id'];
         }
 
         $message = 'Transaction ID found on payment mapper: ' . (empty($transactionId) ? 'false' : $transactionId);
