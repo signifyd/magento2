@@ -183,6 +183,22 @@ class Capture
                 $order,
                 "Signifyd: unable to create invoice: {$e->getMessage()}"
             );
+        } catch (\Error $e) {
+            $this->logger->debug('Error creating invoice: ' . $e->__toString(), ['entity' => $order]);
+            $case->setEntries('fail', 1);
+
+            $order = $this->orderFactory->create();
+            $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
+
+            if ($order->canHold()) {
+                $order->hold();
+                $this->signifydOrderResourceModel->save($order);
+            }
+
+            $this->orderHelper->addCommentToStatusHistory(
+                $order,
+                "Signifyd: unable to create invoice: {$e->getMessage()}"
+            );
         }
 
         return $completeCase;

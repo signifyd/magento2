@@ -105,6 +105,22 @@ class Cancel
                     "Signifyd: order cannot be canceled, {$e->getMessage()}"
                 );
                 throw new LocalizedException(__($e->getMessage()));
+            } catch (\Error $e) {
+                $this->logger->debug($e->__toString(), ['entity' => $order]);
+                $case->setEntries('fail', 1);
+
+                if ($order->canHold()) {
+                    $order->hold();
+                    $this->signifydOrderResourceModel->save($order);
+                }
+
+                $orderAction['action'] = false;
+
+                $this->orderHelper->addCommentToStatusHistory(
+                    $order,
+                    "Signifyd: order cannot be canceled, {$e->getMessage()}"
+                );
+                throw new LocalizedException(__($e->getMessage()));
             }
         } else {
             $reason = $this->orderHelper->getCannotCancelReason($order);

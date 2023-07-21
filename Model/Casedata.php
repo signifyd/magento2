@@ -15,9 +15,6 @@ use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Signifyd\Connect\Logger\Logger;
 use Magento\Framework\Serialize\SerializerInterface;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
-use Signifyd\Connect\Model\Casedata\UpdateCaseV2Factory;
-use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
-use Signifyd\Connect\Model\UpdateOrderFactory;
 
 /**
  * ORM model declaration for case data
@@ -84,21 +81,6 @@ class Casedata extends AbstractModel
     protected $signifydOrderResourceModel;
 
     /**
-     * @var UpdateCaseV2Factory
-     */
-    protected $updateCaseV2Factory;
-
-    /**
-     * @var UpdateCaseFactory
-     */
-    protected $updateCaseFactory;
-
-    /**
-     * @var UpdateOrderFactory
-     */
-    protected $updateOrderFactory;
-
-    /**
      * Casedata constructor.
      * @param Context $context
      * @param Registry $registry
@@ -109,9 +91,6 @@ class Casedata extends AbstractModel
      * @param Logger $logger
      * @param SerializerInterface $serializer
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
-     * @param UpdateCaseV2Factory $updateCaseV2Factory
-     * @param UpdateCaseFactory $updateCaseFactory
-     * @param UpdateOrderFactory $updateOrderFactory
      */
     public function __construct(
         Context $context,
@@ -121,10 +100,7 @@ class Casedata extends AbstractModel
         OrderResourceModel $orderResourceModel,
         Logger $logger,
         SerializerInterface $serializer,
-        SignifydOrderResourceModel $signifydOrderResourceModel,
-        UpdateCaseV2Factory $updateCaseV2Factory,
-        UpdateCaseFactory $updateCaseFactory,
-        UpdateOrderFactory $updateOrderFactory
+        SignifydOrderResourceModel $signifydOrderResourceModel
     ) {
         $this->configHelper = $configHelper;
         $this->orderFactory = $orderFactory;
@@ -132,9 +108,6 @@ class Casedata extends AbstractModel
         $this->logger = $logger;
         $this->serializer = $serializer;
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
-        $this->updateCaseV2Factory = $updateCaseV2Factory;
-        $this->updateCaseFactory = $updateCaseFactory;
-        $this->updateOrderFactory = $updateOrderFactory;
 
         parent::__construct($context, $registry);
     }
