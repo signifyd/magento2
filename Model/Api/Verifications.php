@@ -69,12 +69,7 @@ class Verifications
             }
 
             $avsCode = trim(strtoupper($avsCode));
-
-            if ($avsAdapter->validate($avsCode)) {
-                return $avsCode;
-            } else {
-                return null;
-            }
+            return $avsCode;
         } catch (Exception $e) {
             $this->logger->error(
                 'Error fetching AVS code: ' . $e->getMessage(),
@@ -109,12 +104,7 @@ class Verifications
             }
 
             $cvvCode = trim(strtoupper($cvvCode));
-
-            if ($cvvAdapter->validate($cvvCode)) {
-                return $cvvCode;
-            } else {
-                return null;
-            }
+            return $cvvCode;
         } catch (Exception $e) {
             $this->logger->error(
                 'Error fetching CVV code: ' . $e->getMessage(),

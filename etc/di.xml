@@ -164,6 +164,10 @@
         <plugin name="Signifyd_Connect_Plugin_Logger_Logger" type="\Signifyd\Connect\Plugin\Logger\Logger" />
     </type>
 
+    <type name="Magento\PaymentServicesPaypal\Gateway\Http\ServiceClient">
+        <plugin name="Signifyd_Connect_Plugin_Magento_PaymentServicesPaypal_Gateway_Http_ServiceClient" type="\Signifyd\Connect\Plugin\Magento\PaymentServicesPaypal\Gateway\Http\ServiceClient" />
+    </type>
+
     <!-- Preferences -->
 
     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
