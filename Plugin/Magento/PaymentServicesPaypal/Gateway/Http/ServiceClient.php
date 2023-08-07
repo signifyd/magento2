@@ -33,7 +33,7 @@ class ServiceClient
     public function aroundPlaceRequest(PaymentServicesPaypalServiceClient $subject,  callable $proceed, $transferObject)
     {
         try {
-            $proceed($transferObject);
+            return $proceed($transferObject);
         } catch (ClientException $e) {
             $signifydReason = null;
             $deniedResponse =  __(
