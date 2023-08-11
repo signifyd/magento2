@@ -74,6 +74,13 @@ class Hold
                 $message = "Signifyd: order cannot be updated to on hold, {$e->getMessage()}";
                 $this->orderHelper->addCommentToStatusHistory($order, $message);
                 throw new LocalizedException(__($e->getMessage()));
+            } catch (\Error $e) {
+                $this->logger->debug($e->__toString(), ['entity' => $order]);
+                $case->setEntries('fail', 1);
+
+                $message = "Signifyd: order cannot be updated to on hold, {$e->getMessage()}";
+                $this->orderHelper->addCommentToStatusHistory($order, $message);
+                throw new LocalizedException(__($e->getMessage()));
             }
         } else {
             $reason = $this->orderHelper->getCannotHoldReason($order);

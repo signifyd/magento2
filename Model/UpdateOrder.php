@@ -271,6 +271,14 @@ class UpdateOrder
             }
 
             return $case;
+        } catch (\Error $e) {
+            $this->logger->debug($e->getMessage());
+
+            if ($enableTransaction) {
+                $this->orderResourceModel->getConnection()->rollBack();
+            }
+
+            return $case;
         }
     }
 }

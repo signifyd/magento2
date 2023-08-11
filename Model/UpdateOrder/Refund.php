@@ -138,6 +138,25 @@ class Refund
                 $order,
                 "Signifyd: unable to create creditmemo: {$e->getMessage()}"
             );
+        } catch (\Error $e) {
+            $order = $this->orderFactory->create();
+            $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
+            $case->setEntries('fail', 1);
+
+            if ($order->canHold()) {
+                $order->hold();
+                $this->signifydOrderResourceModel->save($order);
+            }
+
+            $this->logger->debug(
+                'Exception creating creditmemo: ' . $e->__toString(),
+                ['entity' => $order]
+            );
+
+            $this->orderHelper->addCommentToStatusHistory(
+                $order,
+                "Signifyd: unable to create creditmemo: {$e->getMessage()}"
+            );
         }
 
         return $completeCase;

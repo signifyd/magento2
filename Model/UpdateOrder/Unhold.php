@@ -78,6 +78,15 @@ class Unhold
                     "Signifyd: order status cannot be updated, {$e->getMessage()}"
                 );
                 throw new LocalizedException(__($e->getMessage()));
+            } catch (\Error $e) {
+                $this->logger->debug($e->__toString(), ['entity' => $order]);
+                $case->setEntries('fail', 1);
+
+                $this->orderHelper->addCommentToStatusHistory(
+                    $order,
+                    "Signifyd: order status cannot be updated, {$e->getMessage()}"
+                );
+                throw new LocalizedException(__($e->getMessage()));
             }
         } else {
             $reason = $this->orderHelper->getCannotUnholdReason($order);
