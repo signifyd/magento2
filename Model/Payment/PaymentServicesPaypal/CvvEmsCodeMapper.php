@@ -35,7 +35,7 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     {
         $cvvStatus = $order->getPayment()->getCcCidStatus();
 
-        if (isset($cvvStatus) ) {
+        if (isset($cvvStatus)) {
             if (in_array($cvvStatus, array_keys(self::$cvvMap))) {
                 $cvvStatus =  self::$cvvMap[$cvvStatus];
             } else {

@@ -30,7 +30,7 @@ class ServiceClient
      * @return void
      * @throws ClientException
      */
-    public function aroundPlaceRequest(PaymentServicesPaypalServiceClient $subject,  callable $proceed, $transferObject)
+    public function aroundPlaceRequest(PaymentServicesPaypalServiceClient $subject, callable $proceed, $transferObject)
     {
         try {
             return $proceed($transferObject);
