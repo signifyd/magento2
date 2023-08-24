@@ -18,6 +18,9 @@ var config = {
             },
             "Holacash_Payment/js/view/payment/method-renderer/holacash_gateway": {
                 'Signifyd_Connect/js/model/holacash-cc-method-mixin': true,
+            },
+            'CyberSource_SecureAcceptance/js/view/payment/method-renderer/sa/redirect': {
+                'Signifyd_Connect/js/model/cyber-redirect-mixin': true
             }
         }
     }
