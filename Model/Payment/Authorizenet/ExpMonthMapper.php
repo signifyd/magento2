@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\ExpMonthMapper as Base_ExpMonthMapper;
 
 class ExpMonthMapper extends Base_ExpMonthMapper
 {
-    protected $allowedMethods = ['authorizenet_directpost'];
+    protected $allowedMethods = ['authorizenet_directpost','rootways_authorizecim_option'];
 
     /**
      * Gets expiry month from XML response from Authorize.net

@@ -273,6 +273,10 @@ class PreAuth implements ObserverInterface
 
                     $checkoutPaymentDetails['cardExpiryYear'] =
                         $dataArray['paymentMethod']['additional_data']['cardExpiryYear'] ?? null;
+
+                    if ($paymentMethod === 'rootways_authorizecim_option') {
+                        $checkoutPaymentDetails = $this->mappingForAuthnetRootwaysCim($checkoutPaymentDetails, $dataArray);
+                    }
                 }
             }
 
@@ -367,7 +371,12 @@ class PreAuth implements ObserverInterface
             return;
         }
 
-        if (isset($checkoutPaymentDetails['cardBin'])) {
+        $ccNumber = $quote->getPayment()->getData('cc_number');
+
+        if (!isset($ccNumber) &&
+            isset($checkoutPaymentDetails['cardBin']) &&
+            isset($checkoutPaymentDetails['cardLast4'])) {
+
             $quote->getPayment()->setData(
                 'cc_number',
                 $checkoutPaymentDetails['cardBin'] .
@@ -391,5 +400,29 @@ class PreAuth implements ObserverInterface
         if (isset($checkoutPaymentDetails['cardExpiryYear'])) {
             $quote->getPayment()->setCcExpYear($checkoutPaymentDetails['cardExpiryYear']);
         }
+    }
+
+    /**
+     * @param $checkoutPaymentDetails
+     * @param $dataArray
+     * @return mixed
+     */
+    public function mappingForAuthnetRootwaysCim($checkoutPaymentDetails, $dataArray)
+    {
+        $additionalData = $dataArray['paymentMethod']['additional_data'];
+
+        $checkoutPaymentDetails['cardExpiryMonth'] = $additionalData['cc_exp_month'] ?? null;
+        $checkoutPaymentDetails['cardExpiryYear'] = $additionalData['cc_exp_year'] ?? null;
+
+        $cc_number = $additionalData['cc_number'] ?? null;
+        if ($cc_number) {
+            $checkoutPaymentDetails['cardLast4'] = substr($cc_number, -4);
+            $checkoutPaymentDetails['cardBin'] = substr($cc_number, 0, 6);
+        } else {
+            $checkoutPaymentDetails['cardLast4'] = null;
+            $checkoutPaymentDetails['cardBin'] = null;
+        }
+
+        return $checkoutPaymentDetails;
     }
 }
