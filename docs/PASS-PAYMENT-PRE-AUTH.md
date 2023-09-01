@@ -144,6 +144,15 @@ git apply pre-auth-authorizenet.patch
   - Expiry date: yes
   - Cardholder name: yes
 
+### Authorize.net Rootways
+
+- Call transaction API on failure: yes
+- Payment data available:
+  - Bin: yes (not available for saved cards)
+  - Last4: yes
+  - Expiry date: yes
+  - Cardholder name: no
+
 ### Mercado Pago - Custom Checkout
 
 - Call transaction API on failure: yes
