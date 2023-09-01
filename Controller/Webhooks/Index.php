@@ -354,6 +354,15 @@ class Index extends Action
             $httpCode = empty($httpCode) ? 403 : $httpCode;
             $this->getResponse()->appendBody($e->getMessage());
             $this->logger->error("WEBHOOK: {$e->getMessage()}");
+        } catch (\Error $e) {
+            // Triggering case save to unlock case
+            if ($case instanceof \Signifyd\Connect\Model\ResourceModel\Casedata) {
+                $this->casedataResourceModel->save($case);
+            }
+
+            $httpCode = empty($httpCode) ? 403 : $httpCode;
+            $this->getResponse()->appendBody($e->getMessage());
+            $this->logger->error("WEBHOOK: {$e->getMessage()}");
         }
 
         $httpCode = empty($httpCode) ? 200 : $httpCode;
