@@ -164,6 +164,14 @@
         <plugin name="Signifyd_Connect_Plugin_Logger_Logger" type="\Signifyd\Connect\Plugin\Logger\Logger" />
     </type>
 
+    <type name="CyberSource\SecureAcceptance\Gateway\Helper\SubjectReader">
+        <plugin name="Signifyd_Connect_Plugin_CyberSource_Command_HandleResponseCommand" type="\Signifyd\Connect\Plugin\CyberSource\Gateway\Command\HandleResponseCommand" />
+    </type>
+
+    <type name="Magento\PaymentServicesPaypal\Gateway\Http\ServiceClient">
+        <plugin name="Signifyd_Connect_Plugin_Magento_PaymentServicesPaypal_Gateway_Http_ServiceClient" type="\Signifyd\Connect\Plugin\Magento\PaymentServicesPaypal\Gateway\Http\ServiceClient" />
+    </type>
+
     <type name="Rootways\Authorizecim\Gateway\Validator\ResponseValidator">
         <plugin name="signifyd_response_validator_plugin" type="Signifyd\Connect\Plugin\Rootways\Authorizecim\Gateway\Validator\ResponseValidatorPlugin" sortOrder="10"/>
     </type>
