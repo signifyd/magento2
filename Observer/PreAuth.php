@@ -379,9 +379,9 @@ class PreAuth implements ObserverInterface
 
             $quote->getPayment()->setData(
                 'cc_number',
-                $checkoutPaymentDetails['cardBin'] .
-                000000 .
-                $checkoutPaymentDetails['cardLast4'] ?? 0000
+                ($checkoutPaymentDetails['cardBin'] ?? '000000') .
+                '000000' .
+                ($checkoutPaymentDetails['cardLast4'] ?? '0000')
             );
         }
 
