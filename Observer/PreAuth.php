@@ -22,6 +22,7 @@ use Signifyd\Connect\Model\CasedataFactory;
 use Magento\Framework\App\Request\Http as RequestHttp;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\ObjectManagerInterface;
+use Signifyd\Connect\Model\Api\Recipient;
 
 class PreAuth implements ObserverInterface
 {
@@ -101,6 +102,11 @@ class PreAuth implements ObserverInterface
     protected $client;
 
     /**
+     * @var Recipient
+     */
+    protected $recipient;
+
+    /**
      * PreAuth constructor.
      * @param Logger $logger
      * @param CartRepositoryInterface $quoteRepository
@@ -117,6 +123,7 @@ class PreAuth implements ObserverInterface
      * @param ObjectManagerInterface $objectManagerInterface
      * @param CheckoutOrderFactory $checkoutOrderFactory
      * @param Client $client
+     * @param Recipient $recipient
      */
     public function __construct(
         Logger $logger,
@@ -133,7 +140,8 @@ class PreAuth implements ObserverInterface
         ConfigHelper $configHelper,
         ObjectManagerInterface $objectManagerInterface,
         CheckoutOrderFactory $checkoutOrderFactory,
-        Client $client
+        Client $client,
+        Recipient $recipient
     ) {
         $this->logger = $logger;
         $this->quoteRepository = $quoteRepository;
@@ -150,6 +158,7 @@ class PreAuth implements ObserverInterface
         $this->objectManagerInterface = $objectManagerInterface;
         $this->checkoutOrderFactory = $checkoutOrderFactory;
         $this->client = $client;
+        $this->recipient = $recipient;
     }
 
     public function execute(Observer $observer)
@@ -318,6 +327,11 @@ class PreAuth implements ObserverInterface
                         $caseResponse->scaEvaluation->toJson()
                     );
                 }
+
+                $recipient = ($this->recipient)($quote);
+                $recipientJson = $this->jsonSerializer->serialize($recipient);
+                $hashToValidateReroute = sha1($recipientJson);
+                $case->setEntries('hash', $hashToValidateReroute);
 
                 $this->casedataResourceModel->save($case);
             }
