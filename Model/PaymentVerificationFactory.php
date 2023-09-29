@@ -223,7 +223,7 @@ class PaymentVerificationFactory
 
     /**
      * Creates instance of bin mapper.
-     * Exception will be thrown if mapper does not implement PaymentVerificationInterface.
+     * Exception will be thrown if mapper does not implement AsyncCheckerInterface.
      *
      * @param string $paymentCode
      * @return AsyncCheckerInterface

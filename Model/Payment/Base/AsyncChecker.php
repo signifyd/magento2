@@ -33,7 +33,8 @@ class AsyncChecker implements AsyncCheckerInterface
     }
 
     /**
-     * @param \Magento\Sales\Model\Order $order
+     * @param Order $order
+     * @param Casedata $case
      * @return bool|void
      */
     public function __invoke(Order $order, Casedata $case)

@@ -8,9 +8,13 @@ use Signifyd\Connect\Model\Casedata;
 
 class AsyncChecker extends BaseAsyncChecker
 {
+    /**
+     * @param Order $order
+     * @param Casedata $casedata
+     * @return bool|void
+     */
     public function __invoke(Order $order, Casedata $casedata)
     {
-        // Perform checks specific to Adyen to determine if payment has been made.
         if ($order->getPayment()->getMethod() === 'adyen_pay_by_link' && !$order->getPayment()->getCcTransId()) {
             return false;
         }
