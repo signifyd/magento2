@@ -61,6 +61,10 @@
                     <signifyd_transaction_id_adapter>Signifyd\Connect\Model\Payment\Authorizenet\TransactionIdMapper</signifyd_transaction_id_adapter>
                 </authorizenet_directpost>
 
+                <rootways_authorizecim_option>
+                    <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\RootwaysAuthorizecimOption\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
+                </rootways_authorizecim_option>
+
                 <braintree>
                     <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Braintree\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
                     <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Braintree\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
