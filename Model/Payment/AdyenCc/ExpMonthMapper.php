@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\ExpMonthMapper as Base_ExpMonthMapper;
 
 class ExpMonthMapper extends Base_ExpMonthMapper
 {
-    protected $allowedMethods = ['adyen_cc'];
+    protected $allowedMethods = ['adyen_cc','adyen_pay_by_link'];
 
     /**
      * @param \Magento\Sales\Model\Order $order

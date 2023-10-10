@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\BinMapper as Base_BinMapper;
 
 class BinMapper extends Base_BinMapper
 {
-    protected $allowedMethods = ['adyen_cc'];
+    protected $allowedMethods = ['adyen_cc','adyen_pay_by_link'];
 
     /**
      * @param \Magento\Sales\Model\Order $order

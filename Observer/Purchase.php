@@ -26,6 +26,7 @@ use Signifyd\Connect\Model\UpdateOrder\Action as UpdateOrderAction;
 use Signifyd\Connect\Model\Api\RecipientFactory;
 use Signifyd\Connect\Model\Api\SaleOrderFactory;
 use Signifyd\Connect\Model\Api\Core\Client;
+use Signifyd\Connect\Model\PaymentVerificationFactory;
 
 /**
  * Observer for purchase event. Sends order data to Signifyd service
@@ -128,6 +129,11 @@ class Purchase implements ObserverInterface
     protected $client;
 
     /**
+     * @var PaymentVerificationFactory
+     */
+    protected $paymentVerificationFactory;
+
+    /**
      * Purchase constructor.
      * @param Logger $logger
      * @param ConfigHelper $configHelper
@@ -145,6 +151,7 @@ class Purchase implements ObserverInterface
      * @param RecipientFactory $recipientFactory
      * @param SaleOrderFactory $saleOrderFactory
      * @param Client $client
+     * @param PaymentVerificationFactory $paymentVerificationFactory
      */
     public function __construct(
         Logger $logger,
@@ -162,7 +169,8 @@ class Purchase implements ObserverInterface
         JsonSerializer $jsonSerializer,
         RecipientFactory $recipientFactory,
         SaleOrderFactory $saleOrderFactory,
-        Client $client
+        Client $client,
+        PaymentVerificationFactory $paymentVerificationFactory
     ) {
         $this->logger = $logger;
         $this->configHelper = $configHelper;
@@ -180,6 +188,7 @@ class Purchase implements ObserverInterface
         $this->recipientFactory = $recipientFactory;
         $this->saleOrderFactory = $saleOrderFactory;
         $this->client = $client;
+        $this->paymentVerificationFactory = $paymentVerificationFactory;
     }
 
     /**
@@ -357,14 +366,12 @@ class Purchase implements ObserverInterface
             $saleOrder = $this->saleOrderFactory->create();
             $orderData = $saleOrder($order);
 
-            // Stop case sending if order has an async payment method
-            if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig()) &&
-                isset($orderData['transactions']) &&
-                isset($orderData['transactions'][0]) &&
-                isset($orderData['transactions'][0]['verifications']) &&
-                isset($orderData['transactions'][0]['verifications']['avsResponseCode']) === false &&
-                isset($orderData['transactions'][0]['verifications']['cvvResponseCode']) === false
-            ) {
+            if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig())) {
+                /** @var \Signifyd\Connect\Model\Payment\Base\AsyncChecker $asyncCheck */
+                $asyncCheck = $this->paymentVerificationFactory->createPaymentAsyncChecker($order->getPayment()->getMethod());
+            }
+
+            if (isset($asyncCheck)) {
                 $case->setMagentoStatus(Casedata::ASYNC_WAIT);
 
                 try {
@@ -559,6 +566,10 @@ class Purchase implements ObserverInterface
                     "Signifyd: cannot hold order as Amazon Pay is set to capture" .
                     " the payment and the order is not invoiced"
                 );
+                return false;
+            }
+
+            if ($order->getPayment()->getMethod() === 'adyen_pay_by_link') {
                 return false;
             }
 
