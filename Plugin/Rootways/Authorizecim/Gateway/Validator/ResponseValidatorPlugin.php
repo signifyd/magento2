@@ -109,7 +109,7 @@ class ResponseValidatorPlugin
         }
 
         $this->transactionIntegration->setGatewayRefusedReason($signifydReason);
-        $this->transactionIntegration->setGatewayStatusMessage($authorizeErrorMessages->getText());
+        $this->transactionIntegration->setGatewayStatusMessage($authorizeErrorMessages);
         $this->transactionIntegration->submitToTransactionApi();
     }
 }
