@@ -21,6 +21,9 @@ var config = {
             },
             'CyberSource_SecureAcceptance/js/view/payment/method-renderer/sa/redirect': {
                 'Signifyd_Connect/js/model/cyber-redirect-mixin': true
+            },
+            'Rootways_Authorizecim/js/view/payment/method-renderer/authorizecim-method': {
+                'Signifyd_Connect/js/model/authorizecim-method-mixin': true
             }
         }
     }

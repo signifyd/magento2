@@ -63,6 +63,7 @@
 
                 <rootways_authorizecim_option>
                     <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\RootwaysAuthorizecimOption\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
+                    <signifyd_bin_adapter>Signifyd\Connect\Model\Payment\RootwaysAuthorizecimOption\BinMapper</signifyd_bin_adapter>
                 </rootways_authorizecim_option>
 
                 <braintree>
