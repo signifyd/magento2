@@ -52,6 +52,7 @@ class Before implements ObserverInterface
      * @param ConfigHelper $configHelper
      * @param StoreManagerInterface $storeManager
      * @param RequestInterface $request
+     * @param JsonSerializer $jsonSerializer
      */
     public function __construct(
         Logger $loger,
@@ -59,8 +60,7 @@ class Before implements ObserverInterface
         ConfigHelper $configHelper,
         StoreManagerInterface $storeManager,
         RequestInterface $request,
-        JsonSerializer $jsonSerializer,
-
+        JsonSerializer $jsonSerializer
     ) {
         $this->logger = $loger;
         $this->appState = $appState;
