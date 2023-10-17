@@ -11,7 +11,6 @@ define([
             this.vaultEnabler.visitAdditionalData(data);
 
             if (this.isAcceptjs() || this.isAcceptUIjs()) {
-                console.log(data.additional_data);
                 delete data.additional_data.cc_number;
 
                 $.extend(true, data, {
