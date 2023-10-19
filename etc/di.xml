@@ -173,8 +173,9 @@
     </type>
 
     <!-- Preferences -->
-
     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
-
     <preference for="Magento\Sales\Model\Order\Payment" type="Signifyd\Connect\Model\Magento\Sales\Model\Order\Payment" />
+    <preference for="Signifyd\Connect\Api\RerouteRepositoryInterface" type="Signifyd\Connect\Model\RerouteRepository"/>
+    <preference for="Signifyd\Connect\Api\Data\RerouteInterface" type="Signifyd\Connect\Model\Reroute"/>
+    <preference for="Signifyd\Connect\Api\Data\RerouteSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
 </config>
