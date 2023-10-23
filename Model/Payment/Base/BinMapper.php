@@ -14,6 +14,13 @@ class BinMapper extends DataMapper
      */
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
+        $bin = $order->getPayment()->getAdditionalInformation('cc_bin');
+
+        if (isset($bin) && is_string($bin)) {
+            $this->logger->debug('Bin found on base mapper: ' . $bin, ['entity' => $order]);
+            return $bin;
+        }
+
         //Get CC number even if it is encrypted
         $ccNumber = $order->getPayment()->getData('cc_number');
 

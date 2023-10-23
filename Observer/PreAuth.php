@@ -368,11 +368,9 @@ class PreAuth implements ObserverInterface
         }
 
         if (isset($checkoutPaymentDetails['cardBin'])) {
-            $quote->getPayment()->setData(
-                'cc_number',
-                $checkoutPaymentDetails['cardBin'] .
-                000000 .
-                $checkoutPaymentDetails['cardLast4'] ?? 0000
+            $quote->getPayment()->setAdditionalInformation(
+                'cc_bin',
+                $checkoutPaymentDetails['cardBin']
             );
         }
 
