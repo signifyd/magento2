@@ -77,6 +77,16 @@ class Purchase
 
         if ($originStoreCode == 'admin') {
             $purchase['orderChannel'] = "PHONE";
+
+            $writer = new \Zend_Log_Writer_Stream(BP . '/var/log/mag853.log');
+            $logger = new \Zend_Log();
+            $logger->addWriter($writer);
+            $logger->info('START');
+            $logger->info('Order ID: '. $order->getId());
+            $logger->info('Payment Method: '. $order->getPayment()->getMethod());
+            $logger->info('Origin Store Code is: '. $originStoreCode);
+            $logger->info('Order Channel set to PHONE for order '. $order->getId());
+            $logger->info('STOP');
         } else {
             $purchase['orderChannel'] = "WEB";
         }
