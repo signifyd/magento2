@@ -10,6 +10,7 @@ use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+use Magento\Store\Model\ScopeInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
@@ -146,6 +147,24 @@ class UpdateOrder
 
     public function __invoke($case)
     {
+        $bypassUpdates = $this->scopeConfigInterface->getValue('signifyd/advanced/bypass_additional_updates');
+
+        if ($case->getMagentoStatus() == 'completed' && $bypassUpdates == 1) {
+            $order = $this->orderFactory->create();
+            $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
+
+            $this->logger->info('Case for order ' . $order->getIncrementId() . ' will ' .
+                'not be updated as the bypass for additional updates is enabled',
+                ['entity' => $order]
+            );
+            $this->orderHelper->addCommentToStatusHistory(
+                $order,
+                "Signifyd: will not update the case as the bypass for additional updates is enabled"
+            );
+
+            return $case;
+        }
+
         $orderAction = $this->updateOrderAction->handleGuaranteeChange($case);
 
         $this->logger->debug(
