@@ -6,6 +6,7 @@ use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Framework\Registry;
 use Signifyd\Connect\Model\Casedata;
+use Signifyd\Connect\Model\ResourceModel\Logs\CollectionFactory as LogsCollectionFactory;
 
 /**
  * Get Signifyd Case Info
@@ -26,20 +27,28 @@ class CaseInfo extends Template
     private $coreRegistry = false;
 
     /**
+     * @var LogsCollectionFactory
+     */
+    protected $logsCollectionFactory;
+
+    /**
      * CaseInfo constructor.
      * @param Context $context
      * @param Casedata $caseEntity
      * @param Registry $registry
+     * @param LogsCollectionFactory $logsCollectionFactory
      * @param array $data
      */
     public function __construct(
         Context $context,
         Casedata $caseEntity,
         Registry $registry,
+        LogsCollectionFactory $logsCollectionFactory,
         array $data = []
     ) {
         $this->caseEntity = $caseEntity;
         $this->coreRegistry = $registry;
+        $this->logsCollectionFactory = $logsCollectionFactory;
 
         parent::__construct($context, $data);
     }
@@ -109,5 +118,21 @@ class CaseInfo extends Template
     public function getCheckpointActionReason()
     {
         return $this->getCaseEntity()->getData('checkpoint_action_reason');
+    }
+
+    /**
+     * @return array|mixed|null
+     */
+    public function hasLogsToDownload()
+    {
+        $order = $this->getOrder();
+
+        $quoteLogsCollection = $this->logsCollectionFactory->create()
+            ->addFieldToFilter('quote_id', ['eq' => $order->getQuoteId()]);
+
+        $orderLogsCollection = $this->logsCollectionFactory->create()
+            ->addFieldToFilter('order_id', ['eq' => $order->getId()]);
+
+        return $orderLogsCollection->count() > 0 || $quoteLogsCollection->count() > 0;
     }
 }

@@ -28,6 +28,7 @@
                 <guarantee_positive_action>nothing</guarantee_positive_action>
                 <policy_pre_auth_reject_message>Your order cannot be processed, please contact our support team</policy_pre_auth_reject_message>
                 <cron_batch_size>20</cron_batch_size>
+                <logs_retention_period>60</logs_retention_period>
             </advanced>
             <logs>
                 <log>1</log>

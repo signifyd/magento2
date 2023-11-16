@@ -177,4 +177,8 @@
     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
 
     <preference for="Magento\Sales\Model\Order\Payment" type="Signifyd\Connect\Model\Magento\Sales\Model\Order\Payment" />
+
+    <preference for="Signifyd\Connect\Api\LogsRepositoryInterface" type="Signifyd\Connect\Model\LogsRepository"/>
+    <preference for="Signifyd\Connect\Api\Data\LogsInterface" type="Signifyd\Connect\Model\Logs"/>
+    <preference for="Signifyd\Connect\Api\Data\LogsSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
 </config>
