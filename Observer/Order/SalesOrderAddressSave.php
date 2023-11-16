@@ -167,7 +167,7 @@ class SalesOrderAddressSave implements ObserverInterface
             $updateCase = $this->updateCaseFactory->create();
             $case = $updateCase($case, $updateResponse);
 
-            if ($case->getOrigData('signifyd_status') !== $case->getData('signifyd_status')) {
+            if ($case->getOrigData('guarantee') !== $case->getData('guarantee')) {
                 $case->setStatus(\Signifyd\Connect\Model\Casedata::IN_REVIEW_STATUS);
                 $updateOrder = $this->updateOrderFactory->create();
                 $case = $updateOrder($case);
