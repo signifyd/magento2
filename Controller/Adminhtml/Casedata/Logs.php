@@ -4,18 +4,12 @@ namespace Signifyd\Connect\Controller\Adminhtml\Casedata;
 
 use Magento\Framework\Filesystem;
 use Magento\Backend\App\Action;
-use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\LogsFile;
 use Magento\Framework\App\Response\Http\FileFactory;
 use Magento\Framework\App\Filesystem\DirectoryList;
 
 class Logs extends Action
 {
-    /**
-     * @var Logger
-     */
-    protected $logger;
-
     /**
      * @var LogsFile
      */
@@ -40,20 +34,17 @@ class Logs extends Action
 
     /**
      * @param Action\Context $context
-     * @param Logger $logger
      * @param LogsFile $logsFile
      * @param FileFactory $fileFactory
      * @param Filesystem $filesystem
      */
     public function __construct(
         Action\Context $context,
-        Logger $logger,
         LogsFile $logsFile,
         FileFactory $fileFactory,
         Filesystem $filesystem
     ) {
         parent::__construct($context);
-        $this->logger = $logger;
         $this->logsFile = $logsFile;
         $this->fileFactory = $fileFactory;
         $this->filesystem = $filesystem;

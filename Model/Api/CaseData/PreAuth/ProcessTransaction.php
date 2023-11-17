@@ -114,13 +114,13 @@ class ProcessTransaction
             if ($newHashToValidateReroute == $currentHashToValidateReroute) {
                 $this->logger->info(
                     'No data changes, will not send transaction ' .
-                    $order->getIncrementId()
+                    $order->getIncrementId(), ['entity' => $order]
                 );
                 return;
             }
 
             $this->logger->info("Sending pre_auth transaction to Signifyd for order
-                        {$case->getOrderIncrement()}");
+                        {$case->getOrderIncrement()}", ['entity' => $order]);
 
             $this->client->postTransactionToSignifyd($saleTransaction, $order);
             $case->setEntries('transaction_hash', $newHashToValidateReroute);

@@ -189,10 +189,10 @@ class Purchase implements ObserverInterface
     public function execute(Observer $observer, $checkOwnEventsMethods = true)
     {
         try {
-            $this->logger->info('Processing Signifyd event ' . $observer->getEvent()->getName());
-
             /** @var $order Order */
             $order = $observer->getEvent()->getOrder();
+
+            $this->logger->info('Processing Signifyd event ' . $observer->getEvent()->getName(), ['entity' => $order]);
 
             if (isset($order) === false) {
                 return;
@@ -234,7 +234,7 @@ class Purchase implements ObserverInterface
                 if ($casesFromQuoteLoaded->getData('magento_status') == Casedata::PRE_AUTH) {
                     $this->logger->info(
                         "Completing case for order {$order->getIncrementId()} ({$order->getId()}) " .
-                        "because it is a pre auth case"
+                        "because it is a pre auth case", ['entity' => $order]
                     );
                     $casesFromQuoteLoaded->setData('magento_status', Casedata::COMPLETED_STATUS);
                 }
@@ -261,7 +261,7 @@ class Purchase implements ObserverInterface
             $incrementId = $order->getIncrementId();
 
             if ($this->isIgnored($order)) {
-                $this->logger->debug("Order {$incrementId} ignored");
+                $this->logger->debug("Order {$incrementId} ignored", ['entity' => $order]);
                 return;
             }
 
@@ -377,7 +377,7 @@ class Purchase implements ObserverInterface
                     // Initial hold order
                     $this->holdOrder($order, $case, $isPassive);
                 } catch (\Exception $ex) {
-                    $this->logger->error($ex->__toString());
+                    $this->logger->error($ex->__toString(), ['entity' => $order]);
                 }
 
                 return;
@@ -465,8 +465,8 @@ class Purchase implements ObserverInterface
         $createdAtDate = $this->dateTime->gmtTimestamp($order->getCreatedAt());
 
         if ($createdAtDate < $installationDate) {
-            $this->logger->info("Installation date: {$installationDate}");
-            $this->logger->info("Created at date: {$createdAtDate}");
+            $this->logger->info("Installation date: {$installationDate}", ['entity' => $order]);
+            $this->logger->info("Created at date: {$createdAtDate}", ['entity' => $order]);
 
             return true;
         } else {

@@ -171,7 +171,7 @@ class Payment
         }
 
         if ($case->getEntries('OpenPayRefusedReason') == $signifydReason) {
-            $this->logger->info("Reason already send");
+            $this->logger->info("Reason already send", ['entity' => $case]);
             return null;
         }
 

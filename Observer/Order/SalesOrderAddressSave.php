@@ -139,7 +139,7 @@ class SalesOrderAddressSave implements ObserverInterface
                 return;
             }
 
-            $this->logger->info("Send case update for order {$order->getIncrementId()}");
+            $this->logger->info("Send case update for order {$order->getIncrementId()}", ['entity' => $order]);
 
             $makeShipments = $this->shipmentsFactory->create();
             $shipments = $makeShipments($order);
@@ -149,7 +149,9 @@ class SalesOrderAddressSave implements ObserverInterface
             $currentHashToValidateReroute = $case->getEntries('hash');
 
             if ($newHashToValidateReroute == $currentHashToValidateReroute) {
-                $this->logger->info("No data changes, will not update order {$order->getIncrementId()}");
+                $this->logger->info("No data changes, will not update order {$order->getIncrementId()}",
+                    ['entity' => $order]
+                );
                 return;
             }
 
@@ -160,8 +162,7 @@ class SalesOrderAddressSave implements ObserverInterface
             $rerout['shipments'] = $shipments;
             $updateResponse = $this->client->createReroute($rerout, $order);
 
-            $this->logger->info("Case updated for order {$order->getIncrementId()}");
-            $this->logger->info($this->jsonSerializer->serialize($updateResponse));
+            $this->logger->info("Case updated for order {$order->getIncrementId()}", ['entity' => $order]);
 
             $case->setEntries('hash', $newHashToValidateReroute);
             $updateCase = $this->updateCaseFactory->create();

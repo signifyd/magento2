@@ -87,7 +87,7 @@ class Order
                 $order->hold();
                 $this->orderResourceModel->save($order);
                 $this->logger->info(
-                    "Hold order {$order->getIncrementId()} after stripe remove"
+                    "Hold order {$order->getIncrementId()} after stripe remove", ['entity' => $case]
                 );
 
                 $this->orderHelper->addCommentToStatusHistory(
