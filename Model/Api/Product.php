@@ -133,7 +133,8 @@ class Product
 
         if ($itemPrice <= 0) {
             if ($item->getParentItem()) {
-                if ($item->getParentItem()->getProductType() === 'configurable') {
+                $type = $item->getParentItem()->getProductType();
+                if ($type === 'configurable' || $type === 'bundle') {
                     $parentItemPriceInclTax = $item->getParentItem()->getPriceInclTax() ?? 0;
 
                     $itemPrice = floatval(number_format($parentItemPriceInclTax, 2, '.', ''));
@@ -217,7 +218,8 @@ class Product
 
         if ($itemPrice <= 0) {
             if ($item->getParentItem()) {
-                if ($item->getParentItem()->getProductType() === 'configurable') {
+                $type = $item->getParentItem()->getProductType();
+                if ($type === 'configurable' || $type === 'bundle') {
                     $itemPriceInclTax = $item->getParentItem()->getPriceInclTax() ?? 0;
 
                     $itemPrice = floatval(number_format($itemPriceInclTax, 2, '.', ''));
