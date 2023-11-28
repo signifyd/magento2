@@ -40,6 +40,7 @@ class AsyncChecker implements AsyncCheckerInterface
     public function __invoke(Order $order, Casedata $case)
     {
         try {
+            $order->setData('origin_store_code', $case->getData('origin_store_code'));
             $saleOrder = $this->saleOrderFactory->create();
             $caseModel = $saleOrder($order);
             $avsCode = $caseModel['transactions'][0]['verifications']['avsResponseCode'];
