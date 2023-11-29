@@ -24,14 +24,14 @@ class SignifydFlags
      */
     public function updateWebhookFlag($time = null)
     {
-        $filePath = $this->directoryList->getPath('log') . '/' . self::FILE_NAME;
+        $directory = $this->directoryList->getPath('log');
+        $filePath = $directory . '/' . self::FILE_NAME;
         $data = $this->readFlags();
         if (!$data) {
             $data = [];
         }
         $data['webhook'] = $time ?: date('Y-m-d H:i:s');
         if (!$this->fileDriver->isExists($filePath)) {
-            $directory = dirname($filePath);
             $this->fileDriver->createDirectory($directory);
             $this->fileDriver->touch($filePath);
         }
@@ -45,14 +45,14 @@ class SignifydFlags
      */
     public function updateCronFlag($time = null)
     {
-        $filePath = $this->directoryList->getPath('log') . '/' . self::FILE_NAME;
+        $directory = $this->directoryList->getPath('log');
+        $filePath = $directory . '/' . self::FILE_NAME;
         $data = $this->readFlags();
         if (!$data) {
             $data = [];
         }
         $data['cron'] = $time ?: date('Y-m-d H:i:s');
         if (!$this->fileDriver->isExists($filePath)) {
-            $directory = dirname($filePath);
             $this->fileDriver->createDirectory($directory);
             $this->fileDriver->touch($filePath);
         }
