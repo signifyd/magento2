@@ -8,7 +8,6 @@ namespace Signifyd\Connect\Controller\Webhooks;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Response\Http;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
@@ -118,7 +117,6 @@ class Index extends Action
     /**
      * Index constructor.
      * @param Context $context
-     * @param DateTime $dateTime
      * @param Logger $logger
      * @param ConfigHelper $configHelper
      * @param FormKey $formKey
@@ -139,7 +137,6 @@ class Index extends Action
      */
     public function __construct(
         Context $context,
-        DateTime $dateTime,
         Logger $logger,
         ConfigHelper $configHelper,
         FormKey $formKey,
@@ -193,10 +190,6 @@ class Index extends Action
      */
     protected function getRawPost()
     {
-        if (isset($HTTP_RAW_POST_DATA) && $HTTP_RAW_POST_DATA) {
-            return $HTTP_RAW_POST_DATA;
-        }
-
         $post = $this->file->fileGetContents("php://input");
 
         if ($post) {
@@ -271,7 +264,7 @@ class Index extends Action
                 break;
         }
 
-        /** @var $case \Signifyd\Connect\Model\Casedata */
+        /** @var \Signifyd\Connect\Model\Casedata $case */
         $case = $this->casedataFactory->create();
 
         try {
@@ -312,7 +305,7 @@ class Index extends Action
             $order = $this->orderFactory->create();
             $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
 
-            if (isset($order) === false) {
+            if ($order->isEmpty()) {
                 $httpCode = Http::STATUS_CODE_400;
                 throw new LocalizedException(__("Order not found"));
             }

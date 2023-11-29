@@ -49,7 +49,7 @@ interface PaymentVerificationInterface
      * A class implementing GatewayInterface should be implemented and setup on settings in order to
      * retrieve a ResponseInterface that will be passed to this method
      *
-     * @param \Signifyd\Models\Payment\GatewayInterface $paymentGateway
+     * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
      * @return mixed
      */
     public function getPaymentDataFromGatewayResponse(\Signifyd\Models\Payment\Response\ResponseInterface $response);

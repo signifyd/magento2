@@ -8,7 +8,7 @@ interface PaymentMethodMappingInterface
      * Must return desired data. This is the event that is called from outside
      * Throws an exception if provided payment method is different to verification implementation.
      *
-     * @param \Magento\Sales\Model\Order|\Magento\Quote\Model\Quote $order
+     * @param \Magento\Sales\Model\Order|\Magento\Quote\Model\Quote $entity
      * @return string|null
      * @throws \InvalidArgumentException
      */
