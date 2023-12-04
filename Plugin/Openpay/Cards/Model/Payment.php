@@ -108,12 +108,12 @@ class Payment
 
         $quote = $this->checkoutCart->getQuote();
 
-        if ($isPreAuth === false || isset($quote) === false) {
+        if ($isPreAuth === false || $quote->isEmpty()) {
             return null;
         }
 
         $quoteId = $quote->getId();
-        /** @var $case \Signifyd\Connect\Model\Casedata */
+        /** @var \Signifyd\Connect\Model\Casedata $case */
         $case = $this->casedataFactory->create();
         $this->casedataResourceModel->load($case, $quoteId, 'quote_id');
 

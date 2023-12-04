@@ -8,7 +8,7 @@ use Magento\Sales\Model\Order;
 class Mapper extends Base
 {
     /**
-     * @param Order $entity
+     * @param Order $order
      * @return int|string
      */
     public function getPaymentMethodFromOrder(Order $order)

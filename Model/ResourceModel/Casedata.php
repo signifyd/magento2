@@ -115,7 +115,7 @@ class Casedata extends AbstractDb
     }
 
     /**
-     * @param Casedata $case
+     * @param \Signifyd\Connect\Model\Casedata $case
      * @return bool
      */
     public function isCaseLocked(\Signifyd\Connect\Model\Casedata $case)

@@ -49,7 +49,7 @@ class View
         $region = 'toolbar'
     ) {
         if ($buttonId == 'order_unhold') {
-            /** @var $case \Signifyd\Connect\Model\Casedata */
+            /** @var \Signifyd\Connect\Model\Casedata $case */
             $case = $this->casedataFactory->create();
             $this->casedataResourceModel->load($case, $subject->getOrder()->getId(), 'order_id');
 

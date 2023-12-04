@@ -32,7 +32,7 @@ class MappingVerificationFactory
 
     /**
      * @param ObjectManagerInterface $objectManager
-     * @param ConfigInterface|Config $config
+     * @param ConfigInterface $config
      * @param PaymentMethodMappingInterface $paymentMethodDefaultAdapter
      * @param ConfigHelper $configHelper
      */
@@ -55,11 +55,11 @@ class MappingVerificationFactory
 
     /**
      * @param PaymentMethodMappingInterface $defaultAdapter
-     * @param string $paymentCode
-     * @param string $configKey
+     * @param $paymentCode
+     * @param $configKey
      * @return PaymentMethodMappingInterface
-     * @throws ConfigurationMismatchException If payment verification instance
-     * does not implement PaymentMethodMappingInterface.
+     * @throws LocalizedException If payment verification instance
+     *  does not implement PaymentMethodMappingInterface.
      */
     private function create(PaymentMethodMappingInterface $defaultAdapter, $paymentCode, $configKey)
     {

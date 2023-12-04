@@ -51,7 +51,7 @@ class Cancel implements ObserverInterface
     public function execute(Observer $observer)
     {
         try {
-            /** @var $order Order */
+            /** @var Order $order */
             $order = $observer->getEvent()->getOrder();
 
             if ($order instanceof Order == false) {
@@ -63,7 +63,6 @@ class Cancel implements ObserverInterface
                 }
 
                 if ($order instanceof Order == false) {
-                    /** @var \Magento\Sales\Model\Creditmemo $creditmemo */
                     $creditmemo = $observer->getEvent()->getCreditmemo();
 
                     if ($creditmemo instanceof \Magento\Sales\Model\Order\Creditmemo) {

@@ -192,7 +192,7 @@ class PreAuth implements ObserverInterface
             );
 
             if ($isPreAuth === false) {
-                /** @var $case \Signifyd\Connect\Model\Casedata */
+                /** @var \Signifyd\Connect\Model\Casedata $case */
                 $case = $this->casedataFactory->create();
                 $this->casedataResourceModel->load($case, $quote->getId(), 'quote_id');
 
@@ -202,12 +202,6 @@ class PreAuth implements ObserverInterface
 
                 return;
             }
-
-            $policyRejectMessage = $this->scopeConfigInterface->getValue(
-                'signifyd/advanced/policy_pre_auth_reject_message',
-                ScopeInterface::SCOPE_STORES,
-                $quote->getStoreId()
-            );
 
             $checkoutPaymentDetails = [];
 
@@ -297,7 +291,7 @@ class PreAuth implements ObserverInterface
                     $magentoStatus = Casedata::IN_REVIEW_STATUS;
                 }
 
-                /** @var $case \Signifyd\Connect\Model\Casedata */
+                /** @var \Signifyd\Connect\Model\Casedata $case */
                 $case = $this->casedataFactory->create();
                 $this->casedataResourceModel->load($case, $quote->getId(), 'quote_id');
                 $case->setCode($caseResponse->signifydId);
@@ -340,6 +334,12 @@ class PreAuth implements ObserverInterface
         $stopCheckoutProcess = $this->getStopCheckoutProcess($caseResponse, $caseAction);
 
         if ($stopCheckoutProcess) {
+            $policyRejectMessage = $this->scopeConfigInterface->getValue(
+                'signifyd/advanced/policy_pre_auth_reject_message',
+                ScopeInterface::SCOPE_STORES,
+                $quote->getStoreId()
+            );
+
             throw new LocalizedException(__($policyRejectMessage));
         }
     }

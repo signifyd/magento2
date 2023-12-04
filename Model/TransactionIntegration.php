@@ -91,13 +91,13 @@ class TransactionIntegration
     {
         $quote = $this->checkoutCart->getQuote();
 
-        if (isset($quote) === false) {
+        if ($quote->isEmpty()) {
             return null;
         }
 
         $paymentMethod = $quote->getPayment()->getMethod();
 
-        if (isset($paymentMethod) === false) {
+        if (empty($paymentMethod)) {
             return null;
         }
 

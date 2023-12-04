@@ -372,7 +372,7 @@ class Transactions
                 return null;
             }
 
-            /** @var $case \Signifyd\Connect\Model\Casedata */
+            /** @var \Signifyd\Connect\Model\Casedata $case */
             $case = $this->casedataFactory->create();
             $this->casedataResourceModel->load($case, $quoteId, 'quote_id');
 

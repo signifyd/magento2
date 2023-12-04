@@ -33,7 +33,7 @@ use Signifyd\Connect\Model\Api\Core\Client;
 class Purchase implements ObserverInterface
 {
     /**
-     * @var Logger;
+     * @var Logger
      */
     protected $logger;
 
@@ -188,11 +188,11 @@ class Purchase implements ObserverInterface
      */
     public function execute(Observer $observer, $checkOwnEventsMethods = true)
     {
+        /** @var Order $order */
+        $order = $observer->getEvent()->getOrder();
+
         try {
             $this->logger->info('Processing Signifyd event ' . $observer->getEvent()->getName());
-
-            /** @var $order Order */
-            $order = $observer->getEvent()->getOrder();
 
             if (isset($order) === false) {
                 return;
@@ -217,7 +217,7 @@ class Purchase implements ObserverInterface
                 $casesFromQuotes->getFirstItem()->getMagentoStatus() != 'completed'
             ) {
                 $casesFromQuote = $casesFromQuotes->getFirstItem();
-                /** @var $case \Signifyd\Connect\Model\Casedata */
+                /** @var \Signifyd\Connect\Model\Casedata $case */
                 $casesFromQuoteLoaded = $this->casedataFactory->create();
                 $this->casedataResourceModel->load($casesFromQuoteLoaded, $casesFromQuote->getCode(), 'code');
                 $orderId = $casesFromQuoteLoaded->getData('order_id');
@@ -286,7 +286,7 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            /** @var $case \Signifyd\Connect\Model\Casedata */
+            /** @var \Signifyd\Connect\Model\Casedata $case */
             $case = $this->casedataFactory->create();
             $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
 

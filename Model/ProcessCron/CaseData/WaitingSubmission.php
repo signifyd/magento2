@@ -59,11 +59,6 @@ class WaitingSubmission
     protected $casedataResourceModel;
 
     /**
-     * @var \StripeIntegration\Payments\Model\Config
-     */
-    protected $stripeConfig;
-
-    /**
      * @var StoreManagerInterface
      */
     protected $storeManagerInterface;

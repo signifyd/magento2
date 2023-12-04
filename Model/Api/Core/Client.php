@@ -191,7 +191,7 @@ class Client
     {
         $this->logger->debug("Trying to cancel case for order " . $order->getIncrementId(), ['entity' => $order]);
 
-        /** @var $case \Signifyd\Connect\Model\Casedata */
+        /** @var \Signifyd\Connect\Model\Casedata $case */
         $case = $this->casedataFactory->create();
         $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
 
@@ -259,7 +259,7 @@ class Client
      * @return bool|\Signifyd\Core\Response\CheckoutsResponse
      * @throws \Signifyd\Core\Exceptions\ApiException
      * @throws \Signifyd\Core\Exceptions\InvalidClassException
-     * @throws \Signifyd\Core\Exceptions\LoggerException]
+     * @throws \Signifyd\Core\Exceptions\LoggerException
      */
     public function postCaseFromQuoteToSignifyd($caseData, $quote)
     {

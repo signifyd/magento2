@@ -60,7 +60,7 @@ class Order implements ObserverInterface
     public function execute(Observer $observer)
     {
         try {
-            /** @var $order \Magento\Sales\Model\Order */
+            /** @var \Magento\Sales\Model\Order $order */
             $order = $observer->getEvent()->getOrder();
 
             $log = $this->configHelper->getConfigData('signifyd/logs/log', $order);

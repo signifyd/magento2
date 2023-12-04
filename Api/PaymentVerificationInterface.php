@@ -20,7 +20,7 @@ interface PaymentVerificationInterface
      * Throws an exception if provided payment method is different to verification implementation.
      *
      * @param \Magento\Sales\Model\Order $order
-     * @return string
+     * @return mixed
      * @throws \InvalidArgumentException
      */
     public function getData(\Magento\Sales\Model\Order $order);

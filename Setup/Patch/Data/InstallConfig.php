@@ -44,6 +44,9 @@ class InstallConfig implements DataPatchInterface
         $this->dateTime = $dateTime;
     }
 
+    /**
+     * @return $this|InstallConfig
+     */
     public function apply()
     {
         try {
@@ -55,6 +58,8 @@ class InstallConfig implements DataPatchInterface
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
         }
+
+        return $this;
     }
 
     /**

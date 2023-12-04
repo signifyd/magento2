@@ -67,7 +67,7 @@ class PreAuthTransaction
     }
 
     /**
-     * @param array $asyncWaitingCases
+     * @param array $preAuthCases
      * @return void
      */
     public function __invoke(array $preAuthCases)

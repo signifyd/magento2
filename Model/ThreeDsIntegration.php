@@ -132,7 +132,7 @@ class ThreeDsIntegration
         if (isset($quoteId)) {
             $quote = $this->cartRepositoryInterface->get($quoteId);
 
-            if (isset($quote) === false) {
+            if ($quote->isEmpty()) {
                 $this->logger->info("Error getting quote");
 
                 return;
@@ -140,7 +140,7 @@ class ThreeDsIntegration
         } else {
             $quote = $this->checkoutSession->getQuote();
 
-            if (isset($quote) === false) {
+            if ($quote->isEmpty()) {
                 $this->logger->info("Quote not found magento checkout session");
 
                 return;
@@ -152,15 +152,7 @@ class ThreeDsIntegration
         }
 
         $quoteId = $quote->getId();
-
-        if (isset($quoteId) === false) {
-            $this->logger->info("Quote id not found");
-
-            return;
-        }
-
         $threeDsData = $this->validateFields($threeDsData);
-
         $case = $this->casedataFactory->create();
         $this->casedataResourceModel->load($case, $quoteId, 'quote_id');
 
@@ -187,7 +179,7 @@ class ThreeDsIntegration
                 $order = $this->orderFactory->create();
                 $this->signifydOrderResourceModel->load($order, $orderId);
 
-                if (isset($order) === false) {
+                if ($order->isEmpty()) {
                     return;
                 }
 

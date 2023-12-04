@@ -85,7 +85,6 @@ class Casedata extends AbstractModel
      * @param Context $context
      * @param Registry $registry
      * @param ConfigHelper $configHelper
-     * @param ObjectManagerInterface $objectManager
      * @param OrderFactory $orderFactory
      * @param OrderResourceModel $orderResourceModel
      * @param Logger $logger
@@ -143,7 +142,7 @@ class Casedata extends AbstractModel
     }
 
     /**
-     * @param null $index
+     * @param $index
      * @return array|mixed|null
      */
     public function getEntries($index = null)
@@ -181,6 +180,8 @@ class Casedata extends AbstractModel
         } elseif (is_string($index)) {
             $entries = $this->getEntries();
             $entries[$index] = $value;
+        } else {
+            return $this;
         }
 
         $entries = $this->serializer->serialize($entries);

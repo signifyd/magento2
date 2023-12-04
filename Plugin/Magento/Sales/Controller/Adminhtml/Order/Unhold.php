@@ -96,7 +96,7 @@ class Unhold
         try {
             /** @var \Magento\Sales\Model\Order $order */
             $order = $this->orderRepository->get($orderId);
-            /** @var $case \Signifyd\Connect\Model\Casedata */
+            /** @var \Signifyd\Connect\Model\Casedata $case */
             $case = $this->casedataFactory->create();
 
             $this->orderHelper->addCommentToStatusHistory(

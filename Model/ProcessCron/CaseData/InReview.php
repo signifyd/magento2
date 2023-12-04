@@ -57,11 +57,6 @@ class InReview
     protected $casedataResourceModel;
 
     /**
-     * @var \StripeIntegration\Payments\Model\Config
-     */
-    protected $stripeConfig;
-
-    /**
      * @var StoreManagerInterface
      */
     protected $storeManagerInterface;
@@ -117,7 +112,7 @@ class InReview
     }
 
     /**
-     * @param array $asyncWaitingCases
+     * @param array $inReviewCases
      * @return void
      */
     public function __invoke(array $inReviewCases)
