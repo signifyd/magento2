@@ -150,7 +150,7 @@ class Reroute
             $order = $this->orderFactory->create();
             $this->signifydOrderResourceModel->load($order, $orderId);
 
-            $this->logger->info("Send case update for order {$order->getIncrementId()}");
+            $this->logger->info("Send case update for order {$order->getIncrementId()}", ['entity' => $order]);
 
             $makeShipments = $this->shipmentsFactory->create();
             $shipments = $makeShipments($order);
@@ -160,7 +160,9 @@ class Reroute
             $currentHashToValidateReroute = $case->getEntries('hash');
 
             if ($newHashToValidateReroute == $currentHashToValidateReroute) {
-                $this->logger->info("No data changes, will not update order {$order->getIncrementId()}");
+                $this->logger->info("No data changes, will not update order {$order->getIncrementId()}",
+                    ['entity' => $order]
+                );
                 $reroute->setMagentoStatus(\Signifyd\Connect\Model\Fulfillment::COMPLETED_STATUS);
                 $this->rerouteResourceModel->save($reroute);
                 return;
@@ -173,8 +175,7 @@ class Reroute
             $rerout['shipments'] = $shipments;
             $updateResponse = $this->client->createReroute($rerout, $order);
 
-            $this->logger->info("Case updated for order {$order->getIncrementId()}");
-            $this->logger->info($this->jsonSerializer->serialize($updateResponse));
+            $this->logger->info("Case updated for order {$order->getIncrementId()}", ['entity' => $order]);
 
             if ($updateResponse !== false) {
                 $reroute->setMagentoStatus(\Signifyd\Connect\Model\Fulfillment::COMPLETED_STATUS);
@@ -185,7 +186,7 @@ class Reroute
             $updateCase = $this->updateCaseFactory->create();
             $case = $updateCase($case, $updateResponse);
 
-            if ($case->getOrigData('signifyd_status') !== $case->getData('signifyd_status')) {
+            if ($case->getOrigData('guarantee') !== $case->getData('guarantee')) {
                 $case->setStatus(\Signifyd\Connect\Model\Casedata::IN_REVIEW_STATUS);
                 $updateOrder = $this->updateOrderFactory->create();
                 $case = $updateOrder($case);
