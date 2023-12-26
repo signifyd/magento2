@@ -243,7 +243,8 @@ class Purchase implements ObserverInterface
                 if ($casesFromQuoteLoaded->getData('magento_status') == Casedata::PRE_AUTH) {
                     $this->logger->info(
                         "Completing case for order {$order->getIncrementId()} ({$order->getId()}) " .
-                        "because it is a pre auth case", ['entity' => $order]
+                        "because it is a pre auth case",
+                        ['entity' => $order]
                     );
                     $casesFromQuoteLoaded->setData('magento_status', Casedata::COMPLETED_STATUS);
                 }

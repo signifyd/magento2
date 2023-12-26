@@ -149,7 +149,8 @@ class InReview
                     if ($currentCaseHash == $newCaseHash) {
                         $this->logger->info(
                             "CRON: Case {$case->getId()} already update with this data," .
-                            " no action will be taken", ['entity' => $case]
+                            " no action will be taken",
+                            ['entity' => $case]
                         );
 
                         // Triggering case save to unlock case
@@ -170,7 +171,8 @@ class InReview
 
                     $this->logger->error(
                         'CRON: Failed to save case data to database: '
-                        . $e->getMessage(), ['entity' => $case]
+                        . $e->getMessage(),
+                        ['entity' => $case]
                     );
                 }
             } catch (\Exception $e) {

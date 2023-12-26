@@ -136,7 +136,8 @@ class FulfillmentHelper
             $fulfillment = $this->getFulfillmentFromDatabase($shipmentIncrementId);
 
             if ($fulfillment->getId()) {
-                $this->logger->debug("Fulfillment for shipment {$shipmentIncrementId} already sent",
+                $this->logger->debug(
+                    "Fulfillment for shipment {$shipmentIncrementId} already sent",
                     ['entity' => $order]
                 );
                 return false;
@@ -145,7 +146,8 @@ class FulfillmentHelper
             $fulfillmentData = $this->generateFulfillmentData($shipment);
 
             if ($fulfillmentData == false) {
-                $this->logger->debug("Fulfillment for shipment {$shipmentIncrementId} is not ready to be sent",
+                $this->logger->debug(
+                    "Fulfillment for shipment {$shipmentIncrementId} is not ready to be sent",
                     ['entity' => $order]
                 );
                 return false;

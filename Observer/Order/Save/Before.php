@@ -12,7 +12,6 @@ use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 
-
 class Before implements ObserverInterface
 {
     /**
@@ -68,7 +67,6 @@ class Before implements ObserverInterface
         $this->storeManager = $storeManager;
         $this->request = $request;
         $this->jsonSerializer = $jsonSerializer;
-
     }
 
     /**
@@ -89,7 +87,7 @@ class Before implements ObserverInterface
                 return;
             }
             $data = $this->request->getContent();
-            $this->setPaymentData($order,$data);
+            $this->setPaymentData($order, $data);
 
             // Fix for Magento bug https://github.com/magento/magento2/issues/7227
             // x_forwarded_for should be copied from quote, but quote does not have the field on database
@@ -116,14 +114,13 @@ class Before implements ObserverInterface
      * @param $data
      * @return void
      */
-    public function setPaymentData($order,$data)
+    public function setPaymentData($order, $data)
     {
         if ($order->getPayment()->getMethod() === 'rootways_authorizecim_option' && empty($data) === false) {
             $dataArray = $this->jsonSerializer->unserialize($data);
             if (isset($dataArray['paymentMethod']) &&
                 $dataArray['paymentMethod']['additional_data'] &&
-                $dataArray['paymentMethod']['additional_data']['card_bin'])
-            {
+                $dataArray['paymentMethod']['additional_data']['card_bin']) {
                 $order->getPayment()->setAdditionalInformation('card_bin', $dataArray['paymentMethod']['additional_data']['card_bin']);
             }
         }

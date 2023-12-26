@@ -153,7 +153,8 @@ class UpdateOrder
             $order = $this->orderFactory->create();
             $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
 
-            $this->logger->info('Case for order ' . $order->getIncrementId() . ' will ' .
+            $this->logger->info(
+                'Case for order ' . $order->getIncrementId() . ' will ' .
                 'not be updated as the bypass for additional updates is enabled',
                 ['entity' => $order]
             );

@@ -160,7 +160,8 @@ class Reroute
             $currentHashToValidateReroute = $case->getEntries('hash');
 
             if ($newHashToValidateReroute == $currentHashToValidateReroute) {
-                $this->logger->info("No data changes, will not update order {$order->getIncrementId()}",
+                $this->logger->info(
+                    "No data changes, will not update order {$order->getIncrementId()}",
                     ['entity' => $order]
                 );
                 $reroute->setMagentoStatus(\Signifyd\Connect\Model\Fulfillment::COMPLETED_STATUS);

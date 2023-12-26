@@ -114,7 +114,8 @@ class ProcessTransaction
             if ($newHashToValidateReroute == $currentHashToValidateReroute) {
                 $this->logger->info(
                     'No data changes, will not send transaction ' .
-                    $order->getIncrementId(), ['entity' => $order]
+                    $order->getIncrementId(),
+                    ['entity' => $order]
                 );
                 return;
             }

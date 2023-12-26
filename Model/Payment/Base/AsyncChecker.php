@@ -49,7 +49,7 @@ class AsyncChecker implements AsyncCheckerInterface
 
             if ($retries >= 5 || empty($avsCode) === false && empty($cvvCode) === false) {
                 return true;
-            }else {
+            } else {
                 return false;
             }
         } catch (\Exception $e) {

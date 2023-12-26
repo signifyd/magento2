@@ -21,5 +21,3 @@ class AsyncChecker extends BaseAsyncChecker
         return parent::__invoke($order, $casedata);
     }
 }
-
-

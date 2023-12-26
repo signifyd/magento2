@@ -13,7 +13,7 @@ class AsyncChecker extends BaseAsyncChecker
      * @param Casedata $case
      * @return bool|void
      */
-    public function __invoke(Order $order,Casedata $case)
+    public function __invoke(Order $order, Casedata $case)
     {
         if ($case->getOrder()->getPayment()->getMethod() === 'stripe_payments' &&
             $case->getEntries('stripe_status') !== 'approved'

@@ -108,8 +108,7 @@ class Fulfillment
                 $fulfillmentData = $fulfillmentApi($fulfillment);
 
                 $this->logger->info("Call addFulfillments with request: " .
-                    $this->jsonSerializer->serialize($fulfillmentData), ['entity' => $order]
-                );
+                    $this->jsonSerializer->serialize($fulfillmentData), ['entity' => $order]);
 
                 $fulfillmentBulkResponse = $this->client
                     ->getSignifydSaleApi($order)->addFulfillment($fulfillmentData);
@@ -119,8 +118,7 @@ class Fulfillment
                     $message = "CRON: Fullfilment failed to send";
                 } else {
                     $this->logger->info("AddFulfillments response: " .
-                        $this->jsonSerializer->serialize($fulfillmentBulkResponse), ['entity' => $order]
-                    );
+                        $this->jsonSerializer->serialize($fulfillmentBulkResponse), ['entity' => $order]);
                     $message = "CRON: Fullfilment sent";
                     $fulfillment->setMagentoStatus(\Signifyd\Connect\Model\Fulfillment::COMPLETED_STATUS);
                     $this->fulfillmentResourceModel->save($fulfillment);

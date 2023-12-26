@@ -337,7 +337,8 @@ class Index extends Action
             if ($currentCaseHash == $newCaseHash) {
                 $httpCode = Http::STATUS_CODE_200;
                 $this->logger->debug(
-                    "Case {$caseId} already update with this data, no action will be taken", ['entity' => $case]
+                    "Case {$caseId} already update with this data, no action will be taken",
+                    ['entity' => $case]
                 );
                 throw new LocalizedException(
                     __("Case {$caseId} already update with this data, no action will be taken")

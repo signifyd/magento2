@@ -143,7 +143,8 @@ class Client
      */
     public function postCaseToSignifyd($caseData, $order)
     {
-        $this->logger->info("Call sale api with request: " . $this->jsonSerializer->serialize($caseData),
+        $this->logger->info(
+            "Call sale api with request: " . $this->jsonSerializer->serialize($caseData),
             ['entity' => $order]
         );
 
@@ -151,7 +152,8 @@ class Client
         $saleResponse = $this->getSignifydSaleApi($order)->createOrder('orders/events/sales', $caseData);
 
         if (empty($saleResponse->getSignifydId()) === false) {
-            $this->logger->info("Sale api response: " . $this->jsonSerializer->serialize($saleResponse),
+            $this->logger->info(
+                "Sale api response: " . $this->jsonSerializer->serialize($saleResponse),
                 ['entity' => $order]
             );
             $this->logger->debug("Case sent. Id is {$saleResponse->getSignifydId()}", ['entity' => $order]);
@@ -178,14 +180,16 @@ class Client
      */
     public function createReroute($updateData, $order)
     {
-        $this->logger->info("Call reroute api with request: " . $this->jsonSerializer->serialize($updateData),
+        $this->logger->info(
+            "Call reroute api with request: " . $this->jsonSerializer->serialize($updateData),
             ['entity' => $order]
         );
 
         $caseResponse = $this->getSignifydSaleApi($order)->reroute($updateData);
 
         if (empty($caseResponse->getSignifydId()) === false) {
-            $this->logger->info("Reroute response: " . $this->jsonSerializer->serialize($caseResponse),
+            $this->logger->info(
+                "Reroute response: " . $this->jsonSerializer->serialize($caseResponse),
                 ['entity' => $order]
             );
             $this->logger->debug("Reroute created. Id is {$caseResponse->getSignifydId()}", ['entity' => $order]);
@@ -277,7 +281,8 @@ class Client
      */
     public function postCaseFromQuoteToSignifyd($caseData, $quote)
     {
-        $this->logger->info("Call checkout api with request: " . $this->jsonSerializer->serialize($caseData),
+        $this->logger->info(
+            "Call checkout api with request: " . $this->jsonSerializer->serialize($caseData),
             ['entity' => $quote]
         );
 
@@ -285,7 +290,8 @@ class Client
             ->createOrder('orders/events/checkouts', $caseData);
 
         if (empty($caseResponse->getSignifydId()) === false) {
-            $this->logger->info("Checkout api response: " . $this->jsonSerializer->serialize($caseResponse),
+            $this->logger->info(
+                "Checkout api response: " . $this->jsonSerializer->serialize($caseResponse),
                 ['entity' => $quote]
             );
             $this->logger->debug("Case sent. Id is {$caseResponse->getSignifydId()}", ['entity' => $quote]);
@@ -307,7 +313,8 @@ class Client
      */
     public function postTransactionToSignifyd($transactionData, $entity)
     {
-        $this->logger->info("Call transaction api with request: " . $this->jsonSerializer->serialize($transactionData),
+        $this->logger->info(
+            "Call transaction api with request: " . $this->jsonSerializer->serialize($transactionData),
             ['entity' => $entity]
         );
 
@@ -320,7 +327,8 @@ class Client
                 "Transaction sent to quote {$entity->getId()}. Token is {$caseResponse->getCheckoutId()}" :
                 "Transaction sent to order {$entity->getIncrementId()}. Token is {$caseResponse->getCheckoutId()}";
 
-            $this->logger->info("Transaction api response: " . $this->jsonSerializer->serialize($transactionData),
+            $this->logger->info(
+                "Transaction api response: " . $this->jsonSerializer->serialize($transactionData),
                 ['entity' => $entity]
             );
             $this->logger->debug($message, ['entity' => $entity]);

@@ -143,7 +143,7 @@ class AsyncWaiting
                 /** @var \Signifyd\Connect\Model\Payment\Base\AsyncChecker $asyncCheck */
                 $asyncCheck = $this->paymentVerificationFactory->createPaymentAsyncChecker($order->getPayment()->getMethod());
 
-                if ($asyncCheck($order,$case)) {
+                if ($asyncCheck($order, $case)) {
                     try {
                         $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
 
