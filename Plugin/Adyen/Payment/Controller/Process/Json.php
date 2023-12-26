@@ -3,6 +3,7 @@
 namespace Signifyd\Connect\Plugin\Adyen\Payment\Controller\Process;
 
 use Adyen\Payment\Controller\Process\Json as AdyenJson;
+use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\Core\Client;
@@ -13,6 +14,7 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
 use Signifyd\Connect\Model\Api\TransactionsFactory;
+use Magento\Framework\App\Request\Http as RequestHttp;
 
 class Json
 {
@@ -62,6 +64,16 @@ class Json
     protected $client;
 
     /**
+     * @var JsonSerializer
+     */
+    protected $jsonSerializer;
+
+    /**
+     * @var RequestHttp
+     */
+    protected $requestHttp;
+
+    /**
      * CheckoutPaymentsDetailsHandler constructor.
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
@@ -72,6 +84,8 @@ class Json
      * @param TransactionsFactory $transactionsFactory
      * @param ConfigHelper $configHelper
      * @param Client $client
+     * @param JsonSerializer $jsonSerializer
+     * @param RequestHttp $requestHttp
      */
     public function __construct(
         CasedataFactory $casedataFactory,
@@ -82,7 +96,9 @@ class Json
         QuoteResourceModel $quoteResourceModel,
         TransactionsFactory $transactionsFactory,
         ConfigHelper $configHelper,
-        Client $client
+        Client $client,
+        JsonSerializer $jsonSerializer,
+        RequestHttp $requestHttp
     ) {
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
@@ -93,6 +109,8 @@ class Json
         $this->transactionsFactory = $transactionsFactory;
         $this->configHelper = $configHelper;
         $this->client = $client;
+        $this->jsonSerializer = $jsonSerializer;
+        $this->requestHttp = $requestHttp;
     }
 
     public function beforeExecute(AdyenJson $subject)
@@ -108,7 +126,7 @@ class Json
             \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
             $this->storeManager->getStore()->getId()
         );
-        $notificationItems = json_decode(file_get_contents('php://input'), true);
+        $notificationItems = $this->jsonSerializer->unserialize($this->requestHttp->getContent());
 
         if ($isPreAuth === false && empty($notificationItems) === true) {
             return null;
