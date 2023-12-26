@@ -183,4 +183,7 @@
     <preference for="Signifyd\Connect\Api\RerouteRepositoryInterface" type="Signifyd\Connect\Model\RerouteRepository"/>
     <preference for="Signifyd\Connect\Api\Data\RerouteInterface" type="Signifyd\Connect\Model\Reroute"/>
     <preference for="Signifyd\Connect\Api\Data\RerouteSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
+    <preference for="Signifyd\Connect\Api\LogsRepositoryInterface" type="Signifyd\Connect\Model\LogsRepository"/>
+    <preference for="Signifyd\Connect\Api\Data\LogsInterface" type="Signifyd\Connect\Model\Logs"/>
+    <preference for="Signifyd\Connect\Api\Data\LogsSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
 </config>

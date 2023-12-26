@@ -171,7 +171,7 @@ class PreAuth implements ObserverInterface
                 return;
             }
 
-            $this->logger->info("policy validation");
+            $this->logger->info("policy validation", ['entity' => $quote]);
 
             $policyName = $this->configHelper->getPolicyName(
                 $quote->getStore()->getScopeType(),
@@ -295,7 +295,7 @@ class PreAuth implements ObserverInterface
                 }
             }
 
-            $this->logger->info("Creating case for quote {$quote->getId()}");
+            $this->logger->info("Creating case for quote {$quote->getId()}", ['entity' => $quote]);
             $this->addSignifydDataToPayment($quote, $checkoutPaymentDetails);
             $checkoutOrder = $this->checkoutOrderFactory->create();
             $caseFromQuote = $checkoutOrder($quote, $checkoutPaymentDetails, $paymentMethod);
@@ -348,7 +348,7 @@ class PreAuth implements ObserverInterface
         } catch (\Exception $e) {
             $caseAction = false;
             $caseResponse = null;
-            $this->logger->error($e->getMessage());
+            $this->logger->error($e->getMessage(), ['entity' => $quote]);
         }
 
         $enabledConfig = $this->scopeConfigInterface->getValue(

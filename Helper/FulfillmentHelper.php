@@ -102,12 +102,13 @@ class FulfillmentHelper
 
     public function postFulfillmentToSignifyd(\Magento\Sales\Model\Order\Shipment $shipment)
     {
+        $order = $shipment->getOrder();
+
         if ($shipment->getId() <= 0) {
-            $this->logger->info('Fulfillment will not proceed because shipment has no ID');
+            $this->logger->info('Fulfillment will not proceed because shipment has no ID', ['entity' => $order]);
             return false;
         }
 
-        $order = $shipment->getOrder();
         $orderIncrementId = $order->getIncrementId();
         $orderId = $order->getId();
 
@@ -118,7 +119,8 @@ class FulfillmentHelper
 
         if (empty($caseCode)) {
             $this->logger->info(
-                "Fulfillment will not proceed because no case has been found: {$orderIncrementId} ({$orderId})"
+                "Fulfillment will not proceed because no case has been found: {$orderIncrementId} ({$orderId})",
+                ['entity' => $order]
             );
             return false;
         }
@@ -127,27 +129,32 @@ class FulfillmentHelper
             $shipmentIncrementId = $shipment->getIncrementId();
 
             $this->logger->debug(
-                "Fulfillment for case order  {$orderIncrementId} ({$orderId}), shipment {$shipmentIncrementId}"
+                "Fulfillment for case order  {$orderIncrementId} ({$orderId}), shipment {$shipmentIncrementId}",
+                ['entity' => $order]
             );
 
             $fulfillment = $this->getFulfillmentFromDatabase($shipmentIncrementId);
 
             if ($fulfillment->getId()) {
-                $this->logger->debug("Fulfillment for shipment {$shipmentIncrementId} already sent");
+                $this->logger->debug("Fulfillment for shipment {$shipmentIncrementId} already sent",
+                    ['entity' => $order]
+                );
                 return false;
             }
 
             $fulfillmentData = $this->generateFulfillmentData($shipment);
 
             if ($fulfillmentData == false) {
-                $this->logger->debug("Fulfillment for shipment {$shipmentIncrementId} is not ready to be sent");
+                $this->logger->debug("Fulfillment for shipment {$shipmentIncrementId} is not ready to be sent",
+                    ['entity' => $order]
+                );
                 return false;
             }
 
             $fulfillment = $this->prepareFulfillmentToDatabase($fulfillmentData);
             $this->fulfillmentResourceModel->save($fulfillment);
         } catch (\Exception $e) {
-            $this->logger->debug("Fulfillment error: {$e->getMessage()}");
+            $this->logger->debug("Fulfillment error: {$e->getMessage()}", ['entity' => $order]);
             return false;
         }
 

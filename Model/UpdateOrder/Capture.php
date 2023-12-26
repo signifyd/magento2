@@ -148,7 +148,7 @@ class Capture
 
                 $completeCase = true;
             } elseif ($order->getInvoiceCollection()->count() > 0) {
-                $this->logger->info("Invoice already created");
+                $this->logger->info("Invoice already created", ['entity' => $order]);
                 $completeCase = true;
             } else {
                 $reason = $this->orderHelper->getCannotInvoiceReason($order);

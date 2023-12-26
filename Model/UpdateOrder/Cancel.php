@@ -85,6 +85,7 @@ class Cancel
                 $this->orderResourceModel->save($order);
                 $completeCase = true;
 
+                $this->logger->debug("Signifyd: order canceled, {$orderAction["reason"]}", ['entity' => $order]);
                 $this->orderHelper->addCommentToStatusHistory(
                     $order,
                     "Signifyd: order canceled, {$orderAction["reason"]}"

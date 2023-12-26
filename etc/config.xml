@@ -29,6 +29,7 @@
                 <policy_pre_auth_reject_message>Your order cannot be processed, please contact our support team</policy_pre_auth_reject_message>
                 <cron_batch_size>20</cron_batch_size>
                 <bypass_additional_updates>0</bypass_additional_updates>
+                <logs_retention_period>60</logs_retention_period>
             </advanced>
             <logs>
                 <log>1</log>

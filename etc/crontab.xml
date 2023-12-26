@@ -4,6 +4,9 @@
         <job name="cron_retry" instance="Signifyd\Connect\Cron\RetryCaseJob" method="execute">
             <schedule>*/1 * * * *</schedule>
         </job>
+        <job name="delete_logs" instance="Signifyd\Connect\Cron\DeleteLogs" method="execute">
+            <schedule>0 2 * * *</schedule>
+        </job>
         <job name="cron_retry_fulfillment" instance="Signifyd\Connect\Cron\RetryFulfillmentJob" method="execute">
             <schedule>*/5 * * * *</schedule>
         </job>
