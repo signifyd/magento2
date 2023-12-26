@@ -7,6 +7,9 @@
         <job name="cron_retry_fulfillment" instance="Signifyd\Connect\Cron\RetryFulfillmentJob" method="execute">
             <schedule>*/5 * * * *</schedule>
         </job>
+        <job name="cron_retry_reroute" instance="Signifyd\Connect\Cron\RetryReroute" method="execute">
+            <schedule>*/5 * * * *</schedule>
+        </job>
         <job name="cron_validate_order_id" instance="Signifyd\Connect\Cron\ValidateOrderId" method="execute">
             <schedule>0 3 * * *</schedule>
         </job>

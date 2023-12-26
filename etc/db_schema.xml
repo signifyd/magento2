@@ -53,4 +53,14 @@
         <column identity="false" name="retries" padding="11" nullable="false" default="0" xsi:type="int"/>
         <column name="inserted_at" nullable="true" default="CURRENT_TIMESTAMP" xsi:type="datetime"/>
     </table>
+    <table comment="signifyd_connect_reroute Table" engine="innodb" name="signifyd_connect_reroute" resource="default">
+        <column xsi:type="int" name="reroute_id" padding="10" unsigned="true" nullable="false" identity="true" comment="Entity Id"/>
+        <constraint referenceId="PRIMARY" xsi:type="primary">
+            <column name="reroute_id"/>
+        </constraint>
+        <column name="order_id" nullable="true" xsi:type="int" comment="order_id" identity="false"/>
+        <column length="50" name="magento_status" default="waiting_submission" nullable="false" xsi:type="varchar"/>
+        <column identity="false" name="retries" padding="11" nullable="false" default="0" xsi:type="int"/>
+        <column name="inserted_at" nullable="true" default="CURRENT_TIMESTAMP" xsi:type="datetime"/>
+    </table>
 </schema>

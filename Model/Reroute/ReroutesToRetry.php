@@ -1,15 +1,15 @@
 <?php
 
-namespace Signifyd\Connect\Model\Fulfillment;
+namespace Signifyd\Connect\Model\Reroute;
 
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Model\ResourceModel\Fulfillment\CollectionFactory as FulfillmentCollectionFactory;
-use Signifyd\Connect\Model\ResourceModel\Fulfillment as FulfillmentResourceModel;
+use Signifyd\Connect\Model\ResourceModel\Reroute\CollectionFactory as RerouteCollectionFactory;
+use Signifyd\Connect\Model\ResourceModel\Reroute as RerouteResourceModel;
 use Signifyd\Connect\Model\RetryModel;
 
-class FulfillmentsToRetry extends RetryModel
+class ReroutesToRetry extends RetryModel
 {
     /**
      * @var Logger
@@ -17,12 +17,12 @@ class FulfillmentsToRetry extends RetryModel
     protected $logger;
 
     /**
-     * @var FulfillmentCollectionFactory
+     * @var RerouteCollectionFactory
      */
     protected $objectCollectionFactory;
 
     /**
-     * @var FulfillmentResourceModel
+     * @var RerouteResourceModel
      */
     protected $objectResourceModel;
 
@@ -30,14 +30,14 @@ class FulfillmentsToRetry extends RetryModel
      * Retry constructor.
      * @param Context $context
      * @param Logger $logger
-     * @param FulfillmentCollectionFactory $objectCollectionFactory
-     * @param FulfillmentResourceModel $objectResourceModel
+     * @param RerouteCollectionFactory $objectCollectionFactory
+     * @param RerouteResourceModel $objectResourceModel
      */
     public function __construct(
         Context $context,
         Logger $logger,
-        FulfillmentCollectionFactory $objectCollectionFactory,
-        FulfillmentResourceModel $objectResourceModel
+        RerouteCollectionFactory $objectCollectionFactory,
+        RerouteResourceModel $objectResourceModel
     ) {
         parent::__construct($context, $logger);
 
