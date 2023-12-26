@@ -150,6 +150,7 @@ class WaitingSubmission
                 try {
                     $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
                     $saleOrder = $this->saleOrderFactory->create();
+                    $order->setData('origin_store_code', $case->getData('origin_store_code'));
                     $caseModel = $saleOrder($order);
                     /** @var \Signifyd\Core\Response\SaleResponse $caseResponse */
                     $caseResponse = $this->client->postCaseToSignifyd($caseModel, $order);
