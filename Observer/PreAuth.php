@@ -440,7 +440,7 @@ class PreAuth implements ObserverInterface
             $checkoutPaymentDetails['cardBin'] = substr($cc_number, 0, 6);
         } else {
             $checkoutPaymentDetails['cardLast4'] = null;
-            $checkoutPaymentDetails['cardBin'] = null;
+            $checkoutPaymentDetails['cardBin'] = $additionalData['card_bin'] ?? null;
         }
 
         return $checkoutPaymentDetails;
