@@ -59,7 +59,7 @@ class AccountHolderName
         try {
             $firstname = $quote->getBillingAddress()->getFirstname();
             $lastname = $quote->getBillingAddress()->getLastname();
-            $cardholder = trim($firstname) . ' ' . trim($lastname);
+            $cardholder = trim($firstname ?? '') . ' ' . trim($lastname ?? '');
             $cardholder = strtoupper($cardholder);
             $cardholder = preg_replace('/  +/', ' ', $cardholder);
 
