@@ -10,6 +10,7 @@ use Signifyd\Connect\Api\PaymentVerificationInterface;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\PaymentGatewayFactory;
 use Signifyd\Connect\Helper\ConfigHelper;
+use Magento\Framework\Encryption\EncryptorInterface;
 
 abstract class DataMapper implements PaymentVerificationInterface
 {
@@ -56,6 +57,11 @@ abstract class DataMapper implements PaymentVerificationInterface
     protected $objectManagerInterface;
 
     /**
+     * @var EncryptorInterface
+     */
+    protected $encryptor;
+
+    /**
      * DataMapper constructor.
      * @param Registry $registry
      * @param JsonSerializer $jsonSerializer
@@ -63,6 +69,7 @@ abstract class DataMapper implements PaymentVerificationInterface
      * @param Logger $logger
      * @param ConfigHelper $configHelper
      * @param ObjectManagerInterface $objectManagerInterface
+     * @param EncryptorInterface $encryptor
      */
     public function __construct(
         Registry $registry,
@@ -70,7 +77,8 @@ abstract class DataMapper implements PaymentVerificationInterface
         PaymentGatewayFactory $paymentGatewayFactory,
         Logger $logger,
         ConfigHelper $configHelper,
-        ObjectManagerInterface $objectManagerInterface
+        ObjectManagerInterface $objectManagerInterface,
+        \Magento\Framework\Encryption\EncryptorInterface $encryptor
     ) {
         $this->registry = $registry;
         $this->jsonSerializer = $jsonSerializer;
@@ -78,6 +86,7 @@ abstract class DataMapper implements PaymentVerificationInterface
         $this->logger = $logger;
         $this->configHelper = $configHelper;
         $this->objectManagerInterface = $objectManagerInterface;
+        $this->encryptor = $encryptor;
     }
 
     /**
@@ -230,6 +239,12 @@ abstract class DataMapper implements PaymentVerificationInterface
                             $param['path'],
                             $order
                         );
+                        break;
+                    case 'path_secure':
+                        $gatewayIntegrationSettings['params'][$key] = $this->encryptor->decrypt($this->configHelper->getConfigData(
+                            $param['path'],
+                            $order
+                        ));
                         break;
                 }
             }

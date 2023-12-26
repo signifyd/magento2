@@ -72,6 +72,7 @@
             <argument name="expYearDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\ExpYearMapper</argument>
             <argument name="binDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\BinMapper</argument>
             <argument name="transactionIdDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\TransactionIdMapper</argument>
+            <argument name="asyncCheckDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\AsyncChecker</argument>
         </arguments>
     </type>
 
@@ -170,6 +171,10 @@
 
     <type name="Magento\PaymentServicesPaypal\Gateway\Http\ServiceClient">
         <plugin name="Signifyd_Connect_Plugin_Magento_PaymentServicesPaypal_Gateway_Http_ServiceClient" type="\Signifyd\Connect\Plugin\Magento\PaymentServicesPaypal\Gateway\Http\ServiceClient" />
+    </type>
+
+    <type name="Rootways\Authorizecim\Gateway\Validator\ResponseValidator">
+        <plugin name="signifyd_response_validator_plugin" type="Signifyd\Connect\Plugin\Rootways\Authorizecim\Gateway\Validator\ResponseValidatorPlugin" sortOrder="10"/>
     </type>
 
     <!-- Preferences -->

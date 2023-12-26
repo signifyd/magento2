@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\AvsEmsCodeMapper as Base_AvsEmsCodeMappe
 
 class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
 {
-    protected $allowedMethods = ['adyen_cc'];
+    protected $allowedMethods = ['adyen_cc','adyen_pay_by_link'];
 
     /**
      * List of mapping AVS codes
