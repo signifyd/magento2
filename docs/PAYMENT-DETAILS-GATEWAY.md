@@ -58,7 +58,7 @@ To provide a parameter as a direct value, the properties "type" and "value" must
 {"params":{"transactionKey":{"type":"direct","value":"XSS983HDN3"}}}
 ```
 
-To provide a parameter as a reference to an existing Magento setting, the properties "type" and "path" must me provided. For the "type" property, the string "path" must be set and the "path" property must contain the path for the desired setting. Below example shows how to get the AuthorizeNet transaction key from AuthorizeNet's official extension: this way re-typing the transaction key directly in settings is not necessary. The extension will get it from the provided path. Also, if for some reason the transaction key is changed on AuthorizeNet's extension settings, changing it on the gateway integration settings will not be necessary.
+To provide a parameter as a reference to an existing Magento setting, the properties "type" and "path" must me provided. For the "type" property, the string "path" must be defined for non-encrypted fields or "path_secure" for encrypted fields. The "path" property must contain the path for the desired setting. Below example shows how to get the AuthorizeNet transaction key from AuthorizeNet's official extension: this way re-typing the transaction key directly in settings is not necessary. The extension will get it from the provided path. Also, if for some reason the transaction key is changed on AuthorizeNet's extension settings, changing it on the gateway integration settings will not be necessary.
 
 ```json
 {"params":{"transactionKey":{"type":"path","path":"authorize_net/anet_core/trans_key"}}}

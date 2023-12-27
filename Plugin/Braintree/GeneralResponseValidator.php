@@ -175,7 +175,8 @@ class GeneralResponseValidator
                 }
 
                 $this->logger->info(
-                    "collecting Braintree pre-authorization transaction data for case " . $case->getCode()
+                    "collecting Braintree pre-authorization transaction data for case " . $case->getCode(),
+                    ['entity' => $case]
                 );
 
                 $branitreeData = [];

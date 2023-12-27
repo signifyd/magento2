@@ -146,7 +146,7 @@ class Shipments
         $shipment['maxDeliveryDate'] = null;
         $shipment['shipmentId'] = null;
         $shipment['fulfillmentMethod'] = $this->getFulfillmentMethodMapping(
-            $quote->getShippingMethod(),
+            $quote->getShippingAddress()->getShippingMethod(),
             ScopeInterface::SCOPE_STORES,
             $quote->getStoreId()
         );

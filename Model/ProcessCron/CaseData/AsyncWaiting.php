@@ -13,6 +13,7 @@ use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\UpdateOrderFactory;
 use Signifyd\Connect\Model\Api\SaleOrderFactory;
+use Signifyd\Connect\Model\PaymentVerificationFactory;
 
 class AsyncWaiting
 {
@@ -67,6 +68,11 @@ class AsyncWaiting
     protected $saleOrderFactory;
 
     /**
+     * @var PaymentVerificationFactory
+     */
+    protected $paymentVerificationFactory;
+
+    /**
      * AsyncWaiting constructor.
      * @param ConfigHelper $configHelper
      * @param Logger $logger
@@ -89,7 +95,8 @@ class AsyncWaiting
         UpdateOrderFactory $updateOrderFactory,
         CasedataResourceModel $casedataResourceModel,
         StoreManagerInterface $storeManagerInterface,
-        SaleOrderFactory $saleOrderFactory
+        SaleOrderFactory $saleOrderFactory,
+        PaymentVerificationFactory $paymentVerificationFactory
     ) {
         $this->configHelper = $configHelper;
         $this->logger = $logger;
@@ -101,6 +108,7 @@ class AsyncWaiting
         $this->casedataResourceModel = $casedataResourceModel;
         $this->storeManagerInterface = $storeManagerInterface;
         $this->saleOrderFactory = $saleOrderFactory;
+        $this->paymentVerificationFactory = $paymentVerificationFactory;
     }
 
     /**
@@ -127,25 +135,10 @@ class AsyncWaiting
                     $this->casedataResourceModel->delete($case);
                 }
 
-                $order->setData('origin_store_code', $case->getData('origin_store_code'));
-                $saleOrder = $this->saleOrderFactory->create();
-                $caseModel = $saleOrder($order);
-                $avsCode = $caseModel['transactions'][0]['verifications']['avsResponseCode'];
-                $cvvCode = $caseModel['transactions'][0]['verifications']['cvvResponseCode'];
-                $retries = $case->getData('retries');
+                /** @var \Signifyd\Connect\Model\Payment\Base\AsyncChecker $asyncCheck */
+                $asyncCheck = $this->paymentVerificationFactory->createPaymentAsyncChecker($order->getPayment()->getMethod());
 
-                if ($case->getOrder()->getPayment()->getMethod() === 'stripe_payments' &&
-                    $case->getEntries('stripe_status') !== 'approved'
-                ) {
-                    $this->logger->info(
-                        "CRON: case no: {$case->getOrderIncrement()}" .
-                        " will not be sent because the stripe hasn't approved it yet",
-                        ['entity' => $case]
-                    );
-                    continue;
-                }
-
-                if ($retries >= 5 || empty($avsCode) === false && empty($cvvCode) === false) {
+                if ($asyncCheck($order, $case)) {
                     try {
                         $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
 

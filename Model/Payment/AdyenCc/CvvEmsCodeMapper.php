@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\CvvEmsCodeMapper as Base_CvvEmsCodeMappe
 
 class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
 {
-    protected $allowedMethods = ['adyen_cc'];
+    protected $allowedMethods = ['adyen_cc','adyen_pay_by_link'];
 
     /**
      * List of mapping CVV codes

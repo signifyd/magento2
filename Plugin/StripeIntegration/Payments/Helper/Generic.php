@@ -92,7 +92,8 @@ class Generic
                     $order->unhold();
                     $this->orderResourceModel->save($order);
                     $this->logger->info(
-                        "Unhold order {$order->getIncrementId()} before stripe tries to cancel or close"
+                        "Unhold order {$order->getIncrementId()} before stripe tries to cancel or close",
+                        ['entity' => $order]
                     );
 
                     $this->orderHelper->addCommentToStatusHistory(

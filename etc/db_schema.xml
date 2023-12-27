@@ -53,4 +53,27 @@
         <column identity="false" name="retries" padding="11" nullable="false" default="0" xsi:type="int"/>
         <column name="inserted_at" nullable="true" default="CURRENT_TIMESTAMP" xsi:type="datetime"/>
     </table>
+    <table comment="signifyd_connect_reroute Table" engine="innodb" name="signifyd_connect_reroute" resource="default">
+        <column xsi:type="int" name="reroute_id" padding="10" unsigned="true" nullable="false" identity="true" comment="Entity Id"/>
+        <constraint referenceId="PRIMARY" xsi:type="primary">
+            <column name="reroute_id"/>
+        </constraint>
+        <column name="order_id" nullable="true" xsi:type="int" comment="order_id" identity="false"/>
+        <column length="50" name="magento_status" default="waiting_submission" nullable="false" xsi:type="varchar"/>
+        <column identity="false" name="retries" padding="11" nullable="false" default="0" xsi:type="int"/>
+        <column name="inserted_at" nullable="true" default="CURRENT_TIMESTAMP" xsi:type="datetime"/>
+    </table>
+    <table name="signifyd_connect_logs" resource="default" engine="innodb" comment="signifyd_connect_logs Table">
+        <column xsi:type="int" name="logs_id" padding="10" unsigned="true" nullable="false" identity="true" comment="Entity Id"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="logs_id"/>
+        </constraint>
+        <column name="created_at" nullable="true" default="CURRENT_TIMESTAMP" xsi:type="timestamp" comment="created_at"/>
+        <column name="quote_id" nullable="true" unsigned="true" xsi:type="int" padding="10" comment="Quote Id"/>
+        <column name="order_id" nullable="true" unsigned="true" xsi:type="int" padding="10" comment="Order Id"/>
+        <column name="type" nullable="false" xsi:type="varchar" comment="type" length="255"/>
+        <column name="entry" nullable="false" xsi:type="text" comment="entry"/>
+        <constraint xsi:type="foreign" referenceId="QUOTE_ID_QUOTE_ENTITY_ID" table="signifyd_connect_logs" column="quote_id" referenceTable="quote" referenceColumn="entity_id" onDelete="CASCADE"/>
+        <constraint xsi:type="foreign" referenceId="ORDER_ID_SALES_ORDER_ENTITY_ID" table="signifyd_connect_logs" column="order_id" referenceTable="sales_order" referenceColumn="entity_id" onDelete="CASCADE"/>
+    </table>
 </schema>

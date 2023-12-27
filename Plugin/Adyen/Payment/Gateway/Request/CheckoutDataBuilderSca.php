@@ -133,7 +133,7 @@ class CheckoutDataBuilderSca
 
         switch ($scaEvaluation->outcome) {
             case 'REQUEST_EXEMPTION':
-                $this->logger->info("Signifyd's recommendation is to request exemption");
+                $this->logger->info("Signifyd's recommendation is to request exemption", ['entity' => $quote]);
 
                 $placement = $scaEvaluation->exemptionDetails->placement;
                 $scaExemption = 'tra';
@@ -150,14 +150,14 @@ class CheckoutDataBuilderSca
                 $recommendation = $scaEvaluation->outcome == 'DELEGATE_TO_PSP' ?
                     'no exemption/exclusion identified' : 'exclusion';
 
-                $this->logger->info("Signifyd's recommendation is {$recommendation}");
+                $this->logger->info("Signifyd's recommendation is {$recommendation}", ['entity' => $quote]);
 
                 $executeThreeD = '';
                 $scaExemption = '';
                 break;
 
             case 'SOFT_DECLINE':
-                $this->logger->info("Processor responds back with a soft decline");
+                $this->logger->info("Processor responds back with a soft decline", ['entity' => $quote]);
 
                 $executeThreeD = 'always';
                 $scaExemption = '';

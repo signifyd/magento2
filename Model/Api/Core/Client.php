@@ -143,10 +143,19 @@ class Client
      */
     public function postCaseToSignifyd($caseData, $order)
     {
+        $this->logger->info(
+            "Call sale api with request: " . $this->jsonSerializer->serialize($caseData),
+            ['entity' => $order]
+        );
+
         /** @var \Signifyd\Core\Response\SaleResponse $saleResponse */
         $saleResponse = $this->getSignifydSaleApi($order)->createOrder('orders/events/sales', $caseData);
 
         if (empty($saleResponse->getSignifydId()) === false) {
+            $this->logger->info(
+                "Sale api response: " . $this->jsonSerializer->serialize($saleResponse),
+                ['entity' => $order]
+            );
             $this->logger->debug("Case sent. Id is {$saleResponse->getSignifydId()}", ['entity' => $order]);
             $this->orderHelper->addCommentToStatusHistory(
                 $order,
@@ -154,7 +163,7 @@ class Client
             );
             return $saleResponse;
         } else {
-            $this->logger->error($this->jsonSerializer->serialize($saleResponse));
+            $this->logger->error($this->jsonSerializer->serialize($saleResponse), ['entity' => $order]);
             $this->logger->error("Case failed to send.", ['entity' => $order]);
             $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: failed to create case");
 
@@ -171,13 +180,22 @@ class Client
      */
     public function createReroute($updateData, $order)
     {
+        $this->logger->info(
+            "Call reroute api with request: " . $this->jsonSerializer->serialize($updateData),
+            ['entity' => $order]
+        );
+
         $caseResponse = $this->getSignifydSaleApi($order)->reroute($updateData);
 
         if (empty($caseResponse->getSignifydId()) === false) {
+            $this->logger->info(
+                "Reroute response: " . $this->jsonSerializer->serialize($caseResponse),
+                ['entity' => $order]
+            );
             $this->logger->debug("Reroute created. Id is {$caseResponse->getSignifydId()}", ['entity' => $order]);
             return $caseResponse;
         } else {
-            $this->logger->error($this->jsonSerializer->serialize($caseResponse));
+            $this->logger->error($this->jsonSerializer->serialize($caseResponse), ['entity' => $order]);
             $this->logger->error("Reroute failed to create.", ['entity' => $order]);
             return false;
         }
@@ -243,7 +261,7 @@ class Client
                     $this->casedataResourceModel->save($case);
                 }
 
-                $this->logger->error('Failed to save case data to database: ' . $e->getMessage());
+                $this->logger->error('Failed to save case data to database: ' . $e->getMessage(), ['entity' => $order]);
                 return false;
             }
         } else {
@@ -263,14 +281,23 @@ class Client
      */
     public function postCaseFromQuoteToSignifyd($caseData, $quote)
     {
+        $this->logger->info(
+            "Call checkout api with request: " . $this->jsonSerializer->serialize($caseData),
+            ['entity' => $quote]
+        );
+
         $caseResponse = $this->getSignifydCheckoutApi($quote)
             ->createOrder('orders/events/checkouts', $caseData);
 
         if (empty($caseResponse->getSignifydId()) === false) {
+            $this->logger->info(
+                "Checkout api response: " . $this->jsonSerializer->serialize($caseResponse),
+                ['entity' => $quote]
+            );
             $this->logger->debug("Case sent. Id is {$caseResponse->getSignifydId()}", ['entity' => $quote]);
             return $caseResponse;
         } else {
-            $this->logger->error($this->jsonSerializer->serialize($caseResponse));
+            $this->logger->error($this->jsonSerializer->serialize($caseResponse), ['entity' => $quote]);
             $this->logger->error("Case failed to send.", ['entity' => $quote]);
 
             return false;
@@ -286,6 +313,11 @@ class Client
      */
     public function postTransactionToSignifyd($transactionData, $entity)
     {
+        $this->logger->info(
+            "Call transaction api with request: " . $this->jsonSerializer->serialize($transactionData),
+            ['entity' => $entity]
+        );
+
         $caseResponse = $this->getSignifydCheckoutApi($entity)->createTransaction($transactionData);
         $tokenSent = $transactionData['checkoutId'];
         $tokenReceived = $caseResponse->getCheckoutId();
@@ -295,12 +327,17 @@ class Client
                 "Transaction sent to quote {$entity->getId()}. Token is {$caseResponse->getCheckoutId()}" :
                 "Transaction sent to order {$entity->getIncrementId()}. Token is {$caseResponse->getCheckoutId()}";
 
-            $this->logger->debug($message);
+            $this->logger->info(
+                "Transaction api response: " . $this->jsonSerializer->serialize($transactionData),
+                ['entity' => $entity]
+            );
+            $this->logger->debug($message, ['entity' => $entity]);
             return $caseResponse;
         } else {
-            $this->logger->error($this->jsonSerializer->serialize($caseResponse));
+            $this->logger->error($this->jsonSerializer->serialize($caseResponse), ['entity' => $entity]);
             $this->logger->error(
-                "Transaction failed to send. Sent token ({$tokenSent}) is different from received ({$tokenReceived})"
+                "Transaction failed to send. Sent token ({$tokenSent}) is different from received ({$tokenReceived})",
+                ['entity' => $entity]
             );
             return false;
         }

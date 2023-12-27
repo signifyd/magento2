@@ -170,9 +170,9 @@ class SaleOrder
              */
             $this->registry->unregister('signifyd_payment_data');
         } catch (\Exception $e) {
-            $this->logger->info("Failed to create checkout order " . $e->getMessage());
+            $this->logger->info("Failed to create sale order " . $e->getMessage(), ['entity' => $order]);
         } catch (\Error $e) {
-            $this->logger->info("Failed to create checkout order " . $e->getMessage());
+            $this->logger->info("Failed to create sale order " . $e->getMessage(), ['entity' => $order]);
         }
 
         return $signifydOrder;

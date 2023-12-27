@@ -72,6 +72,7 @@
             <argument name="expYearDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\ExpYearMapper</argument>
             <argument name="binDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\BinMapper</argument>
             <argument name="transactionIdDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\TransactionIdMapper</argument>
+            <argument name="asyncCheckDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\AsyncChecker</argument>
         </arguments>
     </type>
 
@@ -172,9 +173,17 @@
         <plugin name="Signifyd_Connect_Plugin_Magento_PaymentServicesPaypal_Gateway_Http_ServiceClient" type="\Signifyd\Connect\Plugin\Magento\PaymentServicesPaypal\Gateway\Http\ServiceClient" />
     </type>
 
+    <type name="Rootways\Authorizecim\Gateway\Validator\ResponseValidator">
+        <plugin name="signifyd_response_validator_plugin" type="Signifyd\Connect\Plugin\Rootways\Authorizecim\Gateway\Validator\ResponseValidatorPlugin" sortOrder="10"/>
+    </type>
+
     <!-- Preferences -->
-
     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
-
     <preference for="Magento\Sales\Model\Order\Payment" type="Signifyd\Connect\Model\Magento\Sales\Model\Order\Payment" />
+    <preference for="Signifyd\Connect\Api\RerouteRepositoryInterface" type="Signifyd\Connect\Model\RerouteRepository"/>
+    <preference for="Signifyd\Connect\Api\Data\RerouteInterface" type="Signifyd\Connect\Model\Reroute"/>
+    <preference for="Signifyd\Connect\Api\Data\RerouteSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
+    <preference for="Signifyd\Connect\Api\LogsRepositoryInterface" type="Signifyd\Connect\Model\LogsRepository"/>
+    <preference for="Signifyd\Connect\Api\Data\LogsInterface" type="Signifyd\Connect\Model\Logs"/>
+    <preference for="Signifyd\Connect\Api\Data\LogsSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
 </config>

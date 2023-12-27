@@ -37,6 +37,22 @@ if ($block->getCaseEntity()->isEmpty()) {
                         <td class="col-guarantee-disposition"><?= $block->escapeHtml($reason) ?></td>
                     </tr>
                     <?php endif; ?>
+                    <tr>
+                        <th class="col-guarantee-disposition"><?= $block->escapeHtml(__('Order Logs')) ?></th>
+                    <?php if ($block->hasLogsToDownload()): ?>
+                        <td class="col-lgos">
+                            <div class="col-lgos">
+                                <a id="download-log" title="Download Order Logs" type="button" class="action-primary action-add"  data-ui-id="widget-button-17" href="<?= $block->getUrl('signifyd_admin/casedata/logs', ['order_id' => $block->getOrder()->getId()]) ?>">Download Order Logs</a>
+                            </div>
+                        </td>
+                    <?php else: ?>
+                        <td class="col-logs">
+                            <div class="col-logs">
+                                <p>There are no logs to download</p>
+                            </div>
+                        </td>
+                    <?php endif; ?>
+                    </tr>
                     </tbody>
                 </table>
             </div>

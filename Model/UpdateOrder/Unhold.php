@@ -65,6 +65,7 @@ class Unhold
 
                 $completeCase = true;
 
+                $this->logger->debug("Signifyd: order status updated, {$orderAction["reason"]}", ['entity' => $order]);
                 $this->orderHelper->addCommentToStatusHistory(
                     $order,
                     "Signifyd: order status updated, {$orderAction["reason"]}"

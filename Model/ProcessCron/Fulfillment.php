@@ -2,6 +2,7 @@
 
 namespace Signifyd\Connect\Model\ProcessCron;
 
+use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
@@ -54,6 +55,11 @@ class Fulfillment
     protected $client;
 
     /**
+     * @var JsonSerializer
+     */
+    protected $jsonSerializer;
+
+    /**
      * Fulfillment constructor.
      * @param ConfigHelper $configHelper
      * @param FulfillmentResourceModel $fulfillmentResourceModel
@@ -63,6 +69,7 @@ class Fulfillment
      * @param OrderFactory $orderFactory
      * @param FulfillmentFactory $fulfillmentFactory
      * @param Client $client
+     * @param JsonSerializer $jsonSerializer
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -72,7 +79,8 @@ class Fulfillment
         SignifydOrderResourceModel $signifydOrderResourceModel,
         OrderFactory $orderFactory,
         FulfillmentFactory $fulfillmentFactory,
-        Client $client
+        Client $client,
+        JsonSerializer $jsonSerializer
     ) {
         $this->configHelper = $configHelper;
         $this->fulfillmentResourceModel = $fulfillmentResourceModel;
@@ -82,6 +90,7 @@ class Fulfillment
         $this->orderFactory = $orderFactory;
         $this->fulfillmentFactory = $fulfillmentFactory;
         $this->client = $client;
+        $this->jsonSerializer = $jsonSerializer;
     }
 
     /**
@@ -98,6 +107,9 @@ class Fulfillment
                 $fulfillmentApi = $this->fulfillmentFactory->create();
                 $fulfillmentData = $fulfillmentApi($fulfillment);
 
+                $this->logger->info("Call addFulfillments with request: " .
+                    $this->jsonSerializer->serialize($fulfillmentData), ['entity' => $order]);
+
                 $fulfillmentBulkResponse = $this->client
                     ->getSignifydSaleApi($order)->addFulfillment($fulfillmentData);
                 $fulfillmentOrderId = $fulfillmentBulkResponse->getOrderId();
@@ -105,12 +117,14 @@ class Fulfillment
                 if (isset($fulfillmentOrderId) === false) {
                     $message = "CRON: Fullfilment failed to send";
                 } else {
+                    $this->logger->info("AddFulfillments response: " .
+                        $this->jsonSerializer->serialize($fulfillmentBulkResponse), ['entity' => $order]);
                     $message = "CRON: Fullfilment sent";
                     $fulfillment->setMagentoStatus(\Signifyd\Connect\Model\Fulfillment::COMPLETED_STATUS);
                     $this->fulfillmentResourceModel->save($fulfillment);
                 }
 
-                $this->logger->debug($message);
+                $this->logger->debug($message, ['entity' => $order]);
                 $this->orderHelper->addCommentToStatusHistory($order, $message);
             } catch (\Exception $e) {
                 $this->logger->error(

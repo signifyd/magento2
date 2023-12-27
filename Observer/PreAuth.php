@@ -22,6 +22,7 @@ use Signifyd\Connect\Model\CasedataFactory;
 use Magento\Framework\App\Request\Http as RequestHttp;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\ObjectManagerInterface;
+use Signifyd\Connect\Model\Api\Recipient;
 
 class PreAuth implements ObserverInterface
 {
@@ -101,6 +102,11 @@ class PreAuth implements ObserverInterface
     protected $client;
 
     /**
+     * @var Recipient
+     */
+    protected $recipient;
+
+    /**
      * PreAuth constructor.
      * @param Logger $logger
      * @param CartRepositoryInterface $quoteRepository
@@ -117,6 +123,7 @@ class PreAuth implements ObserverInterface
      * @param ObjectManagerInterface $objectManagerInterface
      * @param CheckoutOrderFactory $checkoutOrderFactory
      * @param Client $client
+     * @param Recipient $recipient
      */
     public function __construct(
         Logger $logger,
@@ -133,7 +140,8 @@ class PreAuth implements ObserverInterface
         ConfigHelper $configHelper,
         ObjectManagerInterface $objectManagerInterface,
         CheckoutOrderFactory $checkoutOrderFactory,
-        Client $client
+        Client $client,
+        Recipient $recipient
     ) {
         $this->logger = $logger;
         $this->quoteRepository = $quoteRepository;
@@ -150,6 +158,7 @@ class PreAuth implements ObserverInterface
         $this->objectManagerInterface = $objectManagerInterface;
         $this->checkoutOrderFactory = $checkoutOrderFactory;
         $this->client = $client;
+        $this->recipient = $recipient;
     }
 
     public function execute(Observer $observer)
@@ -162,7 +171,7 @@ class PreAuth implements ObserverInterface
                 return;
             }
 
-            $this->logger->info("policy validation");
+            $this->logger->info("policy validation", ['entity' => $quote]);
 
             $policyName = $this->configHelper->getPolicyName(
                 $quote->getStore()->getScopeType(),
@@ -182,6 +191,12 @@ class PreAuth implements ObserverInterface
                 isset($dataArray['paymentMethod']['method'])
             ) {
                 $paymentMethod = $dataArray['paymentMethod']['method'];
+            }
+
+            if (isset($paymentMethod) && $this->configHelper->isPaymentRestricted($paymentMethod)) {
+                $message = 'Case creation with payment ' . $paymentMethod . ' is restricted';
+                $this->logger->debug($message, ['entity' => $quote]);
+                return;
             }
 
             $isPreAuth = $this->configHelper->getIsPreAuth(
@@ -267,10 +282,14 @@ class PreAuth implements ObserverInterface
 
                     $checkoutPaymentDetails['cardExpiryYear'] =
                         $dataArray['paymentMethod']['additional_data']['cardExpiryYear'] ?? null;
+
+                    if ($paymentMethod === 'rootways_authorizecim_option') {
+                        $checkoutPaymentDetails = $this->mappingForAuthnetRootwaysCim($checkoutPaymentDetails, $dataArray);
+                    }
                 }
             }
 
-            $this->logger->info("Creating case for quote {$quote->getId()}");
+            $this->logger->info("Creating case for quote {$quote->getId()}", ['entity' => $quote]);
             $this->addSignifydDataToPayment($quote, $checkoutPaymentDetails);
             $checkoutOrder = $this->checkoutOrderFactory->create();
             $caseFromQuote = $checkoutOrder($quote, $checkoutPaymentDetails, $paymentMethod);
@@ -313,12 +332,17 @@ class PreAuth implements ObserverInterface
                     );
                 }
 
+                $recipient = ($this->recipient)($quote);
+                $recipientJson = $this->jsonSerializer->serialize($recipient);
+                $hashToValidateReroute = sha1($recipientJson);
+                $case->setEntries('hash', $hashToValidateReroute);
+
                 $this->casedataResourceModel->save($case);
             }
         } catch (\Exception $e) {
             $caseAction = false;
             $caseResponse = null;
-            $this->logger->error($e->getMessage());
+            $this->logger->error($e->getMessage(), ['entity' => $quote]);
         }
 
         $enabledConfig = $this->scopeConfigInterface->getValue(
@@ -367,12 +391,17 @@ class PreAuth implements ObserverInterface
             return;
         }
 
-        if (isset($checkoutPaymentDetails['cardBin'])) {
+        $ccNumber = $quote->getPayment()->getData('cc_number');
+
+        if (!isset($ccNumber) &&
+            isset($checkoutPaymentDetails['cardBin']) &&
+            isset($checkoutPaymentDetails['cardLast4'])) {
+
             $quote->getPayment()->setData(
                 'cc_number',
-                $checkoutPaymentDetails['cardBin'] .
-                000000 .
-                $checkoutPaymentDetails['cardLast4'] ?? 0000
+                ($checkoutPaymentDetails['cardBin'] ?? '000000') .
+                '000000' .
+                ($checkoutPaymentDetails['cardLast4'] ?? '0000')
             );
         }
 
@@ -391,5 +420,29 @@ class PreAuth implements ObserverInterface
         if (isset($checkoutPaymentDetails['cardExpiryYear'])) {
             $quote->getPayment()->setCcExpYear($checkoutPaymentDetails['cardExpiryYear']);
         }
+    }
+
+    /**
+     * @param $checkoutPaymentDetails
+     * @param $dataArray
+     * @return mixed
+     */
+    public function mappingForAuthnetRootwaysCim($checkoutPaymentDetails, $dataArray)
+    {
+        $additionalData = $dataArray['paymentMethod']['additional_data'];
+
+        $checkoutPaymentDetails['cardExpiryMonth'] = $additionalData['cc_exp_month'] ?? null;
+        $checkoutPaymentDetails['cardExpiryYear'] = $additionalData['cc_exp_year'] ?? null;
+
+        $cc_number = $additionalData['cc_number'] ?? null;
+        if ($cc_number) {
+            $checkoutPaymentDetails['cardLast4'] = substr($cc_number, -4);
+            $checkoutPaymentDetails['cardBin'] = substr($cc_number, 0, 6);
+        } else {
+            $checkoutPaymentDetails['cardLast4'] = null;
+            $checkoutPaymentDetails['cardBin'] = $additionalData['card_bin'] ?? null;
+        }
+
+        return $checkoutPaymentDetails;
     }
 }

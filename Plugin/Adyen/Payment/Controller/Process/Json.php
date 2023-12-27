@@ -154,7 +154,8 @@ class Json
                 }
 
                 $this->logger->info(
-                    "collecting Adyen pre-authorization transaction data for case " . $case->getCode()
+                    "collecting Adyen pre-authorization transaction data for case " . $case->getCode(),
+                    ['entity' => $case]
                 );
 
                 $adyenData = [];

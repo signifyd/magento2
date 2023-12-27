@@ -310,7 +310,7 @@ class Index extends Action
                 throw new LocalizedException(__("Order not found"));
             }
 
-            $this->logger->info("WEBHOOK: Processing case {$case->getId()}");
+            $this->logger->info("WEBHOOK: Processing case {$case->getId()}", ['entity' => $case]);
             $this->storeManagerInterface->setCurrentStore($order->getStore()->getStoreId());
             $currentCaseHash = sha1(implode(',', $case->getData()));
 
@@ -329,6 +329,10 @@ class Index extends Action
 
             if ($currentCaseHash == $newCaseHash) {
                 $httpCode = Http::STATUS_CODE_200;
+                $this->logger->debug(
+                    "Case {$caseId} already update with this data, no action will be taken",
+                    ['entity' => $case]
+                );
                 throw new LocalizedException(
                     __("Case {$caseId} already update with this data, no action will be taken")
                 );

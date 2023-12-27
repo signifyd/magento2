@@ -61,8 +61,9 @@ class Hold
             try {
                 $order->hold();
                 $this->orderResourceModel->save($order);
-
                 $completeCase = true;
+
+                $this->logger->debug("Signifyd: {$orderAction["reason"]}", ['entity' => $order]);
                 $this->orderHelper->addCommentToStatusHistory(
                     $order,
                     "Signifyd: {$orderAction["reason"]}"
