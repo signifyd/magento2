@@ -65,6 +65,11 @@
         <!-- Grab order id -->
         <grabTextFrom selector="{{CheckoutSuccessMainSection.orderNumber}}" stepKey="getOrderId"/>
 
+        <!--Continue shopping-->
+        <click selector="{{CheckoutSuccessMainSection.continueShoppingButton}}" stepKey="clickContinueShoppingButton"/>
+        <seeCurrentUrlEquals url="{{_ENV.MAGENTO_BASE_URL}}" stepKey="seeHomePageUrl"/>
+        <see userInput="Home Page" selector="{{StorefrontCMSPageSection.mainTitle}}" stepKey="seeHomePageTitle"/>
+
         <!-- Open created order -->
         <actionGroup ref="AdminOrdersPageOpenActionGroup" stepKey="goToOrdersPage"/>
         <actionGroup ref="FilterOrderGridByIdActionGroup" stepKey="filterOrdersGridById">
