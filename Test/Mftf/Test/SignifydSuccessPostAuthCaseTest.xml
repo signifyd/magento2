@@ -23,6 +23,8 @@
             </createData>
             <createData entity="Simple_US_Customer" stepKey="createCustomer"/>
 
+            <actionGroup ref="AdminLoginActionGroup" stepKey="loginAsAdmin"/>
+
             <!-- Set signifyd api key-->
             <magentoCLI command="config:set {{SignifydApi.path}} {{SignifydApi.value}}" stepKey="fillApiKey"/>
         </before>
@@ -33,6 +35,7 @@
             <deleteData createDataKey="createProduct" stepKey="deleteProduct"/>
             <deleteData createDataKey="createCategory" stepKey="deleteCategory"/>
             <deleteData createDataKey="createCustomer" stepKey="deleteCustomer"/>
+            <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
         </after>
         <!--Go to Storefront as Customer-->
         <actionGroup ref="LoginToStorefrontActionGroup" stepKey="customerLogin">
@@ -59,9 +62,17 @@
         <click selector="{{CheckoutPaymentSection.placeOrder}}" stepKey="clickPlaceOrder2"/>
         <see selector="{{CheckoutSuccessMainSection.successTitle}}" userInput="Thank you for your purchase!" stepKey="waitForLoadSuccessPage2"/>
 
-        <!--Continue shopping-->
-        <click selector="{{CheckoutSuccessMainSection.continueShoppingButton}}" stepKey="clickContinueShoppingButton"/>
-        <seeCurrentUrlEquals url="{{_ENV.MAGENTO_BASE_URL}}" stepKey="seeHomePageUrl"/>
-        <see userInput="Home Page" selector="{{StorefrontCMSPageSection.mainTitle}}" stepKey="seeHomePageTitle"/>
+        <!-- Grab order id -->
+        <grabTextFrom selector="{{CheckoutSuccessMainSection.orderNumber}}" stepKey="getOrderId"/>
+
+        <!-- Open created order -->
+        <actionGroup ref="AdminOrdersPageOpenActionGroup" stepKey="goToOrdersPage"/>
+        <actionGroup ref="FilterOrderGridByIdActionGroup" stepKey="filterOrdersGridById">
+            <argument name="orderId" value="$getOrderId"/>
+        </actionGroup>
+        <click selector="{{AdminDataGridTableSection.firstRow}}" stepKey="clickCreatedOrderInGrid"/>
+
+        <!-- Assert that the case was created successfully -->
+        <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="N/A" stepKey="seeSuccessCaseCreated"/>
     </test>
 </tests>

@@ -23,30 +23,30 @@ if ($block->getCaseEntity()->isEmpty()) {
                 <table class="admin__table-secondary order-case-table">
                     <tbody>
                     <tr>
-                        <th class="col-guarantee-disposition"><?= $block->escapeHtml(__('Signifyd Decision')) ?></th>
-                        <td class="col-guarantee-disposition"><?= $block->escapeHtml($block->getCaseGuaranteeDisposition()) ?></td>
+                        <th class="col-guarantee-disposition" id="signifyd-decision"><?= $block->escapeHtml(__('Signifyd Decision')) ?></th>
+                        <td class="col-guarantee-disposition" id="signifyd-decision-value"><?= $block->escapeHtml($block->getCaseGuaranteeDisposition()) ?></td>
                     </tr>
                     <tr>
-                        <th class="col-guarantee-disposition"><?= $block->escapeHtml(__('Score')) ?></th>
-                        <td class="col-guarantee-disposition"><?= $block->escapeHtml($block->getCaseScore()) ?></td>
+                        <th class="col-guarantee-disposition" id="signifyd-score"><?= $block->escapeHtml(__('Score')) ?></th>
+                        <td class="col-guarantee-disposition" id="signifyd-score-value"><?= $block->escapeHtml($block->getCaseScore()) ?></td>
                     </tr>
                     <?php $reason = $block->getCheckpointActionReason(); ?>
                     <?php if (empty($reason) === false): ?>
                     <tr>
-                        <th class="col-guarantee-disposition"><?= $block->escapeHtml(__('Action Reason')) ?></th>
-                        <td class="col-guarantee-disposition"><?= $block->escapeHtml($reason) ?></td>
+                        <th class="col-guarantee-disposition" id="signifyd-reason"><?= $block->escapeHtml(__('Action Reason')) ?></th>
+                        <td class="col-guarantee-disposition" id="signifyd-reason-value"><?= $block->escapeHtml($reason) ?></td>
                     </tr>
                     <?php endif; ?>
                     <tr>
-                        <th class="col-guarantee-disposition"><?= $block->escapeHtml(__('Order Logs')) ?></th>
+                        <th class="col-guarantee-disposition" id="signifyd-logs"><?= $block->escapeHtml(__('Order Logs')) ?></th>
                     <?php if ($block->hasLogsToDownload()): ?>
-                        <td class="col-lgos">
+                        <td class="col-lgos" id="signifyd-logs-value">
                             <div class="col-lgos">
                                 <a id="download-log" title="Download Order Logs" type="button" class="action-primary action-add"  data-ui-id="widget-button-17" href="<?= $block->getUrl('signifyd_admin/casedata/logs', ['order_id' => $block->getOrder()->getId()]) ?>">Download Order Logs</a>
                             </div>
                         </td>
                     <?php else: ?>
-                        <td class="col-logs">
+                        <td class="col-logs" id="signifyd-logs-value">
                             <div class="col-logs">
                                 <p>There are no logs to download</p>
                             </div>
