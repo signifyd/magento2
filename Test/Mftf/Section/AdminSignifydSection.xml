@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<sections xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="urn:magento:mftf:Page/etc/SectionObject.xsd">
+    <section name="AdminSignifydSection">
+        <element name="signifydKey" type="input" selector="#signifyd_general_key"/>
+        <element name="configSave" type="button" selector="#save"/>
+    </section>
+</sections>

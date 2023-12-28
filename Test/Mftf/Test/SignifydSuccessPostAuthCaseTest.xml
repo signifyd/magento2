@@ -7,7 +7,7 @@
 -->
 <tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
-    <test name="SignifydSuccessPostAuthCase">
+    <test name="SignifydSuccessPostAuthCaseTest">
         <annotations>
             <features value="Signifyd Post Auth"/>
             <stories value="Post auth case created successfully"/>
@@ -22,6 +22,9 @@
                 <requiredEntity createDataKey="createCategory"/>
             </createData>
             <createData entity="Simple_US_Customer" stepKey="createCustomer"/>
+
+            <!-- Set signifyd api key-->
+            <actionGroup ref="ConfigureSignifydKeyActionGroup" stepKey="setSignifydKey"/>
         </before>
         <after>
             <!--Logout from customer account-->
