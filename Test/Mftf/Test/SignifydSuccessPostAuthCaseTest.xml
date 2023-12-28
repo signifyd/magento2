@@ -24,7 +24,7 @@
             <createData entity="Simple_US_Customer" stepKey="createCustomer"/>
 
             <!-- Set signifyd api key-->
-            <actionGroup ref="ConfigureSignifydKeyActionGroup" stepKey="setSignifydKey"/>
+            <magentoCLI command="config:set {{SignifydApi.path}} {{SignifydApi.value}}" stepKey="fillApiKey"/>
         </before>
         <after>
             <!--Logout from customer account-->

@@ -8,7 +8,8 @@
 
 <entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:noNamespaceSchemaLocation="urn:magento:mftf:DataGenerator/etc/dataProfileSchema.xsd">
-    <entity name="SignifydConfiguration" type="address">
-        <data key="apiKey">2iyWZzfCbREqqprD3qXf6rUp1pcDUCXY</data>
+    <entity name="SignifydApi" type="address">
+        <data key="value">2iyWZzfCbREqqprD3qXf6rUp1pcDUCXY</data>
+        <data key="path">signifyd/general/key</data>
     </entity>
 </entities>
