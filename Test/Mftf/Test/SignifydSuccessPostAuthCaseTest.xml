@@ -22,14 +22,16 @@
                 <requiredEntity createDataKey="createCategory"/>
             </createData>
             <createData entity="Simple_US_Customer" stepKey="createCustomer"/>
-
             <actionGroup ref="AdminLoginActionGroup" stepKey="loginAsAdmin"/>
+
+            <!-- Remove checkmo from restrict payment -->
+            <magentoCLI command="config:set {{SignifydPaymentRestriction.path}} {{SignifydPaymentRestriction.value}}" stepKey="removePaymentRestriction"/>
 
             <!-- Set signifyd api key-->
             <magentoCLI command="config:set {{SignifydApi.path}} {{SignifydApi.value}}" stepKey="fillApiKey"/>
 
             <!-- Set signifyd post auth-->
-            <magentoCLI command="config:set {{SignifydPolicy.path}} {{SignifydPolicy.post}}" stepKey="setPolicyPost"/>
+            <magentoCLI command="config:set {{SignifydPolicy.path}} {{SignifydPolicy.post}}" stepKey="setPolicy"/>
         </before>
         <after>
             <!--Logout from customer account-->

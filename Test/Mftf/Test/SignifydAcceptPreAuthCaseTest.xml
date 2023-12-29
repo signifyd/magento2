@@ -17,10 +17,8 @@
             <group value="checkout"/>
         </annotations>
         <before>
-            <remove keyForRemoval="setPolicyPost"/>
-
             <!-- Set signifyd pre auth-->
-            <magentoCLI command="config:set {{SignifydPolicy.path}} {{SignifydPolicy.pre}}" stepKey="setPolicyPre"/>
+            <magentoCLI command="config:set {{SignifydPolicy.path}} {{SignifydPolicy.pre}}" stepKey="setPolicy"/>
         </before>
 
         <!-- Assert that the case was accept -->

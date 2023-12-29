@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ /**
+  * Copyright © Magento, Inc. All rights reserved.
+  * See COPYING.txt for license details.
+  */
+-->
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="SignifydRejectPreAuthCaseTest" extends="SignifydAcceptPreAuthCaseTest">
+        <annotations>
+            <features value="Signifyd Pre Auth Refused"/>
+            <stories value="Pre auth case refused"/>
+            <title value="Pre auth case refused"/>
+            <description value="Order creation blocked at checkout"/>
+            <severity value="CRITICAL"/>
+            <group value="checkout"/>
+        </annotations>
+        <before>
+            <remove keyForRemoval="loginAsAdmin"/>
+            <createData entity="Signifyd_Customer_Refuse" stepKey="createCustomer"/>
+        </before>
+        <after>
+            <remove keyForRemoval="logout"/>
+        </after>
+
+        <remove keyForRemoval="waitForLoadSuccessPage2"/>
+        <remove keyForRemoval="getOrderId"/>
+        <remove keyForRemoval="clickContinueShoppingButton"/>
+        <remove keyForRemoval="seeHomePageUrl"/>
+        <remove keyForRemoval="seeHomePageTitle"/>
+        <remove keyForRemoval="goToOrdersPage"/>
+        <remove keyForRemoval="filterOrdersGridById"/>
+        <remove keyForRemoval="clickCreatedOrderInGrid"/>
+        <remove keyForRemoval="seeCaseCreated"/>
+
+        <waitForElement selector="{{CheckoutCartMessageSection.errorMessage}}" time="30" stepKey="waitForErrorMessage"/>
+        <see selector="{{CheckoutCartMessageSection.errorMessage}}" userInput="Your order cannot be processed, please contact our support team" stepKey="assertErrorMessage"/>
+    </test>
+</tests>
