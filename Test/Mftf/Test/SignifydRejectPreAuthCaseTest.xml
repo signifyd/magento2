@@ -7,7 +7,7 @@
 -->
 <tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
-    <test name="SignifydRejectPreAuthCaseTest" extends="SignifydAcceptPreAuthCaseTest">
+    <test name="SignifydRejectPreAuthCaseTest" extends="SignifydSuccessPostAuthCaseTest">
         <annotations>
             <features value="Signifyd Pre Auth Refused"/>
             <stories value="Pre auth case refused"/>
@@ -19,6 +19,9 @@
         <before>
             <remove keyForRemoval="loginAsAdmin"/>
             <createData entity="Signifyd_Customer_Refuse" stepKey="createCustomer"/>
+
+            <!-- Set signifyd pre auth-->
+            <magentoCLI command="config:set {{SignifydPolicy.path}} {{SignifydPolicy.pre}}" stepKey="setPolicy"/>
         </before>
         <after>
             <remove keyForRemoval="logout"/>
