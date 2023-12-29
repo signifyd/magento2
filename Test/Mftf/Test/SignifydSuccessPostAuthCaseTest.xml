@@ -27,6 +27,9 @@
 
             <!-- Set signifyd api key-->
             <magentoCLI command="config:set {{SignifydApi.path}} {{SignifydApi.value}}" stepKey="fillApiKey"/>
+
+            <!-- Set signifyd post auth-->
+            <magentoCLI command="config:set {{SignifydPolicy.path}} {{SignifydPolicy.value-post}}" stepKey="setPolicyPost"/>
         </before>
         <after>
             <!--Logout from customer account-->
@@ -78,6 +81,6 @@
         <click selector="{{AdminDataGridTableSection.firstRow}}" stepKey="clickCreatedOrderInGrid"/>
 
         <!-- Assert that the case was created successfully -->
-        <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="N/A" stepKey="seeSuccessCaseCreated"/>
+        <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="N/A" stepKey="seeCaseCreated"/>
     </test>
 </tests>

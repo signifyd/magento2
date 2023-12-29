@@ -8,8 +8,13 @@
 
 <entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:noNamespaceSchemaLocation="urn:magento:mftf:DataGenerator/etc/dataProfileSchema.xsd">
-    <entity name="SignifydApi" type="address">
+    <entity name="SignifydApi" type="api">
         <data key="value">2iyWZzfCbREqqprD3qXf6rUp1pcDUCXY</data>
         <data key="path">signifyd/general/key</data>
+    </entity>
+    <entity name="SignifydPolicy" type="policy">
+        <data key="value-pre">PRE_AUTH</data>
+        <data key="value-post">POST_AUTH</data>
+        <data key="path">signifyd/general/policy_name</data>
     </entity>
 </entities>

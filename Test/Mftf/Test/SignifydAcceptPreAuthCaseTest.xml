@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ /**
+  * Copyright © Magento, Inc. All rights reserved.
+  * See COPYING.txt for license details.
+  */
+-->
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="SignifydAcceptPreAuthCaseTest" extends="SignifydSuccessPostAuthCaseTest">
+        <annotations>
+            <features value="Signifyd Pre Auth"/>
+            <stories value="Pre auth case created successfully"/>
+            <title value="Pre auth case"/>
+            <description value="Validate pre auth case creation"/>
+            <severity value="CRITICAL"/>
+            <group value="checkout"/>
+        </annotations>
+        <before>
+            <remove keyForRemoval="setPolicyPost"/>
+
+            <!-- Set signifyd pre auth-->
+            <magentoCLI command="config:set {{SignifydPolicy.path}} {{SignifydPolicy.value-pre}}" stepKey="setPolicyPre"/>
+        </before>
+
+        <!-- Assert that the case was accept -->
+        <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="ACCEPT" stepKey="seeCaseCreated"/>
+    </test>
+</tests>
