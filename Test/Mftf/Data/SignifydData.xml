@@ -13,8 +13,8 @@
         <data key="path">signifyd/general/key</data>
     </entity>
     <entity name="SignifydPolicy" type="policy">
-        <data key="value-pre">PRE_AUTH</data>
-        <data key="value-post">POST_AUTH</data>
+        <data key="pre">PRE_AUTH</data>
+        <data key="post">POST_AUTH</data>
         <data key="path">signifyd/general/policy_name</data>
     </entity>
 </entities>

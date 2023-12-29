@@ -29,7 +29,7 @@
             <magentoCLI command="config:set {{SignifydApi.path}} {{SignifydApi.value}}" stepKey="fillApiKey"/>
 
             <!-- Set signifyd post auth-->
-            <magentoCLI command="config:set {{SignifydPolicy.path}} {{SignifydPolicy.value-post}}" stepKey="setPolicyPost"/>
+            <magentoCLI command="config:set {{SignifydPolicy.path}} {{SignifydPolicy.post}}" stepKey="setPolicyPost"/>
         </before>
         <after>
             <!--Logout from customer account-->

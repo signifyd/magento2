@@ -20,7 +20,7 @@
             <remove keyForRemoval="setPolicyPost"/>
 
             <!-- Set signifyd pre auth-->
-            <magentoCLI command="config:set {{SignifydPolicy.path}} {{SignifydPolicy.value-pre}}" stepKey="setPolicyPre"/>
+            <magentoCLI command="config:set {{SignifydPolicy.path}} {{SignifydPolicy.pre}}" stepKey="setPolicyPre"/>
         </before>
 
         <!-- Assert that the case was accept -->
