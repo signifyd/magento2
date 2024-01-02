@@ -27,7 +27,7 @@
             <!-- Remove checkmo from restrict payment -->
             <magentoCLI command="config:set {{SignifydPaymentRestriction.path}} {{SignifydPaymentRestriction.value}}" stepKey="removePaymentRestriction"/>
 
-            <!-- Set signifyd api key-->
+            <!-- Set MFTF signifyd api key-->
             <magentoCLI command="config:set {{SignifydApi.path}} {{SignifydApi.value}}" stepKey="fillApiKey"/>
 
             <!-- Set signifyd post auth-->
