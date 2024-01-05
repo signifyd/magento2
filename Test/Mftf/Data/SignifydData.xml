@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ /**
+  * Copyright © Magento, Inc. All rights reserved.
+  * See COPYING.txt for license details.
+  */
+-->
+
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="urn:magento:mftf:DataGenerator/etc/dataProfileSchema.xsd">
+    <entity name="SignifydApi" type="api">
+        <data key="value">ACn3V1o8UtMAYrQFYqcTYm5DtzbWJ96H</data>
+        <data key="path">signifyd/general/key</data>
+    </entity>
+    <entity name="SignifydPaymentRestriction" type="payment">
+        <data key="value">without_restriction</data>
+        <data key="path">signifyd/general/restrict_payment_methods</data>
+    </entity>
+    <entity name="SignifydPolicy" type="policy">
+        <data key="pre">PRE_AUTH</data>
+        <data key="post">POST_AUTH</data>
+        <data key="path">signifyd/general/policy_name</data>
+    </entity>
+    <entity name="Signifyd_Customer_Refuse" type="customer">
+        <data key="group_id">1</data>
+        <data key="default_billing">true</data>
+        <data key="default_shipping">true</data>
+        <data key="email" unique="prefix">John.Doe@example.com</data>
+        <data key="firstname">John</data>
+        <data key="lastname">Doe</data>
+        <data key="fullname">John Doe</data>
+        <data key="password">pwdTest123!</data>
+        <data key="store_id">0</data>
+        <data key="website_id">0</data>
+        <data key="group">General</data>
+        <requiredEntity type="address">Signifyd_Refuse</requiredEntity>
+    </entity>
+    <entity name="Signifyd_Refuse" type="address">
+        <data key="firstname">John</data>
+        <data key="lastname">Doe</data>
+        <data key="company">368</data>
+        <array key="street">
+            <item>110 Greene St #306</item>
+        </array>
+        <data key="city">New York</data>
+        <data key="state">New York</data>
+        <data key="country_id">US</data>
+        <data key="postcode">10012</data>
+        <data key="telephone">+15552293326</data>
+        <data key="default_billing">Yes</data>
+        <data key="default_shipping">Yes</data>
+        <requiredEntity type="region">RegionNY</requiredEntity>
+        <data key="country">United States</data>
+    </entity>
+</entities>
