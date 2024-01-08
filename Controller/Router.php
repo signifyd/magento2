@@ -50,6 +50,6 @@ class Router implements \Magento\Framework\App\RouterInterface
             return;
         }
 
-        return $this->actionFactory->create( \Magento\Framework\App\Action\Forward::class);
+        return $this->actionFactory->create(\Magento\Framework\App\Action\Forward::class);
     }
 }
