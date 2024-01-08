@@ -77,7 +77,7 @@ class PaymentVerificationFactory
 
     /**
      * @param ObjectManagerInterface $objectManager
-     * @param ConfigInterface|Config $config
+     * @param ConfigInterface $config
      * @param PaymentVerificationInterface $avsDefaultAdapter
      * @param PaymentVerificationInterface $cvvDefaultAdapter
      * @param PaymentVerificationInterface $cardholderDefaultAdapter
@@ -245,8 +245,9 @@ class PaymentVerificationFactory
      * @param PaymentVerificationInterface|AsyncCheckerInterface $defaultAdapter
      * @param string $paymentCode
      * @param string $configKey
+     * @return PaymentVerificationInterface
+     * @throws LocalizedException If payment verification instance
      * @return PaymentVerificationInterface|AsyncCheckerInterface
-     * @throws ConfigurationMismatchException If payment verification instance
      * does not implement PaymentVerificationInterface.
      */
     private function create($defaultAdapter, $paymentCode, $configKey)

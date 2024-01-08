@@ -30,6 +30,9 @@ class CoverageRequestUpdate implements DataPatchInterface
         $this->configHelper = $configHelper;
     }
 
+    /**
+     * @return $this|CoverageRequestUpdate
+     */
     public function apply()
     {
         $decisionRequest = $this->configHelper->getDecisionRequest();
@@ -43,6 +46,8 @@ class CoverageRequestUpdate implements DataPatchInterface
                 $this->configWriter->save('signifyd/general/decision_request', 'NONE');
                 break;
         }
+
+        return $this;
     }
 
     /**

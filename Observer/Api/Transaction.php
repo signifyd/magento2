@@ -45,7 +45,7 @@ class Transaction implements ObserverInterface
     {
         if ($this->configHelper->isEnabled()) {
             try {
-                /** @var $order \Magento\Sales\Model\Order */
+                /** @var \Magento\Sales\Model\Order $order */
                 $order = $observer->getEvent()->getOrder();
 
                 $processTransaction = $this->processTransactionFactory->create();

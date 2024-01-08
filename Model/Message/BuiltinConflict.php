@@ -20,7 +20,8 @@ class BuiltinConflict implements \Magento\Framework\Notification\MessageInterfac
     protected $storeRepository;
 
     /**
-     * @param ScopeConfigInterface $config
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $config
+     * @param \Magento\Store\Model\StoreRepository $storeRepository
      */
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $config,

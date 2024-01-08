@@ -223,8 +223,7 @@ class ConfigHelper
     /**
      * Check if there is any restrictions by payment method or state
      *
-     * @param $method
-     * @param null $state
+     * @param $paymentMethodCode
      * @return bool
      */
     public function isPaymentRestricted($paymentMethodCode)

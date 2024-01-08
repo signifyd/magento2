@@ -96,7 +96,7 @@ class ProcessTransaction
             return;
         }
 
-        /** @var $case \Signifyd\Connect\Model\Casedata */
+        /** @var \Signifyd\Connect\Model\Casedata $case */
         $case = $this->casedataFactory->create();
         $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
 

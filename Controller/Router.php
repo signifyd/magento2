@@ -32,7 +32,7 @@ class Router implements \Magento\Framework\App\RouterInterface
      * Validate and Match
      *
      * @param \Magento\Framework\App\RequestInterface $request
-     * @return bool
+     * @return \Magento\Framework\App\ActionInterface|void
      */
     public function match(\Magento\Framework\App\RequestInterface $request)
     {
@@ -50,9 +50,6 @@ class Router implements \Magento\Framework\App\RouterInterface
             return;
         }
 
-        return $this->actionFactory->create(
-            \Magento\Framework\App\Action\Forward::class,
-            ['request' => $request]
-        );
+        return $this->actionFactory->create( \Magento\Framework\App\Action\Forward::class);
     }
 }

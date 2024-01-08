@@ -113,7 +113,6 @@ class CheckoutDataBuilderSca
         /** @var \Magento\Payment\Gateway\Data\PaymentDataObject $paymentDataObject */
         $paymentDataObject = \Magento\Payment\Gateway\Helper\SubjectReader::readPayment($buildSubject);
         $payment = $paymentDataObject->getPayment();
-        /** @var \Magento\Sales\Model\Order $order */
         $this->quoteId = $payment->getOrder()->getQuoteId();
     }
 

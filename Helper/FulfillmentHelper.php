@@ -300,7 +300,6 @@ class FulfillmentHelper
     {
         $isVirtual = true;
 
-        /** @var Mage_Sales_Model_Order_Item $item */
         foreach ($shipment->getOrder()->getAllItems() as $item) {
             if ($item->getIsVirtual() == false) {
                 $isVirtual = false;
@@ -387,7 +386,6 @@ class FulfillmentHelper
      */
     public function getItemImage(\Magento\Sales\Model\Order\Shipment\Item $item)
     {
-        /** @var \Magento\Catalog\Model\Product $product */
         $product = $item->getOrderItem()->getProduct();
 
         if (isset($product) === false) {

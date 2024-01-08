@@ -20,7 +20,7 @@ interface PaymentVerificationInterface
      * Throws an exception if provided payment method is different to verification implementation.
      *
      * @param \Magento\Sales\Model\Order $order
-     * @return string
+     * @return mixed
      * @throws \InvalidArgumentException
      */
     public function getData(\Magento\Sales\Model\Order $order);
@@ -49,7 +49,7 @@ interface PaymentVerificationInterface
      * A class implementing GatewayInterface should be implemented and setup on settings in order to
      * retrieve a ResponseInterface that will be passed to this method
      *
-     * @param \Signifyd\Models\Payment\GatewayInterface $paymentGateway
+     * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
      * @return mixed
      */
     public function getPaymentDataFromGatewayResponse(\Signifyd\Models\Payment\Response\ResponseInterface $response);

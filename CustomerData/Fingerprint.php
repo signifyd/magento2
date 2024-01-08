@@ -16,7 +16,7 @@ class Fingerprint extends DataObject implements SectionSourceInterface
     protected $deviceHelper;
 
     /**
-     * @var
+     * @var int
      */
     protected $quoteId;
 

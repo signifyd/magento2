@@ -144,7 +144,7 @@ class Json
             $isSuccess = $notificationItems['notificationItems'][0]['NotificationRequestItem']['success'];
             $reason = $notificationItems['notificationItems'][0]['NotificationRequestItem']['reason'];
 
-            /** @var $case \Signifyd\Connect\Model\Casedata */
+            /** @var \Signifyd\Connect\Model\Casedata $case */
             $case = $this->casedataFactory->create();
             $this->casedataResourceModel->load($case, $orderIncrement, 'order_increment');
 

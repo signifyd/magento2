@@ -8,7 +8,7 @@ use Magento\Sales\Model\Order;
 class AdyenHpp extends Base
 {
     /**
-     * @param Order $entity
+     * @param Order $order
      * @return int|string
      */
     public function getPaymentMethodFromOrder(Order $order)
@@ -19,7 +19,7 @@ class AdyenHpp extends Base
     }
 
     /**
-     * @param Quote $entity
+     * @param Quote $quote
      * @return null
      */
     public function getPaymentMethodFromQuote(Quote $quote)

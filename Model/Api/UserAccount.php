@@ -92,12 +92,12 @@ class UserAccount
             $lastOrderId = $lastOrder->getIncrementId();
             $user['lastOrderId'] = isset($lastOrderId) ? $lastOrderId : null;
 
-            /** @var $orders \Magento\Sales\Model\ResourceModel\Order\Collection */
+            /** @var \Magento\Sales\Model\ResourceModel\Order\Collection $orders */
             $orderCollection = $this->orderCollectionFactory->create();
             $orderCollection->addFieldToFilter('customer_id', $order->getCustomerId());
             $orderCollection->load();
 
-            /** @var $orderCollection \Magento\Sales\Model\Order*/
+            /** @var \Magento\Sales\Model\Order $orderCollection */
             foreach ($orderCollection as $o) {
                 $user['aggregateOrderCount']++;
                 $user['aggregateOrderDollars'] += floatval($o->getGrandTotal());
@@ -140,12 +140,12 @@ class UserAccount
             $lastOrderId = $lastOrder->getIncrementId();
             $user['lastOrderId'] = isset($lastOrderId) ? $lastOrderId : null;
 
-            /** @var $orders \Magento\Sales\Model\ResourceModel\Order\Collection */
+            /** @var \Magento\Sales\Model\ResourceModel\Order\Collection $orders */
             $orderCollection = $this->orderCollectionFactory->create();
             $orderCollection->addFieldToFilter('customer_id', $quote->getCustomerId());
             $orderCollection->load();
 
-            /** @var $orderCollection \Magento\Sales\Model\Order */
+            /** @var \Magento\Sales\Model\Order $orderCollection */
             foreach ($orderCollection as $o) {
                 $user['aggregateOrderCount']++;
                 $user['aggregateOrderDollars'] += floatval($o->getGrandTotal());

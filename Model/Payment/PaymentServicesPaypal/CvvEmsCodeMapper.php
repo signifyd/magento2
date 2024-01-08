@@ -27,7 +27,7 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     /**
      * Gets payment CVV verification code.
      *
-     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment
+     * @param \Magento\Sales\Model\Order $order
      * @return string
      * @throws \InvalidArgumentException If specified order payment has different payment method code.
      */

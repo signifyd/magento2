@@ -39,6 +39,9 @@ class UpdateOrderId implements DataPatchInterface
         $this->configWriter = $configWriter;
     }
 
+    /**
+     * @return $this|UpdateOrderId
+     */
     public function apply()
     {
         $signifydConnectCase = $this->schemaSetupInterface->getTable('signifyd_connect_case');
@@ -67,6 +70,8 @@ class UpdateOrderId implements DataPatchInterface
             $this->logger->debug('Update order_id on magento status different from complete failed');
             $this->configWriter->save("signifyd/general/upgrade4.3_inconsistency", "setup");
         }
+
+        return $this;
     }
 
     /**

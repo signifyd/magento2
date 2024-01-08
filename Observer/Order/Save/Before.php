@@ -15,7 +15,7 @@ use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 class Before implements ObserverInterface
 {
     /**
-     * @var Logger;
+     * @var Logger
      */
     protected $logger;
 
@@ -76,7 +76,7 @@ class Before implements ObserverInterface
     public function execute(Observer $observer, $checkOwnEventsMethods = true)
     {
         try {
-            /** @var $order Order */
+            /** @var Order $order */
             $order = $observer->getEvent()->getOrder();
 
             if (!is_object($order)) {

@@ -90,7 +90,7 @@ abstract class DataMapper implements PaymentVerificationInterface
     }
 
     /**
-     * @param null $key
+     * @param $key
      * @return bool|mixed
      */
     public function getSignifydPaymentData($key = null)
@@ -147,7 +147,7 @@ abstract class DataMapper implements PaymentVerificationInterface
      * on extending classes
      *
      * @param \Magento\Sales\Model\Order $order
-     * @return string
+     * @return mixed
      */
     public function getData(\Magento\Sales\Model\Order $order)
     {
@@ -177,7 +177,7 @@ abstract class DataMapper implements PaymentVerificationInterface
 
     /**
      * @param \Magento\Sales\Model\Order $order
-     * @return false|stdClass
+     * @return array|bool|float|int|mixed|string
      */
     public function getGatewayIntegrationSettings(\Magento\Sales\Model\Order $order)
     {
@@ -189,7 +189,6 @@ abstract class DataMapper implements PaymentVerificationInterface
 
         if (empty($gatewayIntegrationSettings) === false) {
             try {
-                /** @var stdClass $gatewayIntegrationSettings */
                 $gatewayIntegrationSettings = $this->jsonSerializer->unserialize($gatewayIntegrationSettings);
                 $this->logger->info($this->jsonSerializer->serialize($gatewayIntegrationSettings));
             } catch (\InvalidArgumentException $e) {

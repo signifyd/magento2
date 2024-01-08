@@ -141,7 +141,7 @@ class GeneralResponseValidator
                 $reason = 'default';
             }
 
-            /** @var $case \Signifyd\Connect\Model\Casedata */
+            /** @var \Signifyd\Connect\Model\Casedata $case */
             $case = $this->casedataFactory->create();
             $this->casedataResourceModel->load($case, $orderIncrement, 'order_increment');
 
