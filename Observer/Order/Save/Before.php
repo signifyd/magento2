@@ -119,8 +119,8 @@ class Before implements ObserverInterface
         if ($order->getPayment()->getMethod() === 'rootways_authorizecim_option' && empty($data) === false) {
             $dataArray = $this->jsonSerializer->unserialize($data);
             if (isset($dataArray['paymentMethod']) &&
-                $dataArray['paymentMethod']['additional_data'] &&
-                $dataArray['paymentMethod']['additional_data']['card_bin']) {
+                isset($dataArray['paymentMethod']['additional_data']) &&
+                isset($dataArray['paymentMethod']['additional_data']['card_bin'])) {
                 $order->getPayment()->setAdditionalInformation('card_bin', $dataArray['paymentMethod']['additional_data']['card_bin']);
             }
         }
