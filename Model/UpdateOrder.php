@@ -154,13 +154,13 @@ class UpdateOrder
             $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
 
             $this->logger->info(
-                'Case for order ' . $order->getIncrementId() . ' will ' .
+                'Order ' . $order->getIncrementId() . ' will ' .
                 'not be updated as the bypass for additional updates is enabled',
                 ['entity' => $order]
             );
             $this->orderHelper->addCommentToStatusHistory(
                 $order,
-                "Signifyd: will not update the case as the bypass for additional updates is enabled"
+                "Signifyd: will not update the order as the bypass for additional updates is enabled"
             );
 
             return $case;
