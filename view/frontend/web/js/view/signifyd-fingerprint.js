@@ -1,8 +1,9 @@
 define([
     'uiComponent',
     'Magento_Customer/js/customer-data',
-    'jquery'
-], function (Component, customerData, $) {
+    'jquery',
+    'mage/url'
+], function (Component, customerData, $, url) {
     'use strict';
 
     return Component.extend({
@@ -26,6 +27,29 @@ define([
                     });
                 }
             }
+
+            document.addEventListener('sigScriptError', function (error) {
+                if (typeof $.cookie('signifyd_fingerprint') !== 'undefined' &&
+                    $.cookie('signifyd_fingerprint') === null
+                ) {
+                    $.ajax({
+                        url: url.build("signifyd_connect/fingerprint/index"),
+                        data: {
+                            fingerprint_error: error.detail
+                        },
+                        type: "POST",
+                        success: function (response) {
+                            $.cookie('signifyd_fingerprint', 1, { path: '/' });
+                        },
+                        fail: function () {
+                        },
+                        error: function () {
+                        }
+                    });
+                }
+
+                console.log('Signifyd fingerprint error details: ', error.detail)
+            });
         },
 
         checkSessionId: function(dataOrderSessionId) {
