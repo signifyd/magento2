@@ -4,7 +4,7 @@ namespace Signifyd\Connect\Model\Payment;
 
 use Adyen\Config;
 use Magento\Framework\ObjectManagerInterface;
-use Magento\Framework\Registry;
+use Signifyd\Connect\Model\Registry;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Signifyd\Connect\Api\PaymentVerificationInterface;
 use Signifyd\Connect\Logger\Logger;
@@ -95,7 +95,7 @@ abstract class DataMapper implements PaymentVerificationInterface
      */
     public function getSignifydPaymentData($key = null)
     {
-        $paymentData = $this->registry->registry('signifyd_payment_data');
+        $paymentData = $this->registry->getData('signifyd_payment_data');
 
         if (empty($key)) {
             return $paymentData;

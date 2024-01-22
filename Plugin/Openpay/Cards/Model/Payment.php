@@ -10,7 +10,7 @@ use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
 use Openpay\Cards\Model\Payment as OpenpayPayment;
-use Magento\Checkout\Model\Cart as CheckoutCart;
+use Magento\Checkout\Model\Session as CheckoutSession;
 
 class Payment
 {
@@ -35,9 +35,9 @@ class Payment
     protected $storeManager;
 
     /**
-     * @var CheckoutCart
+     * @var CheckoutSession
      */
-    protected $checkoutCart;
+    protected $checkoutSession;
 
     /**
      * @var TransactionsFactory
@@ -60,26 +60,26 @@ class Payment
      * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
      * @param StoreManagerInterface $storeManager
-     * @param CheckoutCart $checkoutCart
      * @param TransactionsFactory $transactionsFactory
      * @param ConfigHelper $configHelper
      * @param Client $client
+     * @param CheckoutSession $checkoutSession
      */
     public function __construct(
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
         Logger $logger,
         StoreManagerInterface $storeManager,
-        CheckoutCart $checkoutCart,
         TransactionsFactory $transactionsFactory,
         ConfigHelper $configHelper,
-        Client $client
+        Client $client,
+        CheckoutSession $checkoutSession
     ) {
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
         $this->storeManager = $storeManager;
-        $this->checkoutCart = $checkoutCart;
+        $this->checkoutSession = $checkoutSession;
         $this->transactionsFactory = $transactionsFactory;
         $this->configHelper = $configHelper;
         $this->client = $client;
@@ -106,7 +106,7 @@ class Payment
             $this->storeManager->getStore()->getId()
         );
 
-        $quote = $this->checkoutCart->getQuote();
+        $quote = $this->checkoutSession->getQuote();
 
         if ($isPreAuth === false || $quote->isEmpty()) {
             return null;

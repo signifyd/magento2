@@ -3,7 +3,7 @@
 namespace Signifyd\Connect\Plugin\CyberSource\Gateway\Http\Client;
 
 use CyberSource\SecureAcceptance\Gateway\Http\Client\SOAPClient as CyberSOAPClient;
-use Magento\Framework\Registry;
+use Signifyd\Connect\Model\Registry;
 use Signifyd\Connect\Model\TransactionIntegration;
 
 class SOAPClient
@@ -47,7 +47,7 @@ class SOAPClient
         }
 
         if ($response['decision'] != 'REJECT') {
-            $this->registry->register('signifyd_payment_data', $response);
+            $this->registry->setData('signifyd_payment_data', $response);
             return $response;
         }
 

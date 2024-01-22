@@ -3,7 +3,7 @@
 namespace Signifyd\Connect\Observer;
 
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\Registry;
+use Signifyd\Connect\Model\Registry;
 use Signifyd\Connect\Helper\FulfillmentHelper;
 use Signifyd\Connect\Logger\Logger;
 
@@ -56,12 +56,12 @@ class Fulfillment implements ObserverInterface
                 // This registry entry is used to don't trigger fulfillment creation multiple times on a single save
                 $registryKey = "signifyd_action_shipment_{$shipment->getId()}";
 
-                if ($this->registry->registry($registryKey) == 1) {
+                if ($this->registry->getData($registryKey) == 1) {
                     $this->logger->info('Fulfillment will not proceed because registry key found: ' . $registryKey);
                     return;
                 }
 
-                $this->registry->register($registryKey, 1);
+                $this->registry->setData($registryKey, 1);
 
                 $this->fulfillmentHelper->postFulfillmentToSignifyd($shipment);
             }

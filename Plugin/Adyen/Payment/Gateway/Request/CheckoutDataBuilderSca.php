@@ -4,7 +4,6 @@ namespace Signifyd\Connect\Plugin\Adyen\Payment\Gateway\Request;
 
 use Adyen\Payment\Gateway\Request\CheckoutDataBuilder as AdyenCheckoutDataBuilder;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Registry;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
@@ -67,11 +66,6 @@ class CheckoutDataBuilderSca
     protected $casedataResourceModel;
 
     /**
-     * @var Registry
-     */
-    protected $registry;
-
-    /**
      * CheckoutDataBuilder constructor.
      * @param QuoteResourceModel $quoteResourceModel
      * @param QuoteFactory $quoteFactory
@@ -82,7 +76,6 @@ class CheckoutDataBuilderSca
      * @param ScaEvaluation $scaEvaluation
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
-     * @param Registry $registry
      */
     public function __construct(
         QuoteResourceModel $quoteResourceModel,
@@ -93,8 +86,7 @@ class CheckoutDataBuilderSca
         StoreManagerInterface $storeManagerInterface,
         ScaEvaluation $scaEvaluation,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
-        Registry $registry
+        CasedataResourceModel $casedataResourceModel
     ) {
         $this->quoteResourceModel = $quoteResourceModel;
         $this->quoteFactory = $quoteFactory;
@@ -105,7 +97,6 @@ class CheckoutDataBuilderSca
         $this->scaEvaluation = $scaEvaluation;
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
-        $this->registry = $registry;
     }
 
     public function beforeBuild(AdyenCheckoutDataBuilder $subject, array $buildSubject)

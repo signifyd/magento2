@@ -2,7 +2,7 @@
 
 namespace Signifyd\Connect\Plugin\Magento\Paypal\Model;
 
-use Magento\Framework\Registry;
+use Signifyd\Connect\Model\Registry;
 
 class Payflowlink
 {
@@ -28,7 +28,7 @@ class Payflowlink
      */
     public function beforeProcess(\Magento\Paypal\Model\Payflowlink $subject, $responseData)
     {
-        $this->registry->register('signifyd_payment_data', $responseData);
+        $this->registry->setData('signifyd_payment_data', $responseData);
         return [$responseData];
     }
 }

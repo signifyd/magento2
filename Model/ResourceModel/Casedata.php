@@ -81,7 +81,7 @@ class Casedata extends AbstractDb
         parent::save($case);
 
         $this->loadForUpdate = false;
-        $this->commit();
+        $this->getConnection()->commit();
 
         return $return;
     }

@@ -2,7 +2,7 @@
 
 namespace Signifyd\Connect\Plugin\Magento\Authorizenet\Model;
 
-use Magento\Framework\Registry;
+use Signifyd\Connect\Model\Registry;
 
 class TransactionService
 {
@@ -28,8 +28,7 @@ class TransactionService
      */
     public function afterGetTransactionDetails(\Magento\Authorizenet\Model\TransactionService $subject, $result)
     {
-        $this->registry->unregister('signifyd_payment_data');
-        $this->registry->register('signifyd_payment_data', $result);
+        $this->registry->setData('signifyd_payment_data', $result);
         return $result;
     }
 }

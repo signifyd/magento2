@@ -3,9 +3,9 @@
 namespace Signifyd\Connect\Model\Config\Source;
 
 use Magento\Eav\Model\Entity\Attribute\Source\AbstractSource;
-use Magento\Framework\Option\ArrayInterface;
+use Magento\Framework\Data\OptionSourceInterface;
 
-class SignifydEnableOptions extends AbstractSource implements ArrayInterface
+class SignifydEnableOptions extends AbstractSource implements OptionSourceInterface
 {
     public function toOptionArray()
     {

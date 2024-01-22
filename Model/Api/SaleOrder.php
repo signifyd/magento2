@@ -2,7 +2,7 @@
 
 namespace Signifyd\Connect\Model\Api;
 
-use Magento\Framework\Registry;
+use Signifyd\Connect\Model\Registry;
 use Magento\Sales\Model\Order;
 use Signifyd\Connect\Logger\Logger;
 
@@ -168,7 +168,7 @@ class SaleOrder
              * It must be unregistered after use
              * @see \Signifyd\Connect\Plugin\Magento\Paypal\Model\Payflowlink
              */
-            $this->registry->unregister('signifyd_payment_data');
+            $this->registry->setData('signifyd_payment_data');
         } catch (\Exception $e) {
             $this->logger->info("Failed to create sale order " . $e->getMessage(), ['entity' => $order]);
         } catch (\Error $e) {

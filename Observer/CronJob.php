@@ -3,7 +3,7 @@
 namespace Signifyd\Connect\Observer;
 
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\Registry;
+use Signifyd\Connect\Model\Registry;
 
 class CronJob implements ObserverInterface
 {
@@ -24,12 +24,7 @@ class CronJob implements ObserverInterface
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
         $cronJob = $observer->getEvent()->getData('job_name');
-        $cronJobRegistry = $this->registry->registry('signifyd_cron_job_run');
 
-        if (isset($cronJobRegistry)) {
-            $this->registry->unregister('signifyd_cron_job_run');
-        }
-
-        $this->registry->register('signifyd_cron_job_run', $cronJob);
+        $this->registry->setData('signifyd_cron_job_run', $cronJob);
     }
 }
