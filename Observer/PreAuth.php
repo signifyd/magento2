@@ -218,6 +218,14 @@ class PreAuth implements ObserverInterface
                 return;
             }
 
+            $customerGroupId = $quote->getCustomerGroupId();
+
+            if ($this->configHelper->isCustomerGroupRestricted($customerGroupId)) {
+                $message = 'Case creation with customer group id ' . $customerGroupId . ' is restricted';
+                $this->logger->debug($message, ['entity' => $quote]);
+                return;
+            }
+
             $checkoutPaymentDetails = [];
 
             if (isset($dataArray['paymentMethod']) &&

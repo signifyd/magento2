@@ -299,6 +299,15 @@ class Purchase implements ObserverInterface
                 return;
             }
 
+            $customerGroupId = $order->getCustomerGroupId();
+
+            if ($this->configHelper->isCustomerGroupRestricted($customerGroupId)) {
+                $message = 'Case creation for order ' . $incrementId .
+                    ' with customer group id ' . $customerGroupId . ' is restricted';
+                $this->logger->debug($message, ['entity' => $order]);
+                return;
+            }
+
             /** @var \Signifyd\Connect\Model\Casedata $case */
             $case = $this->casedataFactory->create();
             $this->casedataResourceModel->load($case, $order->getId(), 'order_id');

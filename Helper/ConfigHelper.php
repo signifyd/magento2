@@ -221,6 +221,36 @@ class ConfigHelper
     }
 
     /**
+     * Get restricted customer groups from store configs
+     *
+     * @return array|mixed
+     */
+    public function getRestrictedCustomerGroupsConfig()
+    {
+        $restrictedCustomerGroups = $this->getConfigData('signifyd/general/restrict_customer_groups');
+
+        if (isset($restrictedCustomerGroups) === false) {
+            return [];
+        }
+
+        $restrictedCustomerGroups = explode(',', $restrictedCustomerGroups);
+        $restrictedCustomerGroups = array_map('trim', $restrictedCustomerGroups);
+
+        return $restrictedCustomerGroups;
+    }
+
+    public function isCustomerGroupRestricted($customerGroupId)
+    {
+        $restrictedCustomerGroups = $this->getRestrictedCustomerGroupsConfig();
+
+        if (in_array($customerGroupId, $restrictedCustomerGroups)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Check if there is any restrictions by payment method or state
      *
      * @param $paymentMethodCode
