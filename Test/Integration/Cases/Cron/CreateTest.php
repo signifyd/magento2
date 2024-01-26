@@ -12,9 +12,9 @@ class CreateTest extends OrderTestCase
     /**
      * @var \Signifyd\Connect\Cron\RetryCaseJob
      */
-    protected $retryCaseJob;
+    public $retryCaseJob;
 
-    protected $paymentMethod = 'banktransfer';
+    public $paymentMethod = 'banktransfer';
 
     public function setUp(): void
     {

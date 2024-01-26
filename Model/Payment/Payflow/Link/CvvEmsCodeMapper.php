@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\CvvEmsCodeMapper as Base_CvvEmsCodeMappe
 
 class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
 {
-    protected $allowedMethods = ['payflow_link', 'payflow_advanced'];
+    public $allowedMethods = ['payflow_link', 'payflow_advanced'];
 
     /**
      * Gets payment CVV verification code.

@@ -13,62 +13,62 @@ class CheckoutPaymentDetails
     /**
      * @var AddressFactory
      */
-    protected $addressFactory;
+    public $addressFactory;
 
     /**
      * @var AccountHolderNameFactory
      */
-    protected $accountHolderNameFactory;
+    public $accountHolderNameFactory;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var PaymentVerificationFactory
      */
-    protected $paymentVerificationFactory;
+    public $paymentVerificationFactory;
 
     /**
      * @var AccountHolderTaxIdFactory
      */
-    protected $accountHolderTaxIdFactory;
+    public $accountHolderTaxIdFactory;
 
     /**
      * @var AccountHolderTaxIdCountryFactory
      */
-    protected $accountHolderTaxIdCountryFactory;
+    public $accountHolderTaxIdCountryFactory;
 
     /**
      * @var AbaRoutingNumberFactory
      */
-    protected $abaRoutingNumberFactory;
+    public $abaRoutingNumberFactory;
 
     /**
      * @var CardTokenProviderFactory
      */
-    protected $cardTokenProviderFactory;
+    public $cardTokenProviderFactory;
 
     /**
      * @var CardTokenFactory
      */
-    protected $cardTokenFactory;
+    public $cardTokenFactory;
 
     /**
      * @var CardInstallmentsFactory
      */
-    protected $cardInstallmentsFactory;
+    public $cardInstallmentsFactory;
 
     /**
      * @var AccountLast4Factory
      */
-    protected $accountLast4Factory;
+    public $accountLast4Factory;
 
     /**
      * @var CardBrandFactory
      */
-    protected $cardBrandFactory;
+    public $cardBrandFactory;
 
     /**
      * @param AddressFactory $addressFactory

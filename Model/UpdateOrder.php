@@ -30,72 +30,72 @@ class UpdateOrder
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var OrderHelper
      */
-    protected $orderHelper;
+    public $orderHelper;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var SerializerInterface
      */
-    protected $serializer;
+    public $serializer;
 
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * @var OrderResourceModel
      */
-    protected $orderResourceModel;
+    public $orderResourceModel;
 
     /**
      * @var HoldFactory
      */
-    protected $holdFactory;
+    public $holdFactory;
 
     /**
      * @var UnholdFactory
      */
-    protected $unholdFactory;
+    public $unholdFactory;
 
     /**
      * @var CancelFactory
      */
-    protected $cancelFactory;
+    public $cancelFactory;
 
     /**
      * @var CaptureFactory
      */
-    protected $captureFactory;
+    public $captureFactory;
 
     /**
      * @var RefundFactory
      */
-    protected $refundFactory;
+    public $refundFactory;
 
     /**
      * @var UpdateOrderAction
      */
-    protected $updateOrderAction;
+    public $updateOrderAction;
 
     /**
      * @var OrderFactory
      */
-    protected $orderFactory;
+    public $orderFactory;
 
     /**
      * @var SignifydOrderResourceModel
      */
-    protected $signifydOrderResourceModel;
+    public $signifydOrderResourceModel;
 
     /**
      * @param ConfigHelper $configHelper

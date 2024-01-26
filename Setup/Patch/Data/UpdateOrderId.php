@@ -12,17 +12,17 @@ class UpdateOrderId implements DataPatchInterface
     /**
      * @var SchemaSetupInterface
      */
-    protected $schemaSetupInterface;
+    public $schemaSetupInterface;
 
     /**
      * @var Install
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var WriterInterface
      */
-    protected $configWriter;
+    public $configWriter;
 
     /**
      * @param SchemaSetupInterface $schemaSetupInterface

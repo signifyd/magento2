@@ -9,7 +9,7 @@ class SignifydClient
     /**
      * @var ModuleListInterface
      */
-    protected $moduleList;
+    public $moduleList;
 
     /**
      * @param ModuleListInterface $moduleList

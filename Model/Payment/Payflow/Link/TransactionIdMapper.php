@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\TransactionIdMapper as Base_TransactionI
 
 class TransactionIdMapper extends Base_TransactionIdMapper
 {
-    protected $allowedMethods = ['payflow_link', 'payflow_advanced'];
+    public $allowedMethods = ['payflow_link', 'payflow_advanced'];
 
     /**
      * Gets transaction ID from Payflow response

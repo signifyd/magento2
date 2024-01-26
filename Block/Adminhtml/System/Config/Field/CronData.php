@@ -13,7 +13,7 @@ class CronData extends Field
     /**
      * @var SignifydFlags
      */
-    protected $signifydFlags;
+    public $signifydFlags;
 
     /**
      * @param \Magento\Backend\Block\Template\Context $context

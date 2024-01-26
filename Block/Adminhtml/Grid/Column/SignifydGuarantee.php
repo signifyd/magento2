@@ -11,12 +11,12 @@ class SignifydGuarantee extends AbstractRenderer
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * SignifydGuarantee constructor.

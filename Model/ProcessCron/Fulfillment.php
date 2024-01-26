@@ -17,47 +17,47 @@ class Fulfillment
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var FulfillmentResourceModel
      */
-    protected $fulfillmentResourceModel;
+    public $fulfillmentResourceModel;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var OrderHelper
      */
-    protected $orderHelper;
+    public $orderHelper;
 
     /**
      * @var SignifydOrderResourceModel
      */
-    protected $signifydOrderResourceModel;
+    public $signifydOrderResourceModel;
 
     /**
      * @var OrderFactory
      */
-    protected $orderFactory;
+    public $orderFactory;
 
     /**
      * @var FulfillmentFactory
      */
-    protected $fulfillmentFactory;
+    public $fulfillmentFactory;
 
     /**
      * @var Client
      */
-    protected $client;
+    public $client;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * Fulfillment constructor.

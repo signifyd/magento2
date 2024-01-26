@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\ExpYearMapper as Base_ExpYearMapper;
 
 class ExpYearMapper extends Base_ExpYearMapper
 {
-    protected $allowedMethods = ['payflow_link', 'payflow_advanced'];
+    public $allowedMethods = ['payflow_link', 'payflow_advanced'];
 
     /**
      * Gets expiry year from Payflow response

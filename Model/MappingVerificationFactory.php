@@ -13,22 +13,22 @@ class MappingVerificationFactory
     /**
      * @var ConfigInterface
      */
-    protected $config;
+    public $config;
 
     /**
      * @var ObjectManagerInterface
      */
-    protected $objectManager;
+    public $objectManager;
 
     /**
      * @var PaymentMethodMappingInterface
      */
-    protected $paymentMethodDefaultAdapter;
+    public $paymentMethodDefaultAdapter;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @param ObjectManagerInterface $objectManager

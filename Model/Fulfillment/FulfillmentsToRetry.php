@@ -14,17 +14,17 @@ class FulfillmentsToRetry extends RetryModel
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var FulfillmentCollectionFactory
      */
-    protected $objectCollectionFactory;
+    public $objectCollectionFactory;
 
     /**
      * @var FulfillmentResourceModel
      */
-    protected $objectResourceModel;
+    public $objectResourceModel;
 
     /**
      * Retry constructor.

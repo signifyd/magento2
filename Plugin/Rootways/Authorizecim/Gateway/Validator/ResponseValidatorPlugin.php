@@ -12,12 +12,12 @@ class ResponseValidatorPlugin
     /**
      * @var TransactionIntegration
      */
-    protected $transactionIntegration;
+    public $transactionIntegration;
 
     /**
      * @var LoggerInterface
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @param TransactionIntegration $transactionIntegration

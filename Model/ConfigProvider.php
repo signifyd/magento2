@@ -17,17 +17,17 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManager;
+    public $storeManager;
 
     /**
      * @var ModuleListInterface
      */
-    protected $moduleListInterface;
+    public $moduleListInterface;
 
     /**
      * @param ConfigHelper $configHelper

@@ -12,22 +12,22 @@ class Logger
     /**
      * @var bool
      */
-    protected $log;
+    public $log;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var LogsFactory
      */
-    protected $logsFactory;
+    public $logsFactory;
 
     /**
      * @var LogsResourceModel
      */
-    protected $logsResourceModel;
+    public $logsResourceModel;
 
     /**
      * @param ConfigHelper $configHelper

@@ -15,12 +15,12 @@ class Index extends \Magento\Backend\App\Action
     /**
      * @var Context
      */
-    protected $context;
+    public $context;
 
     /**
      * @var WriterInterface
      */
-    protected $configWriter;
+    public $configWriter;
 
     /**
      * UpgradeSchema constructor.

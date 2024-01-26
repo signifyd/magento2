@@ -7,14 +7,14 @@ class Router implements \Magento\Framework\App\RouterInterface
     /**
      * @var \Magento\Framework\App\ActionFactory
      */
-    protected $actionFactory;
+    public $actionFactory;
 
     /**
      * Response
      *
      * @var \Magento\Framework\App\ResponseInterface
      */
-    protected $_response;
+    public $_response;
 
     /**
      * @param \Magento\Framework\App\ActionFactory $actionFactory

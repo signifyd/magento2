@@ -11,12 +11,12 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * Grid constructor.

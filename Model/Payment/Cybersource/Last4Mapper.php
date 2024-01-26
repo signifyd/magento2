@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\Last4Mapper as Base_Last4Mapper;
 
 class Last4Mapper extends Base_Last4Mapper
 {
-    protected $allowedMethods = ['cybersource', 'chcybersource'];
+    public $allowedMethods = ['cybersource', 'chcybersource'];
 
     /**
      * @param \Magento\Sales\Model\Order $order

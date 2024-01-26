@@ -24,52 +24,52 @@ class Capture
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var OrderHelper
      */
-    protected $orderHelper;
+    public $orderHelper;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var OrderResourceModel
      */
-    protected $orderResourceModel;
+    public $orderResourceModel;
 
     /**
      * @var InvoiceService
      */
-    protected $invoiceService;
+    public $invoiceService;
 
     /**
      * @var InvoiceSender
      */
-    protected $invoiceSender;
+    public $invoiceSender;
 
     /**
      * @var InvoiceResourceModel
      */
-    protected $invoiceResourceModel;
+    public $invoiceResourceModel;
 
     /**
      * @var TransactionFactory
      */
-    protected $transactionFactory;
+    public $transactionFactory;
 
     /**
      * @var OrderFactory
      */
-    protected $orderFactory;
+    public $orderFactory;
 
     /**
      * @var SignifydOrderResourceModel
      */
-    protected $signifydOrderResourceModel;
+    public $signifydOrderResourceModel;
 
     /**
      * @param ConfigHelper $configHelper

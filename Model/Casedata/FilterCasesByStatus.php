@@ -15,27 +15,27 @@ class FilterCasesByStatus extends AbstractHelper
     /**
      * @var CasedataCollectionFactory
      */
-    protected $casedataCollectionFactory;
+    public $casedataCollectionFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * Retry constructor.

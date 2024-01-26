@@ -19,12 +19,12 @@ class Casedata extends AbstractDb
     /**
      * @var bool
      */
-    protected $loadForUpdate = false;
+    public $loadForUpdate = false;
 
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * Casedata constructor.

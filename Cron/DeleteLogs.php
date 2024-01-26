@@ -16,42 +16,42 @@ class DeleteLogs
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * @var LogsCollectionFactory
      */
-    protected $logsCollectionFactory;
+    public $logsCollectionFactory;
 
     /**
      * @var LogsResourceModel
      */
-    protected $logsResourceModel;
+    public $logsResourceModel;
 
     /**
      * @var DateTime
      */
-    protected $dateTime;
+    public $dateTime;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var DirectoryList
      */
-    protected $directoryList;
+    public $directoryList;
 
     /**
      * @var DriverFile
      */
-    protected $driverFile;
+    public $driverFile;
 
     /**
      * @var LogsFile
      */
-    protected $logsFile;
+    public $logsFile;
 
     /**
      * @param ScopeConfigInterface $scopeConfigInterface

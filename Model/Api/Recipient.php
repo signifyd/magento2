@@ -12,17 +12,17 @@ class Recipient
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @var AddressFactory
      */
-    protected $addressFactory;
+    public $addressFactory;
 
     /**
      * @param ScopeConfigInterface $scopeConfigInterface

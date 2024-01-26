@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\ExpYearMapper as Base_ExpYearMapper;
 
 class ExpYearMapper extends Base_ExpYearMapper
 {
-    protected $allowedMethods = ['authorizenet_directpost'];
+    public $allowedMethods = ['authorizenet_directpost'];
 
     /**
      * Gets expiry year from XML response from Authorize.net

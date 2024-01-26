@@ -15,17 +15,17 @@ class WebhookLink implements CommentInterface
     /**
      * @var \Magento\Framework\Url
      */
-    protected $urlBuilder;
+    public $urlBuilder;
 
     /**
      * @var \Magento\Store\Model\StoreManagerInterface
      */
-    protected $storeManager;
+    public $storeManager;
 
     /**
      * @var \Magento\Framework\App\RequestInterface
      */
-    protected $request;
+    public $request;
 
     /**
      * WebhookLink constructor.

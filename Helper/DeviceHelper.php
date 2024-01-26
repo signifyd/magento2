@@ -10,12 +10,12 @@ class DeviceHelper
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManager;
+    public $storeManager;
 
     /**
      * DeviceHelper constructor.

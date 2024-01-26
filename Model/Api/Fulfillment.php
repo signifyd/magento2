@@ -8,7 +8,7 @@ class Fulfillment
     /**
      * @var FulfillmentsFactory
      */
-    protected $fulfillmentsFactory;
+    public $fulfillmentsFactory;
 
     /**
      * @param FulfillmentsFactory $fulfillmentsFactory

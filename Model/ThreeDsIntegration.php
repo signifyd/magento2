@@ -19,64 +19,64 @@ class ThreeDsIntegration
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManager;
+    public $storeManager;
 
     /**
      * @var CheckoutSession
      */
-    protected $checkoutSession;
+    public $checkoutSession;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @var CartRepositoryInterface
      */
-    protected $cartRepositoryInterface;
+    public $cartRepositoryInterface;
 
     /**
      * @var OrderFactory
      */
-    protected $orderFactory;
+    public $orderFactory;
 
     /**
      * @var SignifydOrderResourceModel
      */
-    protected $signifydOrderResourceModel;
+    public $signifydOrderResourceModel;
 
     /**
      * @var TransactionsFactory
      */
-    protected $transactionsFactory;
+    public $transactionsFactory;
 
     /**
      * @var Client
      */
-    protected $client;
+    public $client;
 
-    protected $signifydFields = ['eci', 'cavv', 'version', 'transStatus', 'transStatusReason', 'acsOperatorId',
+    public $signifydFields = ['eci', 'cavv', 'version', 'transStatus', 'transStatusReason', 'acsOperatorId',
         'dsTransId', 'threeDsServerTransId', 'cavvAlgorithm', 'exemptionIndicator', 'timestamp'];
 
     /**

@@ -15,46 +15,46 @@ class TransactionIntegration
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManager;
+    public $storeManager;
 
     /**
      * @var CheckoutSession
      */
-    protected $checkoutSession;
+    public $checkoutSession;
 
     /**
      * @var TransactionsFactory
      */
-    protected $transactionsFactory;
+    public $transactionsFactory;
 
     /**
      * @var Client
      */
-    protected $client;
+    public $client;
 
-    protected $gatewayRefusedReason = null;
+    public $gatewayRefusedReason = null;
 
-    protected $gatewayStatusMessage = null;
+    public $gatewayStatusMessage = null;
 
     /**
      * CheckoutPaymentsDetailsHandler constructor.

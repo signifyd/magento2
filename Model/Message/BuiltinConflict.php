@@ -5,30 +5,38 @@
  */
 namespace Signifyd\Connect\Model\Message;
 
-use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Module\Manager as ModuleManager;
 
 class BuiltinConflict implements \Magento\Framework\Notification\MessageInterface
 {
     /**
      * @var \Magento\Framework\App\Config\ScopeConfigInterface
      */
-    protected $config;
+    public $config;
 
     /**
      * @var \Magento\Store\Model\StoreRepository
      */
-    protected $storeRepository;
+    public $storeRepository;
+
+    /**
+     * @var ModuleManager
+     */
+    public $moduleManager;
 
     /**
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $config
      * @param \Magento\Store\Model\StoreRepository $storeRepository
+     * @param ModuleManager $moduleManager
      */
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $config,
-        \Magento\Store\Model\StoreRepository $storeRepository
+        \Magento\Store\Model\StoreRepository $storeRepository,
+        ModuleManager $moduleManager
     ) {
         $this->config = $config;
         $this->storeRepository = $storeRepository;
+        $this->moduleManager = $moduleManager;
     }
 
     /**
@@ -38,9 +46,7 @@ class BuiltinConflict implements \Magento\Framework\Notification\MessageInterfac
      */
     public function isDisplayed()
     {
-        $objectManager = ObjectManager::getInstance();
-        $moduleManager = $objectManager->get(\Magento\Framework\Module\Manager::class);
-        $isBuiltinModuleEnabled = $moduleManager->isOutputEnabled('Magento_Signifyd') ? true : false;
+        $isBuiltinModuleEnabled = $this->moduleManager->isEnabled('Magento_Signifyd');
 
         if (!$isBuiltinModuleEnabled) {
             return false;

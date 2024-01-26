@@ -10,7 +10,7 @@ class Service
     /**
      * @var TransactionIntegration
      */
-    protected $transactionIntegration;
+    public $transactionIntegration;
 
     /**
      * CheckoutPaymentsDetailsHandler constructor.

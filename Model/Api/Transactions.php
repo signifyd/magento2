@@ -21,107 +21,107 @@ class Transactions
     /**
      * @var TransactionCollectionFactory
      */
-    protected $transactionCollectionFactory;
+    public $transactionCollectionFactory;
 
     /**
      * @var DateTimeFactory
      */
-    protected $dateTimeFactory;
+    public $dateTimeFactory;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @var PaymentVerificationFactory
      */
-    protected $paymentVerificationFactory;
+    public $paymentVerificationFactory;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var QuoteResourceModel
      */
-    protected $quoteResourceModel;
+    public $quoteResourceModel;
 
     /**
      * @var PaymentMethodFactory
      */
-    protected $paymentMethodFactory;
+    public $paymentMethodFactory;
 
     /**
      * @var QuoteFactory
      */
-    protected $quoteFactory;
+    public $quoteFactory;
 
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var ScaEvaluation
      */
-    protected $scaEvaluation;
+    public $scaEvaluation;
 
     /**
      * @var VerificationsFactory
      */
-    protected $verificationsFactory;
+    public $verificationsFactory;
 
     /**
      * @var CheckoutPaymentDetailsFactory
      */
-    protected $checkoutPaymentDetailsFactory;
+    public $checkoutPaymentDetailsFactory;
 
     /**
      * @var ParentTransactionIdFactory
      */
-    protected $parentTransactionIdFactory;
+    public $parentTransactionIdFactory;
 
     /**
      * @var GatewayStatusMessageFactory
      */
-    protected $gatewayStatusMessageFactory;
+    public $gatewayStatusMessageFactory;
 
     /**
      * @var GatewayErrorCodeFactory
      */
-    protected $gatewayErrorCodeFactory;
+    public $gatewayErrorCodeFactory;
 
     /**
      * @var PaypalPendingReasonCodeFactory
      */
-    protected $paypalPendingReasonCodeFactory;
+    public $paypalPendingReasonCodeFactory;
 
     /**
      * @var PaypalProtectionEligibilityFactory
      */
-    protected $paypalProtectionEligibilityFactory;
+    public $paypalProtectionEligibilityFactory;
 
     /**
      * @var PaypalProtectionEligibilityTypeFactory
      */
-    protected $paypalProtectionEligibilityTypeFactory;
+    public $paypalProtectionEligibilityTypeFactory;
 
     /**
      * @var SourceAccountDetailsFactory
      */
-    protected $sourceAccountDetailsFactory;
+    public $sourceAccountDetailsFactory;
 
     /**
      * @var AcquirerDetailsFactory
      */
-    protected $acquirerDetailsFactory;
+    public $acquirerDetailsFactory;
 
     /**
      * @param TransactionCollectionFactory $transactionCollectionFactory

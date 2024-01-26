@@ -22,72 +22,72 @@ class Reroute
     /**
      * @var PaymentUpdateFactory
      */
-    protected $paymentUpdateFactory;
+    public $paymentUpdateFactory;
 
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var UpdateCaseFactory
      */
-    protected $updateCaseFactory;
+    public $updateCaseFactory;
 
     /**
      * @var UpdateOrderFactory
      */
-    protected $updateOrderFactory;
+    public $updateOrderFactory;
 
     /**
      * @var ShipmentsFactory
      */
-    protected $shipmentsFactory;
+    public $shipmentsFactory;
 
     /**
      * @var Client
      */
-    protected $client;
+    public $client;
 
     /**
      * @var DeviceFactory
      */
-    protected $deviceFactory;
+    public $deviceFactory;
 
     /**
      * @var OrderFactory
      */
-    protected $orderFactory;
+    public $orderFactory;
 
     /**
      * @var SignifydOrderResourceModel
      */
-    protected $signifydOrderResourceModel;
+    public $signifydOrderResourceModel;
 
     /**
      * @var RerouteResourceModel
      */
-    protected $rerouteResourceModel;
+    public $rerouteResourceModel;
 
     /**
      * @param PaymentUpdateFactory $paymentUpdateFactory

@@ -18,52 +18,52 @@ class CheckoutDataBuilderSca
     /**
      * @var QuoteResourceModel
      */
-    protected $quoteResourceModel;
+    public $quoteResourceModel;
 
     /**
      * @var QuoteFactory
      */
-    protected $quoteFactory;
+    public $quoteFactory;
 
     /**
      * @var int
      */
-    protected $quoteId;
+    public $quoteId;
 
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfig;
+    public $scopeConfig;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManagerInterface;
+    public $storeManagerInterface;
 
     /**
      * @var ScaEvaluation
      */
-    protected $scaEvaluation;
+    public $scaEvaluation;
 
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * CheckoutDataBuilder constructor.

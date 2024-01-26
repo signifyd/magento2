@@ -19,47 +19,47 @@ class LogsFile
     /**
      * @var DirectoryList
      */
-    protected $directoryList;
+    public $directoryList;
 
     /**
      * @var File
      */
-    protected $file;
+    public $file;
 
     /**
      * @var SignifydOrderResourceModel
      */
-    protected $signifydOrderResourceModel;
+    public $signifydOrderResourceModel;
 
     /**
      * @var OrderFactory
      */
-    protected $orderFactory;
+    public $orderFactory;
 
     /**
      * @var LogsCollectionFactory
      */
-    protected $logsCollectionFactory;
+    public $logsCollectionFactory;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var QuoteFactory
      */
-    protected $quoteFactory;
+    public $quoteFactory;
 
     /**
      * @var QuoteResource
      */
-    protected $quoteResource;
+    public $quoteResource;
 
     /**
      * @var HistoryCollectionFactory
      */
-    protected $historyCollectionFactory;
+    public $historyCollectionFactory;
 
     /**
      * @param DirectoryList $directoryList

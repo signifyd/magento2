@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\BinMapper as Base_BinMapper;
 
 class BinMapper extends Base_BinMapper
 {
-    protected $allowedMethods = ['cybersource', 'chcybersource'];
+    public $allowedMethods = ['cybersource', 'chcybersource'];
 
     /**
      * @param \Magento\Sales\Model\Order $order

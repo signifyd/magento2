@@ -12,17 +12,17 @@ class HandleResponseCommand
     /**
      * @var TransactionIntegration
      */
-    protected $transactionIntegration;
+    public $transactionIntegration;
 
     /**
      * @var Registry
      */
-    protected $registry;
+    public $registry;
 
     /**
      * @var ObjectManagerInterface
      */
-    protected $objectManagerInterface;
+    public $objectManagerInterface;
 
     /**
      * CheckoutPaymentsDetailsHandler constructor.

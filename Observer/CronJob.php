@@ -10,7 +10,7 @@ class CronJob implements ObserverInterface
     /**
      * @var Registry
      */
-    protected $registry;
+    public $registry;
 
     /**
      * CronJob constructor.

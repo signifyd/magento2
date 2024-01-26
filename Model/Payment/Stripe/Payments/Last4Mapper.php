@@ -8,7 +8,7 @@ class Last4Mapper extends Base_Last4Mapper
 {
     use MapperTrait;
 
-    protected $allowedMethods = ['stripe_payments'];
+    public $allowedMethods = ['stripe_payments'];
 
     /**
      * Gets last 4 credit card digits

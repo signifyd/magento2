@@ -9,16 +9,20 @@ use Signifyd\Connect\Logger\Logger;
 
 class Fulfillment implements ObserverInterface
 {
-    /** @var FulfillmentHelper */
-    protected $fulfillmentHelper;
+    /**
+     * @var FulfillmentHelper
+     */
+    public $fulfillmentHelper;
 
-    /** @var Registry */
-    protected $registry;
+    /**
+     * @var Registry
+     */
+    public $registry;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * Fulfillment constructor.

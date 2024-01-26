@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\AvsEmsCodeMapper as Base_AvsEmsCodeMappe
 
 class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
 {
-    protected $allowedMethods = ['payflowpro'];
+    public $allowedMethods = ['payflowpro'];
 
     /**
      * List of mapping AVS codes

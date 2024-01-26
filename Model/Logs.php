@@ -13,7 +13,7 @@ class Logs extends AbstractModel implements LogsInterface
     /**
      * @var SerializerInterface
      */
-    protected $serializer;
+    public $serializer;
 
     /**
      * @param SerializerInterface $serializer

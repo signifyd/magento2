@@ -11,7 +11,7 @@ class AvsEmsCodeMapper extends DataMapper
      *
      * @var array
      */
-    protected $validAvsResponseCodes = [
+    public $validAvsResponseCodes = [
         'X', 'Y', 'A', 'W', 'Z', 'N', 'U', 'R',
         'E', 'S', 'D', 'M', 'B', 'P', 'C', 'I', 'G'
     ];

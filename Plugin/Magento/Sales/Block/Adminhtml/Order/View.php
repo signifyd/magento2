@@ -12,17 +12,17 @@ class View
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var UpdateOrderAction
      */
-    protected $updateOrderAction;
+    public $updateOrderAction;
 
     /**
      * View constructor.

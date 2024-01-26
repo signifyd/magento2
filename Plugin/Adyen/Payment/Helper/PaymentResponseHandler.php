@@ -13,17 +13,17 @@ class PaymentResponseHandler
     /**
      * @var ThreeDsIntegration
      */
-    protected $threeDsIntegration;
+    public $threeDsIntegration;
 
     /**
      * @var HttpRequest
      */
-    protected $httpRequest;
+    public $httpRequest;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @var OrderRepositoryInterface

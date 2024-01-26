@@ -22,74 +22,74 @@ class Client
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var OrderHelper
      */
-    protected $orderHelper;
+    public $orderHelper;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var OrderResourceModel
      */
-    protected $orderResourceModel;
+    public $orderResourceModel;
 
     /**
      * @var RecordReturnFactory
      */
-    protected $recordReturnFactory;
+    public $recordReturnFactory;
 
     /**
      * @var DirectoryList
      */
-    protected $directory;
+    public $directory;
 
     /**
      * @var SaleApiFactory
      */
-    protected $saleApiFactory;
+    public $saleApiFactory;
 
     /**
      * @var CheckoutApiFactory
      */
-    protected $checkoutApiFactory;
+    public $checkoutApiFactory;
 
     /**
      * @var WebhooksApiFactory
      */
-    protected $webhooksApiFactory;
+    public $webhooksApiFactory;
 
     /**
      * @var WebhooksV2ApiFactory
      */
-    protected $webhooksV2ApiFactory;
+    public $webhooksV2ApiFactory;
 
     /**
      * Array of SignifydAPI, one for each store code
      *
      * @var array
      */
-    protected $signifydAPI = [];
+    public $signifydAPI = [];
 
     /**
      * @param ConfigHelper $configHelper

@@ -11,12 +11,12 @@ class CoverageRequests
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @param JsonSerializer $jsonSerializer

@@ -15,32 +15,32 @@ class Register extends Action
     /**
      * @var WebhookLink
      */
-    protected $webhookLink;
+    public $webhookLink;
 
     /**
      * @var WebhooksApiFactory
      */
-    protected $webhooksApiFactory;
+    public $webhooksApiFactory;
 
     /**
      * @var \Magento\Store\Model\StoreManagerInterface $storeManager
      */
-    protected $storeManager;
+    public $storeManager;
 
     /**
      * @var WebhookFactory
      */
-    protected $webhookFactory;
+    public $webhookFactory;
 
     /**
      * @var WebhookV2Factory
      */
-    protected $webhookV2Factory;
+    public $webhookV2Factory;
 
     /**
      * @var Client
      */
-    protected $client;
+    public $client;
 
     /**
      * Register constructor.

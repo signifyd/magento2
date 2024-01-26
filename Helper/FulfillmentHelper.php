@@ -16,52 +16,52 @@ class FulfillmentHelper
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var FulfillmentFactory
      */
-    protected $fulfillmentFactory;
+    public $fulfillmentFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var FulfillmentResourceModel
      */
-    protected $fulfillmentResourceModel;
+    public $fulfillmentResourceModel;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var SerializerInterface
      */
-    protected $serializer;
+    public $serializer;
 
     /**
      * @var OrderHelper
      */
-    protected $orderHelper;
+    public $orderHelper;
 
     /**
      * @var CarrierFactory
      */
-    protected $carrierFactory;
+    public $carrierFactory;
 
     /**
      * @var OriginFactory
      */
-    protected $originFactory;
+    public $originFactory;
 
     /**
      * FulfillmentHelper constructor.

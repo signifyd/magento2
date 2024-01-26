@@ -11,17 +11,17 @@ class Origin
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * @var RegionFactory
      */
-    protected $regionFactory;
+    public $regionFactory;
 
     /**
      * @var RegionResourceModel
      */
-    protected $regionResourceModel;
+    public $regionResourceModel;
 
     /**
      * @param ScopeConfigInterface $scopeConfigInterface

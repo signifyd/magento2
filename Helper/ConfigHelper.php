@@ -19,40 +19,40 @@ class ConfigHelper
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * Associative array of order_id => store_code
      * @var array
      */
-    protected $storeCodes = [];
+    public $storeCodes = [];
 
     /**
      * Array of SignifydAPI, one for each store code
      *
      * @var array
      */
-    protected $signifydAPI = [];
+    public $signifydAPI = [];
 
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManager;
+    public $storeManager;
 
     /**
      * @var OrderFactory
      */
-    protected $orderFactory;
+    public $orderFactory;
 
     /**
      * @var SignifydOrderResourceModel
      */
-    protected $signifydOrderResourceModel;
+    public $signifydOrderResourceModel;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * ConfigHelper constructor.

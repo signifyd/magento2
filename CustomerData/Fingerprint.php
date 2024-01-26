@@ -13,17 +13,17 @@ class Fingerprint extends DataObject implements SectionSourceInterface
     /**
      * @var DeviceHelper
      */
-    protected $deviceHelper;
+    public $deviceHelper;
 
     /**
      * @var int
      */
-    protected $quoteId;
+    public $quoteId;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManagerInterface;
+    public $storeManagerInterface;
 
     /**
      * FingerprintSection constructor.

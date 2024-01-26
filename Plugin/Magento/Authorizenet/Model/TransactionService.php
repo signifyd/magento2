@@ -9,7 +9,7 @@ class TransactionService
     /**
      * @var Registry
      */
-    protected $registry;
+    public $registry;
 
     /**
      * Payflowlink constructor.

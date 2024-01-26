@@ -10,12 +10,12 @@ class OrderAddressTest extends OrderTestCase
     /**
      * @var \Magento\Sales\Model\Order\AddressRepository
      */
-    protected $addressRepository;
+    public $addressRepository;
 
     /**
      * @var \Magento\Sales\Model\OrderRepository
      */
-    protected $orderRepository;
+    public $orderRepository;
 
     public function setUp(): void
     {

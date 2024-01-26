@@ -7,12 +7,12 @@ class RecordReturn
     /**
      * @var DeviceFactory
      */
-    protected $deviceFactory;
+    public $deviceFactory;
 
     /**
      * @var ProductFactory
      */
-    protected $productFactory;
+    public $productFactory;
 
     /**
      * @param DeviceFactory $deviceFactory

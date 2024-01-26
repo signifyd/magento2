@@ -13,17 +13,17 @@ class Transaction implements ObserverInterface
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var ProcessTransactionFactory
      */
-    protected $processTransactionFactory;
+    public $processTransactionFactory;
 
     /**
      * Transaction constructor.

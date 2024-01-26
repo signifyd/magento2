@@ -14,27 +14,27 @@ class Product
     /**
      * @var CategoryCollectionFactory
      */
-    protected $categoryCollectionFactory;
+    public $categoryCollectionFactory;
 
     /**
      * @var CategoryFactory
      */
-    protected $categoryFactory;
+    public $categoryFactory;
 
     /**
      * @var CategoryResourceModel
      */
-    protected $categoryResourceModel;
+    public $categoryResourceModel;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManagerInterface;
+    public $storeManagerInterface;
 
     /**
      * @var SubscriptionFactory
      */
-    protected $subscriptionFactory;
+    public $subscriptionFactory;
 
     /**
      * @param CategoryCollectionFactory $categoryCollectionFactory

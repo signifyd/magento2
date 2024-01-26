@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\Last4Mapper as Base_Last4Mapper;
 
 class Last4Mapper extends Base_Last4Mapper
 {
-    protected $allowedMethods = ['payflow_link', 'payflow_advanced'];
+    public $allowedMethods = ['payflow_link', 'payflow_advanced'];
 
     /**
      * Gets last 4 credit card digits from Payflow response

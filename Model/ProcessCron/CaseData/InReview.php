@@ -19,57 +19,57 @@ class InReview
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var OrderResourceModel
      */
-    protected $orderResourceModel;
+    public $orderResourceModel;
 
     /**
      * @var OrderFactory
      */
-    protected $orderFactory;
+    public $orderFactory;
 
     /**
      * @var SignifydOrderResourceModel
      */
-    protected $signifydOrderResourceModel;
+    public $signifydOrderResourceModel;
 
     /**
      * @var UpdateCaseFactory
      */
-    protected $updateCaseFactory;
+    public $updateCaseFactory;
 
     /**
      * @var UpdateOrderFactory
      */
-    protected $updateOrderFactory;
+    public $updateOrderFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManagerInterface;
+    public $storeManagerInterface;
 
     /**
      * @var ReInitStripeFactory
      */
-    protected $reInitStripeFactory;
+    public $reInitStripeFactory;
 
     /**
      * @var Client
      */
-    protected $client;
+    public $client;
 
     /**
      * InReview constructor.

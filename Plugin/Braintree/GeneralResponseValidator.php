@@ -18,49 +18,49 @@ class GeneralResponseValidator
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManager;
+    public $storeManager;
 
     /**
      * @var QuoteFactory
      */
-    protected $quoteFactory;
+    public $quoteFactory;
 
     /**
      * @var QuoteResourceModel
      */
-    protected $quoteResourceModel;
+    public $quoteResourceModel;
 
     /**
      * @var TransactionsFactory
      */
-    protected $transactionsFactory;
+    public $transactionsFactory;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var Client
      */
-    protected $client;
+    public $client;
 
-    protected $subjectReader;
+    public $subjectReader;
 
     /**
      * CheckoutPaymentsDetailsHandler constructor.

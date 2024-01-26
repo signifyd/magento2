@@ -20,22 +20,22 @@ class Hold
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var OrderHelper
      */
-    protected $orderHelper;
+    public $orderHelper;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var OrderResourceModel
      */
-    protected $orderResourceModel;
+    public $orderResourceModel;
 
     /**
      * @param ConfigHelper $configHelper

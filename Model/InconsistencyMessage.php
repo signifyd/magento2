@@ -16,12 +16,12 @@ class InconsistencyMessage implements MessageInterface
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * @var UrlInterface
      */
-    protected $urlInterface;
+    public $urlInterface;
 
     /**
      * @param ScopeConfigInterface $scopeConfigInterface

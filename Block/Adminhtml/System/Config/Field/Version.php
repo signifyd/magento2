@@ -14,7 +14,7 @@ class Version extends Field
     /**
      * @var ResourceInterface
      */
-    protected $moduleResource;
+    public $moduleResource;
 
     public function __construct(
         ResourceInterface $moduleResource,

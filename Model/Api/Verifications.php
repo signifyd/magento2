@@ -12,12 +12,12 @@ class Verifications
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var PaymentVerificationFactory
      */
-    protected $paymentVerificationFactory;
+    public $paymentVerificationFactory;
 
     /**
      * @param Logger $logger

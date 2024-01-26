@@ -21,22 +21,22 @@ class CaseInfo extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
     /**
      * @var Casedata
      */
-    private $caseEntity;
+    public $caseEntity;
 
     /**
      * @var LogsCollectionFactory
      */
-    protected $logsCollectionFactory;
+    public $logsCollectionFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * CaseInfo constructor.

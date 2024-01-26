@@ -24,27 +24,27 @@ class RerouteRepository implements RerouteRepositoryInterface
     /**
      * @var Reroute
      */
-    protected $searchResultsFactory;
+    public $searchResultsFactory;
 
     /**
      * @var RerouteInterfaceFactory
      */
-    protected $rerouteFactory;
+    public $rerouteFactory;
 
     /**
      * @var CollectionProcessorInterface
      */
-    protected $collectionProcessor;
+    public $collectionProcessor;
 
     /**
      * @var RerouteCollectionFactory
      */
-    protected $rerouteCollectionFactory;
+    public $rerouteCollectionFactory;
 
     /**
      * @var ResourceReroute
      */
-    protected $resource;
+    public $resource;
 
 
     /**
