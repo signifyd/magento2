@@ -239,7 +239,20 @@ class Client
 
         $this->logger->debug('Return case ' . $case->getData('order_id'), ['entity' => $order]);
         $recordReturn = $this->recordReturnFactory->create();
-        $recordReturnResponse = $this->getSignifydSaleApi($order)->recordReturn($recordReturn($order));
+        $recordReturnData = $recordReturn($order);
+
+        $this->logger->info(
+            "Call record a return with: " . $this->jsonSerializer->serialize($recordReturnData),
+            ['entity' => $order]
+        );
+
+        $recordReturnResponse = $this->getSignifydSaleApi($order)->recordReturn($recordReturnData);
+
+        $this->logger->info(
+            "Record a return response: " . $this->jsonSerializer->serialize($recordReturnResponse),
+            ['entity' => $order]
+        );
+
         $returnId = $recordReturnResponse->getReturnId();
 
         if (isset($returnId)) {
