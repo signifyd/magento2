@@ -6,6 +6,11 @@ use Signifyd\Connect\Test\Integration\OrderTestCase;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\Casedata\UpdateCaseV2Factory;
 use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
+use Signifyd\Connect\Model\UpdateOrderFactory;
+use Signifyd\Connect\Model\LogsFile;
+use Magento\Framework\Filesystem;
+use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Filesystem\Driver\File as DriverFile;
 
 class CreateTest extends OrderTestCase
 {
@@ -22,6 +27,11 @@ class CreateTest extends OrderTestCase
 
         $this->retryCaseJob = $this->objectManager->create(\Signifyd\Connect\Cron\RetryCaseJob::class);
         $this->updateCaseFactory = $this->objectManager->create(UpdateCaseFactory::class);
+        $this->updateOrderFactory = $this->objectManager->create(UpdateOrderFactory::class);
+        $this->logsFile = $this->objectManager->create(LogsFile::class);
+        $this->filesystem = $this->objectManager->create(Filesystem::class);
+        $this->directoryList = $this->objectManager->get(DirectoryList::class);
+        $this->driverFile = $this->objectManager->create(DriverFile::class);
     }
 
     /**

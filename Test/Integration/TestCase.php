@@ -73,11 +73,17 @@ class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * @return \Magento\Sales\Model\Order
      */
-    public function getOrder()
+    public function getOrder($orderId = null)
     {
         /** @var \Magento\Sales\Model\Order $order */
         $order = $this->objectManager->get(\Magento\Sales\Model\Order::class);
-        $order->loadByIncrementId($this->incrementId);
+
+        if (isset($orderId)) {
+            $order->load($orderId);
+        } else {
+            $order->loadByIncrementId($this->incrementId);
+        }
+
         return $order;
     }
 }
