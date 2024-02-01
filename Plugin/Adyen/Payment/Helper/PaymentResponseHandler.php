@@ -2,6 +2,7 @@
 
 namespace Signifyd\Connect\Plugin\Adyen\Payment\Helper;
 
+use Magento\Framework\Registry;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
@@ -63,6 +64,11 @@ class PaymentResponseHandler
     protected $casedataResourceModel;
 
     /**
+     * @var Registry
+     */
+    protected $registry;
+
+    /**
      * @param ThreeDsIntegration $threeDsIntegration
      * @param HttpRequest $httpRequest
      * @param JsonSerializer $jsonSerializer
@@ -72,6 +78,7 @@ class PaymentResponseHandler
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param OrderHelper $orderHelper
+     * @param Registry $registry
      */
     public function __construct(
         ThreeDsIntegration $threeDsIntegration,
@@ -82,7 +89,8 @@ class PaymentResponseHandler
         Logger $logger,
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
-        OrderHelper $orderHelper
+        OrderHelper $orderHelper,
+        Registry $registry
     ) {
         $this->threeDsIntegration = $threeDsIntegration;
         $this->httpRequest = $httpRequest;
@@ -93,6 +101,7 @@ class PaymentResponseHandler
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->orderHelper = $orderHelper;
+        $this->registry = $registry;
     }
 
     public function beforeFormatPaymentResponse(
@@ -222,6 +231,10 @@ class PaymentResponseHandler
 
         try {
             if (isset($paymentsResponse['resultCode']) && $paymentsResponse['resultCode'] === $subject::REFUSED) {
+                $this->registry->register(
+                    'gateway_restriction', 'Adyen refused payment'
+                );
+
                 $orderId = $order->getId();
                 $case = $this->casedataFactory->create();
                 $this->casedataResourceModel->load($case, $orderId, 'order_id');
