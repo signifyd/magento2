@@ -243,11 +243,6 @@ class PaymentResponseHandler
                     return [$paymentsResponse, $payment, $order];
                 }
 
-                if ($case->getData('magento_status') === Casedata::ASYNC_WAIT && empty($case->getData('code'))) {
-                    $case->setEntries('async_action', 'delete');
-                    $this->casedataResourceModel->save($case);
-                }
-
                 if ($order->canUnhold()) {
                     try {
                         $order->unhold();
