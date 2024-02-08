@@ -117,6 +117,8 @@ class InReview
      */
     public function __invoke(array $inReviewCases)
     {
+        $previousStore = $this->storeManagerInterface->getStore()->getId();
+
         /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($inReviewCases as $case) {
             try {
@@ -182,5 +184,7 @@ class InReview
                 );
             }
         }
+
+        $this->storeManagerInterface->setCurrentStore($previousStore);
     }
 }

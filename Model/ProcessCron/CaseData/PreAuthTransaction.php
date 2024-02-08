@@ -72,6 +72,8 @@ class PreAuthTransaction
      */
     public function __invoke(array $preAuthCases)
     {
+        $previousStore = $this->storeManagerInterface->getStore()->getId();
+
         /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($preAuthCases as $case) {
             try {
@@ -107,5 +109,7 @@ class PreAuthTransaction
                 );
             }
         }
+
+        $this->storeManagerInterface->setCurrentStore($previousStore);
     }
 }
