@@ -128,6 +128,9 @@ git apply pre-auth-authorizenet.patch
 
 ### Stripe
 
+> [!IMPORTANT]
+> Stripe is compatible with pre auth, however it's not possible to collect any payment data
+
 - Call transaction API on failure: yes
 - Payment data available:
     - Bin: no
