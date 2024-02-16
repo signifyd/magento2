@@ -2,7 +2,7 @@
 
 namespace Signifyd\Connect\Model\Api;
 
-use Magento\Framework\Registry;
+use Signifyd\Connect\Model\Registry;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
@@ -275,7 +275,7 @@ class CheckoutOrder
              * It must be unregistered after use
              * @see \Signifyd\Connect\Plugin\Magento\Paypal\Model\Payflowlink
              */
-            $this->registry->unregister('signifyd_payment_data');
+            $this->registry->setData('signifyd_payment_data');
         } catch (\Exception $e) {
             $this->logger->info("Failed to create checkout order " . $e->getMessage(), ['entity' => $quote]);
         } catch (\Error $e) {

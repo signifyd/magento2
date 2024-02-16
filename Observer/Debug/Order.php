@@ -8,7 +8,7 @@ namespace Signifyd\Connect\Observer\Debug;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\Registry;
+use Signifyd\Connect\Model\Registry;
 use Magento\Framework\UrlInterface;
 use Signifyd\Connect\Logger\Debugger;
 use Signifyd\Connect\Helper\ConfigHelper;
@@ -71,7 +71,7 @@ class Order implements ObserverInterface
                 $currentState = $order->getOrigData('state');
                 $incrementId = $order->getIncrementId();
 
-                $cronJob = $this->registry->registry('signifyd_cron_job_run');
+                $cronJob = $this->registry->getData('signifyd_cron_job_run');
 
                 if (isset($cronJob)) {
                     $this->logger->debug("cron job current process: {$cronJob}");

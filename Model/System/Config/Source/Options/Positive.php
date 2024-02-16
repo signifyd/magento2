@@ -6,13 +6,13 @@
 namespace Signifyd\Connect\Model\System\Config\Source\Options;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Option\ArrayInterface;
+use Magento\Framework\Data\OptionSourceInterface;
 use Magento\Store\Model\ScopeInterface;
 
 /**
  * Option data for positive order actions
  */
-class Positive implements ArrayInterface
+class Positive implements OptionSourceInterface
 {
     /**
      * @var ScopeConfigInterface

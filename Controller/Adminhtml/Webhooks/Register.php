@@ -72,6 +72,9 @@ class Register extends Action
 
     public function execute()
     {
+        /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */
+        $resultRedirect = $this->resultRedirectFactory->create();
+
         try {
             $url = $this->webhookLink->getUrl();
             $isWebhookRegistered = false;
@@ -144,12 +147,10 @@ class Register extends Action
             $this->messageManager->addErrorMessage(
                 __('There was a problem registering the webooks: ' . $e->getMessage())
             );
-
-            return $this->_redirect($this->_redirect->getRefererUrl());
+            return $resultRedirect->setUrl($this->_redirect->getRefererUrl());
         }
 
         $this->messageManager->addSuccessMessage(__('The webhook was registred successfully.'));
-
-        return $this->_redirect($this->_redirect->getRefererUrl());
+        return $resultRedirect->setUrl($this->_redirect->getRefererUrl());
     }
 }

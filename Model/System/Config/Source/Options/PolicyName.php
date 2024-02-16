@@ -2,7 +2,9 @@
 
 namespace Signifyd\Connect\Model\System\Config\Source\Options;
 
-class PolicyName implements \Magento\Framework\Option\ArrayInterface
+use Magento\Framework\Data\OptionSourceInterface;
+
+class PolicyName implements OptionSourceInterface
 {
     /**
      * Options getter

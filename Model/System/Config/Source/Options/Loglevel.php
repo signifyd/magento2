@@ -2,7 +2,9 @@
 
 namespace Signifyd\Connect\Model\System\Config\Source\Options;
 
-class Loglevel implements \Magento\Framework\Option\ArrayInterface
+use Magento\Framework\Data\OptionSourceInterface;
+
+class Loglevel implements OptionSourceInterface
 {
     /**
      * Options getter

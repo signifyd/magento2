@@ -4,7 +4,7 @@ namespace Signifyd\Connect\Plugin\CyberSource\Gateway\Command;
 
 use CyberSource\Core\Gateway\Command\HandleResponseCommand as CyberHandleResponseCommand;
 use Magento\Framework\ObjectManagerInterface;
-use Magento\Framework\Registry;
+use Signifyd\Connect\Model\Registry;
 use Signifyd\Connect\Model\TransactionIntegration;
 
 class HandleResponseCommand
@@ -55,20 +55,23 @@ class HandleResponseCommand
             return $response;
         }
 
-        if ($response['decision'] != 'REJECT') {
-            $this->registry->unregister('signifyd_payment_data');
-            $this->registry->register('signifyd_payment_data', $response);
-            return $response;
-        }
-
-        if (isset($response['reasonCode']) === false) {
+        if ($response['decision'] != 'REJECT' && $response['decision'] != 'DECLINE') {
+            $this->registry->setData('signifyd_payment_data', $response);
             return $response;
         }
 
         $signifydReason = null;
         $signifydMessage = null;
 
-        switch ($response['reasonCode']) {
+        if (isset($response['reasonCode'])) {
+            $reasonCode = $response['reasonCode'];
+        } elseif (isset($response['reason_code'])) {
+            $reasonCode = $response['reason_code'];
+        } else {
+            return $response;
+        }
+
+        switch ($reasonCode) {
             case '101':
                 $signifydReason = 'CARD_DECLINED';
                 $signifydMessage = 'Declined - The request is missing one or more fields';

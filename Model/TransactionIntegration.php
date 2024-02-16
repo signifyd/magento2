@@ -2,12 +2,12 @@
 
 namespace Signifyd\Connect\Model;
 
+use Magento\Checkout\Model\Session as CheckoutSession;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
-use Magento\Checkout\Model\Cart as CheckoutCart;
 use Signifyd\Connect\Model\Api\TransactionsFactory;
 
 class TransactionIntegration
@@ -38,9 +38,9 @@ class TransactionIntegration
     protected $storeManager;
 
     /**
-     * @var CheckoutCart
+     * @var CheckoutSession
      */
-    protected $checkoutCart;
+    protected $checkoutSession;
 
     /**
      * @var TransactionsFactory
@@ -62,7 +62,7 @@ class TransactionIntegration
      * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
      * @param StoreManagerInterface $storeManager
-     * @param CheckoutCart $checkoutCart
+     * @param CheckoutSession $checkoutSession
      * @param TransactionsFactory $transactionsFactory
      * @param ConfigHelper $configHelper
      * @param Client $client
@@ -72,7 +72,7 @@ class TransactionIntegration
         CasedataResourceModel $casedataResourceModel,
         Logger $logger,
         StoreManagerInterface $storeManager,
-        CheckoutCart $checkoutCart,
+        CheckoutSession $checkoutSession,
         TransactionsFactory $transactionsFactory,
         ConfigHelper $configHelper,
         Client $client
@@ -81,7 +81,7 @@ class TransactionIntegration
         $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
         $this->storeManager = $storeManager;
-        $this->checkoutCart = $checkoutCart;
+        $this->checkoutSession = $checkoutSession;
         $this->transactionsFactory = $transactionsFactory;
         $this->configHelper = $configHelper;
         $this->client = $client;
@@ -89,7 +89,7 @@ class TransactionIntegration
 
     public function submitToTransactionApi()
     {
-        $quote = $this->checkoutCart->getQuote();
+        $quote = $this->checkoutSession->getQuote();
 
         if ($quote->isEmpty()) {
             return null;
