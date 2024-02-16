@@ -8,6 +8,7 @@ namespace Signifyd\Connect\Observer;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Registry;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
@@ -134,6 +135,11 @@ class Purchase implements ObserverInterface
     public $paymentVerificationFactory;
 
     /**
+     * @var Registry
+     */
+    protected $registry;
+
+    /**
      * Purchase constructor.
      * @param Logger $logger
      * @param ConfigHelper $configHelper
@@ -152,6 +158,7 @@ class Purchase implements ObserverInterface
      * @param SaleOrderFactory $saleOrderFactory
      * @param Client $client
      * @param PaymentVerificationFactory $paymentVerificationFactory
+     *  @param Registry $registry
      */
     public function __construct(
         Logger $logger,
@@ -170,7 +177,8 @@ class Purchase implements ObserverInterface
         RecipientFactory $recipientFactory,
         SaleOrderFactory $saleOrderFactory,
         Client $client,
-        PaymentVerificationFactory $paymentVerificationFactory
+        PaymentVerificationFactory $paymentVerificationFactory,
+        Registry $registry
     ) {
         $this->logger = $logger;
         $this->configHelper = $configHelper;
@@ -189,6 +197,7 @@ class Purchase implements ObserverInterface
         $this->saleOrderFactory = $saleOrderFactory;
         $this->client = $client;
         $this->paymentVerificationFactory = $paymentVerificationFactory;
+        $this->registry = $registry;
     }
 
     /**
@@ -364,6 +373,16 @@ class Purchase implements ObserverInterface
 
             if ($this->isStateRestricted($state, 'create')) {
                 $message = 'Case creation for order ' . $incrementId . ' with state ' . $state . ' is restricted';
+                $this->logger->debug($message, ['entity' => $order]);
+                return;
+            }
+
+            $gatewayRestriction = $this->registry->registry('gateway_restriction');
+
+            if (isset($gatewayRestriction)) {
+                $this->registry->unregister('gateway_restriction');
+                $message = 'Case creation for order ' . $incrementId .
+                    ' is restricted by gateway: ' . $gatewayRestriction;
                 $this->logger->debug($message, ['entity' => $order]);
                 return;
             }
