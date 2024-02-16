@@ -16,17 +16,17 @@ class ValidateOrderId
     /**
      * @var CasedataCollectionFactory
      */
-    protected $casedataCollection;
+    public $casedataCollection;
 
     /**
      * @var WriterInterface
      */
-    protected $writerInterface;
+    public $writerInterface;
 
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * @param CasedataCollectionFactory $casedataCollection

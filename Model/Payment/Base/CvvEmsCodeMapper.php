@@ -11,7 +11,7 @@ class CvvEmsCodeMapper extends DataMapper
      *
      * @var array
      */
-    protected $validCvvResponseCodes = ['M', 'N', 'P', 'S', 'U'];
+    public $validCvvResponseCodes = ['M', 'N', 'P', 'S', 'U'];
 
     /**
      * Gets payment CVV verification code.

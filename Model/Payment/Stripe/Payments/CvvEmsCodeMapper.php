@@ -8,7 +8,7 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
 {
     use MapperTrait;
 
-    protected $allowedMethods = ['stripe_payments'];
+    public $allowedMethods = ['stripe_payments'];
 
     /**
      * List of mapping CVV codes
@@ -17,7 +17,7 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
      *
      * @var array
      */
-    protected $cvvMap = [
+    public $cvvMap = [
         'pass' => 'M',
         'fail' => 'N',
         'unchecked' => 'P'

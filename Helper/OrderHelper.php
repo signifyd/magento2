@@ -13,12 +13,12 @@ class OrderHelper
     /**
      * @var HistoryFactory
      */
-    protected $historyFactory;
+    public $historyFactory;
 
     /**
      * @var HistoryResourceModel
      */
-    protected $historyResourceModel;
+    public $historyResourceModel;
 
     /**
      * OrderHelper constructor.

@@ -12,22 +12,22 @@ class Device
     /**
      * @var RemoteAddress
      */
-    protected $remoteAddress;
+    public $remoteAddress;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var DeviceHelper
      */
-    protected $deviceHelper;
+    public $deviceHelper;
 
     /**
      * @var FingerprintFactory
      */
-    protected $fingerprintFactory;
+    public $fingerprintFactory;
 
     /**
      * @param RemoteAddress $remoteAddress

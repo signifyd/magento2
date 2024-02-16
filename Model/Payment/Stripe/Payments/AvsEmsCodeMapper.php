@@ -8,7 +8,7 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
 {
     use MapperTrait;
 
-    protected $allowedMethods = ['stripe_payments'];
+    public $allowedMethods = ['stripe_payments'];
 
     /**
      * List of mapping AVS codes
@@ -17,7 +17,7 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
      *
      * @var array
      */
-    protected $avsMap = [
+    public $avsMap = [
         'pass_pass' => 'Y',
         'pass_fail' => 'A',
         'fail_pass' => 'Z',

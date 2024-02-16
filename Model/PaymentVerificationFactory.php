@@ -18,62 +18,62 @@ class PaymentVerificationFactory
     /**
      * @var ConfigInterface
      */
-    protected $config;
+    public $config;
 
     /**
      * @var ObjectManagerInterface
      */
-    protected $objectManager;
+    public $objectManager;
 
     /**
      * @var PaymentVerificationInterface
      */
-    protected $avsDefaultAdapter;
+    public $avsDefaultAdapter;
 
     /**
      * @var PaymentVerificationInterface
      */
-    protected $cvvDefaultAdapter;
+    public $cvvDefaultAdapter;
 
     /**
      * @var PaymentVerificationInterface
      */
-    protected $cardholderDefaultAdapter;
+    public $cardholderDefaultAdapter;
 
     /**
      * @var PaymentVerificationInterface
      */
-    protected $last4DefaultAdapter;
+    public $last4DefaultAdapter;
 
     /**
      * @var PaymentVerificationInterface
      */
-    protected $expMonthDefaultAdapter;
+    public $expMonthDefaultAdapter;
 
     /**
      * @var PaymentVerificationInterface
      */
-    protected $expYearDefaultAdapter;
+    public $expYearDefaultAdapter;
 
     /**
      * @var PaymentVerificationInterface
      */
-    protected $binDefaultAdapter;
+    public $binDefaultAdapter;
 
     /**
      * @var PaymentVerificationInterface
      */
-    protected $transactionIdDefaultAdapter;
+    public $transactionIdDefaultAdapter;
 
     /**
      * @var AsyncCheckerInterface
      */
-    protected $asyncCheckDefaultAdapter;
+    public $asyncCheckDefaultAdapter;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @param ObjectManagerInterface $objectManager

@@ -14,17 +14,17 @@ class ReroutesToRetry extends RetryModel
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var RerouteCollectionFactory
      */
-    protected $objectCollectionFactory;
+    public $objectCollectionFactory;
 
     /**
      * @var RerouteResourceModel
      */
-    protected $objectResourceModel;
+    public $objectResourceModel;
 
     /**
      * Retry constructor.

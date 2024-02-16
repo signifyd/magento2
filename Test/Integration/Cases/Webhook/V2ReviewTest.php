@@ -8,7 +8,7 @@ use Signifyd\Connect\Model\Casedata;
 
 class V2ReviewTest extends OrderTestCase
 {
-    protected $incrementId = '100000002';
+    public $incrementId = '100000002';
 
     /**
      * @magentoDataFixture configFixture

@@ -9,7 +9,7 @@ class Tags
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * @param ScopeConfigInterface $scopeConfigInterface

@@ -14,102 +14,102 @@ class CheckoutOrder
     /**
      * @var Registry
      */
-    protected $registry;
+    public $registry;
 
     /**
      * @var PurchaseFactory
      */
-    protected $purchaseFactory;
+    public $purchaseFactory;
 
     /**
      * @var UserAccountFactory
      */
-    protected $userAccountFactory;
+    public $userAccountFactory;
 
     /**
      * @var CoverageRequestsFactory
      */
-    protected $coverageRequestsFactory;
+    public $coverageRequestsFactory;
 
     /**
      * @var QuoteResourceModel
      */
-    protected $quoteResourceModel;
+    public $quoteResourceModel;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @var DeviceFactory
      */
-    protected $deviceFactory;
+    public $deviceFactory;
 
     /**
      * @var MerchantPlatformFactory
      */
-    protected $merchantPlatformFactory;
+    public $merchantPlatformFactory;
 
     /**
      * @var SignifydClientFactory
      */
-    protected $signifydClientFactory;
+    public $signifydClientFactory;
 
     /**
      * @var TagsFactory
      */
-    protected $tagsFactory;
+    public $tagsFactory;
 
     /**
      * @var AddressFactory
      */
-    protected $addressFactory;
+    public $addressFactory;
 
     /**
      * @var SellersFactory
      */
-    protected $sellersFactory;
+    public $sellersFactory;
 
     /**
      * @var CustomerOrderRecommendationFactory
      */
-    protected $customerOrderRecommendationFactory;
+    public $customerOrderRecommendationFactory;
 
     /**
      * @var SourceAccountDetailsFactory
      */
-    protected $sourceAccountDetailsFactory;
+    public $sourceAccountDetailsFactory;
 
     /**
      * @var AcquirerDetailsFactory
      */
-    protected $acquirerDetailsFactory;
+    public $acquirerDetailsFactory;
 
     /**
      * @var MembershipsFactory
      */
-    protected $membershipsFactory;
+    public $membershipsFactory;
 
     /**
      * @var MerchantCategoryCodeFactory
      */
-    protected $merchantCategoryCodeFactory;
+    public $merchantCategoryCodeFactory;
 
     /**
      * @var PaymentMethodFactory
      */
-    protected $paymentMethodFactory;
+    public $paymentMethodFactory;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @param Registry $registry

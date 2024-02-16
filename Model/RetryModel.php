@@ -11,11 +11,11 @@ class RetryModel extends AbstractHelper
     /**
      * @var Logger
      */
-    protected $logger;
-    
-    protected $objectCollectionFactory;
-    
-    protected $objectResourceModel;
+    public $logger;
+
+    public $objectCollectionFactory;
+
+    public $objectResourceModel;
 
     /**
      * Retry constructor.

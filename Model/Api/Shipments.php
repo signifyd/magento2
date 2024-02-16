@@ -13,32 +13,32 @@ class Shipments
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @var CarrierFactory
      */
-    protected $carrierFactory;
+    public $carrierFactory;
 
     /**
      * @var RecipientFactory
      */
-    protected $recipientFactory;
+    public $recipientFactory;
 
     /**
      * @var OriginFactory
      */
-    protected $originFactory;
+    public $originFactory;
 
     /**
      * @var MinDeliveryDateFactory
      */
-    protected $minDeliveryDateFactory;
+    public $minDeliveryDateFactory;
 
     /**
      * @param ScopeConfigInterface $scopeConfigInterface

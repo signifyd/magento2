@@ -12,22 +12,22 @@ class RetryFulfillmentJob
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var FulfillmentsToRetryFactory
      */
-    protected $fulfillmentsToRetryFactory;
+    public $fulfillmentsToRetryFactory;
 
     /**
      * @var FulfillmentFactory
      */
-    protected $fulfillmentFactory;
+    public $fulfillmentFactory;
 
     /**
      * @var SignifydFlags
      */
-    protected $signifydFlags;
+    public $signifydFlags;
 
     /**
      * RetryFulfillmentJob constructor.

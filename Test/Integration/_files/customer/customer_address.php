@@ -1,10 +1,5 @@
 <?php
-/**
- * Customer address fixture with entity_id = 1
- *
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
+
 $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
 /** @var \Magento\Customer\Model\Address $customerAddress */
 $customerAddress = $objectManager->create(\Magento\Customer\Model\Address::class);

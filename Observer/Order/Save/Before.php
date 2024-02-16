@@ -17,32 +17,32 @@ class Before implements ObserverInterface
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var AppState
      */
-    protected $appState;
+    public $appState;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManager;
+    public $storeManager;
 
     /**
      * @var RequestInterface
      */
-    protected $request;
+    public $request;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * Before constructor.

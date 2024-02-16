@@ -13,12 +13,12 @@ class AsyncChecker implements AsyncCheckerInterface
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var SaleOrderFactory
      */
-    protected $saleOrderFactory;
+    public $saleOrderFactory;
 
     /**
      * @param Logger $logger

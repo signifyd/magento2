@@ -17,7 +17,7 @@ class OrderTestCase extends TestCase
     /**
      * @var QuoteIdMaskFactory
      */
-    protected $quoteIdMaskFactory;
+    public $quoteIdMaskFactory;
 
     /**
      * @inheritdoc

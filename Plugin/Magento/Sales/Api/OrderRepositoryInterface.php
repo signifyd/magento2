@@ -15,22 +15,22 @@ class OrderRepositoryInterface
     /**
      * @var OrderFactory
      */
-    protected $orderFactory;
+    public $orderFactory;
 
     /**
      * @var OrderExtensionFactory
      */
-    protected $orderExtensionFactory;
+    public $orderExtensionFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @param OrderExtensionFactory $extensionFactory

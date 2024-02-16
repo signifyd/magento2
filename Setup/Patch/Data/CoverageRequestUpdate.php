@@ -11,12 +11,12 @@ class CoverageRequestUpdate implements DataPatchInterface
     /**
      * @var WriterInterface
      */
-    protected $configWriter;
+    public $configWriter;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @param WriterInterface $configWriter

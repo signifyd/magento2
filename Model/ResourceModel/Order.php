@@ -7,7 +7,7 @@ class Order extends \Magento\Sales\Model\ResourceModel\Order
     /**
      * @var bool
      */
-    protected $loadForUpdate = false;
+    public $loadForUpdate = false;
 
     public function loadForUpdate(\Magento\Framework\Model\AbstractModel $object, $value, $field = null)
     {

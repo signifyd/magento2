@@ -11,17 +11,17 @@ class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * @var \Magento\Framework\ObjectManagerInterface
      */
-    protected $objectManager;
+    public $objectManager;
 
     /**
      * @var \Signifyd\Connect\Logger\Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var string
      */
-    protected $incrementId;
+    public $incrementId;
 
     /**
      * @inheritdoc

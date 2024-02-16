@@ -9,22 +9,22 @@ use Magento\Framework\Stdlib\DateTime\DateTime;
 
 class InstallConfig implements DataPatchInterface
 {
-    protected $logger;
+    public $logger;
 
     /**
      * @var WriterInterface
      */
-    protected $writerInterface;
+    public $writerInterface;
 
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * @var DateTime
      */
-    protected $dateTime;
+    public $dateTime;
 
     /**
      * @param \Signifyd\Connect\Logger\Install $logger

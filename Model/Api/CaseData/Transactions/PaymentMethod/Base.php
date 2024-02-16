@@ -15,28 +15,28 @@ abstract class Base implements PaymentMethodMappingInterface
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * List of payment methods codes
      * @var array
      */
-    protected $allowedMethods = [];
+    public $allowedMethods = [];
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * @param JsonSerializer $jsonSerializer

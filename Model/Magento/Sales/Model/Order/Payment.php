@@ -17,12 +17,12 @@ class Payment extends \Magento\Sales\Model\Order\Payment
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var ScaEvaluation
      */
-    protected $scaEvaluation;
+    public $scaEvaluation;
 
     /**
      * @param ProductMetadataInterface $productMetadataInterface

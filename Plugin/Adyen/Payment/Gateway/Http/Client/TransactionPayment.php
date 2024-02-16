@@ -13,22 +13,22 @@ class TransactionPayment
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManager;
+    public $storeManager;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var ScaEvaluation
      */
-    protected $scaEvaluation;
+    public $scaEvaluation;
 
     /**
      * @var ScaEvaluationConfig
      */
-    protected $scaEvaluationConfig;
+    public $scaEvaluationConfig;
 
     /**
      * @param StoreManagerInterface $storeManager

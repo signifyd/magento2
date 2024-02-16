@@ -13,24 +13,24 @@ class Logs extends Action
     /**
      * @var LogsFile
      */
-    protected $logsFile;
+    public $logsFile;
 
     /**
      * @var FileFactory
      */
-    protected $fileFactory;
+    public $fileFactory;
 
     /**
      * @var Filesystem
      */
-    protected $filesystem;
+    public $filesystem;
 
     /**
      * Array of actions which can be processed without secret key validation
      *
      * @var string[]
      */
-    protected $_publicActions = ['logs'];
+    public $_publicActions = ['logs'];
 
     /**
      * @param Action\Context $context

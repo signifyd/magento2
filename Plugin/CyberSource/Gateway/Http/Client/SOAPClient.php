@@ -11,12 +11,12 @@ class SOAPClient
     /**
      * @var TransactionIntegration
      */
-    protected $transactionIntegration;
+    public $transactionIntegration;
 
     /**
      * @var Registry
      */
-    protected $registry;
+    public $registry;
 
     /**
      * CheckoutPaymentsDetailsHandler constructor.

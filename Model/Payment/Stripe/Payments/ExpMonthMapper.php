@@ -8,7 +8,7 @@ class ExpMonthMapper extends Base_ExpMonthMapper
 {
     use MapperTrait;
 
-    protected $allowedMethods = ['stripe_payments'];
+    public $allowedMethods = ['stripe_payments'];
 
     /**
      * Gets expiry month

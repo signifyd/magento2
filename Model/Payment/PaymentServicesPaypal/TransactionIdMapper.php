@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\TransactionIdMapper as Base_TransactionI
 
 class TransactionIdMapper extends Base_TransactionIdMapper
 {
-    protected $allowedMethods = ['payment_services_paypal_hosted_fields', 'payment_services_paypal_smart_buttons'];
+    public $allowedMethods = ['payment_services_paypal_hosted_fields', 'payment_services_paypal_smart_buttons'];
 
     /**
      * Get transaction ID from database for Authorize.Net

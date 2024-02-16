@@ -9,7 +9,7 @@ class MerchantPlatform
     /**
      * @var ProductMetadataInterface
      */
-    protected $productMetadataInterface;
+    public $productMetadataInterface;
 
     /**
      * @param ProductMetadataInterface $productMetadataInterface

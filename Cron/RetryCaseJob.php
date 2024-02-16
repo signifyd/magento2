@@ -21,37 +21,37 @@ class RetryCaseJob
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var FilterCasesByStatusFactory
      */
-    protected $filterCasesByStatusFactory;
+    public $filterCasesByStatusFactory;
 
     /**
      * @var InReviewFactory
      */
-    protected $inReviewFactory;
+    public $inReviewFactory;
 
     /**
      * @var WaitingSubmissionFactory
      */
-    protected $waitingSubmissionFactory;
+    public $waitingSubmissionFactory;
 
     /**
      * @var AsyncWaitingFactory
      */
-    protected $asyncWaitingFactory;
+    public $asyncWaitingFactory;
 
     /**
      * @var SignifydFlags
      */
-    protected $signifydFlags;
+    public $signifydFlags;
 
     /**
      * @var PreAuthTransactionFactory
      */
-    protected $preAuthTransactionFactory;
+    public $preAuthTransactionFactory;
 
     /**
      * RetryCaseJob constructor.

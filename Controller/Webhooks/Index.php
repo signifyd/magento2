@@ -37,82 +37,82 @@ class Index extends Action
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var File
      */
-    protected $file;
+    public $file;
 
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var OrderResourceModel
      */
-    protected $orderResourceModel;
+    public $orderResourceModel;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @var ResourceConnection
      */
-    protected $resourceConnection;
+    public $resourceConnection;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManagerInterface;
+    public $storeManagerInterface;
 
     /**
      * @var OrderFactory
      */
-    protected $orderFactory;
+    public $orderFactory;
 
     /**
      * @var SignifydOrderResourceModel
      */
-    protected $signifydOrderResourceModel;
+    public $signifydOrderResourceModel;
 
     /**
      * @var UpdateCaseV2Factory
      */
-    protected $updateCaseV2Factory;
+    public $updateCaseV2Factory;
 
     /**
      * @var UpdateCaseFactory
      */
-    protected $updateCaseFactory;
+    public $updateCaseFactory;
 
     /**
      * @var UpdateOrderFactory
      */
-    protected $updateOrderFactory;
+    public $updateOrderFactory;
 
     /**
      * @var Client
      */
-    protected $client;
+    public $client;
 
     /**
      * @var SignifydFlags
      */
-    protected $signifydFlags;
+    public $signifydFlags;
 
     /**
      * Index constructor.

@@ -14,17 +14,17 @@ class UserAccount
     /**
      * @var CustomerFactory
      */
-    protected $customerFactory;
+    public $customerFactory;
 
     /**
      * @var CustomerResourceModel
      */
-    protected $customerResourceModel;
+    public $customerResourceModel;
 
     /**
      * @var OrderCollectionFactory
      */
-    protected $orderCollectionFactory;
+    public $orderCollectionFactory;
 
     /**
      * @var ResourceConnection

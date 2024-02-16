@@ -24,27 +24,27 @@ class LogsRepository implements LogsRepositoryInterface
     /**
      * @var ResourceLogs
      */
-    protected $resource;
+    public $resource;
 
     /**
      * @var LogsInterfaceFactory
      */
-    protected $logsFactory;
+    public $logsFactory;
 
     /**
      * @var CollectionProcessorInterface
      */
-    protected $collectionProcessor;
+    public $collectionProcessor;
 
     /**
      * @var Logs
      */
-    protected $searchResultsFactory;
+    public $searchResultsFactory;
 
     /**
      * @var LogsCollectionFactory
      */
-    protected $logsCollectionFactory;
+    public $logsCollectionFactory;
 
 
     /**

@@ -21,22 +21,22 @@ class Order implements ObserverInterface
     /**
      * @var \Signifyd\Connect\Logger\Debugger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var UrlInterface
      */
-    protected $url;
+    public $url;
 
     /**
      * @var Registry
      */
-    protected $registry;
+    public $registry;
 
     /**
      * Order constructor.

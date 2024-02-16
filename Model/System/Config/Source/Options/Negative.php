@@ -17,12 +17,12 @@ class Negative implements OptionSourceInterface
     /**
      * @var ScopeConfigInterface
      */
-    protected $coreConfig;
+    public $coreConfig;
 
     /**
      * @var \Magento\Framework\App\RequestInterface
      */
-    protected $request;
+    public $request;
 
     /**
      * Negative constructor.

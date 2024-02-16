@@ -11,72 +11,72 @@ class SaleOrder
     /**
      * @var Registry
      */
-    protected $registry;
+    public $registry;
 
     /**
      * @var PurchaseFactory
      */
-    protected $purchaseFactory;
+    public $purchaseFactory;
 
     /**
      * @var UserAccountFactory
      */
-    protected $userAccountFactory;
+    public $userAccountFactory;
 
     /**
      * @var CoverageRequestsFactory
      */
-    protected $coverageRequestsFactory;
+    public $coverageRequestsFactory;
 
     /**
      * @var DeviceFactory
      */
-    protected $deviceFactory;
+    public $deviceFactory;
 
     /**
      * @var MerchantPlatformFactory
      */
-    protected $merchantPlatformFactory;
+    public $merchantPlatformFactory;
 
     /**
      * @var SignifydClientFactory
      */
-    protected $signifydClientFactory;
+    public $signifydClientFactory;
 
     /**
      * @var TransactionsFactory
      */
-    protected $transactionsFactory;
+    public $transactionsFactory;
 
     /**
      * @var TagsFactory
      */
-    protected $tagsFactory;
+    public $tagsFactory;
 
     /**
      * @var SellersFactory
      */
-    protected $sellersFactory;
+    public $sellersFactory;
 
     /**
      * @var CustomerOrderRecommendationFactory
      */
-    protected $customerOrderRecommendationFactory;
+    public $customerOrderRecommendationFactory;
 
     /**
      * @var MembershipsFactory
      */
-    protected $membershipsFactory;
+    public $membershipsFactory;
 
     /**
      * @var MerchantCategoryCodeFactory
      */
-    protected $merchantCategoryCodeFactory;
+    public $merchantCategoryCodeFactory;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @param Registry $registry

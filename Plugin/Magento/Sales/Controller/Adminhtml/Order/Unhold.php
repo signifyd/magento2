@@ -15,37 +15,37 @@ class Unhold
     /**
      * @var OrderRepositoryInterface
      */
-    protected $orderRepository;
+    public $orderRepository;
 
     /**
      * @var OrderHelper
      */
-    protected $orderHelper;
+    public $orderHelper;
 
     /**
      * @var Session
      */
-    protected $authSession;
+    public $authSession;
 
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var ResourceConnection
      */
-    protected $resourceConnection;
+    public $resourceConnection;
 
     /**
      * @var UpdateOrderAction
      */
-    protected $updateOrderAction;
+    public $updateOrderAction;
 
     /**
      * Unhold constructor.

@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\TransactionIdMapper as Base_TransactionI
 
 class TransactionIdMapper extends Base_TransactionIdMapper
 {
-    protected $allowedMethods = ['cybersource', 'chcybersource'];
+    public $allowedMethods = ['cybersource', 'chcybersource'];
 
     /**
      * Get transaction ID from database for Authorize.Net

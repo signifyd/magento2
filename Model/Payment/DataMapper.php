@@ -17,49 +17,49 @@ abstract class DataMapper implements PaymentVerificationInterface
     /**
      * @var Registry
      */
-    protected $registry;
+    public $registry;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @var PaymentGatewayFactory
      */
-    protected $paymentGatewayFactory;
+    public $paymentGatewayFactory;
 
     /**
      * List of payment methods codes
      * @var array
      */
-    protected $allowedMethods = [];
+    public $allowedMethods = [];
 
     /**
      * Flag to prevent accidental loop for getCode/getData calls
      * @var bool
      */
-    protected $getDataCalled = false;
+    public $getDataCalled = false;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var ObjectManagerInterface
      */
-    protected $objectManagerInterface;
+    public $objectManagerInterface;
 
     /**
      * @var EncryptorInterface
      */
-    protected $encryptor;
+    public $encryptor;
 
     /**
      * DataMapper constructor.

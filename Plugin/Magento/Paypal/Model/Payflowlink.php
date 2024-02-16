@@ -9,7 +9,7 @@ class Payflowlink
     /**
      * @var Registry
      */
-    protected $registry;
+    public $registry;
 
     /**
      * Payflowlink constructor.

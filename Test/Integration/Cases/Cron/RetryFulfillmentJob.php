@@ -9,7 +9,7 @@ class RetryFulfillmentJob extends OrderTestCase
     /**
      * @var \Signifyd\Connect\Cron\RetryFulfillmentJob
      */
-    protected $retryFulfillmentJob;
+    public $retryFulfillmentJob;
 
     public function setUp(): void
     {

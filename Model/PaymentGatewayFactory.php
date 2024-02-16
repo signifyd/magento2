@@ -9,12 +9,12 @@ class PaymentGatewayFactory
     /**
      * @var ObjectManagerInterface
      */
-    protected $objectManager;
+    public $objectManager;
 
     /**
      * @var array
      */
-    protected $gateways = [];
+    public $gateways = [];
 
     /**
      * PaymentGatewayFactory constructor.

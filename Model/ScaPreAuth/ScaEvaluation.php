@@ -15,27 +15,27 @@ class ScaEvaluation extends AbstractModel
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var ScaEvaluationModelFactory
      */
-    protected $scaEvaluationModelFactory;
+    public $scaEvaluationModelFactory;
 
     /**
      * @var SerializerInterface
      */
-    protected $serializer;
+    public $serializer;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @param Context $context

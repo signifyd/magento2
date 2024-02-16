@@ -6,8 +6,8 @@ class SignifydFlags
 {
     const FILE_NAME = 'signifyd_flags.json';
 
-    protected $directoryList;
-    protected $fileDriver;
+    public $directoryList;
+    public $fileDriver;
 
     public function __construct(
         \Magento\Framework\App\Filesystem\DirectoryList $directoryList,

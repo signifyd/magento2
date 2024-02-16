@@ -17,37 +17,37 @@ class SalesOrderAddressSave implements ObserverInterface
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var ProcessCronReroute
      */
-    protected $processCronReroute;
+    public $processCronReroute;
 
     /**
      * @var RerouteFactory
      */
-    protected $rerouteFactory;
+    public $rerouteFactory;
 
     /**
      * @var RerouteResourceModel
      */
-    protected $rerouteResourceModel;
+    public $rerouteResourceModel;
 
     public function __construct(
         CasedataFactory $casedataFactory,

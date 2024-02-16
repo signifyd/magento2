@@ -29,82 +29,82 @@ class PreAuth implements ObserverInterface
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var CartRepositoryInterface
      */
-    protected $quoteRepository;
+    public $quoteRepository;
 
     /**
      * @var ResponseFactory
      */
-    protected $responseFactory;
+    public $responseFactory;
 
     /**
      * @var UrlInterface
      */
-    protected $url;
+    public $url;
 
     /**
      * @var RedirectFactory
      */
-    protected $resultRedirectFactory;
+    public $resultRedirectFactory;
 
     /**
      * @var ResponseInterface
      */
-    protected $responseInterface;
+    public $responseInterface;
 
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var RequestHttp
      */
-    protected $requestHttp;
+    public $requestHttp;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var ObjectManagerInterface
      */
-    protected $objectManagerInterface;
+    public $objectManagerInterface;
 
     /**
      * @var CheckoutOrderFactory
      */
-    protected $checkoutOrderFactory;
+    public $checkoutOrderFactory;
 
     /**
      * @var Client
      */
-    protected $client;
+    public $client;
 
     /**
      * @var Recipient
      */
-    protected $recipient;
+    public $recipient;
 
     /**
      * PreAuth constructor.

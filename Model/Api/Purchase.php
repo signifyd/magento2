@@ -11,22 +11,22 @@ class Purchase
     /**
      * @var DateTimeFactory
      */
-    protected $dateTimeFactory;
+    public $dateTimeFactory;
 
     /**
      * @var ProductFactory
      */
-    protected $productFactory;
+    public $productFactory;
 
     /**
      * @var ShipmentsFactory
      */
-    protected $shipmentsFactory;
+    public $shipmentsFactory;
 
     /**
      * @var ReceivedByFactory
      */
-    protected $receivedByFactory;
+    public $receivedByFactory;
 
     /**
      * @param DateTimeFactory $dateTimeFactory

@@ -10,7 +10,7 @@ class Core
     /**
      * @var TransactionIntegration
      */
-    protected $transactionIntegration;
+    public $transactionIntegration;
 
     /**
      * @param TransactionIntegration $transactionIntegration

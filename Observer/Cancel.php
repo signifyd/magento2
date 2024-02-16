@@ -20,17 +20,17 @@ class Cancel implements ObserverInterface
     /**
      * @var \Signifyd\Connect\Logger\Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var \Signifyd\Connect\Helper\ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var Client
      */
-    protected $client;
+    public $client;
 
     /**
      * Cancel constructor.

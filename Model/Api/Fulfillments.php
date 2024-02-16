@@ -10,7 +10,7 @@ class Fulfillments
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @param JsonSerializer $jsonSerializer

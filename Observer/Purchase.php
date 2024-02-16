@@ -36,38 +36,38 @@ class Purchase implements ObserverInterface
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var SignifydOrderResourceModel
      */
-    protected $signifydOrderResourceModel;
+    public $signifydOrderResourceModel;
 
     /**
      * @var OrderFactory
      */
-    protected $orderFactory;
+    public $orderFactory;
 
     /**
      * Methods that should wait e-mail sent to hold order
      * @var array
      */
-    protected $specialMethods = ['payflow_express'];
+    public $specialMethods = ['payflow_express'];
 
     /**
      * List of methods that uses a different event for triggering case creation
@@ -76,62 +76,62 @@ class Purchase implements ObserverInterface
      *
      * @var array
      */
-    protected $ownEventsMethods = ['authorizenet_directpost', 'paypal_express'];
+    public $ownEventsMethods = ['authorizenet_directpost', 'paypal_express'];
 
     /**
      * @var DateTime
      */
-    protected $dateTime;
+    public $dateTime;
 
     /**
      * @var ScopeConfigInterface
      */
-    protected $scopeConfigInterface;
+    public $scopeConfigInterface;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManager;
+    public $storeManager;
 
     /**
      * @var AppState
      */
-    protected $appState;
+    public $appState;
 
     /**
      * @var CasedataCollectionFactory
      */
-    protected $casedataCollectionFactory;
+    public $casedataCollectionFactory;
 
     /**
      * @var JsonSerializer
      */
-    protected $jsonSerializer;
+    public $jsonSerializer;
 
     /**
      * @var UpdateOrderAction
      */
-    protected $updateOrderAction;
+    public $updateOrderAction;
 
     /**
      * @var RecipientFactory
      */
-    protected $recipientFactory;
+    public $recipientFactory;
 
     /**
      * @var SaleOrderFactory
      */
-    protected $saleOrderFactory;
+    public $saleOrderFactory;
 
     /**
      * @var Client
      */
-    protected $client;
+    public $client;
 
     /**
      * @var PaymentVerificationFactory
      */
-    protected $paymentVerificationFactory;
+    public $paymentVerificationFactory;
 
     /**
      * Purchase constructor.

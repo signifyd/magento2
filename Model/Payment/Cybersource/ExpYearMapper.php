@@ -6,7 +6,7 @@ use Signifyd\Connect\Model\Payment\Base\ExpYearMapper as Base_ExpYearMapper;
 
 class ExpYearMapper extends Base_ExpYearMapper
 {
-    protected $allowedMethods = ['cybersource', 'chcybersource'];
+    public $allowedMethods = ['cybersource', 'chcybersource'];
 
     /**
      * @param \Magento\Sales\Model\Order $order

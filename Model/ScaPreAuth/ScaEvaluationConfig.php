@@ -11,7 +11,7 @@ class ScaEvaluationConfig extends AbstractModel
     /**
      * @var ConfigHelper
      */
-    protected $configHelper;
+    public $configHelper;
 
     /**
      * @param Context $context

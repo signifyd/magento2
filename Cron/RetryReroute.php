@@ -11,17 +11,17 @@ class RetryReroute
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var ReroutesToRetry
      */
-    protected $reroutesToRetry;
+    public $reroutesToRetry;
 
     /**
      * @var ProcessCronReroute
      */
-    protected $processCronReroute;
+    public $processCronReroute;
 
     /**
      * RetryFulfillmentJob constructor.

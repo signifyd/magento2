@@ -10,12 +10,12 @@ class PaymentMethod
     /**
      * @var MappingVerificationFactory
      */
-    protected $mappingVerificationFactory;
+    public $mappingVerificationFactory;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @param MappingVerificationFactory $mappingVerificationFactory

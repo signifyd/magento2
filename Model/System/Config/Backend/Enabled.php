@@ -5,21 +5,26 @@
  */
 namespace Signifyd\Connect\Model\System\Config\Backend;
 
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Module\Manager as ModuleManager;
 
 class Enabled extends \Magento\Framework\App\Config\Value
 {
     /**
      * @var ManagerInterface
      */
-    protected $messageManager;
+    public $messageManager;
 
     /**
      * @var \Magento\Store\Model\StoreRepository
      */
-    protected $storeRepository;
+    public $storeRepository;
+
+    /**
+     * @var ModuleManager
+     */
+    public $moduleManager;
 
     /**
      * @param \Magento\Framework\Model\Context $context
@@ -29,6 +34,7 @@ class Enabled extends \Magento\Framework\App\Config\Value
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
      * @param \Magento\Store\Model\StoreRepository $storeRepository
+     * @param ModuleManager $moduleManager
      * @param array $data
      */
     public function __construct(
@@ -40,10 +46,12 @@ class Enabled extends \Magento\Framework\App\Config\Value
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         \Magento\Store\Model\StoreRepository $storeRepository,
+        ModuleManager $moduleManager,
         array $data = []
     ) {
         $this->messageManager = $messageManager;
         $this->storeRepository = $storeRepository;
+        $this->moduleManager = $moduleManager;
 
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
     }
@@ -57,9 +65,7 @@ class Enabled extends \Magento\Framework\App\Config\Value
             return $this;
         }
 
-        $objectManager = ObjectManager::getInstance();
-        $moduleManager = $objectManager->get(\Magento\Framework\Module\Manager::class);
-        $isBuiltinEnabled = $moduleManager->isOutputEnabled('Magento_Signifyd') ? true : false;
+        $isBuiltinEnabled = $this->moduleManager->isEnabled('Magento_Signifyd');
 
         if (!$isBuiltinEnabled) {
             return $this;

@@ -9,12 +9,12 @@ class ReInit
     /**
      * @var ObjectManagerInterface
      */
-    protected $objectManager;
+    public $objectManager;
 
     /**
      * @var \StripeIntegration\Payments\Model\Config
      */
-    protected $stripeConfig;
+    public $stripeConfig;
 
     /**
      * @param ObjectManagerInterface $objectManager
