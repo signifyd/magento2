@@ -34,7 +34,12 @@ if ($block->getCaseEntity()->isEmpty()) {
                     <?php if ($block->hasLogsToDownload()): ?>
                         <td class="col-lgos" id="signifyd-logs-value">
                             <div class="col-lgos">
-                                <a id="download-log" title="Download Order Logs" type="button" class="action-primary action-add"  data-ui-id="widget-button-17" href="<?= $block->getUrl('signifyd_admin/casedata/logs', ['order_id' => $block->getOrder()->getId()]) ?>">Download Order Logs</a>
+                                <a id="download-log" title="Download Order Logs" type="button"
+                                   class="action-primary action-add"  data-ui-id="widget-button-17"
+                                   href="<?= $block->escapeUrl($block->getUrl(
+                                           'signifyd_admin/casedata/logs',
+                                           ['order_id' => $block->getOrder()->getId()]
+                                   )) ?>">Download Order Logs</a>
                             </div>
                         </td>
                     <?php else: ?>
