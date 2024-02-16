@@ -127,6 +127,8 @@ class WaitingSubmission
      */
     public function __invoke(array $waitingSubmissionCases)
     {
+        $previousStore = $this->storeManagerInterface->getStore()->getId();
+
         /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($waitingSubmissionCases as $case) {
             try {
@@ -175,5 +177,7 @@ class WaitingSubmission
                 );
             }
         }
+
+        $this->storeManagerInterface->setCurrentStore($previousStore);
     }
 }

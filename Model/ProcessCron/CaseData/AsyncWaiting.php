@@ -117,6 +117,8 @@ class AsyncWaiting
      */
     public function __invoke(array $asyncWaitingCases)
     {
+        $previousStore = $this->storeManagerInterface->getStore()->getId();
+
         /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($asyncWaitingCases as $case) {
             try {
@@ -162,5 +164,7 @@ class AsyncWaiting
                 );
             }
         }
+
+        $this->storeManagerInterface->setCurrentStore($previousStore);
     }
 }
