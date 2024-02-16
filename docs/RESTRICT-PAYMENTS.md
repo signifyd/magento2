@@ -12,14 +12,14 @@ By default the extension will automatically exclude orders with the following pa
 
 ### Add custom payment methods
 
-Insert the list of payment codes you want to restict and then run the command below on your database:
+Insert the list of payment codes you want to restrict and then run the command below on your database:
 
 ```
 INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/restrict_payment_methods', 'INSERT-LIST-OF-PAYMENT-METHODS-HERE');
 ```
 ### Update custom payment methods
 
-To modify an existing restricted list, insert the list of new payment codes you want to restict and then run the following command on your database:
+To modify an existing restricted list, insert the list of new payment codes you want to restrict and then run the following command on your database:
 
 ```
 UPDATE core_config_data SET value='INSERT-LIST-OF-PAYMENT-METHODS-HERE' WHERE path='signifyd/general/restrict_payment_methods';
