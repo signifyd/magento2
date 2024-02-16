@@ -4,6 +4,7 @@ namespace Signifyd\Connect\Model\Api;
 
 use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\ResourceModel\Customer as CustomerResourceModel;
+use Magento\Framework\App\ResourceConnection;
 use Magento\Quote\Model\Quote;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
@@ -26,18 +27,26 @@ class UserAccount
     protected $orderCollectionFactory;
 
     /**
+     * @var ResourceConnection
+     */
+    protected $resourceConnection;
+
+    /**
      * @param CustomerFactory $customerFactory
      * @param CustomerResourceModel $customerResourceModel
      * @param OrderCollectionFactory $orderCollectionFactory
+     * @param ResourceConnection $resourceConnection
      */
     public function __construct(
         CustomerFactory $customerFactory,
         CustomerResourceModel $customerResourceModel,
-        OrderCollectionFactory $orderCollectionFactory
+        OrderCollectionFactory $orderCollectionFactory,
+        ResourceConnection $resourceConnection
     ) {
         $this->customerFactory = $customerFactory;
         $this->customerResourceModel = $customerResourceModel;
         $this->orderCollectionFactory = $orderCollectionFactory;
+        $this->resourceConnection = $resourceConnection;
     }
 
     /**
@@ -84,27 +93,38 @@ class UserAccount
             $user['passwordLastUpdateDate'] = null;
 
             $lastOrders = $this->orderCollectionFactory->create()
+                ->addFieldToSelect('increment_id')
                 ->addFieldToFilter('customer_id', ['eq' => $customer->getId()])
                 ->addFieldToFilter('state', ['nin' => ['closed', 'canceled']])
                 ->addFieldToFilter('entity_id', ['neq' => $order->getId()]);
 
-            $lastOrder = $lastOrders->getLastItem();
-            $lastOrderId = $lastOrder->getIncrementId();
+            $lastOrders->setOrder('entity_id', 'desc');
+            $lastOrders->getSelect()->limit(1);
+            $lastOrderId = $lastOrders->getFirstItem()->getIncrementId();
             $user['lastOrderId'] = isset($lastOrderId) ? $lastOrderId : null;
 
-            /** @var \Magento\Sales\Model\ResourceModel\Order\Collection $orders */
-            $orderCollection = $this->orderCollectionFactory->create();
-            $orderCollection->addFieldToFilter('customer_id', $order->getCustomerId());
-            $orderCollection->load();
+            $historyData = $this->getAggregateData($order->getCustomerId());
 
-            /** @var \Magento\Sales\Model\Order $orderCollection */
-            foreach ($orderCollection as $o) {
-                $user['aggregateOrderCount']++;
-                $user['aggregateOrderDollars'] += floatval($o->getGrandTotal());
+            if (isset($historyData['sum_grand_total']) &&
+                isset($historyData['totals_order'])
+            ) {
+                $user['aggregateOrderCount'] = (int) $historyData['totals_order'];
+                $user['aggregateOrderDollars'] = number_format($historyData['sum_grand_total'], 2, '.', '');
             }
         }
 
         return $user;
+    }
+
+    public function getAggregateData($customerId)
+    {
+        $salesOrder = $this->resourceConnection->getTableName('sales_order');
+        $customerOrderHistory = "SELECT customer_id, SUM(grand_total) AS 'sum_grand_total', count(*) AS  " .
+            "'totals_order'  FROM " . $salesOrder . " WHERE customer_id = " . $customerId;
+        $connection = $this->resourceConnection->getConnection();
+        $historyDataArray = $connection->fetchAll($customerOrderHistory);
+
+        return reset($historyDataArray);
     }
 
     /**
@@ -133,22 +153,22 @@ class UserAccount
             $user['passwordLastUpdateDate'] = null;
 
             $lastOrders = $this->orderCollectionFactory->create()
+                ->addFieldToSelect('increment_id')
                 ->addFieldToFilter('customer_id', ['eq' => $customer->getId()])
                 ->addFieldToFilter('state', ['nin' => ['closed', 'canceled']]);
 
-            $lastOrder = $lastOrders->getLastItem();
-            $lastOrderId = $lastOrder->getIncrementId();
+            $lastOrders->setOrder('entity_id', 'desc');
+            $lastOrders->getSelect()->limit(1);
+            $lastOrderId = $lastOrders->getFirstItem()->getIncrementId();
             $user['lastOrderId'] = isset($lastOrderId) ? $lastOrderId : null;
 
-            /** @var \Magento\Sales\Model\ResourceModel\Order\Collection $orders */
-            $orderCollection = $this->orderCollectionFactory->create();
-            $orderCollection->addFieldToFilter('customer_id', $quote->getCustomerId());
-            $orderCollection->load();
+            $historyData = $this->getAggregateData($quote->getCustomerId());
 
-            /** @var \Magento\Sales\Model\Order $orderCollection */
-            foreach ($orderCollection as $o) {
-                $user['aggregateOrderCount']++;
-                $user['aggregateOrderDollars'] += floatval($o->getGrandTotal());
+            if (isset($historyData['sum_grand_total']) &&
+                isset($historyData['totals_order'])
+            ) {
+                $user['aggregateOrderCount'] = (int) $historyData['totals_order'];
+                $user['aggregateOrderDollars'] = number_format($historyData['sum_grand_total'], 2, '.', '');
             }
         }
 
