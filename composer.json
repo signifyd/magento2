@@ -2,7 +2,7 @@
   "name": "signifyd/module-connect",
   "description": "Signifyd integration for Magento",
   "require": {
-    "signifyd/signifyd-php": "4.1.2",
+    "signifyd/signifyd-php": "4.1.3",
     "monolog/monolog": ">=1.16.0",
     "php": ">=5.5.22"
   },
