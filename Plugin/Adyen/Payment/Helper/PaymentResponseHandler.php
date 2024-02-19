@@ -2,7 +2,7 @@
 
 namespace Signifyd\Connect\Plugin\Adyen\Payment\Helper;
 
-use Magento\Framework\Registry;
+use Signifyd\Connect\Model\Registry;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
@@ -231,7 +231,7 @@ class PaymentResponseHandler
 
         try {
             if (isset($paymentsResponse['resultCode']) && $paymentsResponse['resultCode'] === $subject::REFUSED) {
-                $this->registry->register(
+                $this->registry->setData(
                     'gateway_restriction', 'Adyen refused payment'
                 );
 

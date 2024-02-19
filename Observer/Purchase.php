@@ -8,7 +8,7 @@ namespace Signifyd\Connect\Observer;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\Registry;
+use Signifyd\Connect\Model\Registry;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
@@ -158,7 +158,7 @@ class Purchase implements ObserverInterface
      * @param SaleOrderFactory $saleOrderFactory
      * @param Client $client
      * @param PaymentVerificationFactory $paymentVerificationFactory
-     *  @param Registry $registry
+     * @param Registry $registry
      */
     public function __construct(
         Logger $logger,
@@ -377,10 +377,9 @@ class Purchase implements ObserverInterface
                 return;
             }
 
-            $gatewayRestriction = $this->registry->registry('gateway_restriction');
+            $gatewayRestriction = $this->registry->getData('gateway_restriction');
 
             if (isset($gatewayRestriction)) {
-                $this->registry->unregister('gateway_restriction');
                 $message = 'Case creation for order ' . $incrementId .
                     ' is restricted by gateway: ' . $gatewayRestriction;
                 $this->logger->debug($message, ['entity' => $order]);
