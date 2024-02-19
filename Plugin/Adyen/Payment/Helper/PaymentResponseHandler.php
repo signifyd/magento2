@@ -232,7 +232,8 @@ class PaymentResponseHandler
         try {
             if (isset($paymentsResponse['resultCode']) && $paymentsResponse['resultCode'] === $subject::REFUSED) {
                 $this->registry->setData(
-                    'gateway_restriction', 'Adyen refused payment'
+                    'gateway_restriction',
+                    'Adyen refused payment'
                 );
 
                 $orderId = $order->getId();
