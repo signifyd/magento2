@@ -26,7 +26,7 @@ interface LogsInterface
     /**
      * Set logs_id
      * @param string $logsId
-     * @return \Signifyd\Connect\Logs\Api\Data\LogsInterface
+     * @return $this
      */
     public function setLogsId($logsId);
 
@@ -39,7 +39,7 @@ interface LogsInterface
     /**
      * Set created_at
      * @param string $createdAt
-     * @return \Signifyd\Connect\Logs\Api\Data\LogsInterface
+     * @return $this
      */
     public function setCreatedAt($createdAt);
 
@@ -52,7 +52,7 @@ interface LogsInterface
     /**
      * Set quote_id
      * @param string $quoteId
-     * @return \Signifyd\Connect\Logs\Api\Data\LogsInterface
+     * @return $this
      */
     public function setQuoteId($quoteId);
 
@@ -65,7 +65,7 @@ interface LogsInterface
     /**
      * Set order_id
      * @param string $orderId
-     * @return \Signifyd\Connect\Logs\Api\Data\LogsInterface
+     * @return $this
      */
     public function setOrderId($orderId);
 
@@ -78,7 +78,7 @@ interface LogsInterface
     /**
      * Set type
      * @param string $type
-     * @return \Signifyd\Connect\Logs\Api\Data\LogsInterface
+     * @return $this
      */
     public function setType($type);
 
@@ -91,7 +91,7 @@ interface LogsInterface
     /**
      * Set entry
      * @param string $entry
-     * @return \Signifyd\Connect\Logs\Api\Data\LogsInterface
+     * @return $this
      */
     public function setEntry($entry);
 }

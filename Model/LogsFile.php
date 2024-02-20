@@ -134,7 +134,7 @@ class LogsFile
                 ->addFieldToFilter('order_id', ['null' => true]);
 
             if ($quoteLogsCollection->count() > 0) {
-                /** @var \Signifyd\Connect\Model\Logs $log */
+                /** @var \Signifyd\Connect\Model\Logs $quoteLog */
                 foreach ($quoteLogsCollection as $quoteLog) {
                     $fileData .= '[' . strtoupper($quoteLog->getType()) . '] ' . '[' . $quoteLog->getCreatedAt() . '] ' .
                         $quoteLog->getEntry() . PHP_EOL;
@@ -145,7 +145,7 @@ class LogsFile
                 ->addFieldToFilter('order_id', ['eq' => $orderId]);
 
             if ($orderLogsCollection->count() > 0) {
-                /** @var \Signifyd\Connect\Model\Logs $log */
+                /** @var \Signifyd\Connect\Model\Logs $orderLog */
                 foreach ($orderLogsCollection as $orderLog) {
                     $fileData .= '[' . strtoupper($orderLog->getType()) . '] ' . '[' . $orderLog->getCreatedAt() . '] ' .
                         $orderLog->getEntry() . PHP_EOL;

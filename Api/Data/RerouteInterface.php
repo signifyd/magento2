@@ -25,7 +25,7 @@ interface RerouteInterface
     /**
      * Set reroute_id
      * @param string $rerouteId
-     * @return \Signifyd\Connect\Reroute\Api\Data\RerouteInterface
+     * @return $this
      */
     public function setRerouteId($rerouteId);
 
@@ -38,7 +38,7 @@ interface RerouteInterface
     /**
      * Set order_id
      * @param string $orderId
-     * @return \Signifyd\Connect\Reroute\Api\Data\RerouteInterface
+     * @return $this
      */
     public function setOrderId($orderId);
 
@@ -51,7 +51,7 @@ interface RerouteInterface
     /**
      * Set magento_status
      * @param string $magentoStatus
-     * @return \Signifyd\Connect\Reroute\Api\Data\RerouteInterface
+     * @return $this
      */
     public function setMagentoStatus($magentoStatus);
 
@@ -64,7 +64,7 @@ interface RerouteInterface
     /**
      * Set retries
      * @param string $retries
-     * @return \Signifyd\Connect\Reroute\Api\Data\RerouteInterface
+     * @return $this
      */
     public function setRetries($retries);
 
@@ -77,7 +77,7 @@ interface RerouteInterface
     /**
      * Set inserted_at
      * @param string $insertedAt
-     * @return \Signifyd\Connect\Reroute\Api\Data\RerouteInterface
+     * @return $this
      */
     public function setInsertedAt($insertedAt);
 }

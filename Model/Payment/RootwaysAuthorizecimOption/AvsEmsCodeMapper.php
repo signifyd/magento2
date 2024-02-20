@@ -17,6 +17,7 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $additionalInfo = $order->getPayment()->getAdditionalInformation();
+        $avsStatus = null;
 
         if (empty($additionalInfo['avs_response_code']) == false) {
             $avsStatus = $additionalInfo['avs_response_code'];

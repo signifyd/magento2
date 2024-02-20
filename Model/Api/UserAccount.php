@@ -81,7 +81,7 @@ class UserAccount
         $user['email'] = $order->getCustomerEmail();
         $user['phone'] = $order->getBillingAddress()->getTelephone();
 
-        /* @var $customer \Magento\Customer\Model\Customer */
+        /* @var \Magento\Customer\Model\Customer $customer */
         $customer = $this->customerFactory->create();
         $this->customerResourceModel->load($customer, $order->getCustomerId());
 
@@ -141,7 +141,7 @@ class UserAccount
         $user['aggregateOrderCount'] = 0;
         $user['aggregateOrderDollars'] = 0.0;
 
-        /* @var $customer \Magento\Customer\Model\Customer */
+        /* @var \Magento\Customer\Model\Customer $customer */
         $customer = $this->customerFactory->create();
         $this->customerResourceModel->load($customer, $quote->getCustomerId());
 

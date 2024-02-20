@@ -2,7 +2,6 @@
 
 namespace Signifyd\Connect\Plugin\CyberSource\Gateway\Command;
 
-use CyberSource\Core\Gateway\Command\HandleResponseCommand as CyberHandleResponseCommand;
 use Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Model\Registry;
 use Signifyd\Connect\Model\TransactionIntegration;
@@ -41,8 +40,8 @@ class HandleResponseCommand
     }
 
     /**
-     * @param CyberHandleResponseCommand $subject
-     * @param $commandSubject
+     * @param \CyberSource\SecureAcceptance\Gateway\Helper\SubjectReader $subject
+     * @param $response
      * @return mixed
      */
     public function afterReadResponse(\CyberSource\SecureAcceptance\Gateway\Helper\SubjectReader $subject, $response)

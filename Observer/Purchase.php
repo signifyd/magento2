@@ -238,7 +238,7 @@ class Purchase implements ObserverInterface
                 $casesFromQuotes->getFirstItem()->getMagentoStatus() != 'completed'
             ) {
                 $casesFromQuote = $casesFromQuotes->getFirstItem();
-                /** @var \Signifyd\Connect\Model\Casedata $case */
+                /** @var \Signifyd\Connect\Model\Casedata $casesFromQuoteLoaded */
                 $casesFromQuoteLoaded = $this->casedataFactory->create();
                 $this->casedataResourceModel->load($casesFromQuoteLoaded, $casesFromQuote->getCode(), 'code');
                 $orderId = $casesFromQuoteLoaded->getData('order_id');
