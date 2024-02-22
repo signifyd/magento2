@@ -16,5 +16,8 @@
             <label>Signifyd Policy</label>
             <source_model>Signifyd\Connect\Model\System\Config\Source\Options\PolicyName</source_model>
         </field>
+        <!-- MFTF Magento CLI command -->
+        <field id="restrict_payment_methods" type="text" sortOrder="70" showInWebsite="0" showInStore="0" showInDefault="0" translate="label">
+        </field>
     </group>
 </include>
