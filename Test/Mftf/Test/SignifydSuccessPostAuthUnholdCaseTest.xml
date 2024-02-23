@@ -17,9 +17,9 @@
         </before>
 
         <!-- Cron run -->
-        <wait stepKey="waitCaseToBeCreatedOnSignifyd" time="20" before="goToOrdersPage"/>
+        <wait stepKey="waitCaseToBeCreatedOnSignifyd" time="25" before="goToOrdersPage"/>
         <magentoCLI command="cron:run" stepKey="cronRun" before="goToOrdersPage"/>
-        <wait stepKey="waitCronRun" time="10" before="goToOrdersPage"/>
+        <wait stepKey="waitCronRun" time="15" before="goToOrdersPage"/>
 
         <!-- Assert that the case was accepted -->
         <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="ACCEPT" stepKey="seeCaseCreated"/>
