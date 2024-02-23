@@ -2,7 +2,7 @@
 
 <tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
-    <test name="SignifydSuccessPostAuthWebhookDoNothingCaseTest" extends="SignifydSuccessPostAuthCaseTest">
+    <test name="SignifydSuccessPostAuthDoNothingCaseTest" extends="SignifydSuccessPostAuthCaseTest">
         <annotations>
             <features value="Signifyd Post Auth Do Nothing"/>
             <stories value="Pre auth case created successfully"/>
@@ -16,19 +16,14 @@
             <magentoCLI command="config:set {{GuaranteePositiveAction.path}} {{GuaranteePositiveAction.nothing}}" stepKey="setPositiveAction"/>
         </before>
 
-<!--        &lt;!&ndash; Go to the Signifyd configuration and make sure the page is available &ndash;&gt;-->
-<!--        <actionGroup ref="AdminOpenStoreConfigSignifydPageActionGroup" stepKey="goToSignifydConfigPage" before="customerLogin"/>-->
-
-<!--        &lt;!&ndash;Click Webhook button&ndash;&gt;-->
-<!--        <click selector="{{AdminSignifydSection.signifydWebhookButton}}" stepKey="clickRegisterWebhook" before="customerLogin"/>-->
-<!--        <waitForPageLoad stepKey="waitForWebhookButton"/>-->
-
-<!--        &lt;!&ndash; Assert that the webhoook was successfully registered &ndash;&gt;-->
-<!--        <see selector="{{AdminSignifydSection.signifydWebhookSuccessMessage}}" userInput="The webhook was registred successfully." stepKey="seeWebhookRegistered" before="customerLogin"/>-->
-
         <!-- Cron run -->
-        <wait stepKey="waitCaseToBeCreated" time="20" before="goToOrdersPage"/>
+        <wait stepKey="waitCaseToBeCreatedOnSignifyd" time="20" before="goToOrdersPage"/>
         <magentoCLI command="cron:run" stepKey="cronRun" before="goToOrdersPage"/>
         <wait stepKey="waitCronRun" time="10" before="goToOrdersPage"/>
+
+        <!-- Assert that the case was accepted -->
+        <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="ACCEPT" stepKey="seeCaseCreated"/>
+        <!-- Assert that the order is on hold -->
+        <see selector="{{AdminSignifydSection.magentoOrderStatus}}" userInput="On Hold" stepKey="seeOrderStatus"/>
     </test>
 </tests>
