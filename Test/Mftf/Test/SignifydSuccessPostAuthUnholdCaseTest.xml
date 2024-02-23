@@ -13,7 +13,7 @@
         </annotations>
         <before>
             <!-- Set Signifyd positive action-->
-            <magentoCLI command="config:set {{GuaranteePositiveAction.unhold}} {{GuaranteePositiveAction.unhold}}" stepKey="setPositiveAction"/>
+            <magentoCLI command="config:set {{GuaranteePositiveAction.path}} {{GuaranteePositiveAction.unhold}}" stepKey="setPositiveAction"/>
         </before>
 
         <!-- Cron run -->
