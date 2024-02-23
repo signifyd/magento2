@@ -14,6 +14,9 @@
         <before>
             <!-- Set Signifyd positive action-->
             <magentoCLI command="config:set {{GuaranteePositiveAction.path}} {{GuaranteePositiveAction.nothing}}" stepKey="setPositiveAction"/>
+
+            <!-- Set Signifyd negative action to cancel to Signifyd put order on hold -->
+            <magentoCLI command="config:set {{GuaranteeNegativeAction.path}} {{GuaranteeNegativeAction.cancel}}" stepKey="setNegativeAction"/>
         </before>
 
         <!-- Cron run -->
