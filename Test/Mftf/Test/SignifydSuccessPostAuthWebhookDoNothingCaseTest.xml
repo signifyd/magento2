@@ -17,10 +17,10 @@
         </before>
 
         <!-- Go to the Signifyd configuration and make sure the page is available -->
-        <actionGroup ref="AdminOpenStoreConfigSignifydPageActionGroup" stepKey="goToSignifydConfigPage" before="clickRegisterWebhook"/>
+        <actionGroup ref="AdminOpenStoreConfigSignifydPageActionGroup" stepKey="goToSignifydConfigPage" before="customerLogin"/>
 
         <!--Click Webhook button-->
-        <click selector="{{AdminSignifydSection.signifydWebhookButton}}" stepKey="clickRegisterWebhook" before="assertLoggedIn"/>
+        <click selector="{{AdminSignifydSection.signifydWebhookButton}}" stepKey="clickRegisterWebhook" before="customerLogin"/>
 
         <!-- Assert that the webhoook was successfully registered -->
         <see selector="{{AdminSignifydSection.signifydWebhookSuccessMessage}}" userInput="The webhook was registred successfully." stepKey="seeWebhookRegistered" before="customerLogin"/>
