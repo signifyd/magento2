@@ -4,5 +4,7 @@
           xsi:noNamespaceSchemaLocation="urn:magento:mftf:Page/etc/SectionObject.xsd">
     <section name="AdminSignifydSection">
         <element name="signifydDecision" type="text" selector="#signifyd-decision-value"/>
+        <element name="signifydWebhookButton" type="button" selector="#signifyd_general_register_webhook"/>
+        <element name="signifydWebhookSuccessMessage" type="text" selector="#messages-message-success"/>
     </section>
 </sections>
