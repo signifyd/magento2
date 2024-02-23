@@ -27,7 +27,8 @@
 <!--        <see selector="{{AdminSignifydSection.signifydWebhookSuccessMessage}}" userInput="The webhook was registred successfully." stepKey="seeWebhookRegistered" before="customerLogin"/>-->
 
         <!-- Cron run -->
+        <wait stepKey="waitCaseToBeCreated" time="20" before="goToOrdersPage"/>
         <magentoCLI command="cron:run" stepKey="cronRun" before="goToOrdersPage"/>
-        <wait stepKey="waitCronRun" time="30" before="goToOrdersPage"/>
+        <wait stepKey="waitCronRun" time="10" before="goToOrdersPage"/>
     </test>
 </tests>
