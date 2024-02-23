@@ -18,7 +18,7 @@
 
         <!-- Go to the Signifyd configuration and make sure the page is available -->
         <actionGroup ref="AdminOpenStoreConfigSignifydPageActionGroup" stepKey="goToSignifydConfigPage" before="customerLogin"/>
-        <wait stepKey="waitClickWebhookButton" time="10"/>
+        <wait stepKey="waitClickWebhookButton" time="10" before="customerLogin"/>
 
         <!--Click Webhook button-->
         <click selector="{{AdminSignifydSection.signifydWebhookButton}}" stepKey="clickRegisterWebhook" before="customerLogin"/>
