@@ -21,6 +21,7 @@
 
         <!--Click Webhook button-->
         <click selector="{{AdminSignifydSection.signifydWebhookButton}}" stepKey="clickRegisterWebhook" before="customerLogin"/>
+        <waitForPageLoad stepKey="waitForAcceptButton"/>
 
         <!-- Assert that the webhoook was successfully registered -->
         <see selector="{{AdminSignifydSection.signifydWebhookSuccessMessage}}" userInput="The webhook was registred successfully." stepKey="seeWebhookRegistered" before="customerLogin"/>
