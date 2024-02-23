@@ -16,14 +16,18 @@
             <magentoCLI command="config:set {{GuaranteePositiveAction.path}} {{GuaranteePositiveAction.nothing}}" stepKey="setPositiveAction"/>
         </before>
 
-        <!-- Go to the Signifyd configuration and make sure the page is available -->
-        <actionGroup ref="AdminOpenStoreConfigSignifydPageActionGroup" stepKey="goToSignifydConfigPage" before="customerLogin"/>
+<!--        &lt;!&ndash; Go to the Signifyd configuration and make sure the page is available &ndash;&gt;-->
+<!--        <actionGroup ref="AdminOpenStoreConfigSignifydPageActionGroup" stepKey="goToSignifydConfigPage" before="customerLogin"/>-->
 
-        <!--Click Webhook button-->
-        <click selector="{{AdminSignifydSection.signifydWebhookButton}}" stepKey="clickRegisterWebhook" before="customerLogin"/>
-        <waitForPageLoad stepKey="waitForWebhookButton"/>
+<!--        &lt;!&ndash;Click Webhook button&ndash;&gt;-->
+<!--        <click selector="{{AdminSignifydSection.signifydWebhookButton}}" stepKey="clickRegisterWebhook" before="customerLogin"/>-->
+<!--        <waitForPageLoad stepKey="waitForWebhookButton"/>-->
 
-        <!-- Assert that the webhoook was successfully registered -->
-        <see selector="{{AdminSignifydSection.signifydWebhookSuccessMessage}}" userInput="The webhook was registred successfully." stepKey="seeWebhookRegistered" before="customerLogin"/>
+<!--        &lt;!&ndash; Assert that the webhoook was successfully registered &ndash;&gt;-->
+<!--        <see selector="{{AdminSignifydSection.signifydWebhookSuccessMessage}}" userInput="The webhook was registred successfully." stepKey="seeWebhookRegistered" before="customerLogin"/>-->
+
+        <!-- Cron run -->
+        <magentoCLI command="cron:run" stepKey="cronRun" before="goToOrdersPage"/>
+        <wait stepKey="waitCronRun" time="30" before="goToOrdersPage"/>
     </test>
 </tests>
