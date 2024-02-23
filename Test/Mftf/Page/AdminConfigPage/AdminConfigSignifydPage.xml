@@ -2,7 +2,7 @@
 
 <pages xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="urn:magento:mftf:Page/etc/PageObject.xsd">
-    <page name="AdminConfigSignifydPage" url="admin/system_config/edit/section/signifyd/" area="admin" module="Signifyd_Connect">
+    <page name="AdminConfigSignifydPage" url="admin/system_config/edit/section/signifyd/#signifyd_webhook-link" area="admin" module="Signifyd_Connect">
         <section name="AdminConfigSection"/>
     </page>
 </pages>
