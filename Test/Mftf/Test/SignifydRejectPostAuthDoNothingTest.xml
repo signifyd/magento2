@@ -4,10 +4,10 @@
        xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
     <test name="SignifydRejectPostAuthDoNothingTest" extends="SignifydSuccessPostAuthCaseTest">
         <annotations>
-            <features value="Signifyd Post Auth Do Nothing"/>
-            <stories value="Pre auth case created successfully"/>
-            <title value="Post Auth do nothing positive action"/>
-            <description value="Validate post auth do nothing positive action"/>
+            <features value="Sales"/>
+            <stories value="Post Auth do nothing negative action"/>
+            <title value="Post Auth do nothing negative action"/>
+            <description value="Validate post auth do nothing negative action"/>
             <severity value="CRITICAL"/>
             <group value="checkout"/>
         </annotations>

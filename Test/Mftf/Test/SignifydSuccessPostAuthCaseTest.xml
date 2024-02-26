@@ -4,7 +4,7 @@
        xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
     <test name="SignifydSuccessPostAuthCaseTest">
         <annotations>
-            <features value="Signifyd Post Auth"/>
+            <features value="Sales"/>
             <stories value="Post auth case created successfully"/>
             <title value="Post auth case"/>
             <description value="Validate case creation"/>
