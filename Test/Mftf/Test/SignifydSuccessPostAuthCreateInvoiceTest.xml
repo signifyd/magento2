@@ -24,7 +24,7 @@
         <!-- Assert that the case was accepted -->
         <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="ACCEPT" stepKey="seeCaseCreated"/>
 
-<!--        TODO: validar se essa parte do código vai verificar a invoice, necessário remover os passos já existentes no teste original-->
+        <!-- Assert that the invoice was created successfully -->
         <amOnPage url="{{AdminInvoicesPage.url}}" stepKey="goToInvoices"/>
         <waitForPageLoad stepKey="waitForLoadingMask6" />
         <actionGroup ref="ResetProductGridToDefaultViewActionGroup" stepKey="resetGridInitial"/>
