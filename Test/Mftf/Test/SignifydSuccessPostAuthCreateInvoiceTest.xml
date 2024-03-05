@@ -21,6 +21,9 @@
         <magentoCLI command="cron:run" stepKey="cronRun" before="goToOrdersPage"/>
         <wait stepKey="waitCronRun" time="15" before="goToOrdersPage"/>
 
+        <!-- Assert that the case was accepted -->
+        <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="ACCEPT" stepKey="seeCaseCreated"/>
+
 <!--        TODO: validar se essa parte do código vai verificar a invoice, necessário remover os passos já existentes no teste original-->
         <amOnPage url="{{AdminInvoicesPage.url}}" stepKey="goToInvoices"/>
         <waitForPageLoad stepKey="waitForLoadingMask6" />
