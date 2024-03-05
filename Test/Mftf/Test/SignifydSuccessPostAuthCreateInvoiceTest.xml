@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="SignifydSuccessPostAuthCreateInvoiceTest" extends="SignifydSuccessPostAuthCaseTest">
+        <annotations>
+            <features value="Sales"/>
+            <stories value="Post Auth create invoice positive action"/>
+            <title value="Post Auth create invoice positive action"/>
+            <description value="Validate post Auth create invoice positive action"/>
+            <severity value="CRITICAL"/>
+            <group value="checkout"/>
+        </annotations>
+        <before>
+            <!-- Set Signifyd positive action-->
+            <magentoCLI command="config:set {{GuaranteePositiveAction.path}} {{GuaranteePositiveAction.capture}}" stepKey="setPositiveAction"/>
+        </before>
+
+        <!-- Cron run -->
+        <wait stepKey="waitCaseToBeCreatedOnSignifyd" time="25" before="goToOrdersPage"/>
+        <magentoCLI command="cron:run" stepKey="cronRun" before="goToOrdersPage"/>
+        <wait stepKey="waitCronRun" time="15" before="goToOrdersPage"/>
+
+<!--        TODO: validar se essa parte do código vai verificar a invoice, necessário remover os passos já existentes no teste original-->
+        <amOnPage url="{{AdminInvoicesPage.url}}" stepKey="goToInvoices"/>
+        <waitForPageLoad stepKey="waitForLoadingMask6" />
+        <actionGroup ref="ResetProductGridToDefaultViewActionGroup" stepKey="resetGridInitial"/>
+        <click selector="{{AdminInvoicesGridSection.filter}}" stepKey="clickFilters"/>
+        <fillField selector="{{AdminInvoicesFiltersSection.orderNum}}" userInput="{$getOrderId}" stepKey="searchOrderNum2"/>
+        <click selector="{{AdminInvoicesFiltersSection.applyFilters}}" stepKey="clickApplyFilters"/>
+        <click selector="{{AdminInvoicesGridSection.firstRow}}" stepKey="clickInvoice2"/>
+        <see selector="{{AdminInvoiceDetailsInformationSection.orderStatus}}" userInput="Processing" stepKey="seeOrderStatus2"/>
+    </test>
+</tests>
