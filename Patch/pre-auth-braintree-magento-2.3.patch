@@ -1,59 +1,86 @@
-Index: Plugin/Braintree/Gateway/Validator/GeneralResponseValidator.php
-===================================================================
-diff --git a/vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/GeneralResponseValidator.php b/vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/GeneralResponseValidator.php
+From bbb491624e708712094aa360269ca6521e44103c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=C3=89bano=20Lopes?= <ebano@onbi.com.br>
+Date: Thu, 7 Mar 2024 18:04:56 +0000
+Subject: [PATCH] v5.7.0: magento patch 2.3.x
+
+---
+ .../PayPal/GeneralResponseValidator.php       | 106 ++++++++++++++++++
+ etc/di.xml                                    |   4 +
+ 2 files changed, 110 insertions(+)
+ create mode 100644 Plugin/Braintree/Gateway/Validator/PayPal/GeneralResponseValidator.php
+
+diff --git a/vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/PayPal/GeneralResponseValidator.php b/vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/PayPal/GeneralResponseValidator.php
 new file mode 100644
---- /dev/null	(revision f70a8543cd60ea6936c57cc645cf7059b28e8177)
-+++ b/vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/GeneralResponseValidator.php	(revision f70a8543cd60ea6936c57cc645cf7059b28e8177)
-@@ -0,0 +1,89 @@
+index 0000000..a817efd
+--- /dev/null
++++ b/vendor/signifyd/module-connect/Plugin/Braintree/Gateway/Validator/PayPal/GeneralResponseValidator.php
+@@ -0,0 +1,106 @@
 +<?php
 +
-+namespace Signifyd\Connect\Plugin\Braintree\Gateway\Validator;
++namespace Signifyd\Connect\Plugin\Braintree\Gateway\Validator\PayPal;
 +
 +use Magento\Braintree\Gateway\SubjectReader;
++use Signifyd\Connect\Helper\ConfigHelper;
 +use Signifyd\Connect\Logger\Logger;
++use Signifyd\Connect\Model\Api\Core\Client;
 +use Signifyd\Connect\Model\CasedataFactory;
 +use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
-+use Signifyd\Connect\Model\Casedata;
 +use Magento\Store\Model\StoreManagerInterface;
 +use Magento\Quote\Model\QuoteFactory;
 +use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
++use Signifyd\Connect\Model\Api\TransactionsFactory;
 +
 +class GeneralResponseValidator extends \Signifyd\Connect\Plugin\Braintree\GeneralResponseValidator
 +{
 +    /**
 +     * @var CasedataFactory
 +     */
-+    protected $casedataFactory;
++    public $casedataFactory;
 +
 +    /**
 +     * @var CasedataResourceModel
 +     */
-+    protected $casedataResourceModel;
++    public $casedataResourceModel;
 +
 +    /**
 +     * @var Logger
 +     */
-+    protected $logger;
++    public $logger;
 +
 +    /**
 +     * @var StoreManagerInterface
 +     */
-+    protected $storeManager;
++    public $storeManager;
 +
 +    /**
 +     * @var QuoteFactory
 +     */
-+    protected $quoteFactory;
++    public $quoteFactory;
 +
 +    /**
 +     * @var QuoteResourceModel
 +     */
-+    protected $quoteResourceModel;
++    public $quoteResourceModel;
++
++    /**
++     * @var TransactionsFactory
++     */
++    public $transactionsFactory;
++
++    /**
++     * @var ConfigHelper
++     */
++    public $configHelper;
++
++    /**
++     * @var Client
++     */
++    public $client;
 +
 +    /**
 +     * @var SubjectReader
 +     */
-+    protected $subjectReader;
++    public $subjectReader;
 +
 +    /**
 +     * CheckoutPaymentsDetailsHandler constructor.
@@ -63,6 +90,9 @@ new file mode 100644
 +     * @param StoreManagerInterface $storeManager
 +     * @param QuoteFactory $quoteFactory
 +     * @param QuoteResourceModel $quoteResourceModel
++     * @param TransactionsFactory $transactionsFactory
++     * @param ConfigHelper $configHelper
++     * @param Client $client
 +     * @param SubjectReader $subjectReader
 +     */
 +    public function __construct(
@@ -72,6 +102,9 @@ new file mode 100644
 +        StoreManagerInterface $storeManager,
 +        QuoteFactory $quoteFactory,
 +        QuoteResourceModel $quoteResourceModel,
++        TransactionsFactory $transactionsFactory,
++        ConfigHelper $configHelper,
++        Client $client,
 +        SubjectReader $subjectReader
 +    ) {
 +        parent::__construct(
@@ -80,27 +113,30 @@ new file mode 100644
 +            $logger,
 +            $storeManager,
 +            $quoteFactory,
-+            $quoteResourceModel
++            $quoteResourceModel,
++            $transactionsFactory,
++            $configHelper,
++            $client
 +        );
 +        $this->subjectReader = $subjectReader;
 +    }
 +}
 \ No newline at end of file
-Index: etc/di.xml
-IDEA additional info:
-Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
-<+>UTF-8
-===================================================================
 diff --git a/vendor/signifyd/module-connect/etc/di.xml b/vendor/signifyd/module-connect/etc/di.xml
---- a/vendor/signifyd/module-connect/etc/di.xml	(revision b4376027ccf94ffa12fc11206dc9e38aa31fce77)
-+++ b/vendor/signifyd/module-connect/etc/di.xml	(revision f70a8543cd60ea6936c57cc645cf7059b28e8177)
-@@ -1,5 +1,9 @@
- <?xml version="1.0"?>
- <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+index 7ab144e..0b575e3 100644
+--- a/vendor/signifyd/module-connect/etc/di.xml
++++ b/vendor/signifyd/module-connect/etc/di.xml
+@@ -85,6 +85,10 @@
+     </type>
+ 
+     <!-- Plugins -->
 +    <type name="Magento\Braintree\Gateway\Validator\GeneralResponseValidator">
 +        <plugin name="Signifyd_Connect_Plugin_Braintree_Gateway_Validator_GeneralResponseValidator" type="\Signifyd\Connect\Plugin\Braintree\Gateway\Validator\GeneralResponseValidator" />
 +    </type>
 +
-     <!-- Loggers -->
-     <type name="Signifyd\Connect\Logger\Handler">
-         <arguments>
+     <type name="Magento\Paypal\Model\Payflowlink">
+         <plugin name="Signifyd_Connect_Magento_Paypal_Model_Payflowlink" type="\Signifyd\Connect\Plugin\Magento\Paypal\Model\Payflowlink" />
+     </type>
+-- 
+2.17.1
+
