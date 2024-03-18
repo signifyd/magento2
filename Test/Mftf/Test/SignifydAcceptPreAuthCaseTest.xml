@@ -9,7 +9,7 @@
             <title value="Pre auth case"/>
             <description value="Validate pre auth case creation"/>
             <severity value="CRITICAL"/>
-            <group value="checkout"/>
+            <group value="signifyd"/>
         </annotations>
         <before>
             <!-- Set signifyd pre auth-->
