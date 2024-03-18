@@ -294,6 +294,10 @@ class PreAuth implements ObserverInterface
                     if ($paymentMethod === 'rootways_authorizecim_option') {
                         $checkoutPaymentDetails = $this->mappingForAuthnetRootwaysCim($checkoutPaymentDetails, $dataArray);
                     }
+
+                    if ($paymentMethod === 'authnetcim') {
+                        $checkoutPaymentDetails = $this->mappingForAuthnet($checkoutPaymentDetails, $dataArray);
+                    }
                 }
             }
 
@@ -450,6 +454,40 @@ class PreAuth implements ObserverInterface
             $checkoutPaymentDetails['cardLast4'] = null;
             $checkoutPaymentDetails['cardBin'] = $additionalData['card_bin'] ?? null;
         }
+
+        return $checkoutPaymentDetails;
+    }
+
+    /**
+     * @param $checkoutPaymentDetails
+     * @param $dataArray
+     * @return mixed
+     */
+    public function mappingForAuthnet($checkoutPaymentDetails, $dataArray)
+    {
+        $additionalData = $dataArray['paymentMethod']['additional_data'];
+
+        if (isset($dataArray['paymentMethod']['additional_data']['card_id'])) {
+            /** @var \ParadoxLabs\TokenBase\Model\ResourceModel\Card\Collection $cardCollection */
+            $cardCollection = $this->objectManagerInterface->create(
+                \ParadoxLabs\TokenBase\Model\ResourceModel\Card\CollectionFactory::class
+            )->create()
+                ->addFieldToFilter('hash', ['eq' => $dataArray['paymentMethod']['additional_data']['card_id']]);
+
+            $card = $cardCollection->getFirstItem();
+
+            if (empty($card->getData('additional')) === false) {
+                $additionalData = $this->jsonSerializer->unserialize($card->getData('additional'));
+            }
+        }
+
+        $checkoutPaymentDetails['cardExpiryMonth'] = $additionalData['cc_exp_month'] ?? null;
+
+        $checkoutPaymentDetails['cardExpiryYear'] = $additionalData['cc_exp_year'] ?? null;
+
+        $checkoutPaymentDetails['cardLast4'] = $additionalData['cc_last4'] ?? null;
+
+        $checkoutPaymentDetails['cardBin'] = $additionalData['cc_bin'] ?? null;
 
         return $checkoutPaymentDetails;
     }

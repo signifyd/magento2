@@ -138,7 +138,7 @@ git apply pre-auth-authorizenet.patch
     - Expiry date: no
     - Cardholder name: no
 
-### Authorize.net
+### Authorize.net ParadoxLabs
 
 - Call transaction API on failure: yes
 - Payment data available:
