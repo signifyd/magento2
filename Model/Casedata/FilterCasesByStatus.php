@@ -99,17 +99,25 @@ class FilterCasesByStatus extends AbstractHelper
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($casesCollection->getItems() as $case) {
-            $caseToUpdate = $this->casedataFactory->create();
-            $this->casedataResourceModel->loadForUpdate($caseToUpdate, $case->getId());
+            try {
+                $caseToUpdate = $this->casedataFactory->create();
+                $this->casedataResourceModel->loadForUpdate($caseToUpdate, $case->getId());
 
-            $retries = $caseToUpdate->getData('retries');
-            $secondsAfterUpdate = $case->getData('seconds_after_update');
+                $retries = $caseToUpdate->getData('retries');
+                $secondsAfterUpdate = $case->getData('seconds_after_update');
 
-            if ($secondsAfterUpdate > $retryTimes[$retries]) {
+                if ($secondsAfterUpdate > $retryTimes[$retries]) {
 
-                $casesToRetry[$caseToUpdate->getId()] = $caseToUpdate;
-                $caseToUpdate->setData('retries', $retries + 1);
-                $this->casedataResourceModel->save($caseToUpdate);
+                    $casesToRetry[$caseToUpdate->getId()] = $caseToUpdate;
+                    $caseToUpdate->setData('retries', $retries + 1);
+                    $this->casedataResourceModel->save($caseToUpdate);
+                }
+            } catch (\Exception $e) {
+                $this->logger->error(
+                    'CRON: Case failed to load for update: '
+                    . $e->getMessage(),
+                    ['entity' => $case]
+                );
             }
         }
 
