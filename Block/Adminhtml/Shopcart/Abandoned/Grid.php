@@ -37,7 +37,7 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
     ) {
         $this->jsonSerializer = $jsonSerializer;
         $this->configHelper = $configHelper;
-        parent::__construct($context, $backendHelper, $quotesFactory, $data);
+        parent::__construct($context, $backendHelper, $quotesFactory, null, null, $data);
     }
 
     /**
