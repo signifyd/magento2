@@ -11,23 +11,28 @@ namespace Signifyd\Connect\Model;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Magento\Framework\Module\ModuleListInterface;
+use Magento\Framework\Component\ComponentRegistrarInterface;
+use Magento\Framework\Component\ComponentRegistrar;
+use Magento\Framework\Filesystem\Directory\ReadFactory;
 
 class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
 {
     /**
      * @var ConfigHelper
      */
-    public $configHelper;
+    protected $configHelper;
 
     /**
      * @var StoreManagerInterface
      */
-    public $storeManager;
+    protected $storeManager;
 
     /**
      * @var ModuleListInterface
      */
-    public $moduleListInterface;
+    protected $moduleListInterface;
+    protected ComponentRegistrarInterface $componentRegistrar;
+    protected ReadFactory $readFactory;
 
     /**
      * @param ConfigHelper $configHelper
@@ -35,6 +40,8 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
      * @param ModuleListInterface $moduleListInterface
      */
     public function __construct(
+        ReadFactory $readFactory,
+        ComponentRegistrarInterface $componentRegistrar,
         ConfigHelper $configHelper,
         StoreManagerInterface $storeManager,
         ModuleListInterface $moduleListInterface
@@ -42,6 +49,8 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
         $this->storeManager = $storeManager;
         $this->moduleListInterface = $moduleListInterface;
         $this->configHelper = $configHelper;
+        $this->componentRegistrar = $componentRegistrar;
+        $this->readFactory = $readFactory;
     }
     public function getConfig()
     {
@@ -55,7 +64,7 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
         $adyenModule = $this->moduleListInterface->getOne('Adyen_Payment');
 
         if (isset($adyenModule)) {
-            $adyenVersion = $this->moduleListInterface->getOne('Adyen_Payment')['setup_version'];
+            $adyenVersion = $this->getModuleVersionFromComposer('Adyen_Payment');
             $isAdyenGreaterThanEightEighteen = version_compare($adyenVersion, '8.18.0') >= 0;
             $isAdyenGreaterThanEight = version_compare($adyenVersion, '8.0.0') >= 0 &&
                 version_compare($adyenVersion, '8.17.9') <= 0;
@@ -73,5 +82,24 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
             'isAdyenGreaterThanEightEighteen' => $isAdyenGreaterThanEightEighteen,
             'isAdyenGreaterThanEight' => $isAdyenGreaterThanEight]
         ];
+    }
+
+    /**
+     * Get version from composer.json if it exist otherwise return empty string
+     * @param string $moduleName
+     * @return string
+     */
+    public function getModuleVersionFromComposer(string $moduleName) : string
+    {
+        $path = $this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
+        $directoryRead = $this->readFactory->create($path);
+        $composerJsonData = $directoryRead->readFile('composer.json');
+        $data = json_decode($composerJsonData, true);
+        if (is_null($data))
+        {
+            return '';
+        }
+
+        return isset($data['version']) ? $data['version'] : '';
     }
 }
