@@ -397,7 +397,10 @@ class Purchase implements ObserverInterface
             $saleOrder = $this->saleOrderFactory->create();
             $orderData = $saleOrder($order);
 
-            if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig())) {
+            $hasAsyncRestriction = $this->getHasAsyncRestriction($paymentMethod);
+
+            if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig()) && $hasAsyncRestriction === false) {
+
                 /** @var \Signifyd\Connect\Model\Payment\Base\AsyncChecker $asyncCheck */
                 $asyncCheck = $this->paymentVerificationFactory->createPaymentAsyncChecker($order->getPayment()->getMethod());
             }
@@ -481,6 +484,30 @@ class Purchase implements ObserverInterface
         $asyncPaymentMethods = array_map('trim', $asyncPaymentMethods);
 
         return $asyncPaymentMethods;
+    }
+
+    /**
+     * Get async payment methods from store configs
+     *
+     * @return bool
+     */
+    public function getHasAsyncRestriction($paymentMethod)
+    {
+        try {
+            //stripe payments no longer needs to be async in versions 3.4.0 or higher
+            if ($paymentMethod == 'stripe_payments') {
+                $stripeVersion = \StripeIntegration\Payments\Model\Config::$moduleVersion;
+                $process = version_compare($stripeVersion, '3.4.0') >= 0 ? "synchronous" : "asynchronous";
+
+                $this->logger->info("Stripe on version {$stripeVersion} is " . $process);
+
+                return version_compare($stripeVersion, '3.4.0') >= 0;
+            }
+        } catch (\Exception $e) {
+
+        }
+
+        return false;
     }
 
     /**

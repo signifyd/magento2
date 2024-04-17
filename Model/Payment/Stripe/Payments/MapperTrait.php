@@ -16,7 +16,7 @@ trait MapperTrait
             }
 
             $registryKey = "signify_stripe_payment_charge_{$order->getId()}";
-            $charge = $this->registry->registry($registryKey);
+            $charge = $this->registry->getData($registryKey);
 
             if (is_object($charge)) {
                 return $charge;
@@ -66,7 +66,7 @@ trait MapperTrait
                         return false;
                     }
 
-                    $this->registry->register($registryKey, $charge);
+                    $this->registry->setData($registryKey, $charge);
                     return $charge;
                 }
             }
