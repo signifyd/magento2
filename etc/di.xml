@@ -80,7 +80,7 @@
     <type name="Signifyd\Connect\Model\MappingVerificationFactory">
         <arguments>
             <argument name="config" xsi:type="object">Magento\Payment\Gateway\Config\Config</argument>
-            <argument name="paymentMethodDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Api\CaseData\Transactions\PaymentMethod\Mapper</argument>
+            <argument name="paymentMethodDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\PaymentMethodMapper</argument>
         </arguments>
     </type>
 

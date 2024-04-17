@@ -1,6 +1,6 @@
 <?php
 
-namespace Signifyd\Connect\Model\Api\CaseData\Transactions\PaymentMethod;
+namespace Signifyd\Connect\Model\Payment\Base;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
@@ -10,7 +10,7 @@ use Signifyd\Connect\Api\PaymentMethodMappingInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 
-abstract class Base implements PaymentMethodMappingInterface
+abstract class PaymentMethodBase implements PaymentMethodMappingInterface
 {
     /**
      * @var JsonSerializer

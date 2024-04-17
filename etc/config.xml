@@ -52,7 +52,7 @@
                 </adyen_cc>
 
                 <adyen_hpp>
-                    <signifyd_payment_method_adapter>Signifyd\Connect\Model\Api\CaseData\Transactions\PaymentMethod\AdyenHpp</signifyd_payment_method_adapter>
+                    <signifyd_payment_method_adapter>Signifyd\Connect\Model\Payment\AdyenHpp\PaymentMethodMapper</signifyd_payment_method_adapter>
                 </adyen_hpp>
 
                 <adyen_pay_by_link>
@@ -64,6 +64,7 @@
                     <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\AdyenCc\ExpYearMapper</signifyd_exp_year_adapter>
                     <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\AdyenCc\Last4Mapper</signifyd_last4_adapter>
                     <signifyd_transaction_id_adapter>Signifyd\Connect\Model\Payment\AdyenCc\TransactionIdMapper</signifyd_transaction_id_adapter>
+                    <signifyd_payment_method_adapter>Signifyd\Connect\Model\Payment\AdyenPayByLink\PaymentMethodMapper</signifyd_payment_method_adapter>
                 </adyen_pay_by_link>
 
                 <authorizenet_directpost>
