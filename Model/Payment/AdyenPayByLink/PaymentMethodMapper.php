@@ -45,7 +45,7 @@ class PaymentMethodMapper extends PaymentMethodBase
             return $this->makePaymentMethod($paymentMethod);
         }
 
-        $this->logger->info('Mapping for Adyen Pay By method code: ' . $payByLinkMethod, ['entity' => $entity]);
+        $this->logger->info('Mapping for Adyen Pay By Link method code: ' . $payByLinkMethod, ['entity' => $entity]);
 
         if (strpos($payByLinkMethod, 'amazonpay')) {
             $method = 'AMAZON_PAYMENTS';
