@@ -47,19 +47,19 @@ class PaymentMethodMapper extends PaymentMethodBase
 
         $this->logger->info('Mapping for Adyen Pay By Link method code: ' . $payByLinkMethod, ['entity' => $entity]);
 
-        if (strpos($payByLinkMethod, 'amazonpay')) {
+        if (strpos($payByLinkMethod, 'amazonpay') !== false) {
             $method = 'AMAZON_PAYMENTS';
-        } elseif (strpos($payByLinkMethod, 'googlepay')) {
+        } elseif (strpos($payByLinkMethod, 'googlepay') !== false) {
             $method = 'GOOGLE_PAY';
-        } elseif (strpos($payByLinkMethod, 'applepay')) {
+        } elseif (strpos($payByLinkMethod, 'applepay') !== false) {
             $method = 'APPLE_PAY';
-        } elseif (strpos($payByLinkMethod, 'paypal')) {
+        } elseif (strpos($payByLinkMethod, 'paypal') !== false) {
             $method = 'PAYPAL_ACCOUNT';
-        } elseif (strpos($payByLinkMethod, 'debit')) {
+        } elseif (strpos($payByLinkMethod, 'debit') !== false) {
             $method = 'DEBIT_CARD';
-        } elseif (strpos($payByLinkMethod, 'credit') || in_array($payByLinkMethod, $this->creditCard)) {
+        } elseif (strpos($payByLinkMethod, 'credit') !== false || in_array($payByLinkMethod, $this->creditCard)) {
             $method = 'CREDIT_CARD';
-        } elseif (strpos($payByLinkMethod, 'prepaid')) {
+        } elseif (strpos($payByLinkMethod, 'prepaid') !== false) {
             $method = 'PREPAID_CARD';
         } else {
             $method = $this->makePaymentMethod($paymentMethod);
