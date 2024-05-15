@@ -302,8 +302,11 @@ class Purchase implements ObserverInterface
             }
 
             if ($this->configHelper->isPaymentRestricted($paymentMethod)) {
+                $restrictedPaymentMethods =
+                    $this->configHelper->getConfigData('signifyd/general/restrict_payment_methods') ?? '';
                 $message = 'Case creation for order ' . $incrementId .
-                    ' with payment ' . $paymentMethod . ' is restricted';
+                    ' with payment ' . $paymentMethod . ' is restricted' .
+                    ' by rule ' . $restrictedPaymentMethods;
                 $this->logger->debug($message, ['entity' => $order]);
                 return;
             }
