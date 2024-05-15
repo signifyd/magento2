@@ -82,7 +82,8 @@ class Webhook
             $this->casedataResourceModel->load($case, $orderId, 'order_id');
 
             if ($case->isEmpty()) {
-                return $proceed($notification);;
+                return $proceed($notification);
+                ;
             }
 
             $isHoldedBeforeAdyenProcess = $order->canUnhold();

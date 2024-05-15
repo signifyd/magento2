@@ -48,7 +48,13 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
         //Backward compatibility with Magento 2.4.6 or less, in this version the parent
         // construct don't have $urlDecoder and $parameters parameters, causing di:compile error
         $this->initConstructor(
-            $productMetadataInterface, $context, $backendHelper, $quotesFactory, $urlDecoder, $parameters, $data
+            $productMetadataInterface,
+            $context,
+            $backendHelper,
+            $quotesFactory,
+            $urlDecoder,
+            $parameters,
+            $data
         );
 
         $this->jsonSerializer = $jsonSerializer;
@@ -66,7 +72,13 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
      * @return void
      */
     public function initConstructor(
-        $productMetadataInterface, $context, $backendHelper, $quotesFactory, $urlDecoder, $parameters, $data
+        $productMetadataInterface,
+        $context,
+        $backendHelper,
+        $quotesFactory,
+        $urlDecoder,
+        $parameters,
+        $data
     ) {
         if (version_compare($productMetadataInterface->getVersion(), '2.4.7') >= 0) {
             parent::__construct($context, $backendHelper, $quotesFactory, $urlDecoder, $parameters, $data);
