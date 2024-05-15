@@ -132,16 +132,23 @@ At the end of getPaymentData method the parent::getPaymentData($orderPayment) ca
 Here is a list of the payment methods that have a built in helper on the extension and will have payment data collected. If the cardholder name is not found, the billing first and last name will be used.
 
 ### Authorize.Net
-- Code: authorizenet_directpost
+#### Link to the extension https://www.rootways.com/magento-2-authorize-net-cim-extension
+#### Tested on 3.0.1
+- Code: rootways_authorizecim_option
 - Magento built in
 
 **Available data**
 - CVV Status
-- AVS Status
 - Last4
 - Transaction ID
+- Last4
+- Bin
+- Expiry Month
+- Expiry Year
 
 ### PayPal Express/PayPal Standard
+#### Magento default extension
+#### Tested on 101.0.6
 - Code: paypal_express
 - Magento built in
 
@@ -149,6 +156,8 @@ Here is a list of the payment methods that have a built in helper on the extensi
 - Transaction ID
 
 ### PayPal Payments Pro/PayPal Payflow Pro
+#### Magento default extension
+#### Tested on 101.0.6
 - Code: payflowpro
 - Magento built in
 
@@ -161,6 +170,8 @@ Here is a list of the payment methods that have a built in helper on the extensi
 - Transaction ID
 
 ### PayPal Payflow Link
+#### Magento default extension
+#### Tested on 101.0.6
 - Code: payflow_link
 - Magento built in
 
@@ -173,6 +184,8 @@ Here is a list of the payment methods that have a built in helper on the extensi
 - Transaction ID
 
 ### PayPal Payments Advanced
+#### Magento default extension
+#### Tested on 101.0.6
 - Code: payflow_advanced
 - Magento built in
 
@@ -185,6 +198,8 @@ Here is a list of the payment methods that have a built in helper on the extensi
 - Transaction ID
 
 ### Braintree
+#### Magento default extension
+#### Tested on 4.5.0
 - Code: braintree
 - Magento built in
 
@@ -197,12 +212,40 @@ Here is a list of the payment methods that have a built in helper on the extensi
 - Transaction ID
 
 ### Stripe Payments
+#### Link to the extension https://commercemarketplace.adobe.com/stripe-stripe-payments.html
+#### Tested on 3.5.16
 - Code: stripe_payments
 
 **Available data**
 - CVV Status
 - AVS Status
 - Last4
+- Expiry Month
+- Expiry Year
+- Transaction ID
+
+### Adyen
+#### Link to the extension https://github.com/Adyen/adyen-magento2
+#### Tested on 3.5.16
+- Code: adyen_cc
+
+**Available data**
+- AVS Response Code
+- CVV Response Code
+- Bin
+- Last 4
+- Expiry Month
+- Expiry Year
+- Transaction ID
+
+### OpenPay
+#### Link to the extension https://github.com/open-pay/openpay-magento2-cards
+#### Tested on 2.3.0
+- Code: openpay_cards
+
+**Available data**
+- Bin
+- Last 4
 - Expiry Month
 - Expiry Year
 - Transaction ID
