@@ -127,39 +127,22 @@ class InformationCodeMapper extends Signifyd_InformationCodeMapper
 
 At the end of getPaymentData method the parent::getPaymentData($orderPayment) can be called as a fallback if the information is not found or missing. That will trigger Base mapper and it will try to find the information on Magento standard location on database.
 
-## Built in mappers
+## Mappers
 
-Here is a list of the payment methods that have a built in helper on the extension and will have payment data collected. If the cardholder name is not found, the billing first and last name will be used.
-
-### Authorize.Net
-#### Link to the extension https://www.rootways.com/magento-2-authorize-net-cim-extension
-#### Tested on 3.0.1
-- Code: rootways_authorizecim_option
-- Magento built in
-
-**Available data**
-- CVV Status
-- Last4
-- Transaction ID
-- Last4
-- Bin
-- Expiry Month
-- Expiry Year
+Here is a list of the payment methods that have a payment data collected. If the cardholder name is not found, the billing first and last name will be used.
 
 ### PayPal Express/PayPal Standard
-#### Magento default extension
+#### Magento built in
 #### Tested on 101.0.6
 - Code: paypal_express
-- Magento built in
 
 **Available data**
 - Transaction ID
 
 ### PayPal Payments Pro/PayPal Payflow Pro
-#### Magento default extension
+#### Magento built in
 #### Tested on 101.0.6
 - Code: payflowpro
-- Magento built in
 
 **Available data**
 - CVV Status
@@ -170,10 +153,9 @@ Here is a list of the payment methods that have a built in helper on the extensi
 - Transaction ID
 
 ### PayPal Payflow Link
-#### Magento default extension
+#### Magento built in
 #### Tested on 101.0.6
 - Code: payflow_link
-- Magento built in
 
 **Available data**
 - CVV Status
@@ -184,10 +166,9 @@ Here is a list of the payment methods that have a built in helper on the extensi
 - Transaction ID
 
 ### PayPal Payments Advanced
-#### Magento default extension
+#### Magento built in
 #### Tested on 101.0.6
 - Code: payflow_advanced
-- Magento built in
 
 **Available data**
 - CVV Status
@@ -198,10 +179,9 @@ Here is a list of the payment methods that have a built in helper on the extensi
 - Transaction ID
 
 ### Braintree
-#### Magento default extension
+#### Magento built in
 #### Tested on 4.5.0
 - Code: braintree
-- Magento built in
 
 **Available data**
 - CVV Status
@@ -249,3 +229,30 @@ Here is a list of the payment methods that have a built in helper on the extensi
 - Expiry Month
 - Expiry Year
 - Transaction ID
+
+### Authorize.Net Paradoxlabs
+#### Link to the extension https://commercemarketplace.adobe.com/paradoxlabs-authnetcim.html
+#### Tested on 5.0.1
+- Code: authnetcim
+
+**Available data**
+- AVS Response Code
+- Last4
+- Transaction ID
+- Last4
+- Expiry Month
+- Expiry Year
+
+### Authorize.Net Rootways
+#### Link to the extension https://www.rootways.com/magento-2-authorize-net-cim-extension
+#### Tested on 3.0.1
+- Code: rootways_authorizecim_option
+
+**Available data**
+- CVV Status
+- Last4
+- Transaction ID
+- Last4
+- Bin
+- Expiry Month
+- Expiry Year
