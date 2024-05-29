@@ -104,6 +104,7 @@ class Refund
 
             if ($invoices->getTotalCount() > 0) {
                 $this->createInvoicesCreditMemo($invoices, $order);
+                $completeCase = true;
             } else {
                 if ($order->canHold()) {
                     $order->hold();
@@ -116,9 +117,8 @@ class Refund
                     "tried to refund, but there is no invoice to add credit memo",
                     ['entity' => $order]
                 );
+                $case->setEntries('fail', 1);
             }
-
-            $completeCase = true;
         } catch (\Exception $e) {
             $order = $this->orderFactory->create();
             $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));

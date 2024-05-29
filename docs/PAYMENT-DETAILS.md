@@ -206,7 +206,7 @@ Here is a list of the payment methods that have a payment data collected. If the
 
 ### Adyen
 #### Link to the extension https://github.com/Adyen/adyen-magento2
-#### Tested on 3.5.16
+#### Tested on 9.3.0
 - Code: adyen_cc
 
 **Available data**

@@ -82,6 +82,8 @@ git apply pre-auth-authorizenet.patch
 ## Compatible methods
 
 ### Adyen
+#### Link to the extension https://github.com/Adyen/adyen-magento2
+#### Tested on 9.3.0
 
 - Call transaction API on failure: yes
 - Payment data available:
@@ -91,6 +93,8 @@ git apply pre-auth-authorizenet.patch
     - Cardholder name: no
 
 ### Adyen One-click (saved cards)
+#### Link to the extension https://github.com/Adyen/adyen-magento2
+#### Tested on 9.3.0
 
 - Call transaction API on failure: yes
 - Payment data available:
@@ -100,6 +104,8 @@ git apply pre-auth-authorizenet.patch
     - Cardholder name: no
 
 ### Braintree
+#### Magento built in
+#### Tested on 4.5.0
 
 - Call transaction API on failure: yes
 - Payment data available:
@@ -109,15 +115,8 @@ git apply pre-auth-authorizenet.patch
     - Cardholder name: no
 
 ### OpenPay
-
-- Call transaction API on failure: yes
-- Payment data available:
-    - Bin: yes
-    - Last4: yes
-    - Expiry date: yes
-    - Cardholder name: no
-
-### Holocash
+#### Link to the extension https://github.com/open-pay/openpay-magento2-cards
+#### Tested on 2.3.0
 
 - Call transaction API on failure: yes
 - Payment data available:
@@ -127,6 +126,8 @@ git apply pre-auth-authorizenet.patch
     - Cardholder name: no
 
 ### Stripe
+#### Link to the extension https://commercemarketplace.adobe.com/stripe-stripe-payments.html
+#### Tested on 3.5.16
 
 > [!IMPORTANT]
 > Stripe is compatible with pre auth, however it's not possible to collect any payment data
@@ -139,6 +140,8 @@ git apply pre-auth-authorizenet.patch
     - Cardholder name: no
 
 ### Authorize.net ParadoxLabs
+#### Link to the extension https://commercemarketplace.adobe.com/paradoxlabs-authnetcim.html
+#### Tested on 5.0.1
 
 - Call transaction API on failure: yes
 - Payment data available:
@@ -148,6 +151,8 @@ git apply pre-auth-authorizenet.patch
   - Cardholder name: yes
 
 ### Authorize.net Rootways
+#### Link to the extension https://www.rootways.com/magento-2-authorize-net-cim-extension
+#### Tested on 3.0.1
 
 - Call transaction API on failure: yes
 - Payment data available:
@@ -157,6 +162,8 @@ git apply pre-auth-authorizenet.patch
   - Cardholder name: no
 
 ### Mercado Pago - Custom Checkout
+#### Link to the extension https://commercemarketplace.adobe.com/mercadopago-adb-payment.html
+#### Tested on 3.19.0
 
 - Call transaction API on failure: yes
 - Payment data available:
@@ -166,6 +173,8 @@ git apply pre-auth-authorizenet.patch
   - Cardholder name: no
 
 ### Cybersource (Flex Microform)
+#### Link to the extension https://commercemarketplace.adobe.com/cybersource-global-payment-management.html
+#### Tested on 3.5.6
 
 - Call transaction API on failure: yes
 - Payment data available:
@@ -175,6 +184,8 @@ git apply pre-auth-authorizenet.patch
   - Cardholder name: yes
 
 ### Cybersource (Checkout API)
+#### Link to the extension https://commercemarketplace.adobe.com/cybersource-global-payment-management.html
+#### Tested on 3.5.6
 
 - Call transaction API on failure: yes
 - Payment data available:
@@ -184,5 +195,7 @@ git apply pre-auth-authorizenet.patch
   - Cardholder name: no
 
 ### Amazon Pay / PayPal Express
+#### Magento built in
+#### Tested on 101.0.6
 
 Not compatible with any pre auth flows, not even the basic behavior to block the customer on pre auth decline. Needs custom work on checkout as it has a specific behavior on checkout process.
