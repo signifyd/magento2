@@ -228,13 +228,15 @@ class Casedata extends AbstractModel
      * @param $updated
      * @return mixed
      */
-    public function setUpdated($updated = null)
+    public function setUpdated($updated = null, $updateRetries = true)
     {
         if (empty($updated)) {
             $updated = date('Y-m-d H:i:s', time());
         }
 
-        $this->setRetries(0);
+        if ($updateRetries) {
+            $this->setRetries(0);
+        }
 
         return parent::setUpdated($updated);
     }
