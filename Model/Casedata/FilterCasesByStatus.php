@@ -92,8 +92,9 @@ class FilterCasesByStatus extends AbstractHelper
 
         if (isset($cronBatchSize) && is_numeric($cronBatchSize)) {
             $casesCollection->setPageSize((int)$cronBatchSize);
-            $casesCollection->setOrder('updated', 'ASC');
         }
+
+        $casesCollection->setOrder('updated', 'ASC');
 
         $casesToRetry = [];
 
@@ -110,6 +111,7 @@ class FilterCasesByStatus extends AbstractHelper
 
                     $casesToRetry[$caseToUpdate->getId()] = $caseToUpdate;
                     $caseToUpdate->setData('retries', $retries + 1);
+                    $caseToUpdate->setUpdated(null, false);
                     $this->casedataResourceModel->save($caseToUpdate);
                 }
             } catch (\Exception $e) {
