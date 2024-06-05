@@ -5,11 +5,10 @@ namespace Signifyd\Connect\Plugin\Adyen\Payment\Helper;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Model\Casedata;
+use Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Adyen\Payment\Helper\Webhook as AdyenWebhook;
-use Adyen\Payment\Helper\Order as AdyenOrderHelper;
 
 class Webhook
 {
@@ -37,11 +36,10 @@ class Webhook
      * @var OrderHelper
      */
     public $orderHelper;
-
     /**
-     * @var AdyenOrderHelper
+     * @var ObjectManagerInterface
      */
-    public $adyenOrderHelper;
+    public $objectManagerInterface;
 
     /**
      * Cancel constructor.
@@ -50,7 +48,7 @@ class Webhook
      * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
      * @param OrderHelper $orderHelper
-     * @param AdyenOrderHelper $adyenOrderHelper
+     * @param ObjectManagerInterface $objectManagerInterface
      */
     public function __construct(
         Logger $logger,
@@ -58,20 +56,24 @@ class Webhook
         CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
         OrderHelper $orderHelper,
-        AdyenOrderHelper $adyenOrderHelper
+        ObjectManagerInterface $objectManagerInterface
     ) {
         $this->logger = $logger;
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
         $this->orderHelper = $orderHelper;
-        $this->adyenOrderHelper = $adyenOrderHelper;
+        $this->objectManagerInterface = $objectManagerInterface;
     }
 
     public function aroundProcessNotification(AdyenWebhook $subject, callable $proceed, $notification)
     {
         try {
-            $order = $this->adyenOrderHelper->getOrderByIncrementId($notification->getMerchantReference());
+            $adyenOrderHelper = $this->objectManagerInterface->create(
+                \Adyen\Payment\Helper\Order::class
+            );
+
+            $order = $adyenOrderHelper->getOrderByIncrementId($notification->getMerchantReference());
 
             if (!$order) {
                 return $proceed($notification);
@@ -83,7 +85,6 @@ class Webhook
 
             if ($case->isEmpty()) {
                 return $proceed($notification);
-                ;
             }
 
             $isHoldedBeforeAdyenProcess = $order->canUnhold();
@@ -95,7 +96,7 @@ class Webhook
 
             $returnValue = $proceed($notification);
 
-            $order = $this->adyenOrderHelper->getOrderByIncrementId($notification->getMerchantReference());
+            $order = $adyenOrderHelper->getOrderByIncrementId($notification->getMerchantReference());
 
             //Setting order to hold after adyen process
             if ($isHoldedBeforeAdyenProcess && $order->canHold()) {
