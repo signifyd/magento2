@@ -14,7 +14,7 @@
         </annotations>
 
         <click selector="{{AdminOrderDetailsMainActionsSection.unhold}}" stepKey="unholdOrder"/>
-        <click selector="{{SignifydAdminOrderSection.unholdButton}}" stepKey="confirmUnholdOrder"/>
+        <click selector="{{AdminOrderDetailsMainActionsSection.unholdButton}}" stepKey="confirmUnholdOrder"/>
         <waitForPageLoad stepKey="waitForPageLoad" />
     </actionGroup>
 </actionGroups>
