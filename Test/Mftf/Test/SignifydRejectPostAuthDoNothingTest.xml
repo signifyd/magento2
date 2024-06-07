@@ -26,7 +26,7 @@
         <magentoCLI command="cron:run" stepKey="cronRun" before="goToOrdersPage"/>
         <wait stepKey="waitCronRun" time="15" before="goToOrdersPage"/>
 
-        <!-- Assert that the case was accepted -->
+        <!-- Assert that the case was reject -->
         <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="REJECT" stepKey="seeCaseCreated"/>
         <!-- Assert that the order is on hold -->
         <see selector="{{AdminSignifydSection.magentoOrderStatus}}" userInput="On Hold" stepKey="seeOrderStatus"/>

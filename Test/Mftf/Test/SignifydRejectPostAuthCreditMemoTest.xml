@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="SignifydRejectPostAuthCreditMemoTest" extends="SignifydSuccessPostAuthCaseTest">
+        <annotations>
+            <features value="Sales"/>
+            <stories value="Post Auth do refund negative action"/>
+            <title value="Post Auth do refund negative action"/>
+            <description value="Validate post auth do refund negative action"/>
+            <severity value="CRITICAL"/>
+            <group value="checkout"/>
+        </annotations>
+        <before>
+            <createData entity="Signifyd_Customer_Refuse" stepKey="createCustomer"/>
+
+            <!-- Set Signifyd negative action-->
+            <magentoCLI command="config:set {{GuaranteeNegativeAction.path}} {{GuaranteeNegativeAction.refund}}" stepKey="setNegativeAction"/>
+        </before>
+
+        <!--Create Invoice for this Order-->
+        <actionGroup ref="StartCreateInvoiceFromOrderPageActionGroup" stepKey="createInvoice" after="clickCreatedOrderInGrid"/>
+        <actionGroup ref="SubmitInvoiceActionGroup" stepKey="submitInvoice" after="clickCreatedOrderInGrid"/>
+
+        <!-- Cron run -->
+        <wait stepKey="waitCaseToBeCreatedOnSignifyd" time="25" after="clickCreatedOrderInGrid"/>
+        <magentoCLI command="cron:run" stepKey="cronRun" after="clickCreatedOrderInGrid"/>
+        <wait stepKey="waitCronRun" time="15" after="clickCreatedOrderInGrid"/>
+
+        <!--Refresh Page-->
+        <reloadPage stepKey="reloadAdminOrderPage"/>
+
+        <!-- Assert that the case was reject -->
+        <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="REJECT" stepKey="seeCaseCreated"/>
+        <!-- Assert that the order is on hold -->
+        <see selector="{{AdminSignifydSection.magentoOrderStatus}}" userInput="Canceled" stepKey="seeOrderStatus"/>
+    </test>
+</tests>
