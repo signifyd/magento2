@@ -19,17 +19,17 @@
         </before>
 
         <!--Create Invoice for this Order-->
-        <seeElement selector="{{AdminOrderDetailsMainActionsSection.unhold}}" stepKey="seeUnholdButton"/>
-        <actionGroup ref="StartCreateInvoiceFromOrderPageActionGroup" stepKey="createInvoice" after="clickCreatedOrderInGrid"/>
-        <actionGroup ref="SubmitInvoiceActionGroup" stepKey="submitInvoice" after="clickCreatedOrderInGrid"/>
+        <seeElement selector="{{AdminOrderDetailsMainActionsSection.unhold}}" stepKey="seeUnholdButton" before="seeCaseCreated"/>
+        <actionGroup ref="StartCreateInvoiceFromOrderPageActionGroup" stepKey="createInvoice" before="seeCaseCreated"/>
+        <actionGroup ref="SubmitInvoiceActionGroup" stepKey="submitInvoice" before="seeCaseCreated"/>
 
         <!-- Cron run -->
-        <wait stepKey="waitCaseToBeCreatedOnSignifyd" time="25" after="clickCreatedOrderInGrid"/>
-        <magentoCLI command="cron:run" stepKey="cronRun" after="clickCreatedOrderInGrid"/>
-        <wait stepKey="waitCronRun" time="15" after="clickCreatedOrderInGrid"/>
+        <wait stepKey="waitCaseToBeCreatedOnSignifyd" time="25" before="seeCaseCreated"/>
+        <magentoCLI command="cron:run" stepKey="cronRun" before="seeCaseCreated"/>
+        <wait stepKey="waitCronRun" time="15" before="seeCaseCreated"/>
 
         <!--Refresh Page-->
-        <reloadPage stepKey="reloadAdminOrderPage"/>
+        <reloadPage stepKey="reloadAdminOrderPage" before="seeCaseCreated"/>
 
         <!-- Assert that the case was reject -->
         <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="REJECT" stepKey="seeCaseCreated"/>
