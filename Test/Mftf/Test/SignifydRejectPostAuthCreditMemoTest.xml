@@ -19,7 +19,7 @@
         </before>
 
         <!--Create Invoice for this Order-->
-        <actionGroup ref="AdminOpenStoreConfigSignifydPageActionGroup" stepKey="unholdOrder" before="seeCaseCreated"/>
+        <actionGroup ref="AdminOrderSignifydPageActionGroup" stepKey="unholdOrder" before="seeCaseCreated"/>
         <actionGroup ref="StartCreateInvoiceFromOrderPageActionGroup" stepKey="createInvoice" before="seeCaseCreated"/>
         <actionGroup ref="SubmitInvoiceActionGroup" stepKey="submitInvoice" before="seeCaseCreated"/>
 
