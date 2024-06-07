@@ -4,10 +4,11 @@
               xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/actionGroupSchema.xsd">
     <actionGroup name="AdminOpenStoreConfigSignifydPageActionGroup">
         <annotations>
-            <description>Go to admin store configuration Signifyd page.</description>
+            <description>Unhold admin order.</description>
         </annotations>
 
-        <amOnPage url="{{AdminConfigSignifydPage.url}}" stepKey="openAdminStoreConfigSignifydPage" />
+        <click selector="{{AdminOrderDetailsMainActionsSection.unhold}}" stepKey="unholdOrder"/>
+        <click selector="{{AdminSignifydSection.unholdButton}}" stepKey="confirmUnholdOrder"/>
         <waitForPageLoad stepKey="waitForPageLoad" />
     </actionGroup>
 </actionGroups>
