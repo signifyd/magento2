@@ -19,6 +19,7 @@
         </before>
 
         <!--Create Invoice for this Order-->
+        <seeElement selector="{{AdminOrderDetailsMainActionsSection.unhold}}" stepKey="seeUnholdButton"/>
         <actionGroup ref="StartCreateInvoiceFromOrderPageActionGroup" stepKey="createInvoice" after="clickCreatedOrderInGrid"/>
         <actionGroup ref="SubmitInvoiceActionGroup" stepKey="submitInvoice" after="clickCreatedOrderInGrid"/>
 
