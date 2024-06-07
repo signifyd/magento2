@@ -1,11 +1,12 @@
 <?php
 
-namespace Signifyd\Connect\Model\Api\CaseData\Transactions\PaymentMethod;
+namespace Signifyd\Connect\Model\Payment\AdyenHpp;
 
 use Magento\Quote\Model\Quote;
 use Magento\Sales\Model\Order;
+use Signifyd\Connect\Model\Payment\Base\PaymentMethodBase;
 
-class AdyenHpp extends Base
+class PaymentMethodMapper extends PaymentMethodBase
 {
     /**
      * @param Order $order
@@ -15,7 +16,7 @@ class AdyenHpp extends Base
     {
         $paymentBrandCode = $order->getPayment()->getAdditionalInformation('brand_code');
 
-        return $this->adyenHppMapping($paymentBrandCode, $order->getPayment()->getMethod());
+        return $this->adyenHppMapping($paymentBrandCode, $order);
     }
 
     /**
@@ -26,21 +27,20 @@ class AdyenHpp extends Base
     {
         $paymentBrandCode = $quote->getPayment()->getAdditionalInformation('brand_code');
 
-        return $this->adyenHppMapping($paymentBrandCode, $quote->getPayment()->getMethod());
+        return $this->adyenHppMapping($paymentBrandCode, $quote);
     }
 
-    public function adyenHppMapping($paymentBrandCode, $paymentMethod)
+    public function adyenHppMapping($paymentBrandCode, $entity)
     {
+        $paymentMethod = $entity->getPayment()->getMethod();
+
         if (is_string($paymentBrandCode) === false) {
-            $this->logger->info('Adyen Hpp method code not found');
+            $this->logger->info('Adyen Hpp method code not found', ['entity' => $entity]);
 
             return $this->makePaymentMethod($paymentMethod);
         }
 
-        $this->logger->info(
-            'Mapping for Adyen Hpp method code: ' .
-            $paymentBrandCode
-        );
+        $this->logger->info('Mapping for Adyen Hpp method code: ' . $paymentBrandCode, ['entity' => $entity]);
 
         switch ($paymentBrandCode) {
             case 'googlepay':
@@ -63,7 +63,15 @@ class AdyenHpp extends Base
 
             default:
                 $method = $this->makePaymentMethod($paymentMethod);
+
+                $message = 'Payment method found on base mapper: ' . (empty($method) ? 'false' : $method);
+                $this->logger->debug($message, ['entity' => $entity]);
+
+                return $method;
         }
+
+        $message = 'Payment method found on payment mapper: ' . $method;
+        $this->logger->debug($message, ['entity' => $entity]);
 
         return $method;
     }

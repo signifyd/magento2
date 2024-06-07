@@ -9,7 +9,7 @@
             <title value="Pre auth case refused"/>
             <description value="Order creation blocked at checkout"/>
             <severity value="CRITICAL"/>
-            <group value="checkout"/>
+            <group value="signifyd"/>
         </annotations>
         <before>
             <remove keyForRemoval="loginAsAdmin"/>

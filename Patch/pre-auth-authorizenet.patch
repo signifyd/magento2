@@ -1,23 +1,8 @@
-From 2124338b987b96a4772fe8c0e86a7a0e6a74d170 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?=C3=89bano=20Lopes?= <ebano@onbi.com.br>
-Date: Wed, 11 Jan 2023 13:39:13 +0000
-Subject: [PATCH] 5.3.0-MAG-786: AuthNet.
-
----
- .../ParadoxLabs/Authnetcim/Model/Gateway.php  | 113 ++++++++++++++++++
- Observer/PreAuth.php                          |  38 ++++++
- docs/PASS-PAYMENT-PRE-AUTH.md                 |   9 ++
- docs/TRANSACTIONS-INTEGRATION.md              |   4 +-
- etc/config.xml                                |   2 +-
- etc/di.xml                                    |   2 +
- 6 files changed, 165 insertions(+), 3 deletions(-)
- create mode 100644 Model/ParadoxLabs/Authnetcim/Model/Gateway.php
-
-diff --git a/vendor/signifyd/module-connect/Model/ParadoxLabs/Authnetcim/Model/Gateway.php b/vendor/signifyd/module-connect/Model/ParadoxLabs/Authnetcim/Model/Gateway.php
+diff --git a/Model/ParadoxLabs/Authnetcim/Model/Gateway.php b/Model/ParadoxLabs/Authnetcim/Model/Gateway.php
 new file mode 100644
 index 0000000..0dbba48
 --- /dev/null
-+++ b/vendor/signifyd/module-connect/Model/ParadoxLabs/Authnetcim/Model/Gateway.php
++++ b/Model/ParadoxLabs/Authnetcim/Model/Gateway.php
 @@ -0,0 +1,113 @@
 +<?php
 +
@@ -133,125 +118,15 @@ index 0000000..0dbba48
 +    }
 +}
 \ No newline at end of file
-diff --git a/vendor/signifyd/module-connect/Observer/PreAuth.php b/vendor/signifyd/module-connect/Observer/PreAuth.php
-index 2e717df..8df9019 100644
---- a/vendor/signifyd/module-connect/Observer/PreAuth.php
-+++ b/vendor/signifyd/module-connect/Observer/PreAuth.php
-@@ -262,6 +262,10 @@ class PreAuth implements ObserverInterface
+diff --git a/etc/di.xml b/etc/di.xml
+index 7ab144e..0ed7291 100644
+--- a/etc/di.xml
++++ b/etc/di.xml
+@@ -178,6 +178,7 @@
+     </type>
  
-                 $checkoutPaymentDetails['cardExpiryYear'] =
-                     $dataArray['paymentMethod']['additional_data']['cardExpiryYear'] ?? null;
-+
-+                if ($paymentMethod === 'authnetcim') {
-+                    $checkoutPaymentDetails = $this->mappingForAuthnet($checkoutPaymentDetails, $dataArray);
-+                }
-             }
- 
-             $this->logger->info("Creating case for quote {$quote->getId()}");
-@@ -340,4 +344,38 @@ class PreAuth implements ObserverInterface
-             throw new LocalizedException(__($policyRejectMessage));
-         }
-     }
-+
-+    /**
-+     * @param $checkoutPaymentDetails
-+     * @param $dataArray
-+     * @return mixed
-+     */
-+    public function mappingForAuthnet($checkoutPaymentDetails, $dataArray)
-+    {
-+        $additionalData = $dataArray['paymentMethod']['additional_data'];
-+
-+        if (isset($dataArray['paymentMethod']['additional_data']['card_id'])) {
-+            /** @var \ParadoxLabs\TokenBase\Model\ResourceModel\Card\Collection $cardCollection */
-+            $cardCollection = $this->objectManagerInterface->create(
-+                \ParadoxLabs\TokenBase\Model\ResourceModel\Card\CollectionFactory::class
-+            )->create()
-+                ->addFieldToFilter('hash', ['eq' => $dataArray['paymentMethod']['additional_data']['card_id']]);
-+
-+            $card = $cardCollection->getFirstItem();
-+
-+            if (empty($card->getData('additional')) === false) {
-+                $additionalData = $this->jsonSerializer->unserialize($card->getData('additional'));
-+            }
-+        }
-+
-+        $checkoutPaymentDetails['cardExpiryMonth'] = $additionalData['cc_exp_month'] ?? null;
-+
-+        $checkoutPaymentDetails['cardExpiryYear'] = $additionalData['cc_exp_year'] ?? null;
-+
-+        $checkoutPaymentDetails['cardLast4'] = $additionalData['cc_last4'] ?? null;
-+
-+        $checkoutPaymentDetails['cardBin'] = $additionalData['cc_bin'] ?? null;
-+
-+        return $checkoutPaymentDetails;
-+    }
- }
-diff --git a/vendor/signifyd/module-connect/docs/PASS-PAYMENT-PRE-AUTH.md b/vendor/signifyd/module-connect/docs/PASS-PAYMENT-PRE-AUTH.md
-index 323c712..6c258d5 100644
---- a/vendor/signifyd/module-connect/docs/PASS-PAYMENT-PRE-AUTH.md
-+++ b/vendor/signifyd/module-connect/docs/PASS-PAYMENT-PRE-AUTH.md
-@@ -120,6 +120,15 @@ git apply pre-auth-braintree-magento-2.X.patch
-     - Expiry date: no
-     - Cardholder name: no
- 
-+### Authorize.net
-+
-+- Call transaction API on failure: yes
-+- Payment data available:
-+  - Bin: yes (not available for saved cards)
-+  - Last4: yes
-+  - Expiry date: yes
-+  - Cardholder name: yes
-+
- ### Amazon Pay / PayPal Express
- 
- Not compatible with any pre auth flows, not even the basic behavior to block the customer on pre auth decline. Needs custom work on checkout as it has a specific behavior on checkout process.
-\ No newline at end of file
-diff --git a/vendor/signifyd/module-connect/docs/TRANSACTIONS-INTEGRATION.md b/vendor/signifyd/module-connect/docs/TRANSACTIONS-INTEGRATION.md
-index 4510d93..f2afb23 100644
---- a/vendor/signifyd/module-connect/docs/TRANSACTIONS-INTEGRATION.md
-+++ b/vendor/signifyd/module-connect/docs/TRANSACTIONS-INTEGRATION.md
-@@ -11,13 +11,13 @@ For each payment method that want to integrate with the transaction endpoint, it
- It is necessary to add the payment method to the mapped list in the etc/config.xml file:
- 
- ```xml
--<payment_methods_config>{"CREDIT_CARD":["payflow_link", "payflow_advanced", "authorizenet_acceptjs", "adyen_cc", "adyen_oneclick", "adyen_hpp", "braintree", "cybersource", "stripe_payments", "anet_creditcard", "authorizenet_directpost", "openpay_cards", "holacash", "stripe_payments"],"CHECK":["checkmo"]}</payment_methods_config>
-+<payment_methods_config>{"CREDIT_CARD":["payflow_link", "payflow_advanced", "authorizenet_acceptjs", "adyen_cc", "adyen_oneclick", "adyen_hpp", "braintree", "cybersource", "stripe_payments", "anet_creditcard", "authorizenet_directpost", "openpay_cards", "holacash", "stripe_payments", "authnetcim"],"CHECK":["checkmo"]}</payment_methods_config>
- ```
- 
- Likewise, it is necessary to update the payment method mapping doc on docs/PAYMENT-MAPPING.md file:
- 
- ```sql
--INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/payment_methods_config', '{"CREDIT_CARD":["payflow_link", "payflow_advanced", "authorizenet_acceptjs", "adyen_cc", "braintree", "cybersource", "stripe_payments", "anet_creditcard", "authorizenet_directpost", "openpay_cards", "holacash"],"CHECK":["checkmo"], "SIGNIFYD-PAYMENT-CODE": ["magento-payment-code"]}');
-+INSERT INTO core_config_data (path, value) VALUES ('signifyd/general/payment_methods_config', '{"CREDIT_CARD":["payflow_link", "payflow_advanced", "authorizenet_acceptjs", "adyen_cc", "adyen_oneclick", "adyen_hpp", "braintree", "cybersource", "stripe_payments", "anet_creditcard", "authorizenet_directpost", "openpay_cards", "holacash", "stripe_payments", "authnetcim"],"CHECK":["checkmo"]}');
- ```
- 
- ### Implementation of card data
-diff --git a/vendor/signifyd/module-connect/etc/config.xml b/vendor/signifyd/module-connect/etc/config.xml
-index 1301b16..30ba6fe 100644
---- a/vendor/signifyd/module-connect/etc/config.xml
-+++ b/vendor/signifyd/module-connect/etc/config.xml
-@@ -14,7 +14,7 @@
-                 <restrict_states_default>pending_payment,payment_review,canceled,closed,complete</restrict_states_default>
-                 <restrict_states_create>holded,pending_payment,payment_review,canceled,closed,complete</restrict_states_create>
-                 <restrict_payment_methods>checkmo,cashondelivery,banktransfer,purchaseorder,free</restrict_payment_methods>
--                <payment_methods_config>{"CREDIT_CARD":["payflow_link", "payflow_advanced", "authorizenet_acceptjs", "adyen_cc", "adyen_oneclick", "adyen_hpp", "braintree", "cybersource", "stripe_payments", "anet_creditcard", "authorizenet_directpost", "openpay_cards", "holacash", "stripe_payments"],"CHECK":["checkmo"]}</payment_methods_config>
-+                <payment_methods_config>{"CREDIT_CARD":["payflow_link", "payflow_advanced", "authorizenet_acceptjs", "adyen_cc", "adyen_oneclick", "adyen_hpp", "braintree", "cybersource", "stripe_payments", "anet_creditcard", "authorizenet_directpost", "openpay_cards", "holacash", "stripe_payments", "authnetcim"],"CHECK":["checkmo"]}</payment_methods_config>
-                 <shipper_config>{"FEDEX":["fedex"],"DHL":["dhl"],"SHIPWIRE":[],"USPS":["usps"],"UPS":["ups"]}</shipper_config>
-                 <shipping_method_config>{"EXPRESS":["FEDEX_EXPRESS_SAVER", "7", "B", "C", "D", "U", "K", "L", "I", "N", "T", "X", "INT_4", "INT_5", "INT_6", "INT_7", "54", "07"],"ELECTRONIC":[],"FIRST_CLASS":["0_FCLE", "0_FCL", "0_FCP", "0_FCPC", "15", "53", "61", "INT_13", "INT_14", "INT_15", "INT_21"],"FIRST_CLASS_INTERNATIONAL":[],"FREE":["freeshipping"],"FREIGHT":["FEDEX_1_DAY_FREIGHT", "FEDEX_2_DAY_FREIGHT", "FEDEX_3_DAY_FREIGHT", "INTERNATIONAL_ECONOMY_FREIGHT", "INTERNATIONAL_PRIORITY_FREIGHT", "FEDEX_FREIGHT", "FEDEX_NATIONAL_FREIGHT"],"GROUND":["FEDEX_GROUND", "GROUND_HOME_DELIVERY", "INTERNATIONAL_GROUND", "4", "03"],"INTERNATIONAL":["INTERNATIONAL_ECONOMY", "INTERNATIONAL_FIRST"],"OVERNIGHT":["FIRST_OVERNIGHT", "PRIORITY_OVERNIGHT", "STANDARD_OVERNIGHT"],"PRIORITY":["1", "2", "3", "13", "16", "17", "22", "23", "25", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50", "57", "58", "59", "62", "63", "64", "INT_1", "INT_2", "INT_8", "INT_9", "INT_10", "INT_11", "INT_16", "INT_17", "INT_18", "INT_19", "INT_20", "INT_22", "INT_23", "INT_24", "INT_25", "INT_27"],"PRIORITY_INTERNATIONAL":["EUROPE_FIRST_INTERNATIONAL_PRIORITY", "INTERNATIONAL_PRIORITY"],"PICKUP":["pickup"],"STANDARD":["11"],"STORE_TO_STORE":[],"TWO_DAY":["FEDEX_2_DAY", "FEDEX_2_DAY_AM", "59", "02"]}</shipping_method_config>
-                 <async_payment_methods>cybersource,mercadopago_basic,stripe_payments</async_payment_methods>
-diff --git a/vendor/signifyd/module-connect/etc/di.xml b/vendor/signifyd/module-connect/etc/di.xml
-index 4d5454a..08fe6c7 100644
---- a/vendor/signifyd/module-connect/etc/di.xml
-+++ b/vendor/signifyd/module-connect/etc/di.xml
-@@ -138,4 +138,6 @@
-     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
- 
-     <preference for="Magento\Sales\Model\Order\Payment" type="Signifyd\Connect\Model\Magento\Sales\Model\Order\Payment" />
-+
+     <!-- Preferences -->
 +    <preference for="ParadoxLabs\Authnetcim\Model\Gateway" type="Signifyd\Connect\Model\ParadoxLabs\Authnetcim\Model\Gateway" />
- </config>
--- 
-2.17.1
-
+     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
+     <preference for="Magento\Sales\Model\Order\Payment" type="Signifyd\Connect\Model\Magento\Sales\Model\Order\Payment" />
+     <preference for="Signifyd\Connect\Api\RerouteRepositoryInterface" type="Signifyd\Connect\Model\RerouteRepository"/>

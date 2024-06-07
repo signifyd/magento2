@@ -122,7 +122,11 @@ class GeneralResponseValidator
             return;
         }
 
-        $responseBraintree = $response->jsonSerialize()['transaction']->jsonSerialize() ?? [];
+        if (isset($response->jsonSerialize()['transaction'])) {
+            $responseBraintree = $response->jsonSerialize()['transaction']->jsonSerialize();
+        } else {
+            $responseBraintree = [];
+        }
 
         if (isset($responseBraintree['orderId']) &&
             isset($responseBraintree['cvvResponseCode']) &&

@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Signifyd\Connect\Model;
 
+use Magento\Config\Model\ResourceModel\Config\Data\CollectionFactory as ConfigDataCollectionFactory;
+use Magento\Sales\Model\ResourceModel\Order\Status\CollectionFactory as StatusCollectionFactory;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem\Io\File;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResource;
 use Magento\Sales\Model\OrderFactory;
 use Signifyd\Connect\Logger\Logger;
+use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
+use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Logs\CollectionFactory as LogsCollectionFactory;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Magento\Sales\Model\ResourceModel\Order\Status\History\CollectionFactory as HistoryCollectionFactory;
@@ -62,6 +66,26 @@ class LogsFile
     public $historyCollectionFactory;
 
     /**
+     * @var ConfigDataCollectionFactory
+     */
+    protected $configDataCollectionFactory;
+
+    /**
+     * @var StatusCollectionFactory
+     */
+    protected $statusCollectionFactory;
+
+    /**
+     * @var CasedataFactory
+     */
+    public $casedataFactory;
+
+    /**
+     * @var CasedataResourceModel
+     */
+    public $casedataResourceModel;
+
+    /**
      * @param DirectoryList $directoryList
      * @param File $file
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
@@ -71,6 +95,10 @@ class LogsFile
      * @param QuoteFactory $quoteFactory
      * @param QuoteResource $quoteResource
      * @param HistoryCollectionFactory $historyCollectionFactory
+     * @param ConfigDataCollectionFactory $configDataCollectionFactory
+     * @param StatusCollectionFactory $statusCollectionFactory
+     * @param CasedataFactory $casedataFactory
+     * @param CasedataResourceModel $casedataResourceModel
      */
     public function __construct(
         DirectoryList $directoryList,
@@ -81,7 +109,11 @@ class LogsFile
         Logger $logger,
         QuoteFactory $quoteFactory,
         QuoteResource $quoteResource,
-        HistoryCollectionFactory $historyCollectionFactory
+        HistoryCollectionFactory $historyCollectionFactory,
+        ConfigDataCollectionFactory $configDataCollectionFactory,
+        StatusCollectionFactory $statusCollectionFactory,
+        CasedataFactory $casedataFactory,
+        CasedataResourceModel $casedataResourceModel
     ) {
         $this->directoryList = $directoryList;
         $this->file = $file;
@@ -92,6 +124,10 @@ class LogsFile
         $this->quoteFactory = $quoteFactory;
         $this->quoteResource = $quoteResource;
         $this->historyCollectionFactory = $historyCollectionFactory;
+        $this->configDataCollectionFactory = $configDataCollectionFactory;
+        $this->statusCollectionFactory = $statusCollectionFactory;
+        $this->casedataFactory = $casedataFactory;
+        $this->casedataResourceModel = $casedataResourceModel;
     }
 
     /**
@@ -159,6 +195,10 @@ class LogsFile
             $quote = $this->quoteFactory->create();
             $this->quoteResource->load($quote, $order->getQuoteId());
 
+            $case = $this->casedataFactory->create();
+            $this->casedataResourceModel->loadForUpdate($case, $orderId, 'order_id');
+
+            $fileData .= 'case: ' . $case->toJson() . PHP_EOL;
             $fileData .= 'quote: ' . $quote->toJson() . PHP_EOL;
             $fileData .= 'quote_shipping_address: ' . $quote->getShippingAddress()->toJson() . PHP_EOL;
             $fileData .= 'quote_billing_address: ' . $quote->getBillingAddress()->toJson() . PHP_EOL;
@@ -172,6 +212,33 @@ class LogsFile
 
             foreach ($historyCollection as $history) {
                 $fileData .= 'sales_order_status_history: ' . $history->toJson() . PHP_EOL;
+            }
+
+            /** @var \Magento\Sales\Model\ResourceModel\Order\Status\Collection $statusCollectionFactory */
+            $statusCollectionFactory = $this->statusCollectionFactory->create()->joinStates();
+
+            if ($statusCollectionFactory->count() > 0) {
+                $fileData .= 'ORDER STATUS' . PHP_EOL;
+            }
+
+            foreach ($statusCollectionFactory as $statusState) {
+                $fileData .= "Status: " . $statusState->getStatus() . ", label: " . $statusState->getLabel() .
+                    ", state: " . $statusState->getState() . PHP_EOL;
+            }
+
+            /** @var \Magento\Config\Model\ResourceModel\Config\Data\Collection $configDataCollection */
+            $configDataCollection = $this->configDataCollectionFactory->create();
+
+            $configDataCollection
+                ->addFieldToFilter('path', ['like' => '%signifyd%'])
+                ->addFieldToFilter('path', ['neq' => 'signifyd/general/key']);
+
+            if ($configDataCollection->count() > 0) {
+                $fileData .= 'CORE CONFIG DATA SETTINGS' . PHP_EOL;
+            }
+
+            foreach ($configDataCollection as $signifydConfig) {
+                $fileData .= $signifydConfig->getPath() . ": " . $signifydConfig->getValue() . PHP_EOL;
             }
 
             $fh = new \SplFileObject($filePath, 'w');
