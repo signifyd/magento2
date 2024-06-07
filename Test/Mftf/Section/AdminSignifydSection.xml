@@ -9,6 +9,6 @@
         <element name="magentoOrderStatus" type="text" selector="#order_status"/>
     </section>
     <section name="SignifydAdminOrderSection">
-        <element name="unholdButton" type="button" selector=".action-primary.action-accpt"/>
+        <element name="unholdButton" type="button" selector=".action-primary.action-accept"/>
     </section>
 </sections>
