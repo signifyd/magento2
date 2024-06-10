@@ -18,22 +18,18 @@
             <magentoCLI command="config:set {{GuaranteeNegativeAction.path}} {{GuaranteeNegativeAction.refund}}" stepKey="setNegativeAction"/>
         </before>
 
-        <!--Create Invoice for this Order-->
+        <!--As Check/Money is an offline payment method, it is necessary to create the invoice for Signifyd to create the Credit memo-->
         <actionGroup ref="AdminOrderSignifydPageActionGroup" stepKey="unholdOrder" before="seeCaseCreated"/>
         <actionGroup ref="StartCreateInvoiceFromOrderPageActionGroup" stepKey="createInvoice" before="seeCaseCreated"/>
         <actionGroup ref="SubmitInvoiceActionGroup" stepKey="submitInvoice" before="seeCaseCreated"/>
 
         <!-- Cron run -->
-        <wait stepKey="waitCaseToBeCreatedOnSignifyd" time="25" before="seeCaseCreated"/>
         <magentoCLI command="cron:run" stepKey="cronRun" before="seeCaseCreated"/>
         <wait stepKey="waitCronRun" time="15" before="seeCaseCreated"/>
-
-        <!--Refresh Page-->
-        <reloadPage stepKey="reloadAdminOrderPage" before="seeCaseCreated"/>
 
         <!-- Assert that the case was reject -->
         <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="REJECT" stepKey="seeCaseCreated"/>
         <!-- Assert that the order is on hold -->
-        <see selector="{{AdminSignifydSection.magentoOrderStatus}}" userInput="Canceled" stepKey="seeOrderStatus"/>
+        <see selector="{{AdminSignifydSection.magentoOrderStatus}}" userInput="Closed" stepKey="seeOrderStatus"/>
     </test>
 </tests>
