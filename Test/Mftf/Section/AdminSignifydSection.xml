@@ -8,5 +8,6 @@
         <element name="signifydWebhookSuccessMessage" type="text" selector="#messages-message-success"/>
         <element name="magentoOrderStatus" type="text" selector="#order_status"/>
         <element name="unholdButton" type="button" selector=".action-accept"/>
+        <element name="holdButton" type="button" selector="#order-view-hold-button"/>
     </section>
 </sections>
