@@ -27,6 +27,9 @@
         <magentoCLI command="cron:run" stepKey="cronRun" before="seeCaseCreated"/>
         <wait stepKey="waitCronRun" time="15" before="seeCaseCreated"/>
 
+        <!--Refresh page to validate cron processing -->
+        <reloadPage stepKey="reloadAdminOrderPage" before="seeCaseCreated"/>
+
         <!-- Assert that the case was reject -->
         <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="REJECT" stepKey="seeCaseCreated"/>
         <!-- Assert that the order is on hold -->
