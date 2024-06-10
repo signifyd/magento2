@@ -34,6 +34,6 @@
         <!-- Assert that the case was reject -->
         <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="REJECT" stepKey="seeCaseCreated"/>
         <!-- Assert that the order is on hold -->
-        <see selector="{{AdminSignifydSection.magentoOrderStatus}}" userInput="Closed" stepKey="seeOrderStatus"/>
+        <see selector="{{AdminSignifydSection.magentoOrderStatus}}" userInput="Processing" stepKey="seeOrderStatus"/>
     </test>
 </tests>
