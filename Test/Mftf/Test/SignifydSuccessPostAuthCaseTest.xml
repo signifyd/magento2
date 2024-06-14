@@ -19,8 +19,8 @@
             <createData entity="Simple_US_Customer" stepKey="createCustomer"/>
             <actionGroup ref="AdminLoginActionGroup" stepKey="loginAsAdmin"/>
 
-            <!-- Remove checkmo from restrict payment -->
-            <magentoCLI command="config:set signifyd/general/enabled 1" stepKey="enableExtension"/>
+            <!-- Enable Signifyd module -->
+            <magentoCLI command="config:set {{SignifydEnableConfig.path}} {{SignifydEnableConfig.yes}}" stepKey="enableExtension"/>
 
             <!-- Remove checkmo from restrict payment -->
             <magentoCLI command="config:set {{SignifydPaymentRestriction.path}} {{SignifydPaymentRestriction.value}}" stepKey="removePaymentRestriction"/>

@@ -15,6 +15,12 @@
         <data key="post">POST_AUTH</data>
         <data key="path">signifyd/general/policy_name</data>
     </entity>
+    <entity name="SignifydEnableConfig">
+        <data key="path">signifyd/general/enabled</data>
+        <data key="yes">1</data>
+        <data key="no">0</data>
+        <data key="passive">passive</data>
+    </entity>
     <entity name="GuaranteePositiveAction">
         <data key="nothing">nothing</data>
         <data key="unhold">unhold</data>
