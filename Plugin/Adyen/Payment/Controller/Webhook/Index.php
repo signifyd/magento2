@@ -1,22 +1,21 @@
 <?php
 
-namespace Signifyd\Connect\Plugin\Adyen\Payment\Controller\Process;
+namespace Signifyd\Connect\Plugin\Adyen\Payment\Controller\Webhook;
 
-use Adyen\Payment\Controller\Process\Json as AdyenJson;
+use Adyen\Payment\Controller\Webhook\Index as AdyenIndex;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
-use Signifyd\Connect\Model\Casedata;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
 use Signifyd\Connect\Model\Api\TransactionsFactory;
 use Magento\Framework\App\Request\Http as RequestHttp;
 
-class Json
+class Index
 {
     /**
      * @var CasedataFactory
@@ -74,7 +73,7 @@ class Json
     public $requestHttp;
 
     /**
-     * Json constructor.
+     * Index constructor.
      *
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
@@ -115,16 +114,16 @@ class Json
     }
 
     /**
-     * Transactions integration for Adyen versions lower than 9.0.0
+     * Transactions integration for Adyen version 9.0.0 or higher
      *
-     * @param AdyenJson $subject
+     * @param AdyenIndex $subject
      * @return void|null
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      * @throws \Signifyd\Core\Exceptions\ApiException
      * @throws \Signifyd\Core\Exceptions\InvalidClassException
      */
-    public function beforeExecute(AdyenJson $subject)
+    public function beforeExecute(AdyenIndex $subject)
     {
         $policyName = $this->configHelper->getPolicyName(
             \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
@@ -137,6 +136,7 @@ class Json
             \Magento\Store\Model\ScopeInterface::SCOPE_STORES,
             $this->storeManager->getStore()->getId()
         );
+
         $notificationItems = $this->jsonSerializer->unserialize($this->requestHttp->getContent());
 
         if ($isPreAuth === false && empty($notificationItems) === true) {
@@ -217,7 +217,7 @@ class Json
                     if (isset($notificationItems['notificationItems']
                         [0]['NotificationRequestItem']['additionalData']['expiryDate'])) {
                         $expiryDate = $notificationItems['notificationItems'][0]
-                            ['NotificationRequestItem']['additionalData']['expiryDate'];
+                        ['NotificationRequestItem']['additionalData']['expiryDate'];
                         $expiryDateArray = explode('/', $expiryDate);
                         $adyenData['cardExpiryMonth'] = $expiryDateArray[0];
                         $adyenData['cardExpiryYear'] = $expiryDateArray[1];
