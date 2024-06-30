@@ -148,5 +148,14 @@
                 </payment_services_paypal_smart_buttons>
             </payment>
         </signifyd>
+        <csp>
+            <policies>
+                <storefront_checkout_index_index>
+                    <scripts>
+                        <inline>1</inline>>
+                    </scripts>
+                </storefront_checkout_index_index>
+            </policies>
+        </csp>
     </default>
 </config>
