@@ -310,6 +310,24 @@ class Index extends Action
                 throw new LocalizedException(__("Order not found"));
             }
 
+            if ($this->configHelper->processMerchantReview($order) === false &&
+                isset($requestJson->decision)
+            ) {
+                if (is_array($requestJson->decision)) {
+                    $checkpointActionReason = $requestJson->decision['checkpointActionReason'] ?? null;
+                } else {
+                    $checkpointActionReason = $requestJson->decision->checkpointActionReason ?? null;
+                }
+
+                if ($checkpointActionReason == 'MERCHANT_REVIEW') {
+                    $httpCode = Http::STATUS_CODE_200;
+                    $this->logger->info("WEBHOOK: Case {$case->getId()} will not be processed because the ".
+                        "request was made via 'Order review flag' in the Signifyd dashboard"
+                        , ['entity' => $case]);
+                    throw new LocalizedException(__("Request made via 'Order review flag'"));
+                }
+            }
+
             $this->logger->info("WEBHOOK: Processing case {$case->getId()} with request {$request} "
                 , ['entity' => $case]);
             $this->storeManagerInterface->setCurrentStore($order->getStore()->getStoreId());
