@@ -6,18 +6,18 @@ $scriptString = <<<script
             'uiComponent',
             'Magento_Customer/js/customer-data',
             'jquery'
-        ], function (Component, customerData, $) {   
-            'use strict';             
-            var SignifydFingerprint = function() {    
+        ], function (Component, customerData, $) {
+            'use strict';
+            var SignifydFingerprint = function() {
                 return {
-                    initialize: function () {                        
+                    initialize: function () {
                         var me = this;
                         
                         if (jQuery('.checkout-onepage-success').length > 0) {
-                            customerData.reload(['signifyd-fingerprint']);            
+                            customerData.reload(['signifyd-fingerprint']);
                         } else {
                             me.data = customerData.get('signifyd-fingerprint');
-                            me.sent = false;            
+                            me.sent = false;
                             me.sent = me.checkSessionId(me.data().dataOrderSessionId);
                             
                             if (me.sent === false) {
@@ -31,10 +31,10 @@ $scriptString = <<<script
                     checkSessionId: function(dataOrderSessionId) {
                         var me = this;
                         
-                        if (typeof dataOrderSessionId !== 'undefined' && dataOrderSessionId.length > 0) {                        
-                            if (typeof $.cookie('signifyd-' + dataOrderSessionId) !== 'undefined') {  
-                                console.log('Fingerprint already sent');  
-                            } else {                      
+                        if (typeof dataOrderSessionId !== 'undefined' && dataOrderSessionId.length > 0) {
+                            if (typeof $.cookie('signifyd-' + dataOrderSessionId) !== 'undefined') {
+                                console.log('Fingerprint already sent');
+                            } else {
                                 console.log('Sending fingerprint...');
                                 $.cookie('signifyd-' + dataOrderSessionId, true);
                                 
