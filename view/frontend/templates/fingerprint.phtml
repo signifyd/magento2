@@ -12,14 +12,12 @@ $scriptString = <<<script
                 return {
                     initialize: function () {
                         var me = this;
-                        
                         if (jQuery('.checkout-onepage-success').length > 0) {
                             customerData.reload(['signifyd-fingerprint']);
                         } else {
                             me.data = customerData.get('signifyd-fingerprint');
                             me.sent = false;
                             me.sent = me.checkSessionId(me.data().dataOrderSessionId);
-                            
                             if (me.sent === false) {
                                 me.observing = me.data.subscribe(function (newData) {
                                     me.sent = me.checkSessionId(newData.dataOrderSessionId);
@@ -27,33 +25,26 @@ $scriptString = <<<script
                             }
                         }
                     },
-                    
                     checkSessionId: function(dataOrderSessionId) {
                         var me = this;
-                        
                         if (typeof dataOrderSessionId !== 'undefined' && dataOrderSessionId.length > 0) {
                             if (typeof $.cookie('signifyd-' + dataOrderSessionId) !== 'undefined') {
                                 console.log('Fingerprint already sent');
                             } else {
                                 console.log('Sending fingerprint...');
                                 $.cookie('signifyd-' + dataOrderSessionId, true);
-                                
                                 me.callScript(dataOrderSessionId);
-                                
                                 if (typeof me.observing != "undefined") {
                                     me.observing.dispose();
                                 }
-                                
                                 return true;
                             }
                         } else {
                             console.log('Will not send fingerprint');
                             console.log(dataOrderSessionId);
-                            
                             return false;
                         }
                     },
-                    
                     callScript: function(dataOrderSessionId) {
                         var signifydScript = document.createElement('script');
                         signifydScript.setAttribute('async', true);
@@ -61,18 +52,15 @@ $scriptString = <<<script
                         signifydScript.setAttribute('id', 'sig-api');
                         signifydScript.setAttribute('data-order-session-id', dataOrderSessionId);
                         signifydScript.setAttribute('src', 'https://cdn-scripts.signifyd.com/api/script-tag.js');
-                        
                         $("head").append(signifydScript);
                     }
                 }
             };
-            
             jQuery(function() {
                 SignifydFingerprint().initialize();
             });
         }
     );
-    
     require(['signifyd-fingerprint-module']);
 script;
 ?>
