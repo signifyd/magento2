@@ -181,6 +181,10 @@
         <plugin name="signifyd_response_validator_plugin" type="Signifyd\Connect\Plugin\Rootways\Authorizecim\Gateway\Validator\ResponseValidatorPlugin" sortOrder="10"/>
     </type>
 
+    <type name="Magento\Csp\Model\Collector\ControllerCollector">
+        <plugin name="Signifyd_Connect_Plugin_Magento_Csp_Model_Collector_ControllerCollector" type="Signifyd\Connect\Plugin\Magento\Csp\Model\Collector\ControllerCollector"/>
+    </type>
+
     <!-- Preferences -->
     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
     <preference for="Magento\Sales\Model\Order\Payment" type="Signifyd\Connect\Model\Magento\Sales\Model\Order\Payment" />
