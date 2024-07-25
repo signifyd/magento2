@@ -4,6 +4,7 @@ namespace Signifyd\Connect\Plugin\Magento\Csp\Model\Collector;
 
 use Magento\Csp\Model\Collector\ControllerCollector as MagentoControllerCollector;
 use Magento\Csp\Model\Policy\FetchPolicyFactory;
+
 class ControllerCollector
 {
     /**
@@ -14,7 +15,8 @@ class ControllerCollector
     /**
      * @param FetchPolicyFactory $fetchPolicyFactory
      */
-    public function __construct(FetchPolicyFactory $fetchPolicyFactory) {
+    public function __construct(FetchPolicyFactory $fetchPolicyFactory)
+    {
         $this->fetchPolicyFactory = $fetchPolicyFactory;
     }
 

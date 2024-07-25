@@ -310,8 +310,10 @@ class Index extends Action
                 throw new LocalizedException(__("Order not found"));
             }
 
-            $this->logger->info("WEBHOOK: Processing case {$case->getId()} with request {$request} "
-                , ['entity' => $case]);
+            $this->logger->info(
+                "WEBHOOK: Processing case {$case->getId()} with request {$request} ",
+                ['entity' => $case]
+            );
             $this->storeManagerInterface->setCurrentStore($order->getStore()->getStoreId());
             $currentCaseHash = sha1(implode(',', $case->getData()));
 
