@@ -396,6 +396,6 @@ class ConfigHelper
      */
     public function processMerchantReview(\Magento\Framework\Model\AbstractModel $entity = null)
     {
-        return $this->getConfigData('signifyd/advanced/process_webhook_merchant_review', $entity, true);
+        return $this->getConfigData('signifyd/advanced/process_merchant_review_webhook', $entity, true);
     }
 }

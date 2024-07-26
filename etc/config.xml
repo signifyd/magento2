@@ -30,7 +30,7 @@
                 <cron_batch_size>20</cron_batch_size>
                 <bypass_additional_updates>0</bypass_additional_updates>
                 <logs_retention_period>60</logs_retention_period>
-                <process_webhook_merchant_review>0</process_webhook_merchant_review>
+                <process_merchant_review_webhook>0</process_merchant_review_webhook>
             </advanced>
             <logs>
                 <log>1</log>
