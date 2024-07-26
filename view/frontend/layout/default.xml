@@ -4,15 +4,6 @@
         <referenceContainer name="before.body.end">
             <block class="Magento\Framework\View\Element\Template" name="signifyd.connect.fingerprint"
                    template="Signifyd_Connect::fingerprint.phtml">
-                <arguments>
-                    <argument name="jsLayout" xsi:type="array">
-                        <item name="components" xsi:type="array">
-                            <item name="signifyd-fingerprint" xsi:type="array">
-                                <item name="component" xsi:type="string">Signifyd_Connect/js/view/signifyd-fingerprint</item>
-                            </item>
-                        </item>
-                    </argument>
-                </arguments>
             </block>
         </referenceContainer>
     </body>
