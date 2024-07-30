@@ -5,16 +5,20 @@ namespace Signifyd\Connect\Test\Integration\Cases\Webhook;
 use Signifyd\Connect\Test\Integration\WebhookTestCase;
 use Signifyd\Connect\Model\Casedata;
 
-class V3ReviewTest extends WebhookTestCase
+class AllowMerchantReviewTest extends WebhookTestCase
 {
     public $incrementId = '100000002';
 
     /**
      * @magentoDataFixture configFixture
      */
-    public function testWebhookReviewCase()
+    public function testAllowMerchantReview()
     {
-        $request = file_get_contents(__DIR__ . '/../../_files/case/webhook/review-v3-payload.json');
+        /** @var \Magento\Framework\App\Config\Storage\WriterInterface $writerInterface */
+        $writerInterface = $this->objectManager->create(\Magento\Framework\App\Config\Storage\WriterInterface::class);
+        $writerInterface->save('signifyd/advanced/process_merchant_review_webhook', 1);
+
+        $request = file_get_contents(__DIR__ . '/../../_files/case/webhook/merchant-review.json');
         $this->processWebhookRequest($request, '3621099674');
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
