@@ -6,9 +6,8 @@
             <label>Webhook Url</label>
             <comment><model>Signifyd\Connect\Model\WebhookLink</model></comment>
         </field>
-        <field id="register_webhook" translate="label comment" type="button" sortOrder="37" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="register_webhook" translate="label" type="button" sortOrder="37" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Register Webhook</label>
-            <comment />
             <frontend_model>Signifyd\Connect\Block\Adminhtml\System\Config\Button\Webhook</frontend_model>
         </field>
     </group>
