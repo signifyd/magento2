@@ -302,7 +302,7 @@ class PreAuth implements ObserverInterface
             }
 
             $this->logger->info("Creating case for quote {$quote->getId()}", ['entity' => $quote]);
-            $this->addSignifydDataToPayment($quote, $checkoutPaymentDetails);
+            $this->addSignifydDataToPayment($quote, $checkoutPaymentDetails, $paymentMethod);
             $checkoutOrder = $this->checkoutOrderFactory->create();
             $caseFromQuote = $checkoutOrder($quote, $checkoutPaymentDetails, $paymentMethod);
             $caseResponse = $this->client->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
@@ -393,11 +393,14 @@ class PreAuth implements ObserverInterface
     }
 
     /**
-     * @param \Magento\Quote\Model\Quote $quote
-     * @param array $checkoutPaymentDetails
+     * Add data to payment
+     *
+     * @param $quote
+     * @param $checkoutPaymentDetails
+     * @param $paymentMethod
      * @return void
      */
-    public function addSignifydDataToPayment($quote, $checkoutPaymentDetails)
+    public function addSignifydDataToPayment($quote, $checkoutPaymentDetails, $paymentMethod)
     {
         if (empty($checkoutPaymentDetails)) {
             return;
@@ -405,16 +408,21 @@ class PreAuth implements ObserverInterface
 
         $ccNumber = $quote->getPayment()->getData('cc_number');
 
-        if (!isset($ccNumber) &&
-            isset($checkoutPaymentDetails['cardBin']) &&
-            isset($checkoutPaymentDetails['cardLast4'])) {
-
+        if (!isset($ccNumber)
+            && isset($checkoutPaymentDetails['cardBin'])
+            && isset($checkoutPaymentDetails['cardLast4'])
+            && $paymentMethod !== 'authnetcim'
+        ) {
             $quote->getPayment()->setData(
                 'cc_number',
                 ($checkoutPaymentDetails['cardBin'] ?? '000000') .
                 '000000' .
                 ($checkoutPaymentDetails['cardLast4'] ?? '0000')
             );
+        }
+
+        if (isset($checkoutPaymentDetails['cardBin'])) {
+            $quote->getPayment()->setAdditionalInformation('card_bin', $checkoutPaymentDetails['cardBin']);
         }
 
         if (isset($checkoutPaymentDetails['holderName'])) {
