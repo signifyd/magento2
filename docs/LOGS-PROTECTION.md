@@ -1,6 +1,6 @@
 [Signifyd Extension for Magento 2](../README.md) > Logs protection
 
-## Personal data protection 
+## Personal data protection
 
 By default, the Signifyd extension protects all personal data. The list of protected fields includes:`streetAddress,unit,postalCode,city,provinceCode,countryCode,email,phone,name`.
 
