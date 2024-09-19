@@ -13,6 +13,7 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
+use Signifyd\Core\LoggerProtection;
 
 class ConfigHelper
 {
@@ -55,25 +56,33 @@ class ConfigHelper
     public $jsonSerializer;
 
     /**
+     * @var LoggerProtection
+     */
+    public $loggerProtection;
+
+    /**
      * ConfigHelper constructor.
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param StoreManagerInterface $storeManager
      * @param OrderFactory $orderFactory
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param JsonSerializer $jsonSerializer
+     * @param LoggerProtection $loggerProtection
      */
     public function __construct(
         ScopeConfigInterface $scopeConfigInterface,
         StoreManagerInterface $storeManager,
         OrderFactory $orderFactory,
         SignifydOrderResourceModel $signifydOrderResourceModel,
-        JsonSerializer $jsonSerializer
+        JsonSerializer $jsonSerializer,
+        LoggerProtection $loggerProtection
     ) {
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->storeManager = $storeManager;
         $this->orderFactory = $orderFactory;
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
         $this->jsonSerializer = $jsonSerializer;
+        $this->loggerProtection = $loggerProtection;
     }
 
     /**
@@ -388,5 +397,38 @@ class ConfigHelper
         }
 
         return true;
+    }
+
+    /**
+     * Get fields to private
+     *
+     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @return mixed
+     */
+    public function getPrivateLogData(\Magento\Framework\Model\AbstractModel $entity = null)
+    {
+        return $this->getConfigData('signifyd/advanced/private_log_data', $entity);
+    }
+
+    /**
+     * A general function that handles all requests and returns an array containing protected data.
+     *
+     * @param array $data
+     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @return array
+     */
+    public function filterLogData(array $data, \Magento\Framework\Model\AbstractModel $entity = null)
+    {
+        if (is_array($data) === false) {
+            return $data;
+        }
+
+        $fiesdsToPrivate = $this->getPrivateLogData($entity);
+
+        if (empty($fiesdsToPrivate)) {
+            return $data;
+        }
+
+        return ($this->loggerProtection)($data, $fiesdsToPrivate);
     }
 }

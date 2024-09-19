@@ -30,6 +30,7 @@
                 <cron_batch_size>20</cron_batch_size>
                 <bypass_additional_updates>0</bypass_additional_updates>
                 <logs_retention_period>60</logs_retention_period>
+                <private_log_data>streetAddress,unit,postalCode,city,provinceCode,countryCode,email,phone,name</private_log_data>
             </advanced>
             <logs>
                 <log>1</log>

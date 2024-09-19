@@ -143,13 +143,16 @@ class Client
      */
     public function postCaseToSignifyd($caseData, $order)
     {
+        $protectedCaseData = $this->configHelper->filterLogData($caseData, $order);
+
         $this->logger->info(
-            "Call sale api with request: " . $this->jsonSerializer->serialize($caseData),
+            "Call sale api with request: " . $this->jsonSerializer->serialize($protectedCaseData),
             ['entity' => $order]
         );
 
         /** @var \Signifyd\Core\Response\SaleResponse $saleResponse */
-        $saleResponse = $this->getSignifydSaleApi($order)->createOrder('orders/events/sales', $caseData);
+        $saleResponse = $this->getSignifydSaleApi($order)
+            ->createOrder('orders/events/sales', $caseData, $this->configHelper->getPrivateLogData($order));
 
         if (empty($saleResponse->getSignifydId()) === false) {
             $this->logger->info(
@@ -180,12 +183,15 @@ class Client
      */
     public function createReroute($updateData, $order)
     {
+        $protectedUpdateData = $this->configHelper->filterLogData($updateData, $order);
+
         $this->logger->info(
-            "Call reroute api with request: " . $this->jsonSerializer->serialize($updateData),
+            "Call reroute api with request: " . $this->jsonSerializer->serialize($protectedUpdateData),
             ['entity' => $order]
         );
 
-        $caseResponse = $this->getSignifydSaleApi($order)->reroute($updateData);
+        $caseResponse = $this->getSignifydSaleApi($order)
+            ->reroute($updateData, $this->configHelper->getPrivateLogData($order));
 
         if (empty($caseResponse->getSignifydId()) === false) {
             $this->logger->info(
@@ -294,13 +300,15 @@ class Client
      */
     public function postCaseFromQuoteToSignifyd($caseData, $quote)
     {
+        $protectedCaseData = $this->configHelper->filterLogData($caseData, $quote);
+
         $this->logger->info(
-            "Call checkout api with request: " . $this->jsonSerializer->serialize($caseData),
+            "Call checkout api with request: " . $this->jsonSerializer->serialize($protectedCaseData),
             ['entity' => $quote]
         );
 
         $caseResponse = $this->getSignifydCheckoutApi($quote)
-            ->createOrder('orders/events/checkouts', $caseData);
+            ->createOrder('orders/events/checkouts', $caseData, $this->configHelper->getPrivateLogData($quote));
 
         if (empty($caseResponse->getSignifydId()) === false) {
             $this->logger->info(
@@ -326,12 +334,15 @@ class Client
      */
     public function postTransactionToSignifyd($transactionData, $entity)
     {
+        $protectedTransactionData = $this->configHelper->filterLogData($transactionData, $entity);
+
         $this->logger->info(
-            "Call transaction api with request: " . $this->jsonSerializer->serialize($transactionData),
+            "Call transaction api with request: " . $this->jsonSerializer->serialize($protectedTransactionData),
             ['entity' => $entity]
         );
 
-        $caseResponse = $this->getSignifydCheckoutApi($entity)->createTransaction($transactionData);
+        $caseResponse = $this->getSignifydCheckoutApi($entity)
+            ->createTransaction($transactionData,  $this->configHelper->getPrivateLogData($entity));
         $tokenSent = $transactionData['checkoutId'];
         $tokenReceived = $caseResponse->getCheckoutId();
 
@@ -341,7 +352,7 @@ class Client
                 "Transaction sent to order {$entity->getIncrementId()}. Token is {$caseResponse->getCheckoutId()}";
 
             $this->logger->info(
-                "Transaction api response: " . $this->jsonSerializer->serialize($transactionData),
+                "Transaction api response: " . $this->jsonSerializer->serialize($caseResponse),
                 ['entity' => $entity]
             );
             $this->logger->debug($message, ['entity' => $entity]);
