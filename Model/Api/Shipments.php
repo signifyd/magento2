@@ -168,7 +168,7 @@ class Shipments
         return $shipments;
     }
 
-    protected function getFulfillmentMethodMapping(
+    public function getFulfillmentMethodMapping(
         $shippingMethod,
         $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
         $scopeCode = null

@@ -10,6 +10,8 @@ use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\CarrierFactory;
 use Signifyd\Connect\Model\Api\OriginFactory;
 use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Store\Model\ScopeInterface;
+use Signifyd\Connect\Model\Api\Shipments;
 
 class FulfillmentHelper
 {
@@ -64,6 +66,11 @@ class FulfillmentHelper
     public $originFactory;
 
     /**
+     * @var Shipments
+     */
+    public $shipments;
+
+    /**
      * FulfillmentHelper constructor.
      * @param CasedataFactory $casedataFactory
      * @param FulfillmentFactory $fulfillmentFactory
@@ -75,6 +82,7 @@ class FulfillmentHelper
      * @param OrderHelper $orderHelper
      * @param CarrierFactory $carrierFactory
      * @param OriginFactory $originFactory
+     * @param Shipments $shipments
      */
     public function __construct(
         CasedataFactory $casedataFactory,
@@ -86,7 +94,8 @@ class FulfillmentHelper
         SerializerInterface $serializer,
         OrderHelper $orderHelper,
         CarrierFactory $carrierFactory,
-        OriginFactory $originFactory
+        OriginFactory $originFactory,
+        Shipments $shipments
     ) {
         $this->casedataFactory = $casedataFactory;
         $this->fulfillmentFactory = $fulfillmentFactory;
@@ -98,6 +107,7 @@ class FulfillmentHelper
         $this->orderHelper = $orderHelper;
         $this->carrierFactory = $carrierFactory;
         $this->originFactory = $originFactory;
+        $this->shipments = $shipments;
     }
 
     public function postFulfillmentToSignifyd(\Magento\Sales\Model\Order\Shipment $shipment)
@@ -193,6 +203,7 @@ class FulfillmentHelper
         $fulfillment->setData('destination', $this->serialize($fulfillmentData['destination']));
         $fulfillment->setData('origin', $this->serialize($fulfillmentData['origin']));
         $fulfillment->setData('carrier', $fulfillmentData['carrier']);
+        $fulfillment->setData('fulfillment_method', $fulfillmentData['fulfillmentMethod']);
 
         return $fulfillment;
     }
@@ -237,6 +248,11 @@ class FulfillmentHelper
         $fulfillment['destination'] = $this->makeDestination($shipment);
         $fulfillment['origin'] = $makeOrigin($shipment->getOrder()->getStoreId());
         $fulfillment['carrier'] = $makeCarrier($shipment->getOrder()->getShippingMethod());
+        $fulfillment['fulfillmentMethod'] = $this->shipments->getFulfillmentMethodMapping(
+            $shipment->getOrder()->getShippingMethod(),
+            ScopeInterface::SCOPE_STORES,
+            $shipment->getOrder()->getStoreId()
+        );
 
         return $fulfillment;
     }
