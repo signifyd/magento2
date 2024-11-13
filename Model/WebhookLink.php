@@ -74,6 +74,6 @@ class WebhookLink implements CommentInterface
             $url = "{{store url}}/signifyd_connect/webhooks/index";
         }
 
-        return $url;
+        return $url = rtrim($url, '/');
     }
 }
