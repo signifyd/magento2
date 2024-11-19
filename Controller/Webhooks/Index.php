@@ -282,6 +282,12 @@ class Index extends Action
                 throw new LocalizedException(__("Case {$caseId} on request not found on Magento"));
             }
 
+            if ($case->getEntries('processed_by_gateway') === false) {
+                $this->casedataResourceModel->save($case);
+                $httpCode = Http::STATUS_CODE_400;
+                throw new LocalizedException(__("Case {$caseId} awaiting gateway processing"));
+            }
+
             $signifydWebhookApi = $this->client->getSignifydWebhookApi($case);
 
             if ($signifydWebhookApi->validWebhookRequest($request, $hash, $topic) == false) {
@@ -346,23 +352,29 @@ class Index extends Action
 
             $this->casedataResourceModel->save($case);
         } catch (\Exception $e) {
+            $context = [];
+
             // Triggering case save to unlock case
             if ($case instanceof \Signifyd\Connect\Model\ResourceModel\Casedata) {
                 $this->casedataResourceModel->save($case);
+                $context['entity'] = $case;
             }
 
             $httpCode = empty($httpCode) ? 403 : $httpCode;
             $this->getResponse()->appendBody($e->getMessage());
-            $this->logger->error("WEBHOOK: {$e->getMessage()}");
+            $this->logger->error("WEBHOOK: {$e->getMessage()}", $context);
         } catch (\Error $e) {
+            $context = [];
+
             // Triggering case save to unlock case
             if ($case instanceof \Signifyd\Connect\Model\ResourceModel\Casedata) {
                 $this->casedataResourceModel->save($case);
+                $context['entity'] = $case;
             }
 
             $httpCode = empty($httpCode) ? 403 : $httpCode;
             $this->getResponse()->appendBody($e->getMessage());
-            $this->logger->error("WEBHOOK: {$e->getMessage()}");
+            $this->logger->error("WEBHOOK: {$e->getMessage()}", $context);
         }
 
         $httpCode = empty($httpCode) ? 200 : $httpCode;

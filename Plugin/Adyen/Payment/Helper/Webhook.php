@@ -68,25 +68,26 @@ class Webhook
 
     public function aroundProcessNotification(AdyenWebhook $subject, callable $proceed, $notification)
     {
+        $adyenOrderHelper = $this->objectManagerInterface->create(
+            \Adyen\Payment\Helper\Order::class
+        );
+
+        $order = $adyenOrderHelper->getOrderByIncrementId($notification->getMerchantReference());
+
+        if (!$order) {
+            return $proceed($notification);
+        }
+
+        $orderId = $order->getId();
+        $case = $this->casedataFactory->create();
+        $this->casedataResourceModel->load($case, $orderId, 'order_id');
+
+        if ($case->isEmpty()) {
+            $this->casedataResourceModel->save($case);
+            return $proceed($notification);
+        }
+
         try {
-            $adyenOrderHelper = $this->objectManagerInterface->create(
-                \Adyen\Payment\Helper\Order::class
-            );
-
-            $order = $adyenOrderHelper->getOrderByIncrementId($notification->getMerchantReference());
-
-            if (!$order) {
-                return $proceed($notification);
-            }
-
-            $orderId = $order->getId();
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $orderId, 'order_id');
-
-            if ($case->isEmpty()) {
-                return $proceed($notification);
-            }
-
             $isHoldedBeforeAdyenProcess = $order->canUnhold();
 
             if ($isHoldedBeforeAdyenProcess) {
@@ -129,6 +130,9 @@ class Webhook
 
             $this->logger->error($ex->getMessage(), $context);
         }
+
+        $case->setEntries('processed_by_gateway', true);
+        $this->casedataResourceModel->save($case);
 
         if (isset($returnValue)) {
             return $returnValue;
