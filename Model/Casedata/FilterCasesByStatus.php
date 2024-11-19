@@ -102,7 +102,12 @@ class FilterCasesByStatus extends AbstractHelper
                 $secondsAfterUpdate = $case->getData('seconds_after_update');
 
                 if ($secondsAfterUpdate > $retryTimes[$retries]) {
-                    $casesToRetry[$caseToUpdate->getId()] = $caseToUpdate;
+                    $processedByGateway = $case->getEntries('processed_by_gateway');
+
+                    if (isset($processedByGateway) === false || $processedByGateway === true) {
+                        $casesToRetry[$caseToUpdate->getId()] = $caseToUpdate;
+                    }
+
                     $caseToUpdate->setData('retries', $retries + 1);
                     $caseToUpdate->setUpdated(null, false);
                     $this->casedataResourceModel->save($caseToUpdate);
