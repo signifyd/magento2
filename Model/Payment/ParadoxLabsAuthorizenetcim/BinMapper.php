@@ -17,8 +17,11 @@ class BinMapper extends Base_BinMapper
         $additionalInfo = $order->getPayment()->getAdditionalInformation();
 
         $bin = null;
+
         if (isset($additionalInfo['card_bin'])) {
             $bin = $additionalInfo['card_bin'];
+        } elseif (isset($additionalInfo['cc_bin'])) {
+            $bin = $additionalInfo['cc_bin'];
         }
 
         $message = 'Bin found on payment mapper: ' . (empty($bin) ? 'false' : 'true');
