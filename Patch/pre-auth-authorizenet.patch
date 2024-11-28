@@ -1,8 +1,8 @@
-diff --git a/Model/ParadoxLabs/Authnetcim/Model/Gateway.php b/Model/ParadoxLabs/Authnetcim/Model/Gateway.php
+diff --git a/vendor/signifyd/module-connect/Model/ParadoxLabs/Authnetcim/Model/Gateway.php b/vendor/signifyd/module-connect/Model/ParadoxLabs/Authnetcim/Model/Gateway.php
 new file mode 100644
 index 0000000..0dbba48
 --- /dev/null
-+++ b/Model/ParadoxLabs/Authnetcim/Model/Gateway.php
++++ b/vendor/signifyd/module-connect/Model/ParadoxLabs/Authnetcim/Model/Gateway.php
 @@ -0,0 +1,113 @@
 +<?php
 +
@@ -118,13 +118,13 @@ index 0000000..0dbba48
 +    }
 +}
 \ No newline at end of file
-diff --git a/etc/di.xml b/etc/di.xml
+diff --git a/vendor/signifyd/module-connect/etc/di.xml b/vendor/signifyd/module-connect/etc/di.xml
 index 7ab144e..0ed7291 100644
---- a/etc/di.xml
-+++ b/etc/di.xml
+--- a/vendor/signifyd/module-connect/etc/di.xml
++++ b/vendor/signifyd/module-connect/etc/di.xml
 @@ -178,6 +178,7 @@
      </type>
- 
+
      <!-- Preferences -->
 +    <preference for="ParadoxLabs\Authnetcim\Model\Gateway" type="Signifyd\Connect\Model\ParadoxLabs\Authnetcim\Model\Gateway" />
      <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
