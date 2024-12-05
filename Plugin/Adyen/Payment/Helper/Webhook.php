@@ -68,6 +68,10 @@ class Webhook
 
     public function aroundProcessNotification(AdyenWebhook $subject, callable $proceed, $notification)
     {
+        if (is_null($notification->getMerchantReference())) {
+            return $proceed($notification);
+        }
+
         $adyenOrderHelper = $this->objectManagerInterface->create(
             \Adyen\Payment\Helper\Order::class
         );
