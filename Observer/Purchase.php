@@ -447,7 +447,7 @@ class Purchase implements ObserverInterface
                 }
 
                 //Adyen needs to process the order before Signifyd.
-                if ($paymentMethod == 'adyen_cc') {
+                if (strpos($paymentMethod, 'adyen') !== false) {
                     $case->setEntries('processed_by_gateway', false);
                 }
 
