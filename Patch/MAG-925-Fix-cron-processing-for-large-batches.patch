@@ -1,0 +1,66 @@
+diff --git a/vendor/signifyd/module-connect/Model/Casedata.php b/vendor/signifyd/module-connect/Model/Casedata.php
+index 79486cd..dcd4935 100644
+--- a/vendor/signifyd/module-connect/Model/Casedata.php
++++ b/vendor/signifyd/module-connect/Model/Casedata.php
+@@ -228,13 +228,15 @@ class Casedata extends AbstractModel
+      * @param $updated
+      * @return mixed
+      */
+-    public function setUpdated($updated = null)
++    public function setUpdated($updated = null, $updateRetries = true)
+     {
+         if (empty($updated)) {
+             $updated = date('Y-m-d H:i:s', time());
+         }
+ 
+-        $this->setRetries(0);
++        if ($updateRetries) {
++            $this->setRetries(0);
++        }
+ 
+         return parent::setUpdated($updated);
+     }
+diff --git a/vendor/signifyd/module-connect/Model/Casedata/FilterCasesByStatus.php b/vendor/signifyd/module-connect/Model/Casedata/FilterCasesByStatus.php
+index 8d43013..9b1f364 100644
+--- a/vendor/signifyd/module-connect/Model/Casedata/FilterCasesByStatus.php
++++ b/vendor/signifyd/module-connect/Model/Casedata/FilterCasesByStatus.php
+@@ -88,13 +88,8 @@ class FilterCasesByStatus extends AbstractHelper
+             ['updated']
+         );
+ 
++        $casesCollection->setOrder('updated', 'ASC');
+         $cronBatchSize = $this->configHelper->getCronBatchSize();
+-
+-        if (isset($cronBatchSize) && is_numeric($cronBatchSize)) {
+-            $casesCollection->setPageSize((int)$cronBatchSize);
+-            $casesCollection->setOrder('updated', 'ASC');
+-        }
+-
+         $casesToRetry = [];
+ 
+         /** @var \Signifyd\Connect\Model\Casedata $case */
+@@ -107,9 +102,9 @@ class FilterCasesByStatus extends AbstractHelper
+                 $secondsAfterUpdate = $case->getData('seconds_after_update');
+ 
+                 if ($secondsAfterUpdate > $retryTimes[$retries]) {
+-
+                     $casesToRetry[$caseToUpdate->getId()] = $caseToUpdate;
+                     $caseToUpdate->setData('retries', $retries + 1);
++                    $caseToUpdate->setUpdated(null, false);
+                     $this->casedataResourceModel->save($caseToUpdate);
+                 }
+             } catch (\Exception $e) {
+@@ -119,6 +114,13 @@ class FilterCasesByStatus extends AbstractHelper
+                     ['entity' => $case]
+                 );
+             }
++
++            if (isset($cronBatchSize)
++                && is_numeric($cronBatchSize)
++                && count($casesToRetry) >= $cronBatchSize
++            ) {
++                break;
++            }
+         }
+ 
+         return $casesToRetry;
