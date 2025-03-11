@@ -164,10 +164,10 @@ class Client
             return $saleResponse;
         } else {
             $this->logger->error($this->jsonSerializer->serialize($saleResponse), ['entity' => $order]);
-            $this->logger->error("Case failed to send.", ['entity' => $order]);
+            $this->logger->error("Failed to create case.", ['entity' => $order]);
             $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: failed to create case");
 
-            return false;
+            return $saleResponse;
         }
     }
 
