@@ -446,8 +446,12 @@ class Purchase implements ObserverInterface
                     $magentoStatus = Casedata::IN_REVIEW_STATUS;
                 }
 
-                $case->setMagentoStatus($magentoStatus);
+                //Adyen needs to process the order before Signifyd.
+                if (strpos($paymentMethod, 'adyen') !== false) {
+                    $case->setEntries('processed_by_gateway', false);
+                }
 
+                $case->setMagentoStatus($magentoStatus);
                 $case->setUpdated();
             }
 
