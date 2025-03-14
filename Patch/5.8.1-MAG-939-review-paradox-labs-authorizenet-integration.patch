@@ -1,0 +1,115 @@
+diff --git a/vendor/signifyd/module-connect/Model/Payment/ParadoxLabsAuthorizenetcim/BinMapper.php b/vendor/signifyd/module-connect/Model/Payment/ParadoxLabsAuthorizenetcim/BinMapper.php
+new file mode 100644
+index 0000000..9ad7f93
+--- /dev/null
++++ b/vendor/signifyd/module-connect/Model/Payment/ParadoxLabsAuthorizenetcim/BinMapper.php
+@@ -0,0 +1,36 @@
++<?php
++
++namespace Signifyd\Connect\Model\Payment\ParadoxLabsAuthorizenetcim;
++
++use Signifyd\Connect\Model\Payment\Base\BinMapper as Base_BinMapper;
++
++class BinMapper extends Base_BinMapper
++{
++    /**
++     * Gets bin digits on Magento's payment additional information
++     *
++     * @param \Magento\Sales\Model\Order $order
++     * @return null|string
++     */
++    public function getPaymentData(\Magento\Sales\Model\Order $order)
++    {
++        $additionalInfo = $order->getPayment()->getAdditionalInformation();
++
++        $bin = null;
++
++        if (isset($additionalInfo['card_bin'])) {
++            $bin = $additionalInfo['card_bin'];
++        } elseif (isset($additionalInfo['cc_bin'])) {
++            $bin = $additionalInfo['cc_bin'];
++        }
++
++        $message = 'Bin found on payment mapper: ' . (empty($bin) ? 'false' : 'true');
++        $this->logger->debug($message, ['entity' => $order]);
++
++        if (empty($bin)) {
++            $bin = parent::getPaymentData($order);
++        }
++
++        return $bin;
++    }
++}
+diff --git a/vendor/signifyd/module-connect/Observer/PreAuth.php b/vendor/signifyd/module-connect/Observer/PreAuth.php
+index 6f404db..aaf0dfc 100644
+--- a/vendor/signifyd/module-connect/Observer/PreAuth.php
++++ b/vendor/signifyd/module-connect/Observer/PreAuth.php
+@@ -302,7 +302,7 @@ class PreAuth implements ObserverInterface
+             }
+ 
+             $this->logger->info("Creating case for quote {$quote->getId()}", ['entity' => $quote]);
+-            $this->addSignifydDataToPayment($quote, $checkoutPaymentDetails);
++            $this->addSignifydDataToPayment($quote, $checkoutPaymentDetails, $paymentMethod);
+             $checkoutOrder = $this->checkoutOrderFactory->create();
+             $caseFromQuote = $checkoutOrder($quote, $checkoutPaymentDetails, $paymentMethod);
+             $caseResponse = $this->client->postCaseFromQuoteToSignifyd($caseFromQuote, $quote);
+@@ -393,11 +393,14 @@ class PreAuth implements ObserverInterface
+     }
+ 
+     /**
+-     * @param \Magento\Quote\Model\Quote $quote
+-     * @param array $checkoutPaymentDetails
++     * Add data to payment
++     *
++     * @param $quote
++     * @param $checkoutPaymentDetails
++     * @param $paymentMethod
+      * @return void
+      */
+-    public function addSignifydDataToPayment($quote, $checkoutPaymentDetails)
++    public function addSignifydDataToPayment($quote, $checkoutPaymentDetails, $paymentMethod)
+     {
+         if (empty($checkoutPaymentDetails)) {
+             return;
+@@ -405,10 +408,11 @@ class PreAuth implements ObserverInterface
+ 
+         $ccNumber = $quote->getPayment()->getData('cc_number');
+ 
+-        if (!isset($ccNumber) &&
+-            isset($checkoutPaymentDetails['cardBin']) &&
+-            isset($checkoutPaymentDetails['cardLast4'])) {
+-
++        if (!isset($ccNumber)
++            && isset($checkoutPaymentDetails['cardBin'])
++            && isset($checkoutPaymentDetails['cardLast4'])
++            && $paymentMethod !== 'authnetcim'
++        ) {
+             $quote->getPayment()->setData(
+                 'cc_number',
+                 ($checkoutPaymentDetails['cardBin'] ?? '000000') .
+@@ -417,6 +421,10 @@ class PreAuth implements ObserverInterface
+             );
+         }
+ 
++        if (isset($checkoutPaymentDetails['cardBin'])) {
++            $quote->getPayment()->setAdditionalInformation('card_bin', $checkoutPaymentDetails['cardBin']);
++        }
++
+         if (isset($checkoutPaymentDetails['holderName'])) {
+             $quote->getPayment()->setCcOwner($checkoutPaymentDetails['holderName']);
+         }
+diff --git a/vendor/signifyd/module-connect/etc/config.xml b/vendor/signifyd/module-connect/etc/config.xml
+index 2736bae..b121d97 100644
+--- a/vendor/signifyd/module-connect/etc/config.xml
++++ b/vendor/signifyd/module-connect/etc/config.xml
+@@ -80,6 +80,10 @@
+                     <signifyd_bin_adapter>Signifyd\Connect\Model\Payment\RootwaysAuthorizecimOption\BinMapper</signifyd_bin_adapter>
+                 </rootways_authorizecim_option>
+ 
++                <authnetcim>
++                    <signifyd_bin_adapter>Signifyd\Connect\Model\Payment\ParadoxLabsAuthorizenetcim\BinMapper</signifyd_bin_adapter>
++                </authnetcim>
++
+                 <braintree>
+                     <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Braintree\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
+                     <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Braintree\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>

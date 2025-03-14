@@ -1,0 +1,32 @@
+From 3a450fb15543d7a6249f96388daf3fc516e8270d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=C3=89bano=20Lopes?= <ebano@onbi.com.br>
+Date: Tue, 12 Nov 2024 17:34:03 +0000
+Subject: [PATCH] MAG-940: Fingerprint miss matching session ID for guest
+ orders
+
+---
+ view/frontend/templates/fingerprint.phtml | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/vendor/signifyd/module-connect/view/frontend/templates/fingerprint.phtml b/vendor/signifyd/module-connect/view/frontend/templates/fingerprint.phtml
+index de27cb0..79dab8a 100644
+--- a/vendor/signifyd/module-connect/view/frontend/templates/fingerprint.phtml
++++ b/vendor/signifyd/module-connect/view/frontend/templates/fingerprint.phtml
+@@ -20,7 +20,13 @@ $scriptString = <<<script
+                         } else {
+                             me.data = customerData.get('signifyd-fingerprint');
+                             me.sent = false;
+-            
++                            
++                            if (Object.entries(me.data()).length === 0 &&
++                                window.location.href.indexOf('checkout') > -1
++                            ) {
++                                customerData.reload(['signifyd-fingerprint']);
++                            }
++                            
+                             me.sent = me.checkSessionId(me.data().dataOrderSessionId);
+             
+                             if (me.sent === false) {
+-- 
+2.25.1
+

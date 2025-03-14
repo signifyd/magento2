@@ -1,0 +1,254 @@
+diff --git a/vendor/signifyd/module-connect/Helper/ConfigHelper.php b/vendor/signifyd/module-connect/Helper/ConfigHelper.php
+index 8774937..e54e344 100644
+--- a/vendor/signifyd/module-connect/Helper/ConfigHelper.php
++++ b/vendor/signifyd/module-connect/Helper/ConfigHelper.php
+@@ -13,6 +13,7 @@ use Magento\Sales\Model\Order;
+ use Magento\Sales\Model\OrderFactory;
+ use Magento\Store\Model\StoreManagerInterface;
+ use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
++use Signifyd\Core\LoggerProtection;
+ 
+ class ConfigHelper
+ {
+@@ -54,6 +55,11 @@ class ConfigHelper
+      */
+     public $jsonSerializer;
+ 
++    /**
++     * @var LoggerProtection
++     */
++    public $loggerProtection;
++
+     /**
+      * ConfigHelper constructor.
+      * @param ScopeConfigInterface $scopeConfigInterface
+@@ -61,19 +67,22 @@ class ConfigHelper
+      * @param OrderFactory $orderFactory
+      * @param SignifydOrderResourceModel $signifydOrderResourceModel
+      * @param JsonSerializer $jsonSerializer
++     * @param LoggerProtection $loggerProtection
+      */
+     public function __construct(
+         ScopeConfigInterface $scopeConfigInterface,
+         StoreManagerInterface $storeManager,
+         OrderFactory $orderFactory,
+         SignifydOrderResourceModel $signifydOrderResourceModel,
+-        JsonSerializer $jsonSerializer
++        JsonSerializer $jsonSerializer,
++        LoggerProtection $loggerProtection
+     ) {
+         $this->scopeConfigInterface = $scopeConfigInterface;
+         $this->storeManager = $storeManager;
+         $this->orderFactory = $orderFactory;
+         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
+         $this->jsonSerializer = $jsonSerializer;
++        $this->loggerProtection = $loggerProtection;
+     }
+ 
+     /**
+@@ -389,4 +398,37 @@ class ConfigHelper
+ 
+         return true;
+     }
++
++    /**
++     * Get fields to private
++     *
++     * @param \Magento\Framework\Model\AbstractModel|null $entity
++     * @return mixed
++     */
++    public function getPrivateLogData(\Magento\Framework\Model\AbstractModel $entity = null)
++    {
++        return $this->getConfigData('signifyd/advanced/private_log_data', $entity);
++    }
++
++    /**
++     * A general function that handles all requests and returns an array containing protected data.
++     *
++     * @param array $data
++     * @param \Magento\Framework\Model\AbstractModel|null $entity
++     * @return array
++     */
++    public function filterLogData(array $data, \Magento\Framework\Model\AbstractModel $entity = null)
++    {
++        if (is_array($data) === false) {
++            return $data;
++        }
++
++        $fiesdsToPrivate = $this->getPrivateLogData($entity);
++
++        if (empty($fiesdsToPrivate)) {
++            return $data;
++        }
++
++        return ($this->loggerProtection)($data, $fiesdsToPrivate);
++    }
+ }
+diff --git a/vendor/signifyd/module-connect/Model/Api/Core/Client.php b/vendor/signifyd/module-connect/Model/Api/Core/Client.php
+index 8e42904..a5b7a7f 100644
+--- a/vendor/signifyd/module-connect/Model/Api/Core/Client.php
++++ b/vendor/signifyd/module-connect/Model/Api/Core/Client.php
+@@ -143,13 +143,16 @@ class Client
+      */
+     public function postCaseToSignifyd($caseData, $order)
+     {
++        $protectedCaseData = $this->configHelper->filterLogData($caseData, $order);
++
+         $this->logger->info(
+-            "Call sale api with request: " . $this->jsonSerializer->serialize($caseData),
++            "Call sale api with request: " . $this->jsonSerializer->serialize($protectedCaseData),
+             ['entity' => $order]
+         );
+ 
+         /** @var \Signifyd\Core\Response\SaleResponse $saleResponse */
+-        $saleResponse = $this->getSignifydSaleApi($order)->createOrder('orders/events/sales', $caseData);
++        $saleResponse = $this->getSignifydSaleApi($order)
++            ->createOrder('orders/events/sales', $caseData, $this->configHelper->getPrivateLogData($order));
+ 
+         if (empty($saleResponse->getSignifydId()) === false) {
+             $this->logger->info(
+@@ -180,12 +183,15 @@ class Client
+      */
+     public function createReroute($updateData, $order)
+     {
++        $protectedUpdateData = $this->configHelper->filterLogData($updateData, $order);
++
+         $this->logger->info(
+-            "Call reroute api with request: " . $this->jsonSerializer->serialize($updateData),
++            "Call reroute api with request: " . $this->jsonSerializer->serialize($protectedUpdateData),
+             ['entity' => $order]
+         );
+ 
+-        $caseResponse = $this->getSignifydSaleApi($order)->reroute($updateData);
++        $caseResponse = $this->getSignifydSaleApi($order)
++            ->reroute($updateData, $this->configHelper->getPrivateLogData($order));
+ 
+         if (empty($caseResponse->getSignifydId()) === false) {
+             $this->logger->info(
+@@ -294,13 +300,15 @@ class Client
+      */
+     public function postCaseFromQuoteToSignifyd($caseData, $quote)
+     {
++        $protectedCaseData = $this->configHelper->filterLogData($caseData, $quote);
++
+         $this->logger->info(
+-            "Call checkout api with request: " . $this->jsonSerializer->serialize($caseData),
++            "Call checkout api with request: " . $this->jsonSerializer->serialize($protectedCaseData),
+             ['entity' => $quote]
+         );
+ 
+         $caseResponse = $this->getSignifydCheckoutApi($quote)
+-            ->createOrder('orders/events/checkouts', $caseData);
++            ->createOrder('orders/events/checkouts', $caseData, $this->configHelper->getPrivateLogData($quote));
+ 
+         if (empty($caseResponse->getSignifydId()) === false) {
+             $this->logger->info(
+@@ -326,12 +334,15 @@ class Client
+      */
+     public function postTransactionToSignifyd($transactionData, $entity)
+     {
++        $protectedTransactionData = $this->configHelper->filterLogData($transactionData, $entity);
++
+         $this->logger->info(
+-            "Call transaction api with request: " . $this->jsonSerializer->serialize($transactionData),
++            "Call transaction api with request: " . $this->jsonSerializer->serialize($protectedTransactionData),
+             ['entity' => $entity]
+         );
+ 
+-        $caseResponse = $this->getSignifydCheckoutApi($entity)->createTransaction($transactionData);
++        $caseResponse = $this->getSignifydCheckoutApi($entity)
++            ->createTransaction($transactionData,  $this->configHelper->getPrivateLogData($entity));
+         $tokenSent = $transactionData['checkoutId'];
+         $tokenReceived = $caseResponse->getCheckoutId();
+ 
+@@ -341,7 +352,7 @@ class Client
+                 "Transaction sent to order {$entity->getIncrementId()}. Token is {$caseResponse->getCheckoutId()}";
+ 
+             $this->logger->info(
+-                "Transaction api response: " . $this->jsonSerializer->serialize($transactionData),
++                "Transaction api response: " . $this->jsonSerializer->serialize($caseResponse),
+                 ['entity' => $entity]
+             );
+             $this->logger->debug($message, ['entity' => $entity]);
+diff --git a/vendor/signifyd/module-connect/Model/ProcessCron/Fulfillment.php b/vendor/signifyd/module-connect/Model/ProcessCron/Fulfillment.php
+index 7eef7ab..d1eec7f 100644
+--- a/vendor/signifyd/module-connect/Model/ProcessCron/Fulfillment.php
++++ b/vendor/signifyd/module-connect/Model/ProcessCron/Fulfillment.php
+@@ -106,12 +106,14 @@ class Fulfillment
+                 $this->signifydOrderResourceModel->load($order, $orderId, 'increment_id');
+                 $fulfillmentApi = $this->fulfillmentFactory->create();
+                 $fulfillmentData = $fulfillmentApi($fulfillment);
++                $protectedFulfillmentData = $this->configHelper->filterLogData($fulfillmentData, $order);
+ 
+                 $this->logger->info("Call addFulfillments with request: " .
+-                    $this->jsonSerializer->serialize($fulfillmentData), ['entity' => $order]);
++                    $this->jsonSerializer->serialize($protectedFulfillmentData), ['entity' => $order]);
++
++                $fulfillmentBulkResponse = $this->client->getSignifydSaleApi($order)
++                    ->addFulfillment($fulfillmentData, $this->configHelper->getPrivateLogData($order));
+ 
+-                $fulfillmentBulkResponse = $this->client
+-                    ->getSignifydSaleApi($order)->addFulfillment($fulfillmentData);
+                 $fulfillmentOrderId = $fulfillmentBulkResponse->getOrderId();
+ 
+                 if (isset($fulfillmentOrderId) === false) {
+diff --git a/vendor/signifyd/module-connect/docs/LOGS-PROTECTION.md b/vendor/signifyd/module-connect/docs/LOGS-PROTECTION.md
+new file mode 100644
+index 0000000..2524f44
+--- /dev/null
++++ b/vendor/signifyd/module-connect/docs/LOGS-PROTECTION.md
+@@ -0,0 +1,42 @@
++[Signifyd Extension for Magento 2](../README.md) > Logs protection
++
++## Personal data protection
++
++By default, the Signifyd extension protects all personal data. The list of protected fields includes:`streetAddress,unit,postalCode,city,provinceCode,countryCode,email,phone,name`.
++
++### Data Protection Rules
++
++* Fields with 12 or more characters will be protected as `3 characters + *** + 3 characters`.e.g. `6146 Honey Bluff Parkway => 614***way`
++* Fields with between 7 and 11 characters will be protected as `*** + 3 characters`. e.g., `John Doe => ***Doe`.
++* Fields with fewer than 7 characters will be protected as `***`. e.g. `Texas => ***`
++
++### Add custom data protection
++
++It is possible to customize the fields to protect. The list must include the fields mentioned above, separated by commas.
++
++For example, if you want to protect just the name and email, run the command below on your database:
++
++```
++`INSERT INTO core_config_data (path, value) VALUES ('signifyd/advanced/private_log_data', 'email,name');`
++```
++### Update data protection
++
++To modify an existing data protection list, insert the list of new fields you want to protect and then run the following command on your database:
++
++```
++UPDATE core_config_data SET value='INSERT-LIST-OF-FIELDS-HERE' WHERE path='signifyd/advanced/private_log_data';
++```
++### Delete custom data protection
++
++To remove a custom data protection, just delete it from the database:
++
++```
++DELETE FROM core_config_data WHERE path='signifyd/advanced/private_log_data';
++```
++
++### Check custom data protection
++
++To check the custom data protection, run the command below on your database:
++
++```
++SELECT * FROM core_config_data WHERE path = 'signifyd/advanced/private_log_data';
+diff --git a/vendor/signifyd/module-connect/etc/config.xml b/vendor/signifyd/module-connect/etc/config.xml
+index 2736bae..f0db711 100644
+--- a/vendor/signifyd/module-connect/etc/config.xml
++++ b/vendor/signifyd/module-connect/etc/config.xml
+@@ -30,6 +30,7 @@
+                 <cron_batch_size>20</cron_batch_size>
+                 <bypass_additional_updates>0</bypass_additional_updates>
+                 <logs_retention_period>60</logs_retention_period>
++                <private_log_data>streetAddress,unit,postalCode,city,provinceCode,countryCode,email,phone,name</private_log_data>
+             </advanced>
+             <logs>
+                 <log>1</log>

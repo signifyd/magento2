@@ -1,0 +1,26 @@
+From efa3773106f99032413e66ad3fec206db3a93938 Mon Sep 17 00:00:00 2001
+From: ebanolopes <ebano@onbi.com.br>
+Date: Tue, 28 Jan 2025 18:54:01 +0000
+Subject: [PATCH] MAG-941: set flag 'processed_by_gateway' to all adyens
+ methods
+
+---
+ Observer/Purchase.php | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/vendor/signifyd/module-connect/Observer/Purchase.php b/vendor/signifyd/module-connect/Observer/Purchase.php
+index f549dac..d6be745 100644
+--- a/vendor/signifyd/module-connect/Observer/Purchase.php
++++ b/vendor/signifyd/module-connect/Observer/Purchase.php
+@@ -447,7 +447,7 @@ class Purchase implements ObserverInterface
+                 }
+ 
+                 //Adyen needs to process the order before Signifyd.
+-                if ($paymentMethod == 'adyen_cc') {
++                if (strpos($paymentMethod, 'adyen') !== false) {
+                     $case->setEntries('processed_by_gateway', false);
+                 }
+ 
+-- 
+2.25.1
+

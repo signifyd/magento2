@@ -1,0 +1,53 @@
+From 11d916c76c354627b2d173e9dca2a0b06ae9e44f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=C3=89bano=20Lopes?= <ebano@onbi.com.br>
+Date: Tue, 2 Apr 2024 12:51:39 +0000
+Subject: [PATCH] MAG-912: Case lock halting cron execution
+
+---
+ Model/Casedata/FilterCasesByStatus.php | 30 ++++++++++++++++----------
+ 1 file changed, 19 insertions(+), 11 deletions(-)
+
+diff --git a/vendor/signifyd/module-connect/Model/Casedata/FilterCasesByStatus.php b/vendor/signifyd/module-connect/Model/Casedata/FilterCasesByStatus.php
+index 4311e98..8d43013 100644
+--- a/vendor/signifyd/module-connect/Model/Casedata/FilterCasesByStatus.php
++++ b/vendor/signifyd/module-connect/Model/Casedata/FilterCasesByStatus.php
+@@ -99,17 +99,25 @@ class FilterCasesByStatus extends AbstractHelper
+ 
+         /** @var \Signifyd\Connect\Model\Casedata $case */
+         foreach ($casesCollection->getItems() as $case) {
+-            $caseToUpdate = $this->casedataFactory->create();
+-            $this->casedataResourceModel->loadForUpdate($caseToUpdate, $case->getId());
+-
+-            $retries = $caseToUpdate->getData('retries');
+-            $secondsAfterUpdate = $case->getData('seconds_after_update');
+-
+-            if ($secondsAfterUpdate > $retryTimes[$retries]) {
+-
+-                $casesToRetry[$caseToUpdate->getId()] = $caseToUpdate;
+-                $caseToUpdate->setData('retries', $retries + 1);
+-                $this->casedataResourceModel->save($caseToUpdate);
++            try {
++                $caseToUpdate = $this->casedataFactory->create();
++                $this->casedataResourceModel->loadForUpdate($caseToUpdate, $case->getId());
++
++                $retries = $caseToUpdate->getData('retries');
++                $secondsAfterUpdate = $case->getData('seconds_after_update');
++
++                if ($secondsAfterUpdate > $retryTimes[$retries]) {
++
++                    $casesToRetry[$caseToUpdate->getId()] = $caseToUpdate;
++                    $caseToUpdate->setData('retries', $retries + 1);
++                    $this->casedataResourceModel->save($caseToUpdate);
++                }
++            } catch (\Exception $e) {
++                $this->logger->error(
++                    'CRON: Case failed to load for update: '
++                    . $e->getMessage(),
++                    ['entity' => $case]
++                );
+             }
+         }
+ 
+-- 
+2.17.1
+

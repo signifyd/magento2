@@ -1,0 +1,31 @@
+diff --git a/vendor/signifyd/module-connect/view/frontend/templates/fingerprint.phtml b/vendor/signifyd/module-connect/view/frontend/templates/fingerprint.phtml
+index de27cb0..28138ba 100644
+--- a/vendor/signifyd/module-connect/view/frontend/templates/fingerprint.phtml
++++ b/vendor/signifyd/module-connect/view/frontend/templates/fingerprint.phtml
+@@ -20,7 +20,13 @@ $scriptString = <<<script
+                         } else {
+                             me.data = customerData.get('signifyd-fingerprint');
+                             me.sent = false;
+-            
++                            
++                            if (Object.entries(me.data()).length === 0 &&
++                                window.location.href.indexOf('checkout') > -1
++                            ) {
++                                customerData.reload(['signifyd-fingerprint']);
++                            }
++                            
+                             me.sent = me.checkSessionId(me.data().dataOrderSessionId);
+             
+                             if (me.sent === false) {
+@@ -35,7 +41,10 @@ $scriptString = <<<script
+                         var me = this;
+             
+                         if (typeof dataOrderSessionId !== 'undefined' && dataOrderSessionId.length > 0) {                        
+-                            if (typeof $.cookie('signifyd-' + dataOrderSessionId) !== 'undefined') {  
++                            if (typeof $.cookie('signifyd-' + dataOrderSessionId) !== 'undefined' &&
++                                $.cookie('signifyd-' + dataOrderSessionId) !== null &&
++                                $.cookie('signifyd-' + dataOrderSessionId) !== 'null'
++                            ) {  
+                                 console.log('Fingerprint already sent');  
+                             } else {                      
+                                 console.log('Sending fingerprint...');

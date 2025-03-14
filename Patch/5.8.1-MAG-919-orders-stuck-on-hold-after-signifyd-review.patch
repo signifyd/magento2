@@ -1,0 +1,33 @@
+From f1f8fccd7c65b12a22ff0d858900be9f4def4f6c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=C3=89bano=20Lopes?= <ebano@onbi.com.br>
+Date: Thu, 25 Apr 2024 18:45:44 +0000
+Subject: [PATCH] Orders stuck "On Hold" after Signifyd review
+
+---
+ Model/ProcessCron/Reroute.php | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/vendor/signifyd/module-connect/Model/ProcessCron/Reroute.php b/vendor/signifyd/module-connect/Model/ProcessCron/Reroute.php
+index 50cfcd6..77e87b5 100644
+--- a/vendor/signifyd/module-connect/Model/ProcessCron/Reroute.php
++++ b/vendor/signifyd/module-connect/Model/ProcessCron/Reroute.php
+@@ -158,6 +158,7 @@ class Reroute
+             $recipientJson = $this->jsonSerializer->serialize($recipient);
+             $newHashToValidateReroute = sha1($recipientJson);
+             $currentHashToValidateReroute = $case->getEntries('hash');
++            $failEntry = $case->getEntries('fail');
+ 
+             if ($newHashToValidateReroute == $currentHashToValidateReroute) {
+                 $this->logger->info(
+@@ -187,7 +188,7 @@ class Reroute
+             $updateCase = $this->updateCaseFactory->create();
+             $case = $updateCase($case, $updateResponse);
+ 
+-            if ($case->getOrigData('guarantee') !== $case->getData('guarantee')) {
++            if ($case->getOrigData('guarantee') !== $case->getData('guarantee') || isset($failEntry)) {
+                 $case->setStatus(\Signifyd\Connect\Model\Casedata::IN_REVIEW_STATUS);
+                 $updateOrder = $this->updateOrderFactory->create();
+                 $case = $updateOrder($case);
+-- 
+2.17.1
+
