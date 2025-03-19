@@ -400,6 +400,11 @@ class Purchase implements ObserverInterface
             $saleOrder = $this->saleOrderFactory->create();
             $orderData = $saleOrder($order);
 
+            //Adyen needs to process the order before Signifyd.
+            if (strpos($paymentMethod, 'adyen') !== false) {
+                $case->setEntries('processed_by_gateway', false);
+            }
+
             $hasAsyncRestriction = $this->getHasAsyncRestriction($paymentMethod);
 
             if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig()) && $hasAsyncRestriction === false) {
@@ -444,11 +449,6 @@ class Purchase implements ObserverInterface
                     }
                 } else {
                     $magentoStatus = Casedata::IN_REVIEW_STATUS;
-                }
-
-                //Adyen needs to process the order before Signifyd.
-                if (strpos($paymentMethod, 'adyen') !== false) {
-                    $case->setEntries('processed_by_gateway', false);
                 }
 
                 $case->setMagentoStatus($magentoStatus);
