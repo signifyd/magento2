@@ -191,6 +191,9 @@ class PreAuth implements ObserverInterface
                 isset($dataArray['paymentMethod']['method'])
             ) {
                 $paymentMethod = $dataArray['paymentMethod']['method'];
+            } else {
+                $payment = $quote->getPayment();
+                $paymentMethod = $payment->getMethod();
             }
 
             if (isset($paymentMethod) && $this->configHelper->isPaymentRestricted($paymentMethod)) {
@@ -299,6 +302,12 @@ class PreAuth implements ObserverInterface
                         $checkoutPaymentDetails = $this->mappingForAuthnet($checkoutPaymentDetails, $dataArray);
                     }
                 }
+            } else {
+                $checkoutPaymentDetails['cardBin'] = $payment->getAdditionalInformation('cardBin');
+                $checkoutPaymentDetails['cardExpiryMonth'] = $payment->getAdditionalInformation('cardExpiryMonth');
+                $checkoutPaymentDetails['cardExpiryYear'] = $payment->getAdditionalInformation('cardExpiryYear');
+                $checkoutPaymentDetails['cardLast4'] = $payment->getAdditionalInformation('cardLast4');
+                $checkoutPaymentDetails['holderName'] = $payment->getAdditionalInformation('holderName');
             }
 
             $this->logger->info("Creating case for quote {$quote->getId()}", ['entity' => $quote]);
