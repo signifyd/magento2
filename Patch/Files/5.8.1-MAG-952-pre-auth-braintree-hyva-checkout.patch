@@ -110,11 +110,11 @@ index 0000000..ebd8f42
 +
 ++                    const responseDetails = response.details || {};
 ++                    const cardDetails = {
-++                        cardBin: response.details.bin || null,
-++                        cardExpiryMonth: response.details.expirationMonth || null,
-++                        cardExpiryYear: response.details.expirationYear || null,
-++                        holderName: response.details.holderName || null,
-++                        cardLast4: response.details.lastFour || null
+++                        cardBin: responseDetails.bin || null,
+++                        cardExpiryMonth: responseDetails.expirationMonth || null,
+++                        cardExpiryYear: responseDetails.expirationYear || null,
+++                        holderName: responseDetails.holderName || null,
+++                        cardLast4: responseDetails.lastFour || null
 ++                    };
 ++
 ++                    await Magewire.find('checkout.payment.method.' + 'signifyd').call('setCardData', cardDetails);
