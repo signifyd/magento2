@@ -28,6 +28,7 @@ class Signifyd extends Form
      *
      * @param Validator $validator
      * @param Session $sessionCheckout
+     * @param QuoteResourceModel $quoteResourceModel
      */
     public function __construct(
         Validator $validator,
@@ -42,21 +43,14 @@ class Signifyd extends Form
     /**
      * Set setCardData
      *
-     * @param array $details
+     * @param array $cardDetails
      * @return void
      * @throws LocalizedException
      * @throws NoSuchEntityException
      * @throws Exception
      */
-    public function setCardData(array $details): void
+    public function setCardData(array $cardDetails): void
     {
-        $cardDetails = [
-            'cardBin' => $details['bin'] ?? null,
-            'cardExpiryMonth' => $details['expirationMonth'] ?? null,
-            'cardExpiryYear' => $details['expirationYear'] ?? null,
-            'cardLast4' => $details['lastFour'] ?? null
-        ];
-
         $quote = $this->sessionCheckout->getQuote();
 
         $quote->getPayment()
