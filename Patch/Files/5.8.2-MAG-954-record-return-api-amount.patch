@@ -1,0 +1,15 @@
+diff --git a/vendor/signifyd/module-connect/Model/Api/RecordReturn.php b/vendor/signifyd/module-connect/Model/Api/RecordReturn.php
+index c0997ff..4392f3a 100644
+--- a/vendor/signifyd/module-connect/Model/Api/RecordReturn.php
++++ b/vendor/signifyd/module-connect/Model/Api/RecordReturn.php
+@@ -54,6 +54,10 @@ class RecordReturn
+         $recordReturn['returnId'] = uniqid();
+         $recordReturn['device'] = $device($order->getQuoteId(), $order->getStoreId(), $order);
+ 
++        $recordReturn['refund']['amount'] = $order->getGrandTotal();
++        $recordReturn['refund']['currency'] = $order->getOrderCurrencyCode();
++        $recordReturn['refund']['method'] = 'ORIGINAL_PAYMENT_INSTRUMENT';
++
+         return $recordReturn;
+     }
+ }

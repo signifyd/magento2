@@ -54,6 +54,10 @@ class RecordReturn
         $recordReturn['returnId'] = uniqid();
         $recordReturn['device'] = $device($order->getQuoteId(), $order->getStoreId(), $order);
 
+        $recordReturn['refund']['amount'] = $order->getGrandTotal();
+        $recordReturn['refund']['currency'] = $order->getOrderCurrencyCode();
+        $recordReturn['refund']['method'] = 'ORIGINAL_PAYMENT_INSTRUMENT';
+
         return $recordReturn;
     }
 }
