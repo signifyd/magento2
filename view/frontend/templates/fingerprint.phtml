@@ -39,7 +39,11 @@ $scriptString = <<<script
                                 console.log('Fingerprint already sent');  
                             } else {                      
                                 console.log('Sending fingerprint...');
-                                $.cookie('signifyd-' + dataOrderSessionId, true);
+                                
+                                $.cookie('signifyd-' + dataOrderSessionId, true, {
+                                    expires: 0.5,
+                                    path: '/'
+                                });
                 
                                 me.callScript(dataOrderSessionId);
                 
