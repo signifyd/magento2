@@ -17,6 +17,13 @@ $scriptString = <<<script
                         } else {
                             me.data = customerData.get('signifyd-fingerprint');
                             me.sent = false;
+                            
+                            if (Object.entries(me.data()).length === 0 &&
+                                window.location.href.indexOf('checkout') > -1
+                            ) {
+                                customerData.reload(['signifyd-fingerprint']);
+                            }
+                            
                             me.sent = me.checkSessionId(me.data().dataOrderSessionId);
                             if (me.sent === false) {
                                 me.observing = me.data.subscribe(function (newData) {
