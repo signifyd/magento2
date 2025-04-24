@@ -158,6 +158,7 @@ class Reroute
             $recipientJson = $this->jsonSerializer->serialize($recipient);
             $newHashToValidateReroute = sha1($recipientJson);
             $currentHashToValidateReroute = $case->getEntries('hash');
+            $failEntry = $case->getEntries('fail');
 
             if ($newHashToValidateReroute == $currentHashToValidateReroute) {
                 $this->logger->info(
@@ -187,7 +188,7 @@ class Reroute
             $updateCase = $this->updateCaseFactory->create();
             $case = $updateCase($case, $updateResponse);
 
-            if ($case->getOrigData('guarantee') !== $case->getData('guarantee')) {
+            if ($case->getOrigData('guarantee') !== $case->getData('guarantee') || isset($failEntry)) {
                 $case->setStatus(\Signifyd\Connect\Model\Casedata::IN_REVIEW_STATUS);
                 $updateOrder = $this->updateOrderFactory->create();
                 $case = $updateOrder($case);
