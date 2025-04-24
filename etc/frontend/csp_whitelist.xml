@@ -4,6 +4,8 @@
         <policy id="script-src">
             <values>
                 <value id="signifyd-cdn-scripts" type="host">https://cdn-scripts.signifyd.com</value>
+                <value id="signifyd-cdn-tookkit" type="host">https://cdn-scripts.signifyd.com/api/company_toolkit.js</value>
+                <value id="signifyd-cdn-tookkit" type="host">https://cdn-scripts.signifyd.com/api/script-tag.js</value>
                 <value id="signifyd-imgs" type="host">https://imgs.signifyd.com</value>
                 <value id="signifyd-metrix" type="host">https://h64.online-metrix.net</value>
             </values>

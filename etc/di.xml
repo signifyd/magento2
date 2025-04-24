@@ -181,10 +181,6 @@
         <plugin name="signifyd_response_validator_plugin" type="Signifyd\Connect\Plugin\Rootways\Authorizecim\Gateway\Validator\ResponseValidatorPlugin" sortOrder="10"/>
     </type>
 
-    <type name="Magento\Csp\Model\Collector\ControllerCollector">
-        <plugin name="Signifyd_Connect_Plugin_Magento_Csp_Model_Collector_ControllerCollector" type="Signifyd\Connect\Plugin\Magento\Csp\Model\Collector\ControllerCollector"/>
-    </type>
-
     <type name="Adyen\Payment\Controller\Webhook\Index">
         <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Controller_Webhook_Index" type="\Signifyd\Connect\Plugin\Adyen\Payment\Controller\Webhook\Index" />
     </type>
