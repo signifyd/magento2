@@ -31,6 +31,7 @@
                 <bypass_additional_updates>0</bypass_additional_updates>
                 <logs_retention_period>60</logs_retention_period>
                 <process_merchant_review_webhook>0</process_merchant_review_webhook>
+                <private_log_data>streetAddress,unit,postalCode,city,provinceCode,countryCode,email,phone,name</private_log_data>
             </advanced>
             <logs>
                 <log>1</log>

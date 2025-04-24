@@ -106,12 +106,14 @@ class Fulfillment
                 $this->signifydOrderResourceModel->load($order, $orderId, 'increment_id');
                 $fulfillmentApi = $this->fulfillmentFactory->create();
                 $fulfillmentData = $fulfillmentApi($fulfillment);
+                $protectedFulfillmentData = $this->configHelper->filterLogData($fulfillmentData, $order);
 
                 $this->logger->info("Call addFulfillments with request: " .
-                    $this->jsonSerializer->serialize($fulfillmentData), ['entity' => $order]);
+                    $this->jsonSerializer->serialize($protectedFulfillmentData), ['entity' => $order]);
 
-                $fulfillmentBulkResponse = $this->client
-                    ->getSignifydSaleApi($order)->addFulfillment($fulfillmentData);
+                $fulfillmentBulkResponse = $this->client->getSignifydSaleApi($order)
+                    ->addFulfillment($fulfillmentData, $this->configHelper->getPrivateLogData($order));
+
                 $fulfillmentOrderId = $fulfillmentBulkResponse->getOrderId();
 
                 if (isset($fulfillmentOrderId) === false) {
