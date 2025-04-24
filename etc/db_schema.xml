@@ -52,6 +52,7 @@
         <column length="50" name="magento_status" default="waiting_submission" nullable="false" xsi:type="varchar"/>
         <column identity="false" name="retries" padding="11" nullable="false" default="0" xsi:type="int"/>
         <column name="inserted_at" nullable="true" default="CURRENT_TIMESTAMP" xsi:type="datetime"/>
+        <column length="32" name="fulfillment_method" nullable="true" xsi:type="varchar"/>
     </table>
     <table comment="signifyd_connect_reroute Table" engine="innodb" name="signifyd_connect_reroute" resource="default">
         <column xsi:type="int" name="reroute_id" padding="10" unsigned="true" nullable="false" identity="true" comment="Entity Id"/>

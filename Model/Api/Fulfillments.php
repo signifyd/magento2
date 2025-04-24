@@ -39,6 +39,7 @@ class Fulfillments
         $fulfillment['destination'] = $this->jsonSerializer->unserialize($fulfillmentData->getData('destination'));
         $fulfillment['origin'] = $this->jsonSerializer->unserialize($fulfillmentData->getData('origin'));
         $fulfillment['carrier'] = $fulfillmentData->getData('carrier');
+        $fulfillment['fulfillmentMethod'] = $fulfillmentData->getData('fulfillment_method');
 
         $fulfillments[] = $fulfillment;
         return $fulfillments;
