@@ -88,13 +88,8 @@ class FilterCasesByStatus extends AbstractHelper
             ['updated']
         );
 
+        $casesCollection->setOrder('updated', 'ASC');
         $cronBatchSize = $this->configHelper->getCronBatchSize();
-
-        if (isset($cronBatchSize) && is_numeric($cronBatchSize)) {
-            $casesCollection->setPageSize((int)$cronBatchSize);
-            $casesCollection->setOrder('updated', 'ASC');
-        }
-
         $casesToRetry = [];
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
@@ -107,9 +102,9 @@ class FilterCasesByStatus extends AbstractHelper
                 $secondsAfterUpdate = $case->getData('seconds_after_update');
 
                 if ($secondsAfterUpdate > $retryTimes[$retries]) {
-
                     $casesToRetry[$caseToUpdate->getId()] = $caseToUpdate;
                     $caseToUpdate->setData('retries', $retries + 1);
+                    $caseToUpdate->setUpdated(null, false);
                     $this->casedataResourceModel->save($caseToUpdate);
                 }
             } catch (\Exception $e) {
@@ -118,6 +113,13 @@ class FilterCasesByStatus extends AbstractHelper
                     . $e->getMessage(),
                     ['entity' => $case]
                 );
+            }
+
+            if (isset($cronBatchSize)
+                && is_numeric($cronBatchSize)
+                && count($casesToRetry) >= $cronBatchSize
+            ) {
+                break;
             }
         }
 
