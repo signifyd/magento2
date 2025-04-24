@@ -13,6 +13,7 @@ use Magento\Framework\Component\ComponentRegistrarInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Magento\Framework\Module\ModuleListInterface;
+use Magento\Framework\Filesystem\Directory\ReadFactory;
 
 class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
 {
@@ -37,27 +38,36 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
     public $componentRegistrar;
 
     /**
-     * ConfigProvider constructor
+     * @var ReadFactory
+     */
+    public $readFactory;
+
+    /**
+     * ConfigProvider constructor.
      *
+     * @param ReadFactory $readFactory
+     * @param ComponentRegistrarInterface $componentRegistrar
      * @param ConfigHelper $configHelper
      * @param StoreManagerInterface $storeManager
      * @param ModuleListInterface $moduleListInterface
-     * @param ComponentRegistrarInterface $componentRegistrar
      */
     public function __construct(
-        ConfigHelper $configHelper,
-        StoreManagerInterface $storeManager,
-        ModuleListInterface $moduleListInterface,
-        ComponentRegistrarInterface $componentRegistrar
-    ) {
+        ReadFactory                 $readFactory,
+        ComponentRegistrarInterface $componentRegistrar,
+        ConfigHelper                $configHelper,
+        StoreManagerInterface       $storeManager,
+        ModuleListInterface         $moduleListInterface
+    )
+    {
+        $this->readFactory = $readFactory;
+        $this->componentRegistrar = $componentRegistrar;
+        $this->configHelper = $configHelper;
         $this->storeManager = $storeManager;
         $this->moduleListInterface = $moduleListInterface;
-        $this->configHelper = $configHelper;
-        $this->componentRegistrar = $componentRegistrar;
     }
 
     /**
-     * Get config
+     * Get config method
      *
      * @return array[]
      * @throws \Magento\Framework\Exception\NoSuchEntityException
@@ -71,9 +81,10 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
 
         $isAdyenGreaterThanEightEighteen = false;
         $isAdyenGreaterThanEight = false;
-        $adyenVersion = $this->getAdyenModuleVersion();
+        $adyenModule = $this->moduleListInterface->getOne('Adyen_Payment');
 
-        if (isset($adyenVersion)) {
+        if (isset($adyenModule)) {
+            $adyenVersion = $this->getModuleVersionFromComposer('Adyen_Payment');
             $isAdyenGreaterThanEightEighteen = version_compare($adyenVersion, '8.18.0') >= 0;
             $isAdyenGreaterThanEight = version_compare($adyenVersion, '8.0.0') >= 0 &&
                 version_compare($adyenVersion, '8.17.9') <= 0;
@@ -86,7 +97,7 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
             $this->storeManager->getStore()->getCode()
         );
 
-        return [ 'signifyd' => [
+        return ['signifyd' => [
             'isAdyenPreAuth' => $isAdyenPreAuth,
             'isAdyenGreaterThanEightEighteen' => $isAdyenGreaterThanEightEighteen,
             'isAdyenGreaterThanEight' => $isAdyenGreaterThanEight]
@@ -94,28 +105,23 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
     }
 
     /**
-     * Get Adyen module version
+     * Get version from composer.json if it exists otherwise return empty string
      *
-     * @return mixed|null
+     * @param string $moduleName
+     * @return string
      */
-    public function getAdyenModuleVersion()
+    public function getModuleVersionFromComposer(string $moduleName): string
     {
-        $moduleDir = $this->componentRegistrar->getPath(
-            ComponentRegistrar::MODULE,
-            'Adyen_Payment'
-        );
+        $path = $this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
+        $directoryRead = $this->readFactory->create($path);
+        $composerJsonData = $directoryRead->readFile('composer.json');
 
-        if (isset($moduleDir) === false) {
-            return null;
+        $data = json_decode($composerJsonData, true);
+
+        if (is_null($data)) {
+            return '';
         }
 
-        $composerJson = file_get_contents($moduleDir . '/composer.json');
-        $composerJson = json_decode($composerJson, true);
-
-        if (empty($composerJson['version'])) {
-            return null;
-        }
-
-        return $composerJson['version'];
+        return $data['version'] ?? '';
     }
 }
