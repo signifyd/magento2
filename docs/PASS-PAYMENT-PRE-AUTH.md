@@ -83,7 +83,7 @@ git apply pre-auth-authorizenet.patch
 
 ### Adyen
 #### Link to the extension https://github.com/Adyen/adyen-magento2
-#### Tested on 9.3.0
+#### Tested on 9.5.3
 
 - Call transaction API on failure: yes
 - Payment data available:
@@ -94,7 +94,7 @@ git apply pre-auth-authorizenet.patch
 
 ### Adyen One-click (saved cards)
 #### Link to the extension https://github.com/Adyen/adyen-magento2
-#### Tested on 9.3.0
+#### Tested on 9.5.3
 
 - Call transaction API on failure: yes
 - Payment data available:
