@@ -1,0 +1,240 @@
+diff --git a/vendor/signifyd/module-connect/Plugin/Magento/Csp/Model/Collector/ControllerCollector.php b/vendor/signifyd/module-connect/Plugin/Magento/Csp/Model/Collector/ControllerCollector.php
+new file mode 100644
+index 0000000..1eb6bcb
+--- /dev/null
++++ b/vendor/signifyd/module-connect/Plugin/Magento/Csp/Model/Collector/ControllerCollector.php
+@@ -0,0 +1,37 @@
++<?php
++
++namespace Signifyd\Connect\Plugin\Magento\Csp\Model\Collector;
++
++use Magento\Csp\Model\Collector\ControllerCollector as MagentoControllerCollector;
++use Magento\Csp\Model\Policy\FetchPolicyFactory;
++class ControllerCollector
++{
++    /**
++     * @var FetchPolicyFactory
++     */
++    public $fetchPolicyFactory;
++
++    /**
++     * @param FetchPolicyFactory $fetchPolicyFactory
++     */
++    public function __construct(FetchPolicyFactory $fetchPolicyFactory) {
++        $this->fetchPolicyFactory = $fetchPolicyFactory;
++    }
++
++    public function beforeCollect(MagentoControllerCollector $subject, array $defaultPolicies)
++    {
++        //plugin necessary to send the fingerprint without the Signifyd script generating a CSP error
++        $defaultPolicies[] = $this->fetchPolicyFactory->create(
++            [
++                'id' => 'script-src',
++                'noneAllowed' => false,
++                'hostSources' => ['https://h64.online-metrix.net'],
++                'schemeSources' => [],
++                'selfAllowed' => true,
++                'inlineAllowed' => true
++            ]
++        );
++
++        return [$defaultPolicies];
++    }
++}
+diff --git a/vendor/signifyd/module-connect/etc/di.xml b/vendor/signifyd/module-connect/etc/di.xml
+index 2d30542..cc164e3 100644
+--- a/vendor/signifyd/module-connect/etc/di.xml
++++ b/vendor/signifyd/module-connect/etc/di.xml
+@@ -181,6 +181,10 @@
+         <plugin name="signifyd_response_validator_plugin" type="Signifyd\Connect\Plugin\Rootways\Authorizecim\Gateway\Validator\ResponseValidatorPlugin" sortOrder="10"/>
+     </type>
+ 
++    <type name="Magento\Csp\Model\Collector\ControllerCollector">
++        <plugin name="Signifyd_Connect_Plugin_Magento_Csp_Model_Collector_ControllerCollector" type="Signifyd\Connect\Plugin\Magento\Csp\Model\Collector\ControllerCollector"/>
++    </type>
++
+     <!-- Preferences -->
+     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
+     <preference for="Magento\Sales\Model\Order\Payment" type="Signifyd\Connect\Model\Magento\Sales\Model\Order\Payment" />
+diff --git a/vendor/signifyd/module-connect/etc/frontend/csp_whitelist.xml b/vendor/signifyd/module-connect/etc/frontend/csp_whitelist.xml
+index 89f728a..f9c23de 100644
+--- a/vendor/signifyd/module-connect/etc/frontend/csp_whitelist.xml
++++ b/vendor/signifyd/module-connect/etc/frontend/csp_whitelist.xml
+@@ -5,6 +5,7 @@
+             <values>
+                 <value id="signifyd-cdn-scripts" type="host">https://cdn-scripts.signifyd.com</value>
+                 <value id="signifyd-imgs" type="host">https://imgs.signifyd.com</value>
++                <value id="signifyd-metrix" type="host">https://h64.online-metrix.net</value>
+             </values>
+         </policy>
+         <policy id="img-src">
+diff --git a/vendor/signifyd/module-connect/view/frontend/layout/default.xml b/vendor/signifyd/module-connect/view/frontend/layout/default.xml
+index d6ac2f3..6d30407 100644
+--- a/vendor/signifyd/module-connect/view/frontend/layout/default.xml
++++ b/vendor/signifyd/module-connect/view/frontend/layout/default.xml
+@@ -4,15 +4,6 @@
+         <referenceContainer name="before.body.end">
+             <block class="Magento\Framework\View\Element\Template" name="signifyd.connect.fingerprint"
+                    template="Signifyd_Connect::fingerprint.phtml">
+-                <arguments>
+-                    <argument name="jsLayout" xsi:type="array">
+-                        <item name="components" xsi:type="array">
+-                            <item name="signifyd-fingerprint" xsi:type="array">
+-                                <item name="component" xsi:type="string">Signifyd_Connect/js/view/signifyd-fingerprint</item>
+-                            </item>
+-                        </item>
+-                    </argument>
+-                </arguments>
+             </block>
+         </referenceContainer>
+     </body>
+diff --git a/vendor/signifyd/module-connect/view/frontend/templates/fingerprint.phtml b/vendor/signifyd/module-connect/view/frontend/templates/fingerprint.phtml
+index 0cfbdcc..e1525a2 100644
+--- a/vendor/signifyd/module-connect/view/frontend/templates/fingerprint.phtml
++++ b/vendor/signifyd/module-connect/view/frontend/templates/fingerprint.phtml
+@@ -1,9 +1,68 @@
+-<div data-role="signifyd-fingerprint" data-bind="scope: 'signifyd-fingerprint'"></div>
++<?php
++$scriptString = <<<script
++    define(
++        'signifyd-fingerprint-module',
++        [
++            'uiComponent',
++            'Magento_Customer/js/customer-data',
++            'jquery'
++        ], function (Component, customerData, $) {
++            'use strict';
++            var SignifydFingerprint = function() {
++                return {
++                    initialize: function () {
++                        var me = this;
++                        if (jQuery('.checkout-onepage-success').length > 0) {
++                            customerData.reload(['signifyd-fingerprint']);
++                        } else {
++                            me.data = customerData.get('signifyd-fingerprint');
++                            me.sent = false;
++                            me.sent = me.checkSessionId(me.data().dataOrderSessionId);
++                            if (me.sent === false) {
++                                me.observing = me.data.subscribe(function (newData) {
++                                    me.sent = me.checkSessionId(newData.dataOrderSessionId);
++                                });
++                            }
++                        }
++                    },
++                    checkSessionId: function(dataOrderSessionId) {
++                        var me = this;
++                        if (typeof dataOrderSessionId !== 'undefined' && dataOrderSessionId.length > 0) {
++                            if (typeof $.cookie('signifyd-' + dataOrderSessionId) !== 'undefined') {
++                                console.log('Fingerprint already sent');
++                            } else {
++                                console.log('Sending fingerprint...');
++                                $.cookie('signifyd-' + dataOrderSessionId, true);
++                                me.callScript(dataOrderSessionId);
++                                if (typeof me.observing != "undefined") {
++                                    me.observing.dispose();
++                                }
++                                return true;
++                            }
++                        } else {
++                            console.log('Will not send fingerprint');
++                            console.log(dataOrderSessionId);
++                            return false;
++                        }
++                    },
++                    callScript: function(dataOrderSessionId) {
++                        var signifydScript = document.createElement('script');
++                        signifydScript.setAttribute('async', true);
++                        signifydScript.setAttribute('type', 'text/javascript');
++                        signifydScript.setAttribute('id', 'sig-api');
++                        signifydScript.setAttribute('data-order-session-id', dataOrderSessionId);
++                        signifydScript.setAttribute('src', 'https://cdn-scripts.signifyd.com/api/script-tag.js');
++                        $("head").append(signifydScript);
++                    }
++                }
++            };
++            jQuery(function() {
++                SignifydFingerprint().initialize();
++            });
++        }
++    );
++    require(['signifyd-fingerprint-module']);
++script;
++?>
+ 
+-<script type="text/x-magento-init">
+-{
+-    "[data-role=signifyd-fingerprint]": {
+-        "Magento_Ui/js/core/app": <?= /* @escapeNotVerified */ $block->getJsLayout() ?>
+-    }
+-}
+-</script>
++<?= /* @noEscape */ $secureRenderer->renderTag('script', [], $scriptString, false); ?>
+diff --git a/vendor/signifyd/module-connect/view/frontend/web/js/view/signifyd-fingerprint.js b/vendor/signifyd/module-connect/view/frontend/web/js/view/signifyd-fingerprint.js
+deleted file mode 100644
+index cf683c6..0000000
+--- a/vendor/signifyd/module-connect/view/frontend/web/js/view/signifyd-fingerprint.js
++++ /dev/null
+@@ -1,63 +0,0 @@
+-define([
+-    'uiComponent',
+-    'Magento_Customer/js/customer-data',
+-    'jquery'
+-], function (Component, customerData, $) {
+-    'use strict';
+-
+-    return Component.extend({
+-        /** @inheritdoc */
+-        initialize: function () {
+-            var me = this;
+-            me._super();
+-
+-            if (jQuery('.checkout-onepage-success').length > 0) {
+-                customerData.reload(['signifyd-fingerprint']);
+-
+-            } else {
+-                me.data = customerData.get('signifyd-fingerprint');
+-                me.sent = false;
+-
+-                me.sent = me.checkSessionId(me.data().dataOrderSessionId);
+-
+-                if (me.sent === false) {
+-                    me.observing = me.data.subscribe(function (newData) {
+-                        me.sent = me.checkSessionId(newData.dataOrderSessionId);
+-                    });
+-                }
+-            }
+-        },
+-
+-        checkSessionId: function(dataOrderSessionId) {
+-            var me = this;
+-
+-            if (typeof dataOrderSessionId !== 'undefined' && dataOrderSessionId.length > 0) {
+-                console.log('Sending fingerprint...');
+-
+-                me.callScript(dataOrderSessionId);
+-
+-                if (typeof me.observing != "undefined") {
+-                    me.observing.dispose();
+-                }
+-
+-                return true;
+-            } else {
+-                console.log('Will not send fingerprint');
+-                console.log(dataOrderSessionId);
+-
+-                return false;
+-            }
+-        },
+-
+-        callScript: function(dataOrderSessionId) {
+-            var script = document.createElement('script');
+-            script.setAttribute('async', true);
+-            script.setAttribute('type', 'text/javascript');
+-            script.setAttribute('id', 'sig-api');
+-            script.setAttribute('data-order-session-id', dataOrderSessionId);
+-            script.setAttribute('src', 'https://cdn-scripts.signifyd.com/api/script-tag.js');
+-
+-            $("body").append(script);
+-        }
+-    });
+-});

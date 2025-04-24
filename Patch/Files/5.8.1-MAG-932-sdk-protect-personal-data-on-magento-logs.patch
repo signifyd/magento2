@@ -1,0 +1,351 @@
+diff --git a/vendor/signifyd/signifyd-php/lib/Core/Api/ApiModel.php b/vendor/signifyd/signifyd-php/lib/Core/Api/ApiModel.php
+index f9f5fff..27a6742 100644
+--- a/vendor/signifyd/signifyd-php/lib/Core/Api/ApiModel.php
++++ b/vendor/signifyd/signifyd-php/lib/Core/Api/ApiModel.php
+@@ -16,6 +16,7 @@ namespace Signifyd\Core\Api;
+ use Signifyd\Core\Connection;
+ use Signifyd\Core\Exceptions\ApiException;
+ use Signifyd\Core\Exceptions\InvalidClassException;
++use Signifyd\Core\LoggerProtection;
+ use Signifyd\Core\Logging;
+ use Signifyd\Core\Response\CaseResponse;
+ use Signifyd\Core\Settings;
+@@ -147,7 +148,7 @@ class ApiModel
+      * @throws ApiException
+      * @throws InvalidClassException
+      */
+-    public function reroute($reroute)
++    public function reroute($reroute, $listOfFiesdsToPrivate = null)
+     {
+         $this->logger->info('SaleApi: reroute method called');
+         if (is_array($reroute)) {
+@@ -172,8 +173,11 @@ class ApiModel
+             );
+         }
+ 
++        $loggerProtection = New LoggerProtection();
++
+         $this->logger->info(
+-            'Connection call reroute with: ' . $reroute->toJson()
++            'Connection call reroute with: '
++            . json_encode($loggerProtection((array) $reroute, $listOfFiesdsToPrivate))
+         );
+ 
+         $response = $this->connection->callApi(
+@@ -193,12 +197,15 @@ class ApiModel
+      * @return bool|mixed|object|\Signifyd\Core\Response
+      * @throws InvalidClassException
+      */
+-    public function addFulfillment($fulfillmentsData)
++    public function addFulfillment($fulfillmentsData, $listOfFiesdsToPrivate = null)
+     {
+         $fulfillments = new \Signifyd\Models\Fulfillments($fulfillmentsData);
+ 
++        $loggerProtection = New LoggerProtection();
++
+         $this->logger->info(
+-            'Connection call addFulfillments with: ' . $fulfillments->toJson()
++            'Connection call addFulfillments with: '
++            . json_encode($loggerProtection((array) $fulfillments, $listOfFiesdsToPrivate))
+         );
+ 
+         $response = $this->connection->callApi(
+diff --git a/vendor/signifyd/signifyd-php/lib/Core/Api/CaseApi.php b/vendor/signifyd/signifyd-php/lib/Core/Api/CaseApi.php
+index 64768e7..fc94fe0 100644
+--- a/vendor/signifyd/signifyd-php/lib/Core/Api/CaseApi.php
++++ b/vendor/signifyd/signifyd-php/lib/Core/Api/CaseApi.php
+@@ -17,6 +17,7 @@ use Signifyd\Core\Connection;
+ use Signifyd\Core\Exceptions\CaseModelException;
+ use Signifyd\Core\Exceptions\FulfillmentException;
+ use Signifyd\Core\Exceptions\InvalidClassException;
++use Signifyd\Core\LoggerProtection;
+ use Signifyd\Core\Logging;
+ use Signifyd\Core\Response\CaseResponse;
+ use Signifyd\Core\Response\FulfillmentBulkResponse;
+@@ -93,7 +94,7 @@ class CaseApi
+      * @throws InvalidClassException
+      * @throws \Signifyd\Core\Exceptions\LoggerException
+      */
+-    public function createCase($case)
++    public function createCase($case, $listOfFiesdsToPrivate = null)
+     {
+         $this->logger->info('CreateCase method called');
+         if (is_array($case)) {
+@@ -119,10 +120,13 @@ class CaseApi
+         }
+ 
+         $case = $this->addPlatform($case);
++        $loggerProtection = New LoggerProtection();
+ 
+         $this->logger->info(
+-            'Connection call create case api with case: ' . $case->toJson()
++            'Connection call create case api with case: '
++            . json_encode($loggerProtection((array) $case, $listOfFiesdsToPrivate))
+         );
++
+         $response = $this->connection->callApi(
+             'cases',
+             $case->toJson(),
+diff --git a/vendor/signifyd/signifyd-php/lib/Core/Api/CheckoutApi.php b/vendor/signifyd/signifyd-php/lib/Core/Api/CheckoutApi.php
+index f44da99..f3b4bbf 100644
+--- a/vendor/signifyd/signifyd-php/lib/Core/Api/CheckoutApi.php
++++ b/vendor/signifyd/signifyd-php/lib/Core/Api/CheckoutApi.php
+@@ -15,6 +15,7 @@ namespace Signifyd\Core\Api;
+ 
+ use Signifyd\Core\Exceptions\ApiException;
+ use Signifyd\Core\Exceptions\InvalidClassException;
++use Signifyd\Core\LoggerProtection;
+ use Signifyd\Models\CheckoutModel;
+ use Signifyd\Models\CheckoutTransaction;
+ use Signifyd\Models\SendTransaction;
+@@ -55,9 +56,10 @@ class CheckoutApi extends ApiModel
+      * @throws InvalidClassException
+      * @throws \Signifyd\Core\Exceptions\LoggerException
+      */
+-    public function createOrder($endpoint, $order)
++    public function createOrder($endpoint, $order, $listOfFiesdsToPrivate = null)
+     {
+         $this->logger->info('CheckoutApi: CreateOrder method called');
++
+         if (is_array($order)) {
+             $order = new CheckoutModel($order);
+             $valid = $order->validate();
+@@ -80,9 +82,13 @@ class CheckoutApi extends ApiModel
+             );
+         }
+ 
++        $loggerProtection = New LoggerProtection();
++
+         $this->logger->info(
+-            'Connection call checkout api with: ' . $order->toJson()
++            'Connection call checkout api with: '
++            . json_encode($loggerProtection((array) $order, $listOfFiesdsToPrivate))
+         );
++
+         $response = $this->connection->callApi(
+             $endpoint,
+             $order->toJson(),
+@@ -99,7 +105,7 @@ class CheckoutApi extends ApiModel
+      * @throws ApiException
+      * @throws InvalidClassException
+      */
+-    public function createTransaction($transaction)
++    public function createTransaction($transaction, $listOfFiesdsToPrivate = null)
+     {
+         $this->logger->info('CheckoutApi: CreateTransaction method called');
+         if (is_array($transaction)) {
+@@ -124,9 +130,13 @@ class CheckoutApi extends ApiModel
+             );
+         }
+ 
++        $loggerProtection = New LoggerProtection();
++
+         $this->logger->info(
+-            'Connection call create case api with transaction: ' . $transaction->toJson()
++            'Connection call create case api with transaction: '
++            . json_encode($loggerProtection((array) $transaction, $listOfFiesdsToPrivate))
+         );
++
+         $response = $this->connection->callApi(
+             'orders/events/transactions',
+             $transaction->toJson(),
+diff --git a/vendor/signifyd/signifyd-php/lib/Core/Api/SaleApi.php b/vendor/signifyd/signifyd-php/lib/Core/Api/SaleApi.php
+index 9ebdc77..ba81c8f 100644
+--- a/vendor/signifyd/signifyd-php/lib/Core/Api/SaleApi.php
++++ b/vendor/signifyd/signifyd-php/lib/Core/Api/SaleApi.php
+@@ -17,6 +17,7 @@ use Signifyd\Core\Connection;
+ use Signifyd\Core\Exceptions\ApiException;
+ use Signifyd\Core\Exceptions\InvalidClassException;
+ use Signifyd\Models\SaleModel;
++use Signifyd\Core\LoggerProtection;
+ 
+ /**
+  * Class CaseApi
+@@ -54,7 +55,7 @@ class SaleApi extends ApiModel
+      * @throws InvalidClassException
+      * @throws \Signifyd\Core\Exceptions\LoggerException
+      */
+-    public function createOrder($endpoint, $order)
++    public function createOrder($endpoint, $order, $listOfFiesdsToPrivate = null)
+     {
+         $this->logger->info('SaleApi: CreateOrder method called');
+         if (is_array($order)) {
+@@ -79,9 +80,13 @@ class SaleApi extends ApiModel
+             );
+         }
+ 
++        $loggerProtection = New LoggerProtection();
++
+         $this->logger->info(
+-            'Connection call sale api with: ' . $order->toJson()
++            'Connection call sale api with: '
++            . json_encode($loggerProtection((array) $order, $listOfFiesdsToPrivate))
+         );
++
+         $response = $this->connection->callApi(
+             $endpoint,
+             $order->toJson(),
+diff --git a/vendor/signifyd/signifyd-php/lib/Core/Connection.php b/vendor/signifyd/signifyd-php/lib/Core/Connection.php
+index 4cddeff..3f3abed 100644
+--- a/vendor/signifyd/signifyd-php/lib/Core/Connection.php
++++ b/vendor/signifyd/signifyd-php/lib/Core/Connection.php
+@@ -184,7 +184,6 @@ class Connection
+         $retry = 0;
+         while ($retry <= 4) {
+             $status = true;
+-            $this->logger->info("Raw payload: " . $payload);
+             curl_setopt($this->curl, CURLOPT_POSTFIELDS, $payload);
+             $response = curl_exec($this->curl);
+             $info = curl_getinfo($this->curl);
+diff --git a/vendor/signifyd/signifyd-php/lib/Core/LoggerProtection.php b/vendor/signifyd/signifyd-php/lib/Core/LoggerProtection.php
+new file mode 100644
+index 0000000..89be514
+--- /dev/null
++++ b/vendor/signifyd/signifyd-php/lib/Core/LoggerProtection.php
+@@ -0,0 +1,146 @@
++<?php
++
++namespace Signifyd\Core;
++
++class LoggerProtection
++{
++    /**
++     * A general function that handles all requests and returns an array containing protected data.
++     *
++     * @param array $data
++     * @param string|null $listOfFiesdsToPrivate
++     * @return array
++     */
++    public function __invoke(array $data, $listOfFiesdsToPrivate = null)
++    {
++        if (is_array($data) === false) {
++            return $data;
++        }
++
++        $fiesdsToPrivate = $this->validateFieldsToPrivate($listOfFiesdsToPrivate);
++
++        if (empty($fiesdsToPrivate)) {
++            return $data;
++        }
++
++        foreach ($data as $firsKey => &$firstLayer) {
++            if (is_array($firstLayer) || is_object($firstLayer)) {
++                $firstLayer = (array) $firstLayer;
++                foreach ($firstLayer as $secondKey => &$secondLayer) {
++                    if (is_array($secondLayer) || is_object($secondLayer)) {
++                        $secondLayer = (array) $secondLayer;
++                        foreach ($secondLayer as $thirdKey => &$thirdLayer) {
++                            if (is_array($thirdLayer) || is_object($thirdLayer)) {
++                                $thirdLayer = (array) $thirdLayer;
++                                foreach ($thirdLayer as $fourthKey => &$fourthLayer) {
++                                    if (is_array($fourthLayer) || is_object($fourthLayer)) {
++                                        $fourthLayer = (array) $fourthLayer;
++                                        foreach ($fourthLayer as $fifthKey => &$fifthLayer) {
++                                            if (is_array($fifthLayer) || is_object($fifthLayer)) {
++                                                $fifthLayer = (array) $fifthLayer;
++                                                foreach ($fifthLayer as $sixthKey => &$sixthLayer) {
++                                                    if (is_string($sixthLayer) && in_array($sixthKey, $fiesdsToPrivate))
++                                                    {
++                                                        $sixthLayer = $this->privateField($sixthLayer);
++                                                    }
++                                                }
++                                            } else {
++                                                if (in_array($fifthKey, $fiesdsToPrivate)) {
++                                                    $fifthLayer = $this->privateField($fifthLayer);
++                                                }
++                                            }
++                                        }
++                                    } else {
++                                        if (in_array($fourthKey, $fiesdsToPrivate)) {
++                                            $fourthLayer = $this->privateField($fourthLayer);
++                                        }
++                                    }
++                                }
++                            } else {
++                                if (in_array($thirdKey, $fiesdsToPrivate)) {
++                                    $thirdLayer = $this->privateField($thirdLayer);
++                                }
++                            }
++                        }
++                    } else {
++                        if (in_array($secondKey, $fiesdsToPrivate)) {
++                            $secondLayer = $this->privateField($secondLayer);
++                        }
++                    }
++                }
++            } else {
++                if (in_array($firsKey, $fiesdsToPrivate)) {
++                    $firstLayer = $this->privateField($firstLayer);
++                }
++            }
++        }
++
++        return $data;
++    }
++
++    /**
++     * Private fields based on their lenght
++     *
++     * @param $fieldToPrivate
++     * @return string
++     */
++    protected function privateField($fieldToPrivate)
++    {
++        if (isset($fieldToPrivate) === false) {
++            return '***';
++        }
++
++        if (strlen($fieldToPrivate) >= 12) {
++            return substr($fieldToPrivate, 0, 3) . '***' . substr($fieldToPrivate, -3);
++        } elseif (strlen($fieldToPrivate) >= 7 && strlen($fieldToPrivate) <= 11) {
++            return '***' . substr($fieldToPrivate, -3);
++        } else {
++            return '***';
++        }
++    }
++
++    /**
++     * Return fields that must be privated
++     *
++     * @param string|null $listOfFiesdsToPrivate
++     * @return array
++     */
++    protected function validateFieldsToPrivate($listOfFiesdsToPrivate)
++    {
++        if (isset($listOfFiesdsToPrivate) === false) {
++            return [];
++        }
++
++        $name = ['accountHolderName','fullName','username'];
++        $phone = ['phone','confirmationPhone',];
++        $email = ['confirmationEmail','email'];
++        $address = ['streetAddress','unit','postalCode','city','provinceCode','countryCode'];
++        $fiesdsToPrivate = explode(',', $listOfFiesdsToPrivate);
++
++        if (empty($fiesdsToPrivate) === true || $fiesdsToPrivate === false) {
++            return [];
++        }
++
++        $formatedFieldsToPrivate = [];
++
++        foreach ($fiesdsToPrivate as $field) {
++            if ($field === 'name') {
++                $formatedFieldsToPrivate = array_merge($formatedFieldsToPrivate, $name);
++            }
++
++            if ($field === 'phone') {
++                $formatedFieldsToPrivate = array_merge($formatedFieldsToPrivate, $phone);
++            }
++
++            if ($field === 'email') {
++                $formatedFieldsToPrivate = array_merge($formatedFieldsToPrivate, $email);
++            }
++
++            if (in_array($field, $address)) {
++                $formatedFieldsToPrivate[] = $field;
++            }
++        }
++
++        return $formatedFieldsToPrivate;
++    }
++}

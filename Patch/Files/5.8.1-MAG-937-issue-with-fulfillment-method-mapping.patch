@@ -1,0 +1,123 @@
+From fde081d7b94100032a6797923aad2cf72b8474a1 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=C3=89bano=20Lopes?= <ebano@onbi.com.br>
+Date: Thu, 24 Oct 2024 14:43:03 +0000
+Subject: [PATCH] MAG-937: Issue with Fulfillment Method mapping
+
+---
+ Helper/FulfillmentHelper.php | 18 +++++++++++++++++-
+ Model/Api/Fulfillments.php   |  1 +
+ Model/Api/Shipments.php      |  2 +-
+ etc/db_schema.xml            |  1 +
+ 4 files changed, 20 insertions(+), 2 deletions(-)
+
+diff --git a/vendor/signifyd/module-connect/Helper/FulfillmentHelper.php b/vendor/signifyd/module-connect/Helper/FulfillmentHelper.php
+index b13ad1e..21caac8 100644
+--- a/vendor/signifyd/module-connect/Helper/FulfillmentHelper.php
++++ b/vendor/signifyd/module-connect/Helper/FulfillmentHelper.php
+@@ -10,6 +10,8 @@ use Signifyd\Connect\Logger\Logger;
+ use Signifyd\Connect\Model\Api\CarrierFactory;
+ use Signifyd\Connect\Model\Api\OriginFactory;
+ use Magento\Framework\Serialize\SerializerInterface;
++use Magento\Store\Model\ScopeInterface;
++use Signifyd\Connect\Model\Api\Shipments;
+ 
+ class FulfillmentHelper
+ {
+@@ -63,6 +65,11 @@ class FulfillmentHelper
+      */
+     public $originFactory;
+ 
++    /**
++     * @var Shipments
++     */
++    public $shipments;
++
+     /**
+      * FulfillmentHelper constructor.
+      * @param CasedataFactory $casedataFactory
+@@ -75,6 +82,7 @@ class FulfillmentHelper
+      * @param OrderHelper $orderHelper
+      * @param CarrierFactory $carrierFactory
+      * @param OriginFactory $originFactory
++     * @param Shipments $shipments
+      */
+     public function __construct(
+         CasedataFactory $casedataFactory,
+@@ -86,7 +94,8 @@ class FulfillmentHelper
+         SerializerInterface $serializer,
+         OrderHelper $orderHelper,
+         CarrierFactory $carrierFactory,
+-        OriginFactory $originFactory
++        OriginFactory $originFactory,
++        Shipments $shipments
+     ) {
+         $this->casedataFactory = $casedataFactory;
+         $this->fulfillmentFactory = $fulfillmentFactory;
+@@ -98,6 +107,7 @@ class FulfillmentHelper
+         $this->orderHelper = $orderHelper;
+         $this->carrierFactory = $carrierFactory;
+         $this->originFactory = $originFactory;
++        $this->shipments = $shipments;
+     }
+ 
+     public function postFulfillmentToSignifyd(\Magento\Sales\Model\Order\Shipment $shipment)
+@@ -193,6 +203,7 @@ class FulfillmentHelper
+         $fulfillment->setData('destination', $this->serialize($fulfillmentData['destination']));
+         $fulfillment->setData('origin', $this->serialize($fulfillmentData['origin']));
+         $fulfillment->setData('carrier', $fulfillmentData['carrier']);
++        $fulfillment->setData('fulfillment_method', $fulfillmentData['fulfillmentMethod']);
+ 
+         return $fulfillment;
+     }
+@@ -237,6 +248,11 @@ class FulfillmentHelper
+         $fulfillment['destination'] = $this->makeDestination($shipment);
+         $fulfillment['origin'] = $makeOrigin($shipment->getOrder()->getStoreId());
+         $fulfillment['carrier'] = $makeCarrier($shipment->getOrder()->getShippingMethod());
++        $fulfillment['fulfillmentMethod'] = $this->shipments->getFulfillmentMethodMapping(
++            $shipment->getOrder()->getShippingMethod(),
++            ScopeInterface::SCOPE_STORES,
++            $shipment->getOrder()->getStoreId()
++        );
+ 
+         return $fulfillment;
+     }
+diff --git a/vendor/signifyd/module-connect/Model/Api/Fulfillments.php b/vendor/signifyd/module-connect/Model/Api/Fulfillments.php
+index e4e2367..2dc2f86 100644
+--- a/vendor/signifyd/module-connect/Model/Api/Fulfillments.php
++++ b/vendor/signifyd/module-connect/Model/Api/Fulfillments.php
+@@ -39,6 +39,7 @@ class Fulfillments
+         $fulfillment['destination'] = $this->jsonSerializer->unserialize($fulfillmentData->getData('destination'));
+         $fulfillment['origin'] = $this->jsonSerializer->unserialize($fulfillmentData->getData('origin'));
+         $fulfillment['carrier'] = $fulfillmentData->getData('carrier');
++        $fulfillment['fulfillmentMethod'] = $fulfillmentData->getData('fulfillment_method');
+ 
+         $fulfillments[] = $fulfillment;
+         return $fulfillments;
+diff --git a/vendor/signifyd/module-connect/Model/Api/Shipments.php b/vendor/signifyd/module-connect/Model/Api/Shipments.php
+index 81df2ba..4be11e9 100644
+--- a/vendor/signifyd/module-connect/Model/Api/Shipments.php
++++ b/vendor/signifyd/module-connect/Model/Api/Shipments.php
+@@ -168,7 +168,7 @@ class Shipments
+         return $shipments;
+     }
+ 
+-    protected function getFulfillmentMethodMapping(
++    public function getFulfillmentMethodMapping(
+         $shippingMethod,
+         $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
+         $scopeCode = null
+diff --git a/vendor/signifyd/module-connect/etc/db_schema.xml b/vendor/signifyd/module-connect/etc/db_schema.xml
+index cb0784a..c4074ad 100644
+--- a/vendor/signifyd/module-connect/etc/db_schema.xml
++++ b/vendor/signifyd/module-connect/etc/db_schema.xml
+@@ -52,6 +52,7 @@
+         <column length="50" name="magento_status" default="waiting_submission" nullable="false" xsi:type="varchar"/>
+         <column identity="false" name="retries" padding="11" nullable="false" default="0" xsi:type="int"/>
+         <column name="inserted_at" nullable="true" default="CURRENT_TIMESTAMP" xsi:type="datetime"/>
++        <column length="32" name="fulfillment_method" nullable="true" xsi:type="varchar"/>
+     </table>
+     <table comment="signifyd_connect_reroute Table" engine="innodb" name="signifyd_connect_reroute" resource="default">
+         <column xsi:type="int" name="reroute_id" padding="10" unsigned="true" nullable="false" identity="true" comment="Entity Id"/>
+-- 
+2.17.1
+

@@ -1,0 +1,88 @@
+From 771e6857c38a735f3f6e9895525ccd07ec722b4f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=C3=89bano=20Lopes?= <ebano@onbi.com.br>
+Date: Mon, 15 Jul 2024 18:16:40 +0000
+Subject: [PATCH] MS-309: debug
+
+---
+ Cron/RetryCaseJob.php | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/vendor/signifyd/module-connect/Cron/RetryCaseJob.php b/vendor/signifyd/module-connect/Cron/RetryCaseJob.php
+index 517ba03..a735471 100644
+--- a/vendor/signifyd/module-connect/Cron/RetryCaseJob.php
++++ b/vendor/signifyd/module-connect/Cron/RetryCaseJob.php
+@@ -8,6 +8,7 @@
+ namespace Signifyd\Connect\Cron;
+ 
+ use Magento\Framework\ObjectManagerInterface;
++use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
+ use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+ use Magento\Sales\Model\OrderFactory;
+ use Signifyd\Connect\Logger\Logger;
+@@ -82,6 +83,11 @@ class RetryCaseJob
+      */
+     protected $storeManagerInterface;
+ 
++    /**
++     * @var JsonSerializer
++     */
++    public $jsonSerializer;
++
+     /**
+      * RetryCaseJob constructor.
+      * @param ObjectManagerInterface $objectManager
+@@ -95,6 +101,7 @@ class RetryCaseJob
+      * @param CasedataFactory $casedataFactory
+      * @param ResourceConnection $resourceConnection
+      * @param StoreManagerInterface $storeManagerInterface
++     * @param JsonSerializer $jsonSerializer
+      */
+     public function __construct(
+         ObjectManagerInterface $objectManager,
+@@ -107,7 +114,8 @@ class RetryCaseJob
+         CasedataResourceModel $casedataResourceModel,
+         CasedataFactory $casedataFactory,
+         ResourceConnection $resourceConnection,
+-        StoreManagerInterface $storeManagerInterface
++        StoreManagerInterface $storeManagerInterface,
++        JsonSerializer $jsonSerializer
+     ) {
+         $this->objectManager = $objectManager;
+         $this->purchaseHelper = $purchaseHelper;
+@@ -120,6 +128,7 @@ class RetryCaseJob
+         $this->casedataFactory = $casedataFactory;
+         $this->resourceConnection = $resourceConnection;
+         $this->storeManagerInterface = $storeManagerInterface;
++        $this->jsonSerializer = $jsonSerializer;
+     }
+ 
+     /**
+@@ -218,13 +227,25 @@ class RetryCaseJob
+ 
+             try {
+                 $response = $this->configHelper->getSignifydCaseApi($case)->getCase($case->getData('code'));
++                $this->logger->info(
++                    "Get case api response: " . $this->jsonSerializer->serialize($response)
++                );
+ 
+                 $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
+ 
+                 $currentCaseHash = sha1(implode(',', $case->getData()));
++
++                $this->logger->info(
++                    "Current hash {$currentCaseHash} for case: " . $this->jsonSerializer->serialize($case->getData())
++                );
++
+                 $case->updateCase($response);
+                 $newCaseHash = sha1(implode(',', $case->getData()));
+ 
++                $this->logger->info(
++                    "New hash {$currentCaseHash} for case: " . $this->jsonSerializer->serialize($case->getData())
++                );
++
+                 if ($currentCaseHash == $newCaseHash) {
+                     $this->logger->info(
+                         "CRON: Case {$case->getId()} already update with this data, no action will be taken"
+-- 
+2.17.1
+

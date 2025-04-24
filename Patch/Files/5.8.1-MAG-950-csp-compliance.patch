@@ -1,0 +1,106 @@
+From 656dcd918c8566fddc5f7e8b3f5ef625db1d06e1 Mon Sep 17 00:00:00 2001
+From: ebanolopes <ebano@onbi.com.br>
+Date: Thu, 6 Mar 2025 16:34:45 +0000
+Subject: [PATCH] MS-340: CSP Compliance
+
+---
+ .../Model/Collector/ControllerCollector.php   | 39 -------------------
+ etc/di.xml                                    |  4 --
+ etc/frontend/csp_whitelist.xml                |  2 +
+ view/frontend/layout/checkout_index_index.xml |  9 +++++
+ 4 files changed, 11 insertions(+), 43 deletions(-)
+ delete mode 100644 Plugin/Magento/Csp/Model/Collector/ControllerCollector.php
+ create mode 100644 view/frontend/layout/checkout_index_index.xml
+
+diff --git a/vendor/signifyd/module-connect/Plugin/Magento/Csp/Model/Collector/ControllerCollector.php b/vendor/signifyd/module-connect/Plugin/Magento/Csp/Model/Collector/ControllerCollector.php
+deleted file mode 100644
+index 92d19ae..0000000
+--- a/vendor/signifyd/module-connect/Plugin/Magento/Csp/Model/Collector/ControllerCollector.php
++++ /dev/null
+@@ -1,39 +0,0 @@
+-<?php
+-
+-namespace Signifyd\Connect\Plugin\Magento\Csp\Model\Collector;
+-
+-use Magento\Csp\Model\Collector\ControllerCollector as MagentoControllerCollector;
+-use Magento\Csp\Model\Policy\FetchPolicyFactory;
+-
+-class ControllerCollector
+-{
+-    /**
+-     * @var FetchPolicyFactory
+-     */
+-    public $fetchPolicyFactory;
+-
+-    /**
+-     * @param FetchPolicyFactory $fetchPolicyFactory
+-     */
+-    public function __construct(FetchPolicyFactory $fetchPolicyFactory)
+-    {
+-        $this->fetchPolicyFactory = $fetchPolicyFactory;
+-    }
+-
+-    public function beforeCollect(MagentoControllerCollector $subject, array $defaultPolicies)
+-    {
+-        //plugin necessary to send the fingerprint without the Signifyd script generating a CSP error
+-        $defaultPolicies[] = $this->fetchPolicyFactory->create(
+-            [
+-                'id' => 'script-src',
+-                'noneAllowed' => false,
+-                'hostSources' => ['https://h64.online-metrix.net'],
+-                'schemeSources' => [],
+-                'selfAllowed' => true,
+-                'inlineAllowed' => true
+-            ]
+-        );
+-
+-        return [$defaultPolicies];
+-    }
+-}
+diff --git a/vendor/signifyd/module-connect/etc/di.xml b/vendor/signifyd/module-connect/etc/di.xml
+index cc164e3..2d30542 100644
+--- a/vendor/signifyd/module-connect/etc/di.xml
++++ b/vendor/signifyd/module-connect/etc/di.xml
+@@ -181,10 +181,6 @@
+         <plugin name="signifyd_response_validator_plugin" type="Signifyd\Connect\Plugin\Rootways\Authorizecim\Gateway\Validator\ResponseValidatorPlugin" sortOrder="10"/>
+     </type>
+ 
+-    <type name="Magento\Csp\Model\Collector\ControllerCollector">
+-        <plugin name="Signifyd_Connect_Plugin_Magento_Csp_Model_Collector_ControllerCollector" type="Signifyd\Connect\Plugin\Magento\Csp\Model\Collector\ControllerCollector"/>
+-    </type>
+-
+     <!-- Preferences -->
+     <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
+     <preference for="Magento\Sales\Model\Order\Payment" type="Signifyd\Connect\Model\Magento\Sales\Model\Order\Payment" />
+diff --git a/vendor/signifyd/module-connect/etc/frontend/csp_whitelist.xml b/vendor/signifyd/module-connect/etc/frontend/csp_whitelist.xml
+index f9c23de..1781a63 100644
+--- a/vendor/signifyd/module-connect/etc/frontend/csp_whitelist.xml
++++ b/vendor/signifyd/module-connect/etc/frontend/csp_whitelist.xml
+@@ -4,6 +4,8 @@
+         <policy id="script-src">
+             <values>
+                 <value id="signifyd-cdn-scripts" type="host">https://cdn-scripts.signifyd.com</value>
++                <value id="signifyd-cdn-tookkit" type="host">https://cdn-scripts.signifyd.com/api/company_toolkit.js</value>
++                <value id="signifyd-cdn-tookkit" type="host">https://cdn-scripts.signifyd.com/api/script-tag.js</value>
+                 <value id="signifyd-imgs" type="host">https://imgs.signifyd.com</value>
+                 <value id="signifyd-metrix" type="host">https://h64.online-metrix.net</value>
+             </values>
+diff --git a/vendor/signifyd/module-connect/view/frontend/layout/checkout_index_index.xml b/vendor/signifyd/module-connect/view/frontend/layout/checkout_index_index.xml
+new file mode 100644
+index 0000000..c2acf12
+--- /dev/null
++++ b/vendor/signifyd/module-connect/view/frontend/layout/checkout_index_index.xml
+@@ -0,0 +1,9 @@
++<?xml version="1.0"?>
++
++<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="checkout" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
++    <body>
++        <referenceContainer name="before.body.end">
++            <referenceBlock name="signifyd.connect.fingerprint" remove="true" />
++        </referenceContainer>
++    </body>
++</page>
+\ No newline at end of file
+-- 
+2.25.1
+

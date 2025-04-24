@@ -1,0 +1,13 @@
+diff --git a/vendor/signifyd/signifyd-php/lib/Core/Connection.php b/vendor/signifyd/signifyd-php/lib/Core/Connection.php
+index 4cddeff..3f796cd 100644
+--- a/vendor/signifyd/signifyd-php/lib/Core/Connection.php
++++ b/vendor/signifyd/signifyd-php/lib/Core/Connection.php
+@@ -63,7 +63,7 @@ class Connection
+      *
+      * @var array The retry timings
+      */
+-    private $_retryIntervals = [0.25, 0.5, 1, 2, 3];
++    private $_retryIntervals = [0, 0, 1, 2, 3];
+
+     /**
+      * Connection constructor.

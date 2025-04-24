@@ -1,0 +1,527 @@
+From 3c07e6a783b7ad9ed0696332b30b76fdbf1b3a18 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=C3=89bano=20Lopes?= <ebano@onbi.com.br>
+Date: Thu, 25 Apr 2024 16:41:38 +0000
+Subject: [PATCH] MAG-908: Adyen pay by link mapper fixed
+
+---
+ .../Payment/AdyenHpp/PaymentMethodMapper.php  |  78 ++++++++++
+ .../AdyenPayByLink/PaymentMethodMapper.php    |  78 ++++++++++
+ Model/Payment/Base/PaymentMethodBase.php      |  98 +++++++++++++
+ Model/Payment/Base/PaymentMethodMapper.php    |  37 +++++
+ Plugin/Adyen/Payment/Helper/Webhook.php       | 137 ++++++++++++++++++
+ etc/config.xml                                |   3 +-
+ etc/di.xml                                    |   6 +-
+ 7 files changed, 435 insertions(+), 2 deletions(-)
+ create mode 100644 Model/Payment/AdyenHpp/PaymentMethodMapper.php
+ create mode 100644 Model/Payment/AdyenPayByLink/PaymentMethodMapper.php
+ create mode 100644 Model/Payment/Base/PaymentMethodBase.php
+ create mode 100644 Model/Payment/Base/PaymentMethodMapper.php
+ create mode 100644 Plugin/Adyen/Payment/Helper/Webhook.php
+
+diff --git a/vendor/signifyd/module-connect/Model/Payment/AdyenHpp/PaymentMethodMapper.php b/vendor/signifyd/module-connect/Model/Payment/AdyenHpp/PaymentMethodMapper.php
+new file mode 100644
+index 0000000..3dc8a10
+--- /dev/null
++++ b/vendor/signifyd/module-connect/Model/Payment/AdyenHpp/PaymentMethodMapper.php
+@@ -0,0 +1,78 @@
++<?php
++
++namespace Signifyd\Connect\Model\Payment\AdyenHpp;
++
++use Magento\Quote\Model\Quote;
++use Magento\Sales\Model\Order;
++use Signifyd\Connect\Model\Payment\Base\PaymentMethodBase;
++
++class PaymentMethodMapper extends PaymentMethodBase
++{
++    /**
++     * @param Order $order
++     * @return int|string
++     */
++    public function getPaymentMethodFromOrder(Order $order)
++    {
++        $paymentBrandCode = $order->getPayment()->getAdditionalInformation('brand_code');
++
++        return $this->adyenHppMapping($paymentBrandCode, $order);
++    }
++
++    /**
++     * @param Quote $quote
++     * @return null
++     */
++    public function getPaymentMethodFromQuote(Quote $quote)
++    {
++        $paymentBrandCode = $quote->getPayment()->getAdditionalInformation('brand_code');
++
++        return $this->adyenHppMapping($paymentBrandCode, $quote);
++    }
++
++    public function adyenHppMapping($paymentBrandCode, $entity)
++    {
++        $paymentMethod = $entity->getPayment()->getMethod();
++
++        if (is_string($paymentBrandCode) === false) {
++            $this->logger->info('Adyen Hpp method code not found', ['entity' => $entity]);
++
++            return $this->makePaymentMethod($paymentMethod);
++        }
++
++        $this->logger->info('Mapping for Adyen Hpp method code: ' . $paymentBrandCode, ['entity' => $entity]);
++
++        switch ($paymentBrandCode) {
++            case 'googlepay':
++            case 'paywithgoogle':
++                $method = 'GOOGLE_PAY';
++                break;
++
++            case 'applepay':
++            case 'paywithapple':
++                $method = 'APPLE_PAY';
++                break;
++
++            case 'paypal':
++                $method = 'PAYPAL_ACCOUNT';
++                break;
++
++            case 'amazonpay':
++                $method = 'AMAZON_PAYMENTS';
++                break;
++
++            default:
++                $method = $this->makePaymentMethod($paymentMethod);
++
++                $message = 'Payment method found on base mapper: ' . (empty($method) ? 'false' : $method);
++                $this->logger->debug($message, ['entity' => $entity]);
++
++                return $method;
++        }
++
++        $message = 'Payment method found on payment mapper: ' . $method;
++        $this->logger->debug($message, ['entity' => $entity]);
++
++        return $method;
++    }
++}
+diff --git a/vendor/signifyd/module-connect/Model/Payment/AdyenPayByLink/PaymentMethodMapper.php b/vendor/signifyd/module-connect/Model/Payment/AdyenPayByLink/PaymentMethodMapper.php
+new file mode 100644
+index 0000000..39790f7
+--- /dev/null
++++ b/vendor/signifyd/module-connect/Model/Payment/AdyenPayByLink/PaymentMethodMapper.php
+@@ -0,0 +1,78 @@
++<?php
++
++namespace Signifyd\Connect\Model\Payment\AdyenPayByLink;
++
++use Magento\Quote\Model\Quote;
++use Magento\Sales\Model\Order;
++use Signifyd\Connect\Model\Payment\Base\PaymentMethodBase;
++
++class PaymentMethodMapper extends PaymentMethodBase
++{
++    /**
++     * @var string[]
++     */
++    public $creditCard = ['amex', 'cup', 'discover', 'jcb', 'mc', 'visa'];
++
++    /**
++     * @param Order $order
++     * @return int|string
++     */
++    public function getPaymentMethodFromOrder(Order $order)
++    {
++        $payByLinkMethod = $order->getPayment()->getAdditionalInformation('payment_method');
++
++        return $this->adyenPayByLinkMapping($payByLinkMethod, $order);
++    }
++
++    /**
++     * @param Quote $quote
++     * @return null
++     */
++    public function getPaymentMethodFromQuote(Quote $quote)
++    {
++        $payByLinkMethod = $quote->getPayment()->getAdditionalInformation('payment_method');
++
++        return $this->adyenPayByLinkMapping($payByLinkMethod, $quote);
++    }
++
++    public function adyenPayByLinkMapping($payByLinkMethod, $entity)
++    {
++        $paymentMethod = $entity->getPayment()->getMethod();
++
++        if (isset($payByLinkMethod) === false) {
++            $this->logger->info('Adyen Pay By Link method code not found', ['entity' => $entity]);
++
++            return $this->makePaymentMethod($paymentMethod);
++        }
++
++        $this->logger->info('Mapping for Adyen Pay By Link method code: ' . $payByLinkMethod, ['entity' => $entity]);
++
++        if (strpos($payByLinkMethod, 'amazonpay') !== false) {
++            $method = 'AMAZON_PAYMENTS';
++        } elseif (strpos($payByLinkMethod, 'googlepay') !== false) {
++            $method = 'GOOGLE_PAY';
++        } elseif (strpos($payByLinkMethod, 'applepay') !== false) {
++            $method = 'APPLE_PAY';
++        } elseif (strpos($payByLinkMethod, 'paypal') !== false) {
++            $method = 'PAYPAL_ACCOUNT';
++        } elseif (strpos($payByLinkMethod, 'debit') !== false) {
++            $method = 'DEBIT_CARD';
++        } elseif (strpos($payByLinkMethod, 'credit') !== false || in_array($payByLinkMethod, $this->creditCard)) {
++            $method = 'CREDIT_CARD';
++        } elseif (strpos($payByLinkMethod, 'prepaid') !== false) {
++            $method = 'PREPAID_CARD';
++        } else {
++            $method = $this->makePaymentMethod($paymentMethod);
++
++            $message = 'Payment method found on base mapper: ' . (empty($method) ? 'false' : $method);
++            $this->logger->debug($message, ['entity' => $entity]);
++
++            return $method;
++        }
++
++        $message = 'Payment method found on payment mapper: ' . $method;
++        $this->logger->debug($message, ['entity' => $entity]);
++
++        return $method;
++    }
++}
+diff --git a/vendor/signifyd/module-connect/Model/Payment/Base/PaymentMethodBase.php b/vendor/signifyd/module-connect/Model/Payment/Base/PaymentMethodBase.php
+new file mode 100644
+index 0000000..a140b61
+--- /dev/null
++++ b/vendor/signifyd/module-connect/Model/Payment/Base/PaymentMethodBase.php
+@@ -0,0 +1,98 @@
++<?php
++
++namespace Signifyd\Connect\Model\Payment\Base;
++
++use Magento\Framework\App\Config\ScopeConfigInterface;
++use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
++use Magento\Quote\Model\Quote;
++use Magento\Sales\Model\Order;
++use Signifyd\Connect\Api\PaymentMethodMappingInterface;
++use Signifyd\Connect\Helper\ConfigHelper;
++use Signifyd\Connect\Logger\Logger;
++
++abstract class PaymentMethodBase implements PaymentMethodMappingInterface
++{
++    /**
++     * @var JsonSerializer
++     */
++    public $jsonSerializer;
++
++    /**
++     * List of payment methods codes
++     * @var array
++     */
++    public $allowedMethods = [];
++
++    /**
++     * @var Logger
++     */
++    public $logger;
++
++    /**
++     * @var ConfigHelper
++     */
++    public $configHelper;
++
++    /**
++     * @var ScopeConfigInterface
++     */
++    public $scopeConfigInterface;
++
++    /**
++     * @param JsonSerializer $jsonSerializer
++     * @param Logger $logger
++     * @param ConfigHelper $configHelper
++     * @param ScopeConfigInterface $scopeConfigInterface
++     */
++    public function __construct(
++        JsonSerializer $jsonSerializer,
++        Logger $logger,
++        ConfigHelper $configHelper,
++        ScopeConfigInterface $scopeConfigInterface
++    ) {
++        $this->jsonSerializer = $jsonSerializer;
++        $this->logger = $logger;
++        $this->configHelper = $configHelper;
++        $this->scopeConfigInterface = $scopeConfigInterface;
++    }
++
++    /**
++     * @param Order|Quote $entity
++     * @return mixed
++     */
++    public function getData($entity)
++    {
++        if ($entity instanceof Order && $entity->isEmpty() === false) {
++            $data = $this->getPaymentMethodFromOrder($entity);
++        } elseif ($entity instanceof Quote && $entity->isEmpty() === false) {
++            $data = $this->getPaymentMethodFromQuote($entity);
++        } else {
++            return 'CREDIT_CARD';
++        }
++
++        return $data;
++    }
++
++    /**
++     * @param $paymentMethod
++     * @return int|string
++     */
++    public function makePaymentMethod($paymentMethod)
++    {
++        $allowMethodsJson = $this->scopeConfigInterface->getValue('signifyd/general/payment_methods_config');
++
++        try {
++            $allowMethods = $this->jsonSerializer->unserialize($allowMethodsJson);
++        } catch (\InvalidArgumentException $e) {
++            return $paymentMethod;
++        }
++
++        foreach ($allowMethods as $i => $allowMethod) {
++            if (in_array($paymentMethod, $allowMethod)) {
++                return $i;
++            }
++        }
++
++        return $paymentMethod;
++    }
++}
+diff --git a/vendor/signifyd/module-connect/Model/Payment/Base/PaymentMethodMapper.php b/vendor/signifyd/module-connect/Model/Payment/Base/PaymentMethodMapper.php
+new file mode 100644
+index 0000000..80a0bd7
+--- /dev/null
++++ b/vendor/signifyd/module-connect/Model/Payment/Base/PaymentMethodMapper.php
+@@ -0,0 +1,37 @@
++<?php
++
++namespace Signifyd\Connect\Model\Payment\Base;
++
++use Magento\Quote\Model\Quote;
++use Magento\Sales\Model\Order;
++
++class PaymentMethodMapper extends PaymentMethodBase
++{
++    /**
++     * @param Order $order
++     * @return int|string
++     */
++    public function getPaymentMethodFromOrder(Order $order)
++    {
++        $paymentMethod = $this->makePaymentMethod($order->getPayment()->getMethod());
++
++        $message = 'Payment method found on base mapper: ' . (empty($paymentMethod) ? 'false' : $paymentMethod);
++        $this->logger->debug($message, ['entity' => $order]);
++
++        return $paymentMethod;
++    }
++
++    /**
++     * @param Quote $quote
++     * @return int|string
++     */
++    public function getPaymentMethodFromQuote(Quote $quote)
++    {
++        $paymentMethod = $this->makePaymentMethod($quote->getPayment()->getMethod());
++
++        $message = 'Payment method found on base mapper: ' . (empty($paymentMethod) ? 'false' : $paymentMethod);
++        $this->logger->debug($message, ['entity' => $quote]);
++
++        return $paymentMethod;
++    }
++}
+diff --git a/vendor/signifyd/module-connect/Plugin/Adyen/Payment/Helper/Webhook.php b/vendor/signifyd/module-connect/Plugin/Adyen/Payment/Helper/Webhook.php
+new file mode 100644
+index 0000000..f4d667c
+--- /dev/null
++++ b/vendor/signifyd/module-connect/Plugin/Adyen/Payment/Helper/Webhook.php
+@@ -0,0 +1,137 @@
++<?php
++
++namespace Signifyd\Connect\Plugin\Adyen\Payment\Helper;
++
++use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
++use Signifyd\Connect\Helper\OrderHelper;
++use Signifyd\Connect\Logger\Logger;
++use Signifyd\Connect\Model\Casedata;
++use Signifyd\Connect\Model\CasedataFactory;
++use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
++use Adyen\Payment\Helper\Webhook as AdyenWebhook;
++use Adyen\Payment\Helper\Order as AdyenOrderHelper;
++
++class Webhook
++{
++    /**
++     * @var Logger
++     */
++    public $logger;
++
++    /**
++     * @var CasedataFactory
++     */
++    public $casedataFactory;
++
++    /**
++     * @var CasedataResourceModel
++     */
++    public $casedataResourceModel;
++
++    /**
++     * @var OrderResourceModel
++     */
++    public $orderResourceModel;
++
++    /**
++     * @var OrderHelper
++     */
++    public $orderHelper;
++
++    /**
++     * @var AdyenOrderHelper
++     */
++    public $adyenOrderHelper;
++
++    /**
++     * Cancel constructor.
++     * @param Logger $logger
++     * @param CasedataFactory $casedataFactory
++     * @param CasedataResourceModel $casedataResourceModel
++     * @param OrderResourceModel $orderResourceModel
++     * @param OrderHelper $orderHelper
++     * @param AdyenOrderHelper $adyenOrderHelper
++     */
++    public function __construct(
++        Logger $logger,
++        CasedataFactory $casedataFactory,
++        CasedataResourceModel $casedataResourceModel,
++        OrderResourceModel $orderResourceModel,
++        OrderHelper $orderHelper,
++        AdyenOrderHelper $adyenOrderHelper
++    ) {
++        $this->logger = $logger;
++        $this->casedataFactory = $casedataFactory;
++        $this->casedataResourceModel = $casedataResourceModel;
++        $this->orderResourceModel = $orderResourceModel;
++        $this->orderHelper = $orderHelper;
++        $this->adyenOrderHelper = $adyenOrderHelper;
++    }
++
++    public function aroundProcessNotification(AdyenWebhook $subject, callable $proceed, $notification)
++    {
++        try {
++            $order = $this->adyenOrderHelper->getOrderByIncrementId($notification->getMerchantReference());
++
++            if (!$order) {
++                return $proceed($notification);
++            }
++
++            $orderId = $order->getId();
++            $case = $this->casedataFactory->create();
++            $this->casedataResourceModel->load($case, $orderId, 'order_id');
++
++            if ($case->isEmpty()) {
++                return $proceed($notification);;
++            }
++
++            $isHoldedBeforeAdyenProcess = $order->canUnhold();
++
++            if ($isHoldedBeforeAdyenProcess) {
++                $order->unhold();
++                $this->orderResourceModel->save($order);
++            }
++
++            $returnValue = $proceed($notification);
++
++            $order = $this->adyenOrderHelper->getOrderByIncrementId($notification->getMerchantReference());
++
++            //Setting order to hold after adyen process
++            if ($isHoldedBeforeAdyenProcess && $order->canHold()) {
++                $order->hold();
++                $this->orderResourceModel->save($order);
++                $this->logger->info(
++                    "Hold order {$order->getIncrementId()} after adyen processing",
++                    ['entity' => $case]
++                );
++
++                $this->orderHelper->addCommentToStatusHistory(
++                    $order,
++                    "Signifyd: hold order after adyen processing"
++                );
++            }
++        } catch (\Exception $ex) {
++            $context = [];
++
++            if (isset($order) && $order instanceof Order) {
++                $context['entity'] = $order;
++            }
++
++            $this->logger->error($ex->getMessage(), $context);
++        } catch (\Error $ex) {
++            $context = [];
++
++            if (isset($order) && $order instanceof Order) {
++                $context['entity'] = $order;
++            }
++
++            $this->logger->error($ex->getMessage(), $context);
++        }
++
++        if (isset($returnValue)) {
++            return $returnValue;
++        } else {
++            return $proceed($notification);
++        }
++    }
++}
+\ No newline at end of file
+diff --git a/vendor/signifyd/module-connect/etc/config.xml b/vendor/signifyd/module-connect/etc/config.xml
+index 2520c3b..ddd7d75 100644
+--- a/vendor/signifyd/module-connect/etc/config.xml
++++ b/vendor/signifyd/module-connect/etc/config.xml
+@@ -52,7 +52,7 @@
+                 </adyen_cc>
+ 
+                 <adyen_hpp>
+-                    <signifyd_payment_method_adapter>Signifyd\Connect\Model\Api\CaseData\Transactions\PaymentMethod\AdyenHpp</signifyd_payment_method_adapter>
++                    <signifyd_payment_method_adapter>Signifyd\Connect\Model\Payment\AdyenHpp\PaymentMethodMapper</signifyd_payment_method_adapter>
+                 </adyen_hpp>
+ 
+                 <adyen_pay_by_link>
+@@ -64,6 +64,7 @@
+                     <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\AdyenCc\ExpYearMapper</signifyd_exp_year_adapter>
+                     <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\AdyenCc\Last4Mapper</signifyd_last4_adapter>
+                     <signifyd_transaction_id_adapter>Signifyd\Connect\Model\Payment\AdyenCc\TransactionIdMapper</signifyd_transaction_id_adapter>
++                    <signifyd_payment_method_adapter>Signifyd\Connect\Model\Payment\AdyenPayByLink\PaymentMethodMapper</signifyd_payment_method_adapter>
+                 </adyen_pay_by_link>
+ 
+                 <authorizenet_directpost>
+diff --git a/vendor/signifyd/module-connect/etc/di.xml b/vendor/signifyd/module-connect/etc/di.xml
+index 7ab144e..2d30542 100644
+--- a/vendor/signifyd/module-connect/etc/di.xml
++++ b/vendor/signifyd/module-connect/etc/di.xml
+@@ -80,7 +80,7 @@
+     <type name="Signifyd\Connect\Model\MappingVerificationFactory">
+         <arguments>
+             <argument name="config" xsi:type="object">Magento\Payment\Gateway\Config\Config</argument>
+-            <argument name="paymentMethodDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Api\CaseData\Transactions\PaymentMethod\Mapper</argument>
++            <argument name="paymentMethodDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\PaymentMethodMapper</argument>
+         </arguments>
+     </type>
+ 
+@@ -145,6 +145,10 @@
+         <plugin name="Signifyd_Connect_Plugin_StripeIntegration_Payments_Helper_Order" type="\Signifyd\Connect\Plugin\StripeIntegration\Payments\Helper\Order" />
+     </type>
+ 
++    <type name="Adyen\Payment\Helper\Webhook">
++        <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Helper_Webhook" type="\Signifyd\Connect\Plugin\Adyen\Payment\Helper\Webhook" />
++    </type>
++
+     <type name="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+         <plugin name="signifydSalesOrderGrid" type="\Signifyd\Connect\Plugin\OrderGrid\SalesOrderGridPlugin"/>
+     </type>
+-- 
+2.17.1
+

@@ -1,0 +1,26 @@
+From d100a7d62c79044bf6fe322e2f33a2170fca3eec Mon Sep 17 00:00:00 2001
+From: ebanolopes <ebano@onbi.com.br>
+Date: Tue, 11 Mar 2025 18:34:21 +0000
+Subject: [PATCH] MAG-951: Order failed to have a case created due to Signifyd
+ outage
+
+---
+ lib/Core/Connection.php | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/vendor/signifyd/signifyd-php/lib/Core/Connection.php b/vendor/signifyd/signifyd-php/lib/Core/Connection.php
+index 4cddeff..e0c829e 100644
+--- a/vendor/signifyd/signifyd-php/lib/Core/Connection.php
++++ b/vendor/signifyd/signifyd-php/lib/Core/Connection.php
+@@ -63,7 +63,7 @@ class Connection
+      *
+      * @var array The retry timings
+      */
+-    private $_retryIntervals = [0.25, 0.5, 1, 2, 3];
++    private $_retryIntervals = [1, 2, 3];
+ 
+     /**
+      * Connection constructor.
+-- 
+2.25.1
+

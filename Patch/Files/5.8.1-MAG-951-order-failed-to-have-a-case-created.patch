@@ -1,0 +1,71 @@
+From 897816042610810b8ec20d3c96df122fae8f3bf9 Mon Sep 17 00:00:00 2001
+From: ebanolopes <ebano@onbi.com.br>
+Date: Tue, 11 Mar 2025 18:33:18 +0000
+Subject: [PATCH] MAG-951: Order failed to have a case created due to Signifyd
+ outage
+
+---
+ Model/Api/Core/Client.php |  4 ++--
+ Observer/Purchase.php     | 28 ++++++++++++++++++++++++----
+ 2 files changed, 26 insertions(+), 6 deletions(-)
+
+diff --git a/vendor/signifyd/module-connect/Model/Api/Core/Client.php b/vendor/signifyd/module-connect/Model/Api/Core/Client.php
+index 8e42904..3658d70 100644
+--- a/vendor/signifyd/module-connect/Model/Api/Core/Client.php
++++ b/vendor/signifyd/module-connect/Model/Api/Core/Client.php
+@@ -164,10 +164,10 @@ class Client
+             return $saleResponse;
+         } else {
+             $this->logger->error($this->jsonSerializer->serialize($saleResponse), ['entity' => $order]);
+-            $this->logger->error("Case failed to send.", ['entity' => $order]);
++            $this->logger->error("Failed to create case.", ['entity' => $order]);
+             $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: failed to create case");
+ 
+-            return false;
++            return $saleResponse;
+         }
+     }
+ 
+diff --git a/vendor/signifyd/module-connect/Observer/Purchase.php b/vendor/signifyd/module-connect/Observer/Purchase.php
+index 64aff6b..15719a7 100644
+--- a/vendor/signifyd/module-connect/Observer/Purchase.php
++++ b/vendor/signifyd/module-connect/Observer/Purchase.php
+@@ -429,11 +429,31 @@ class Purchase implements ObserverInterface
+ 
+             $saleResponse = $this->client->postCaseToSignifyd($orderData, $order);
+ 
+-            if ($saleResponse === false) {
+-                return;
+-            }
++            if ($saleResponse->getSignifydId() === null) {
++                //If the API returns a timeout error,
++                // the case will be created in Magento to remain in the sending queue through the cron.
++                if (is_array($saleResponse->getMessages()) &&
++                    isset($saleResponse->getMessages()[0]) &&
++                    strpos($saleResponse->getMessages()[0], "timed out") !== false
++                ) {
++                    $case->setMagentoStatus(Casedata::WAITING_SUBMISSION_STATUS);
++
++                    try {
++                        $this->casedataResourceModel->save($case);
++                        $this->logger->debug(
++                            'Case for order:#' . $incrementId . ' was not sent because the operation timed out',
++                            ['entity' => $case]
++                        );
++
++                        // Initial hold order
++                        $this->holdOrder($order, $case, $isPassive);
++                    } catch (\Exception $ex) {
++                        $this->logger->error($ex->__toString(), ['entity' => $order]);
++                    }
++                }
+ 
+-            if (is_object($saleResponse)) {
++                return;
++            } else {
+                 $case->setCode($saleResponse->getSignifydId());
+ 
+                 if ($paymentMethod === 'amazon_payment_v2') {
+-- 
+2.25.1
+
