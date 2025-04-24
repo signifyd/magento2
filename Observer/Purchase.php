@@ -429,11 +429,31 @@ class Purchase implements ObserverInterface
 
             $saleResponse = $this->client->postCaseToSignifyd($orderData, $order);
 
-            if ($saleResponse === false) {
-                return;
-            }
+            if ($saleResponse->getSignifydId() === null) {
+                //If the API returns a timeout error,
+                // the case will be created in Magento to remain in the sending queue through the cron.
+                if (is_array($saleResponse->getMessages()) &&
+                    isset($saleResponse->getMessages()[0]) &&
+                    strpos($saleResponse->getMessages()[0], "timed out") !== false
+                ) {
+                    $case->setMagentoStatus(Casedata::WAITING_SUBMISSION_STATUS);
 
-            if (is_object($saleResponse)) {
+                    try {
+                        $this->casedataResourceModel->save($case);
+                        $this->logger->debug(
+                            'Case for order:#' . $incrementId . ' was not sent because the operation timed out',
+                            ['entity' => $case]
+                        );
+
+                        // Initial hold order
+                        $this->holdOrder($order, $case, $isPassive);
+                    } catch (\Exception $ex) {
+                        $this->logger->error($ex->__toString(), ['entity' => $order]);
+                    }
+                }
+
+                return;
+            } else {
                 $case->setCode($saleResponse->getSignifydId());
 
                 if ($paymentMethod === 'amazon_payment_v2') {
