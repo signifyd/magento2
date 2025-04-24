@@ -82,6 +82,10 @@
                     <signifyd_bin_adapter>Signifyd\Connect\Model\Payment\RootwaysAuthorizecimOption\BinMapper</signifyd_bin_adapter>
                 </rootways_authorizecim_option>
 
+                <authnetcim>
+                    <signifyd_bin_adapter>Signifyd\Connect\Model\Payment\ParadoxLabsAuthorizenetcim\BinMapper</signifyd_bin_adapter>
+                </authnetcim>
+
                 <braintree>
                     <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Braintree\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
                     <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Braintree\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
