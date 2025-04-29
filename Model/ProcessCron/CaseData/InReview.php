@@ -2,6 +2,7 @@
 
 namespace Signifyd\Connect\Model\ProcessCron\CaseData;
 
+use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
@@ -16,6 +17,12 @@ use Signifyd\Connect\Model\UpdateOrderFactory;
 
 class InReview
 {
+
+    /**
+     * @var JsonSerializer
+     */
+    public $jsonSerializer;
+
     /**
      * @var Logger
      */
@@ -73,8 +80,10 @@ class InReview
 
     /**
      * InReview constructor.
-     * @param ConfigHelper $configHelper
+     * 
+     * @param JsonSerializer $jsonSerializer
      * @param Logger $logger
+     * @param ConfigHelper $configHelper
      * @param OrderResourceModel $orderResourceModel
      * @param OrderFactory $orderFactory
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
@@ -86,8 +95,9 @@ class InReview
      * @param Client $client
      */
     public function __construct(
-        ConfigHelper $configHelper,
+        JsonSerializer $jsonSerializer,
         Logger $logger,
+        ConfigHelper $configHelper,
         OrderResourceModel $orderResourceModel,
         OrderFactory $orderFactory,
         SignifydOrderResourceModel $signifydOrderResourceModel,
@@ -98,8 +108,9 @@ class InReview
         ReInitStripeFactory $reInitStripeFactory,
         Client $client
     ) {
-        $this->configHelper = $configHelper;
+        $this->jsonSerializer = $jsonSerializer;
         $this->logger = $logger;
+        $this->configHelper = $configHelper;
         $this->orderResourceModel = $orderResourceModel;
         $this->orderFactory = $orderFactory;
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
@@ -136,6 +147,11 @@ class InReview
 
                 try {
                     $response = $this->client->getSignifydSaleApi($case)->getCase($case->getData('order_increment'));
+                    
+                    $this->logger->info(
+                        "Get case api response: " . $this->jsonSerializer->serialize($response), ['entity' => $case]
+                    );
+
                     $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
 
                     $currentCaseHash = sha1(implode(',', $case->getData()));
