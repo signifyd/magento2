@@ -301,7 +301,11 @@ class Index extends Action
             ) {
                 $httpCode = Http::STATUS_CODE_400;
                 throw new LocalizedException(__("Case {$caseId} it is not ready to be updated"));
-            } elseif ($case->getPolicyName() === Casedata::PRE_AUTH) {
+            } elseif (
+                $case->getPolicyName() === Casedata::PRE_AUTH &&
+                $case->getGuarantee() !== 'HOLD' &&
+                $case->getGuarantee() !== 'PENDING'
+            ) {
                 $httpCode = Http::STATUS_CODE_200;
                 throw new LocalizedException(
                     __("Case {$caseId} already completed by synchronous response, no action will be taken")
