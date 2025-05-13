@@ -89,10 +89,10 @@ class ConfigHelper
      * Retrieve store configuration for order store
      *
      * @param $path
-     * @param \Magento\Sales\Model\Order|null $entity
+     * @param ?\Magento\Sales\Model\Order $entity
      * @return mixed
      */
-    public function getConfigData($path, \Magento\Framework\Model\AbstractModel $entity = null, $flag = false)
+    public function getConfigData($path, ?\Magento\Framework\Model\AbstractModel $entity = null, $flag = false)
     {
         $storeCode = $this->getStoreCode($entity);
 
@@ -108,10 +108,10 @@ class ConfigHelper
     /**
      * Given entity returns store code
      *
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return bool|int|mixed|null|string
      */
-    public function getStoreCode(\Magento\Framework\Model\AbstractModel $entity = null, $returnNullString = false)
+    public function getStoreCode(?\Magento\Framework\Model\AbstractModel $entity = null, $returnNullString = false)
     {
         if ($entity instanceof \Signifyd\Connect\Model\Casedata && $entity->isEmpty() == false) {
             $orderId = $entity->getOrderId();
@@ -170,10 +170,10 @@ class ConfigHelper
     }
 
     /**
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return mixed
      */
-    public function isEnabled(\Magento\Framework\Model\AbstractModel $entity = null)
+    public function isEnabled(?\Magento\Framework\Model\AbstractModel $entity = null)
     {
         $key = $this->getConfigData('signifyd/general/key', $entity);
 
@@ -400,10 +400,10 @@ class ConfigHelper
     }
 
     /**
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return mixed
      */
-    public function processMerchantReview(\Magento\Framework\Model\AbstractModel $entity = null)
+    public function processMerchantReview(?\Magento\Framework\Model\AbstractModel $entity = null)
     {
         return $this->getConfigData('signifyd/advanced/process_merchant_review_webhook', $entity, true);
     }
@@ -411,10 +411,10 @@ class ConfigHelper
     /**
      * Get fields to private
      *
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return mixed
      */
-    public function getPrivateLogData(\Magento\Framework\Model\AbstractModel $entity = null)
+    public function getPrivateLogData(?\Magento\Framework\Model\AbstractModel $entity = null)
     {
         return $this->getConfigData('signifyd/advanced/private_log_data', $entity);
     }
@@ -423,10 +423,10 @@ class ConfigHelper
      * A general function that handles all requests and returns an array containing protected data.
      *
      * @param array $data
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @param \Magento\Framework\Model\AbstractModel $entity
      * @return array
      */
-    public function filterLogData(array $data, \Magento\Framework\Model\AbstractModel $entity = null)
+    public function filterLogData(array $data, ?\Magento\Framework\Model\AbstractModel $entity = null)
     {
         if (is_array($data) === false) {
             return $data;

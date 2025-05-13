@@ -368,47 +368,47 @@ class Client
     }
 
     /**
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return \Signifyd\Core\Api\ApiModel
      */
-    public function getSignifydSaleApi(\Magento\Framework\Model\AbstractModel $entity = null)
+    public function getSignifydSaleApi(?\Magento\Framework\Model\AbstractModel $entity = null)
     {
         return $this->getSignifydApi('sale', $entity);
     }
 
     /**
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return \Signifyd\Core\Api\CheckoutApi
      */
-    public function getSignifydCheckoutApi(\Magento\Framework\Model\AbstractModel $entity = null)
+    public function getSignifydCheckoutApi(?\Magento\Framework\Model\AbstractModel $entity = null)
     {
         return $this->getSignifydApi('checkout', $entity);
     }
 
     /**
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return \Signifyd\Core\Api\WebhooksApi
      */
-    public function getSignifydWebhookApi(\Magento\Framework\Model\AbstractModel $entity = null)
+    public function getSignifydWebhookApi(?\Magento\Framework\Model\AbstractModel $entity = null)
     {
         return $this->getSignifydApi('webhook', $entity);
     }
 
     /**
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return \Signifyd\Core\Api\WebhooksV2Api
      */
-    public function getSignifydWebhookV2Api(\Magento\Framework\Model\AbstractModel $entity = null)
+    public function getSignifydWebhookV2Api(?\Magento\Framework\Model\AbstractModel $entity = null)
     {
         return $this->getSignifydApi('webhookV2', $entity);
     }
 
     /**
      * @param string $type
-     * @param \Magento\Framework\Model\AbstractModel|null $entity
+     * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return mixed
      */
-    public function getSignifydApi($type, \Magento\Framework\Model\AbstractModel $entity = null)
+    public function getSignifydApi($type, ?\Magento\Framework\Model\AbstractModel $entity = null)
     {
         $type = strtolower($type);
         $apiId = $type . $this->configHelper->getStoreCode($entity, true);

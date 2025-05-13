@@ -41,8 +41,8 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
         \Magento\Reports\Model\ResourceModel\Quote\CollectionFactory $quotesFactory,
         JsonSerializer $jsonSerializer,
         ConfigHelper $configHelper,
-        DecoderInterface $urlDecoder = null,
-        Parameters $parameters = null,
+        ?DecoderInterface $urlDecoder = null,
+        ?Parameters $parameters = null,
         array $data = []
     ) {
         //Backward compatibility with Magento 2.4.6 or less, in this version the parent

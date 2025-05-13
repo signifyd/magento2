@@ -63,10 +63,10 @@ class Payment extends \Magento\Sales\Model\Order\Payment
         OrderRepositoryInterface $orderRepository,
         Logger $logger,
         ScaEvaluation $scaEvaluation,
-        \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
-        \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
+        ?\Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
+        ?\Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = [],
-        CreditmemoManager $creditmemoManager = null
+        ?CreditmemoManager $creditmemoManager = null
     ) {
         //Backward compatibility with Magento 2.3, in this version the parent
         // construct don't have $saleOperation parameter, causing di:compile error

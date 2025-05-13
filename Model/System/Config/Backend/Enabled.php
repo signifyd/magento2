@@ -31,10 +31,10 @@ class Enabled extends \Magento\Framework\App\Config\Value
      * @param \Magento\Framework\Registry $registry
      * @param ScopeConfigInterface $config
      * @param \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList
-     * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
-     * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
      * @param \Magento\Store\Model\StoreRepository $storeRepository
      * @param ModuleManager $moduleManager
+     * @param ?\Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
+     * @param ?\Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
      * @param array $data
      */
     public function __construct(
@@ -43,15 +43,15 @@ class Enabled extends \Magento\Framework\App\Config\Value
         ScopeConfigInterface $config,
         \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList,
         ManagerInterface $messageManager,
-        \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
-        \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         \Magento\Store\Model\StoreRepository $storeRepository,
         ModuleManager $moduleManager,
+        ?\Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
+        ?\Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = []
     ) {
+        $this->moduleManager = $moduleManager;
         $this->messageManager = $messageManager;
         $this->storeRepository = $storeRepository;
-        $this->moduleManager = $moduleManager;
 
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
     }
