@@ -8,6 +8,9 @@ class ExpYearMapper extends Base_ExpYearMapper
 {
     use MapperTrait;
 
+    /**
+     * @var string[]
+     */
     public $allowedMethods = ['stripe_payments'];
 
     /**

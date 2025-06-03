@@ -12,12 +12,14 @@ interface LogsSearchResultsInterface extends \Magento\Framework\Api\SearchResult
 
     /**
      * Get logs list.
+     *
      * @return \Signifyd\Connect\Api\Data\LogsInterface[]
      */
     public function getItems();
 
     /**
-     * Set created_at list.
+     * Set created at list.
+     *
      * @param \Signifyd\Connect\Api\Data\LogsInterface[] $items
      * @return $this
      */

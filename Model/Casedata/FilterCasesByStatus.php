@@ -38,7 +38,8 @@ class FilterCasesByStatus extends AbstractHelper
     public $configHelper;
 
     /**
-     * Retry constructor.
+     * FilterCasesByStatus constructor.
+     *
      * @param Context $context
      * @param CasedataCollectionFactory $casedataCollectionFactory
      * @param CasedataResourceModel $casedataResourceModel
@@ -64,8 +65,11 @@ class FilterCasesByStatus extends AbstractHelper
     }
 
     /**
-     * @param $status
-     * @return mixed
+     * Invoke method.
+     *
+     * @param mixed $status
+     * @param string $policyName
+     * @return array
      */
     public function __invoke($status, $policyName = 'post_auth')
     {

@@ -52,12 +52,19 @@ class TransactionIntegration
      */
     public $client;
 
+    /**
+     * @var null
+     */
     public $gatewayRefusedReason = null;
 
+    /**
+     * @var null
+     */
     public $gatewayStatusMessage = null;
 
     /**
-     * CheckoutPaymentsDetailsHandler constructor.
+     * TransactionIntegration constructor.
+     *
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
@@ -87,6 +94,16 @@ class TransactionIntegration
         $this->client = $client;
     }
 
+    /**
+     * Submit to transaction api method.
+     *
+     * @return null
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws \Signifyd\Core\Exceptions\ApiException
+     * @throws \Signifyd\Core\Exceptions\InvalidClassException
+     */
     public function submitToTransactionApi()
     {
         $quote = $this->checkoutSession->getQuote();
@@ -147,11 +164,23 @@ class TransactionIntegration
         return null;
     }
 
+    /**
+     * Set gateway refused reason method.
+     *
+     * @param mixed $signifydReason
+     * @return void
+     */
     public function setGatewayRefusedReason($signifydReason)
     {
         $this->gatewayRefusedReason = $signifydReason;
     }
 
+    /**
+     * Set gateway status message method.
+     *
+     * @param mixed $signifydStatusMessage
+     * @return void
+     */
     public function setGatewayStatusMessage($signifydStatusMessage)
     {
         $this->gatewayStatusMessage = $signifydStatusMessage;

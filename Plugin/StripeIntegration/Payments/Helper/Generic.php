@@ -46,7 +46,8 @@ class Generic
     public $casedataResourceModel;
 
     /**
-     * Cancel constructor.
+     * Generic constructor.
+     *
      * @param Logger $logger
      * @param OrderHelper $orderHelper
      * @param OrderResourceModel $orderResourceModel
@@ -67,6 +68,15 @@ class Generic
         $this->casedataResourceModel = $casedataResourceModel;
     }
 
+    /**
+     * Before cancel or close order method.
+     *
+     * @param StripeIntegrationGeneric $subject
+     * @param Order $order
+     * @param mixed $refundInvoices
+     * @param mixed $refundOffline
+     * @return array
+     */
     public function beforeCancelOrCloseOrder(
         StripeIntegrationGeneric $subject,
         $order,

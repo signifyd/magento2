@@ -26,6 +26,7 @@ class Negative implements OptionSourceInterface
 
     /**
      * Negative constructor.
+     *
      * @param ScopeConfigInterface $coreConfig
      * @param \Magento\Framework\App\RequestInterface $request
      */
@@ -37,6 +38,11 @@ class Negative implements OptionSourceInterface
         $this->request = $request;
     }
 
+    /**
+     * To option array method.
+     *
+     * @return array|array[]
+     */
     public function toOptionArray()
     {
         $options = [

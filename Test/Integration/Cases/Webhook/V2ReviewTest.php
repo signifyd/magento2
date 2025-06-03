@@ -8,6 +8,9 @@ use Signifyd\Connect\Model\Casedata;
 
 class V2ReviewTest extends OrderTestCase
 {
+    /**
+     * @var string
+     */
     public $incrementId = '100000002';
 
     /**

@@ -4,6 +4,14 @@ namespace Signifyd\Connect\Plugin\Magento\Sales\Model\ResourceModel\Order\Grid;
 
 class Collection
 {
+    /**
+     * Before add field to filter method.
+     *
+     * @param \Magento\Sales\Model\ResourceModel\Order\Grid\Collection $subject
+     * @param mixed $field
+     * @param mixed $condition
+     * @return array
+     */
     public function beforeAddFieldToFilter(
         \Magento\Sales\Model\ResourceModel\Order\Grid\Collection $subject,
         $field,

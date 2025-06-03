@@ -86,10 +86,12 @@ class LogsFile
     public $casedataResourceModel;
 
     /**
+     * LogsFile construct.
+     *
      * @param DirectoryList $directoryList
      * @param File $file
-     * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param OrderFactory $orderFactory
+     * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param LogsCollectionFactory $logsCollectionFactory
      * @param Logger $logger
      * @param QuoteFactory $quoteFactory
@@ -97,7 +99,7 @@ class LogsFile
      * @param HistoryCollectionFactory $historyCollectionFactory
      * @param ConfigDataCollectionFactory $configDataCollectionFactory
      * @param StatusCollectionFactory $statusCollectionFactory
-     * @param CasedataFactory $casedataFactory
+     * @param \Signifyd\Connect\Model\CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      */
     public function __construct(
@@ -131,6 +133,8 @@ class LogsFile
     }
 
     /**
+     * Prep logs dir method.
+     *
      * @return void
      * @throws \Magento\Framework\Exception\FileSystemException
      */
@@ -146,7 +150,9 @@ class LogsFile
     }
 
     /**
-     * @param $orderId
+     * Create log file method.
+     *
+     * @param int|string $orderId
      * @return string
      */
     public function createLogFile($orderId)
@@ -172,7 +178,11 @@ class LogsFile
             if ($quoteLogsCollection->count() > 0) {
                 /** @var \Signifyd\Connect\Model\Logs $quoteLog */
                 foreach ($quoteLogsCollection as $quoteLog) {
-                    $fileData .= '[' . strtoupper($quoteLog->getType()) . '] ' . '[' . $quoteLog->getCreatedAt() . '] ' .
+                    $fileData .= '[' . strtoupper($quoteLog->getType()) .
+                        '] ' .
+                        '[' .
+                        $quoteLog->getCreatedAt() .
+                        '] ' .
                         $quoteLog->getEntry() . PHP_EOL;
                 }
             }
@@ -183,7 +193,12 @@ class LogsFile
             if ($orderLogsCollection->count() > 0) {
                 /** @var \Signifyd\Connect\Model\Logs $orderLog */
                 foreach ($orderLogsCollection as $orderLog) {
-                    $fileData .= '[' . strtoupper($orderLog->getType()) . '] ' . '[' . $orderLog->getCreatedAt() . '] ' .
+                    $fileData .= '[' .
+                        strtoupper($orderLog->getType()) .
+                        '] ' .
+                        '[' .
+                        $orderLog->getCreatedAt() .
+                        '] ' .
                         $orderLog->getEntry() . PHP_EOL;
                 }
             }

@@ -12,9 +12,14 @@ use Magento\Widget\Block\BlockInterface;
  */
 class Webhook extends Field
 {
+    /**
+     * @var string
+     */
     protected $_template = 'Signifyd_Connect::system/config/button.phtml';
 
     /**
+     * Get element html method.
+     *
      * @param AbstractElement $element
      *
      * @return string

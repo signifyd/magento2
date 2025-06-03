@@ -9,87 +9,98 @@ namespace Signifyd\Connect\Api\Data;
 
 interface LogsInterface
 {
-
-    const LOGS_ID = 'logs_id';
-    const TYPE = 'type';
-    const ORDER_ID = 'order_id';
-    const QUOTE_ID = 'quote_id';
-    const ENTRY = 'entry';
-    const CREATED_AT = 'created_at';
+    public const LOGS_ID = 'logs_id';
+    public const TYPE = 'type';
+    public const ORDER_ID = 'order_id';
+    public const QUOTE_ID = 'quote_id';
+    public const ENTRY = 'entry';
+    public const CREATED_AT = 'created_at';
 
     /**
-     * Get logs_id
+     * Get logs id method
+     *
      * @return string|null
      */
     public function getLogsId();
 
     /**
-     * Set logs_id
+     * Set logs id method
+     *
      * @param string $logsId
      * @return $this
      */
     public function setLogsId($logsId);
 
     /**
-     * Get created_at
+     * Get created at method
+     *
      * @return string|null
      */
     public function getCreatedAt();
 
     /**
-     * Set created_at
+     * Set created at method
+     *
      * @param string $createdAt
      * @return $this
      */
     public function setCreatedAt($createdAt);
 
     /**
-     * Get quote_id
+     * Get quote id method
+     *
      * @return string|null
      */
     public function getQuoteId();
 
     /**
-     * Set quote_id
+     * Set quote id method
+     *
      * @param string $quoteId
      * @return $this
      */
     public function setQuoteId($quoteId);
 
     /**
-     * Get order_id
+     * Get order id method
+     *
      * @return string|null
      */
     public function getOrderId();
 
     /**
-     * Set order_id
+     * Set order id method
+     *
      * @param string $orderId
      * @return $this
      */
     public function setOrderId($orderId);
 
     /**
-     * Get type
+     * Get type method
+     *
      * @return string|null
      */
     public function getType();
 
     /**
-     * Set type
+     * Set type method
+     *
      * @param string $type
      * @return $this
      */
     public function setType($type);
 
     /**
-     * Get entry
+     * Get entry method
+     *
      * @return string|null
      */
     public function getEntry();
 
     /**
-     * Set entry
+     * Set entry method
+     *
      * @param string $entry
      * @return $this
      */

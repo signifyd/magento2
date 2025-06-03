@@ -30,6 +30,8 @@ class Logger
     public $logsResourceModel;
 
     /**
+     * Logger construct.
+     *
      * @param ConfigHelper $configHelper
      * @param LogsFactory $logsFactory
      * @param LogsResourceModel $logsResourceModel
@@ -46,16 +48,24 @@ class Logger
     }
 
     /**
+     * Around add record method.
+     *
      * @param SignifydLogger $subject
      * @param callable $proceed
-     * @param $level
-     * @param $message
-     * @param $context
-     * @param $datetime
+     * @param mixed $level
+     * @param mixed $message
+     * @param array $context
+     * @param mixed $datetime
      * @return bool
      */
-    public function aroundAddRecord(SignifydLogger $subject, callable $proceed, $level, $message, $context = [], $datetime = null)
-    {
+    public function aroundAddRecord(
+        SignifydLogger $subject,
+        callable $proceed,
+        $level,
+        $message,
+        $context = [],
+        $datetime = null
+    ) {
         $result = $proceed($level, $message, $context, $datetime);
 
         if (isset($context['entity'])) {
@@ -68,10 +78,8 @@ class Logger
                 $modelLogs->setType($type);
                 $modelLogs->setEntry($message);
                 $this->logsResourceModel->save($modelLogs);
-            } catch (\Error $e) {
-
-            } catch (\Exception $e) {
-
+            } catch (\Error|\Exception $e) {
+                return false;
             }
             unset($context['entity']);
         } else {
@@ -85,6 +93,12 @@ class Logger
         return $result;
     }
 
+    /**
+     * Get signifyd log model method.
+     *
+     * @param mixed $entity
+     * @return \Signifyd\Connect\Model\Logs
+     */
     public function getSignifydLogModel($entity)
     {
         /** @var \Signifyd\Connect\Model\Logs $logs */

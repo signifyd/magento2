@@ -74,6 +74,7 @@ class AsyncWaiting
 
     /**
      * AsyncWaiting constructor.
+     *
      * @param ConfigHelper $configHelper
      * @param Logger $logger
      * @param OrderResourceModel $orderResourceModel
@@ -84,6 +85,7 @@ class AsyncWaiting
      * @param CasedataResourceModel $casedataResourceModel
      * @param StoreManagerInterface $storeManagerInterface
      * @param SaleOrderFactory $saleOrderFactory
+     * @param PaymentVerificationFactory $paymentVerificationFactory
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -112,6 +114,8 @@ class AsyncWaiting
     }
 
     /**
+     * Invoke method.
+     *
      * @param array $asyncWaitingCases
      * @return void
      */
@@ -138,7 +142,9 @@ class AsyncWaiting
                 }
 
                 /** @var \Signifyd\Connect\Model\Payment\Base\AsyncChecker $asyncCheck */
-                $asyncCheck = $this->paymentVerificationFactory->createPaymentAsyncChecker($order->getPayment()->getMethod());
+                $asyncCheck = $this->paymentVerificationFactory->createPaymentAsyncChecker(
+                    $order->getPayment()->getMethod()
+                );
 
                 if ($asyncCheck($order, $case)) {
                     try {

@@ -25,6 +25,8 @@ class Payment extends \Magento\Sales\Model\Order\Payment
     public $scaEvaluation;
 
     /**
+     * Payment construct.
+     *
      * @param ProductMetadataInterface $productMetadataInterface
      * @param \Magento\Framework\Model\Context $context
      * @param Registry $registry
@@ -95,25 +97,48 @@ class Payment extends \Magento\Sales\Model\Order\Payment
         $this->scaEvaluation = $scaEvaluation;
     }
 
+    /**
+     * Init constructor method.
+     *
+     * @param ProductMetadataInterface $productMetadataInterface
+     * @param \Magento\Framework\Model\Context $context
+     * @param Registry $registry
+     * @param \Magento\Framework\Api\ExtensionAttributesFactory $extensionFactory
+     * @param \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory
+     * @param \Magento\Payment\Helper\Data $paymentData
+     * @param \Magento\Framework\Encryption\EncryptorInterface $encryptor
+     * @param \Magento\Sales\Model\Order\CreditmemoFactory $creditmemoFactory
+     * @param PriceCurrencyInterface $priceCurrency
+     * @param \Magento\Sales\Api\TransactionRepositoryInterface $transactionRepository
+     * @param ManagerInterface $transactionManager
+     * @param Order\Payment\Transaction\BuilderInterface $transactionBuilder
+     * @param \Magento\Sales\Model\Order\Payment\Processor $paymentProcessor
+     * @param OrderRepositoryInterface $orderRepository
+     * @param ?\Magento\Framework\Model\ResourceModel\AbstractResource $resource
+     * @param ?\Magento\Framework\Data\Collection\AbstractDb $resourceCollection
+     * @param array $data
+     * @param ?CreditmemoManager $creditmemoManager
+     * @return void
+     */
     public function initConstructor(
-        $productMetadataInterface,
-        $context,
-        $registry,
-        $extensionFactory,
-        $customAttributeFactory,
-        $paymentData,
-        $encryptor,
-        $creditmemoFactory,
-        $priceCurrency,
-        $transactionRepository,
-        $transactionManager,
-        $transactionBuilder,
-        $paymentProcessor,
-        $orderRepository,
-        $resource,
-        $resourceCollection,
-        $data,
-        $creditmemoManager
+        ProductMetadataInterface $productMetadataInterface,
+        \Magento\Framework\Model\Context $context,
+        Registry $registry,
+        \Magento\Framework\Api\ExtensionAttributesFactory $extensionFactory,
+        \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory,
+        \Magento\Payment\Helper\Data $paymentData,
+        \Magento\Framework\Encryption\EncryptorInterface $encryptor,
+        \Magento\Sales\Model\Order\CreditmemoFactory $creditmemoFactory,
+        PriceCurrencyInterface $priceCurrency,
+        \Magento\Sales\Api\TransactionRepositoryInterface $transactionRepository,
+        ManagerInterface $transactionManager,
+        Order\Payment\Transaction\BuilderInterface $transactionBuilder,
+        \Magento\Sales\Model\Order\Payment\Processor $paymentProcessor,
+        OrderRepositoryInterface $orderRepository,
+        ?\Magento\Framework\Model\ResourceModel\AbstractResource $resource,
+        ?\Magento\Framework\Data\Collection\AbstractDb $resourceCollection,
+        array $data,
+        ?CreditmemoManager $creditmemoManager
     ) {
         if (version_compare($productMetadataInterface->getVersion(), '2.4.0') >= 0) {
             $saleOperation = \Magento\Framework\App\ObjectManager::getInstance()
@@ -161,6 +186,14 @@ class Payment extends \Magento\Sales\Model\Order\Payment
         }
     }
 
+    /**
+     * Process action method.
+     *
+     * @param string $action
+     * @param Order $order
+     * @return void
+     * @throws \Exception
+     */
     protected function processAction($action, Order $order)
     {
         try {

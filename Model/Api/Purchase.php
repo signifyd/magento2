@@ -29,6 +29,8 @@ class Purchase
     public $receivedByFactory;
 
     /**
+     * Purchase construct.
+     *
      * @param DateTimeFactory $dateTimeFactory
      * @param ProductFactory $productFactory
      * @param ShipmentsFactory $shipmentsFactory
@@ -48,7 +50,8 @@ class Purchase
 
     /**
      * Construct a new Purchase object
-     * @param $entity Order|Quote
+     *
+     * @param Order|Quote $entity
      * @return array
      */
     public function __invoke($entity)
@@ -65,7 +68,9 @@ class Purchase
     }
 
     /**
-     * @param $order Order
+     * Make purchase from order method.
+     *
+     * @param Order $order
      * @return array
      */
     protected function makePurchaseFromOrder(Order $order)
@@ -115,8 +120,9 @@ class Purchase
         return $purchase;
     }
 
-
     /**
+     * Make purchase from quote method.
+     *
      * @param Quote $quote
      * @return array
      */

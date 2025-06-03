@@ -9,6 +9,14 @@ class Order extends \Magento\Sales\Model\ResourceModel\Order
      */
     public $loadForUpdate = false;
 
+    /**
+     * Load for update method.
+     *
+     * @param \Magento\Framework\Model\AbstractModel $object
+     * @param mixed $value
+     * @param string $field
+     * @return Order
+     */
     public function loadForUpdate(\Magento\Framework\Model\AbstractModel $object, $value, $field = null)
     {
         $this->loadForUpdate = true;
@@ -17,6 +25,8 @@ class Order extends \Magento\Sales\Model\ResourceModel\Order
     }
 
     /**
+     * Get load select method.
+     *
      * @param string $field
      * @param mixed $value
      * @param \Magento\Framework\Model\AbstractModel $object

@@ -67,6 +67,7 @@ class CheckoutDataBuilderSca
 
     /**
      * CheckoutDataBuilder constructor.
+     *
      * @param QuoteResourceModel $quoteResourceModel
      * @param QuoteFactory $quoteFactory
      * @param ScopeConfigInterface $scopeConfig
@@ -99,6 +100,13 @@ class CheckoutDataBuilderSca
         $this->casedataResourceModel = $casedataResourceModel;
     }
 
+    /**
+     * Before build method.
+     *
+     * @param AdyenCheckoutDataBuilder $subject
+     * @param array $buildSubject
+     * @return void
+     */
     public function beforeBuild(AdyenCheckoutDataBuilder $subject, array $buildSubject)
     {
         /** @var \Magento\Payment\Gateway\Data\PaymentDataObject $paymentDataObject */
@@ -107,6 +115,13 @@ class CheckoutDataBuilderSca
         $this->quoteId = $payment->getOrder()->getQuoteId();
     }
 
+    /**
+     * After build method.
+     *
+     * @param AdyenCheckoutDataBuilder $subject
+     * @param mixed $request
+     * @return array|mixed
+     */
     public function afterBuild(AdyenCheckoutDataBuilder $subject, $request)
     {
         /** @var \Magento\Quote\Model\Quote $quote */
@@ -164,7 +179,7 @@ class CheckoutDataBuilderSca
                         $executeThreeD = 'True';
                         break;
 
-                    case 'never';
+                    case 'never':
                         $executeThreeD = 'False';
                         break;
                 }

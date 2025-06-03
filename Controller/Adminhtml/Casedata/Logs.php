@@ -51,6 +51,8 @@ class Logs extends Action
     }
 
     /**
+     * Execute method
+     *
      * @return \Magento\Framework\App\ResponseInterface|\Magento\Framework\Controller\Result\Json|\Magento\Framework\Controller\ResultInterface
      */
     public function execute()

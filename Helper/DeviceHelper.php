@@ -44,7 +44,8 @@ class DeviceHelper
     /**
      * Generate device fingerprint based on store URL and quoteId
      *
-     * @param $quoteId
+     * @param string $quoteId
+     * @param null|string|bool|int|\Magento\Store\Api\Data\StoreInterface $storeId
      * @return string
      */
     public function generateFingerprint($quoteId, $storeId = null)

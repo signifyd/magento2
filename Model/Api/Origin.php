@@ -24,6 +24,8 @@ class Origin
     public $regionResourceModel;
 
     /**
+     * Origin construct.
+     *
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param RegionFactory $regionFactory
      * @param RegionResourceModel $regionResourceModel
@@ -40,7 +42,8 @@ class Origin
 
     /**
      * Construct a new Origin object
-     * @param $storeId
+     *
+     * @param null|int|string|\Magento\Framework\App\ScopeInterface $storeId
      * @return array
      */
     public function __invoke($storeId)

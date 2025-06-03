@@ -6,9 +6,13 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
 use Magento\Framework\Stdlib\DateTime\DateTime;
+use Signifyd\Connect\Logger\Install;
 
 class InstallConfig implements DataPatchInterface
 {
+    /**
+     * @var Install
+     */
     public $logger;
 
     /**
@@ -27,13 +31,15 @@ class InstallConfig implements DataPatchInterface
     public $dateTime;
 
     /**
-     * @param \Signifyd\Connect\Logger\Install $logger
+     * InstallConfig construct.
+     *
+     * @param Install $logger
      * @param WriterInterface $writerInterface
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param DateTime $dateTime
      */
     public function __construct(
-        \Signifyd\Connect\Logger\Install $logger,
+        Install $logger,
         WriterInterface $writerInterface,
         ScopeConfigInterface $scopeConfigInterface,
         DateTime $dateTime
@@ -45,6 +51,8 @@ class InstallConfig implements DataPatchInterface
     }
 
     /**
+     * Apply method.
+     *
      * @return $this|InstallConfig
      */
     public function apply()
@@ -63,7 +71,7 @@ class InstallConfig implements DataPatchInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function getAliases()
     {
@@ -71,7 +79,7 @@ class InstallConfig implements DataPatchInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public static function getDependencies()
     {

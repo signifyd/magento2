@@ -43,6 +43,8 @@ class UpdateCaseV2
     public $signifydOrderResourceModel;
 
     /**
+     * UpdateCaseV2 construct.
+     *
      * @param ConfigHelper $configHelper
      * @param OrderHelper $orderHelper
      * @param Logger $logger
@@ -64,8 +66,10 @@ class UpdateCaseV2
     }
 
     /**
-     * @param $case
-     * @param $response
+     * Invoke method.
+     *
+     * @param mixed $case
+     * @param mixed $response
      * @return mixed
      */
     public function __invoke($case, $response)

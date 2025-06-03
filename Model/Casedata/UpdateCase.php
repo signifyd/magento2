@@ -63,6 +63,13 @@ class UpdateCase
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
     }
 
+    /**
+     * Invoke method.
+     *
+     * @param mixed $case
+     * @param mixed $response
+     * @return mixed
+     */
     public function __invoke($case, $response)
     {
         try {

@@ -92,6 +92,8 @@ class Client
     public $signifydAPI = [];
 
     /**
+     * Client construct.
+     *
      * @param ConfigHelper $configHelper
      * @param Logger $logger
      * @param OrderHelper $orderHelper
@@ -137,8 +139,10 @@ class Client
     }
 
     /**
-     * @param $caseData
-     * @param $order
+     * Post case to signifyd method.
+     *
+     * @param array $caseData
+     * @param \Magento\Framework\Model\AbstractModel $order
      * @return false|\Signifyd\Core\Response\SaleResponse
      */
     public function postCaseToSignifyd($caseData, $order)
@@ -175,8 +179,10 @@ class Client
     }
 
     /**
-     * @param $updateData
-     * @param $order
+     * Create reroute method.
+     *
+     * @param array $updateData
+     * @param \Magento\Framework\Model\AbstractModel $order
      * @return bool|mixed|object|\Signifyd\Core\Response
      * @throws \Signifyd\Core\Exceptions\ApiException
      * @throws \Signifyd\Core\Exceptions\InvalidClassException
@@ -208,6 +214,8 @@ class Client
     }
 
     /**
+     * Cancel case on signifyd method.
+     *
      * @param Order $order
      * @return bool
      */
@@ -291,8 +299,10 @@ class Client
     }
 
     /**
-     * @param $caseData
-     * @param $quote
+     * Post case from quote to signifyd method.
+     *
+     * @param array $caseData
+     * @param \Magento\Framework\Model\AbstractModel $quote
      * @return bool|\Signifyd\Core\Response\CheckoutsResponse
      * @throws \Signifyd\Core\Exceptions\ApiException
      * @throws \Signifyd\Core\Exceptions\InvalidClassException
@@ -326,8 +336,10 @@ class Client
     }
 
     /**
-     * @param $transactionData
-     * @param $entity
+     * Post transaction to signifyd method.
+     *
+     * @param array $transactionData
+     * @param \Magento\Framework\Model\AbstractModel $entity
      * @return bool|mixed|object|\Signifyd\Core\Response
      * @throws \Signifyd\Core\Exceptions\ApiException
      * @throws \Signifyd\Core\Exceptions\InvalidClassException
@@ -342,7 +354,7 @@ class Client
         );
 
         $caseResponse = $this->getSignifydCheckoutApi($entity)
-            ->createTransaction($transactionData,  $this->configHelper->getPrivateLogData($entity));
+            ->createTransaction($transactionData, $this->configHelper->getPrivateLogData($entity));
         $tokenSent = $transactionData['checkoutId'];
         $tokenReceived = $caseResponse->getCheckoutId();
 
@@ -368,6 +380,8 @@ class Client
     }
 
     /**
+     * GetSignifydSaleApi method.
+     *
      * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return \Signifyd\Core\Api\ApiModel
      */
@@ -377,6 +391,8 @@ class Client
     }
 
     /**
+     * Get signifyd checkout api method.
+     *
      * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return \Signifyd\Core\Api\CheckoutApi
      */
@@ -386,6 +402,8 @@ class Client
     }
 
     /**
+     * Get signifyd webhook api method.
+     *
      * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return \Signifyd\Core\Api\WebhooksApi
      */
@@ -395,6 +413,8 @@ class Client
     }
 
     /**
+     * Get signifyd webhook V2 api method.
+     *
      * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return \Signifyd\Core\Api\WebhooksV2Api
      */
@@ -404,6 +424,8 @@ class Client
     }
 
     /**
+     * Get signifyd api method.
+     *
      * @param string $type
      * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return mixed

@@ -8,6 +8,8 @@ use Magento\Framework\Event\Observer;
 class PaypalExpress extends Purchase
 {
     /**
+     * Execute method.
+     *
      * @param Observer $observer
      * @param bool $checkOwnEventsMethods
      */

@@ -33,6 +33,8 @@ class OrderRepositoryInterface
     public $casedataFactory;
 
     /**
+     * OrderRepositoryInterface construct.
+     *
      * @param OrderExtensionFactory $extensionFactory
      * @param OrderFactory $orderFactory
      * @param CasedataResourceModel $casedataResourceModel
@@ -51,6 +53,8 @@ class OrderRepositoryInterface
     }
 
     /**
+     * Set signifyd order attribute data method.
+     *
      * @param OrderInterface $order
      * @return void
      */
@@ -85,6 +89,8 @@ class OrderRepositoryInterface
     }
 
     /**
+     * After get list method.
+     *
      * @param MagentoOrderRepositoryInterface $subject
      * @param OrderSearchResultInterface $orderSearchResult
      * @return OrderSearchResultInterface
@@ -101,6 +107,8 @@ class OrderRepositoryInterface
     }
 
     /**
+     * After get method.
+     *
      * @param MagentoOrderRepositoryInterface $subject
      * @param OrderInterface $resultOrder
      * @return OrderInterface

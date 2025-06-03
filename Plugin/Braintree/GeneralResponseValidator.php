@@ -60,10 +60,9 @@ class GeneralResponseValidator
      */
     public $client;
 
-    public $subjectReader;
-
     /**
-     * CheckoutPaymentsDetailsHandler constructor.
+     * GenericResponseValidator constructor.
+     *
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
@@ -96,6 +95,17 @@ class GeneralResponseValidator
         $this->client = $client;
     }
 
+    /**
+     * Before validate method.
+     *
+     * @param mixed $subject
+     * @param array $validationSubject
+     * @return void|null
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws \Signifyd\Core\Exceptions\ApiException
+     * @throws \Signifyd\Core\Exceptions\InvalidClassException
+     */
     public function beforeValidate($subject, array $validationSubject)
     {
         $this->logger->info("Braintree pre-authorization transaction validator");

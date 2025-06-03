@@ -98,6 +98,8 @@ class UpdateOrder
     public $signifydOrderResourceModel;
 
     /**
+     * UpdateOrder construct.
+     *
      * @param ConfigHelper $configHelper
      * @param OrderHelper $orderHelper
      * @param Logger $logger
@@ -145,6 +147,13 @@ class UpdateOrder
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
     }
 
+    /**
+     * Invoke method.
+     *
+     * @param mixed $case
+     * @return mixed
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     */
     public function __invoke($case)
     {
         $bypassUpdates = $this->scopeConfigInterface->getValue('signifyd/advanced/bypass_additional_updates');

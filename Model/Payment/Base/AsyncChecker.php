@@ -21,6 +21,8 @@ class AsyncChecker implements AsyncCheckerInterface
     public $saleOrderFactory;
 
     /**
+     * AsyncChecker construct.
+     *
      * @param Logger $logger
      * @param SaleOrderFactory $saleOrderFactory
      */
@@ -33,6 +35,8 @@ class AsyncChecker implements AsyncCheckerInterface
     }
 
     /**
+     * Invoke method.
+     *
      * @param Order $order
      * @param Casedata $case
      * @return bool|void

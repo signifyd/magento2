@@ -27,14 +27,17 @@ class Enabled extends \Magento\Framework\App\Config\Value
     public $moduleManager;
 
     /**
+     * Enabled construct.
+     *
      * @param \Magento\Framework\Model\Context $context
      * @param \Magento\Framework\Registry $registry
      * @param ScopeConfigInterface $config
      * @param \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList
+     * @param ManagerInterface $messageManager
      * @param \Magento\Store\Model\StoreRepository $storeRepository
      * @param ModuleManager $moduleManager
-     * @param ?\Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
-     * @param ?\Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
+     * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
+     * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
      * @param array $data
      */
     public function __construct(
@@ -57,6 +60,8 @@ class Enabled extends \Magento\Framework\App\Config\Value
     }
 
     /**
+     * Before save method.
+     *
      * @return $this
      */
     public function beforeSave()

@@ -17,12 +17,17 @@ class Last4Mapper extends DataMapper
         $last4 = $order->getPayment()->getCcLast4();
         $last4 = $last4 === null ? '' : $last4;
 
-        $this->logger->debug('Last4 found on base mapper: ' . (empty($last4) ? 'false' : 'true'), ['entity' => $order]);
+        $this->logger->debug(
+            'Last4 found on base mapper: ' . (empty($last4) ? 'false' : 'true'),
+            ['entity' => $order]
+        );
 
         return $last4;
     }
 
     /**
+     * Get payment data from gateway response method.
+     *
      * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
      * @return string
      */

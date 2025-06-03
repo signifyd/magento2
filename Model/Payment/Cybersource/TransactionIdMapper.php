@@ -6,6 +6,9 @@ use Signifyd\Connect\Model\Payment\Base\TransactionIdMapper as Base_TransactionI
 
 class TransactionIdMapper extends Base_TransactionIdMapper
 {
+    /**
+     * @var string[]
+     */
     public $allowedMethods = ['cybersource', 'chcybersource'];
 
     /**

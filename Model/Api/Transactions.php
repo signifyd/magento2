@@ -124,6 +124,8 @@ class Transactions
     public $acquirerDetailsFactory;
 
     /**
+     * Transactions construct.
+     *
      * @param TransactionCollectionFactory $transactionCollectionFactory
      * @param DateTimeFactory $dateTimeFactory
      * @param JsonSerializer $jsonSerializer
@@ -194,7 +196,10 @@ class Transactions
 
     /**
      * Construct a new Transactions object
-     * @param $entity Order|Quote
+     *
+     * @param Order|Quote $entity
+     * @param mixed $checkoutToken
+     * @param array $methodData
      * @return array
      */
     public function __invoke($entity, $checkoutToken = null, $methodData = [])
@@ -212,6 +217,7 @@ class Transactions
 
     /**
      * Construct a new Transactions object
+     *
      * @param Order $order
      * @return array
      */
@@ -275,9 +281,11 @@ class Transactions
     }
 
     /**
+     * Make checkout transactions method.
+     *
      * @param Quote $quote
-     * @param $checkoutToken
-     * @param $methodData
+     * @param mixed $checkoutToken
+     * @param array $methodData
      * @return array
      */
     protected function makeCheckoutTransactions(Quote $quote, $checkoutToken, $methodData = [])
@@ -359,7 +367,9 @@ class Transactions
     }
 
     /**
-     * @param $quoteId
+     * Make sca exemption requested method.
+     *
+     * @param mixed $quoteId
      * @return string|null
      */
     protected function makeScaExemptionRequested($quoteId = null)
@@ -395,11 +405,12 @@ class Transactions
     }
 
     /**
-     * makeThreeDsResult method should be extended/intercepted by plugin to add value to it.
+     * MakeThreeDsResult method should be extended/intercepted by plugin to add value to it.
+     *
      * These are details about the result of the 3D Secure authentication
      * This method should be extended/intercepted by plugin to add value to it
      *
-     * @param $quoteId
+     * @param mixed $quoteId
      * @return array|bool|float|int|mixed|string|null
      */
     public function makeThreeDsResult($quoteId)

@@ -46,6 +46,7 @@ class Before implements ObserverInterface
 
     /**
      * Before constructor.
+     *
      * @param Logger $loger
      * @param AppState $appState
      * @param ConfigHelper $configHelper
@@ -70,6 +71,8 @@ class Before implements ObserverInterface
     }
 
     /**
+     * Execute method.
+     *
      * @param Observer $observer
      * @param bool $checkOwnEventsMethods
      */
@@ -110,8 +113,10 @@ class Before implements ObserverInterface
     }
 
     /**
-     * @param $order
-     * @param $data
+     * Set payment data method.
+     *
+     * @param Order $order
+     * @param string $data
      * @return void
      */
     public function setPaymentData($order, $data)
@@ -121,7 +126,10 @@ class Before implements ObserverInterface
             if (isset($dataArray['paymentMethod']) &&
                 isset($dataArray['paymentMethod']['additional_data']) &&
                 isset($dataArray['paymentMethod']['additional_data']['card_bin'])) {
-                $order->getPayment()->setAdditionalInformation('card_bin', $dataArray['paymentMethod']['additional_data']['card_bin']);
+                $order->getPayment()->setAdditionalInformation(
+                    'card_bin',
+                    $dataArray['paymentMethod']['additional_data']['card_bin']
+                );
             }
         }
     }

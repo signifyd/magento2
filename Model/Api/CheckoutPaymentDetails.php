@@ -114,7 +114,9 @@ class CheckoutPaymentDetails
 
     /**
      * Construct a new CheckoutPaymentDetails object
-     * @param $entity Order|Quote
+     *
+     * @param Order|Quote $entity
+     * @param array $methodData
      * @return array
      */
     public function __invoke($entity, $methodData = [])
@@ -131,7 +133,9 @@ class CheckoutPaymentDetails
     }
 
     /**
-     * @param $order Order
+     * Make checkout payment details method.
+     *
+     * @param Order $order
      * @return array
      */
     protected function makeCheckoutPaymentDetails(Order $order)
@@ -183,8 +187,10 @@ class CheckoutPaymentDetails
     }
 
     /**
+     * Make checkout payment details from quote method.
+     *
      * @param Quote $quote
-     * @param $methodData
+     * @param array $methodData
      * @return array
      */
     protected function makeCheckoutPaymentDetailsFromQuote(Quote $quote, $methodData = [])

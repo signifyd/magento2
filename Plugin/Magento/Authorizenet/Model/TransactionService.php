@@ -12,7 +12,8 @@ class TransactionService
     public $registry;
 
     /**
-     * Payflowlink constructor.
+     * TransactionService constructor.
+     *
      * @param Registry $registry
      */
     public function __construct(
@@ -22,8 +23,10 @@ class TransactionService
     }
 
     /**
+     * After get transaction details method.
+     *
      * @param \Magento\Authorizenet\Model\TransactionService $subject
-     * @param $result
+     * @param mixed $result
      * @return mixed
      */
     public function afterGetTransactionDetails(\Magento\Authorizenet\Model\TransactionService $subject, $result)

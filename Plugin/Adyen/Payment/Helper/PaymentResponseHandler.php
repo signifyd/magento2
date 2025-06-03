@@ -2,6 +2,8 @@
 
 namespace Signifyd\Connect\Plugin\Adyen\Payment\Helper;
 
+use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Signifyd\Connect\Model\Registry;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Api\OrderRepositoryInterface;
@@ -69,6 +71,8 @@ class PaymentResponseHandler
     protected $registry;
 
     /**
+     * PaymentResponseHandler construct.
+     *
      * @param ThreeDsIntegration $threeDsIntegration
      * @param HttpRequest $httpRequest
      * @param JsonSerializer $jsonSerializer
@@ -104,6 +108,18 @@ class PaymentResponseHandler
         $this->registry = $registry;
     }
 
+    /**
+     * Before format payment response method.
+     *
+     * @param AdyenPaymentResponseHandler $subject
+     * @param string $resultCode
+     * @param array $action
+     * @param array $additionalData
+     * @return array
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
     public function beforeFormatPaymentResponse(
         AdyenPaymentResponseHandler $subject,
         $resultCode,
@@ -219,6 +235,15 @@ class PaymentResponseHandler
         return [$resultCode, $action, $additionalData];
     }
 
+    /**
+     * Before handle payment response method.
+     *
+     * @param AdyenPaymentResponseHandler $subject
+     * @param mixed $paymentsResponse
+     * @param OrderPaymentInterface $payment
+     * @param OrderInterface $order
+     * @return array
+     */
     public function beforeHandlePaymentResponse(
         AdyenPaymentResponseHandler $subject,
         $paymentsResponse,

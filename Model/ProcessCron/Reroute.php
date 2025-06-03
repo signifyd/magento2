@@ -90,6 +90,8 @@ class Reroute
     public $rerouteResourceModel;
 
     /**
+     * Reroute construct.
+     *
      * @param PaymentUpdateFactory $paymentUpdateFactory
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
@@ -138,6 +140,8 @@ class Reroute
     }
 
     /**
+     * Invoke method.
+     *
      * @param \Signifyd\Connect\Model\Reroute $reroute
      * @return void
      */

@@ -24,7 +24,8 @@ class HandleResponseCommand
     public $objectManagerInterface;
 
     /**
-     * CheckoutPaymentsDetailsHandler constructor.
+     * HandleResponseCommand constructor.
+     *
      * @param TransactionIntegration $transactionIntegration
      * @param Registry $registry
      * @param ObjectManagerInterface $objectManagerInterface
@@ -40,12 +41,16 @@ class HandleResponseCommand
     }
 
     /**
+     * After read response method.
+     *
      * @param \CyberSource\SecureAcceptance\Gateway\Helper\SubjectReader $subject
-     * @param $response
+     * @param mixed $response
      * @return mixed
      */
-    public function afterReadResponse(\CyberSource\SecureAcceptance\Gateway\Helper\SubjectReader $subject, $response)
-    {
+    public function afterReadResponse(
+        \CyberSource\SecureAcceptance\Gateway\Helper\SubjectReader $subject,
+        $response
+    ) {
         if (is_array($response) === false) {
             return $response;
         }

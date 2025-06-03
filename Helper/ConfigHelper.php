@@ -62,6 +62,7 @@ class ConfigHelper
 
     /**
      * ConfigHelper constructor.
+     *
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param StoreManagerInterface $storeManager
      * @param OrderFactory $orderFactory
@@ -88,11 +89,12 @@ class ConfigHelper
     /**
      * Retrieve store configuration for order store
      *
-     * @param $path
+     * @param string $path
      * @param ?\Magento\Sales\Model\Order $entity
+     * @param bool $flag
      * @return mixed
      */
-    public function getConfigData($path, ?\Magento\Framework\Model\AbstractModel $entity = null, $flag = false)
+    public function getConfigData(string $path, ?\Magento\Framework\Model\AbstractModel $entity = null, $flag = false)
     {
         $storeCode = $this->getStoreCode($entity);
 
@@ -109,6 +111,7 @@ class ConfigHelper
      * Given entity returns store code
      *
      * @param ?\Magento\Framework\Model\AbstractModel $entity
+     * @param bool $returnNullString
      * @return bool|int|mixed|null|string
      */
     public function getStoreCode(?\Magento\Framework\Model\AbstractModel $entity = null, $returnNullString = false)
@@ -143,6 +146,13 @@ class ConfigHelper
         return $returnNullString ? '__null_signifyd_store__' : null;
     }
 
+    /**
+     * Get store id from quote method.
+     *
+     * @param \Magento\Quote\Model\Quote $entity
+     * @return mixed|string|null
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
     public function getStoreIdFromQuote(\Magento\Quote\Model\Quote $entity)
     {
         $quoteId = $entity->getId();
@@ -170,6 +180,8 @@ class ConfigHelper
     }
 
     /**
+     * Is enabled method.
+     *
      * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return mixed
      */
@@ -184,6 +196,12 @@ class ConfigHelper
         return $this->getConfigData('signifyd/general/enabled', $entity, true);
     }
 
+    /**
+     * Get enabled by store id method.
+     *
+     * @param null|int|string|\Magento\Framework\App\ScopeInterface $storeId
+     * @return bool
+     */
     public function getEnabledByStoreId($storeId = null)
     {
         $key = $this->scopeConfigInterface->getValue('signifyd/general/key', 'stores', $storeId);
@@ -195,16 +213,31 @@ class ConfigHelper
         return $this->scopeConfigInterface->isSetFlag('signifyd/general/enabled', 'stores', $storeId);
     }
 
+    /**
+     * Is score only method.
+     *
+     * @return bool
+     */
     public function isScoreOnly()
     {
         return (bool) $this->scopeConfigInterface->getValue('signifyd/general/score_only');
     }
 
+    /**
+     * Get decision request method.
+     *
+     * @return mixed
+     */
     public function getDecisionRequest()
     {
         return $this->scopeConfigInterface->getValue('signifyd/general/decision_request');
     }
 
+    /**
+     * Get cron batch size method.
+     *
+     * @return mixed
+     */
     public function getCronBatchSize()
     {
         return $this->scopeConfigInterface->getValue('signifyd/advanced/cron_batch_size');
@@ -248,6 +281,12 @@ class ConfigHelper
         return $restrictedCustomerGroups;
     }
 
+    /**
+     * Is customer group restricted method.
+     *
+     * @param mixed $customerGroupId
+     * @return bool
+     */
     public function isCustomerGroupRestricted($customerGroupId)
     {
         $restrictedCustomerGroups = $this->getRestrictedCustomerGroupsConfig();
@@ -262,7 +301,7 @@ class ConfigHelper
     /**
      * Check if there is any restrictions by payment method or state
      *
-     * @param $paymentMethodCode
+     * @param mixed $paymentMethodCode
      * @return bool
      */
     public function isPaymentRestricted($paymentMethodCode)
@@ -277,6 +316,9 @@ class ConfigHelper
     }
 
     /**
+     * Get is order processed by amazon method.
+     *
+     * @param Order $order
      * @return bool
      */
     public function getIsOrderProcessedByAmazon(Order $order)
@@ -294,6 +336,13 @@ class ConfigHelper
         return true;
     }
 
+    /**
+     * Get default policy method.
+     *
+     * @param string $scopeType
+     * @param null|int|string|\Magento\Framework\App\ScopeInterface $scopeCode
+     * @return mixed
+     */
     public function getDefaultPolicy($scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
     {
         return $this->scopeConfigInterface->getValue(
@@ -303,6 +352,13 @@ class ConfigHelper
         );
     }
 
+    /**
+     * Get policy name method.
+     *
+     * @param string $scopeType
+     * @param null|int|string|\Magento\Framework\App\ScopeInterface $scopeCode
+     * @return mixed
+     */
     public function getPolicyName($scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null)
     {
         $defaultPolicyName = $this->getDefaultPolicy($scopeType, $scopeCode);
@@ -320,8 +376,12 @@ class ConfigHelper
     }
 
     /**
-     * @param $policyName
-     * @param $paymentMethod
+     * Get is pre auth method.
+     *
+     * @param string $policyName
+     * @param mixed $paymentMethod
+     * @param string $scopeType
+     * @param null|int|string|\Magento\Framework\App\ScopeInterface $scopeCode
      * @return bool
      */
     public function getIsPreAuth(
@@ -341,8 +401,12 @@ class ConfigHelper
     }
 
     /**
-     * @param $policyName
-     * @param $paymentMethod
+     * Get policy from method.
+     *
+     * @param string $policyName
+     * @param mixed $paymentMethod
+     * @param string $scopeType
+     * @param null|int|string|\Magento\Framework\App\ScopeInterface $scopeCode
      * @return int|mixed|string
      */
     public function getPolicyFromMethod(
@@ -381,7 +445,9 @@ class ConfigHelper
     }
 
     /**
-     * @param $policyName
+     * Get is pre auth in use method.
+     *
+     * @param string $policyName
      * @return bool
      */
     public function getIsPreAuthInUse($policyName)
@@ -400,6 +466,8 @@ class ConfigHelper
     }
 
     /**
+     * Process merchant review method.
+     *
      * @param ?\Magento\Framework\Model\AbstractModel $entity
      * @return mixed
      */

@@ -15,6 +15,7 @@ class ServiceClient
 
     /**
      * ServiceClient constructor.
+     *
      * @param TransactionIntegration $transactionIntegration
      */
     public function __construct(
@@ -24,9 +25,11 @@ class ServiceClient
     }
 
     /**
+     * Around place request method.
+     *
      * @param PaymentServicesPaypalServiceClient $subject
      * @param callable $proceed
-     * @param $transferObject
+     * @param mixed $transferObject
      * @return void
      * @throws ClientException
      */

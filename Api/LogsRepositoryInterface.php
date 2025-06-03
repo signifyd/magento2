@@ -13,7 +13,8 @@ interface LogsRepositoryInterface
 {
 
     /**
-     * Save logs
+     * Save logs method.
+     *
      * @param \Signifyd\Connect\Api\Data\LogsInterface $logs
      * @return \Signifyd\Connect\Api\Data\LogsInterface
      * @throws \Magento\Framework\Exception\LocalizedException
@@ -23,7 +24,8 @@ interface LogsRepositoryInterface
     );
 
     /**
-     * Retrieve logs
+     * Retrieve logs method.
+     *
      * @param string $logsId
      * @return \Signifyd\Connect\Api\Data\LogsInterface
      * @throws \Magento\Framework\Exception\LocalizedException
@@ -32,6 +34,7 @@ interface LogsRepositoryInterface
 
     /**
      * Retrieve logs matching the specified criteria.
+     *
      * @param \Magento\Framework\Api\SearchCriteriaInterface $searchCriteria
      * @return \Signifyd\Connect\Api\Data\LogsSearchResultsInterface
      * @throws \Magento\Framework\Exception\LocalizedException
@@ -41,7 +44,8 @@ interface LogsRepositoryInterface
     );
 
     /**
-     * Delete logs
+     * Delete logs method.
+     *
      * @param \Signifyd\Connect\Api\Data\LogsInterface $logs
      * @return bool true on success
      * @throws \Magento\Framework\Exception\LocalizedException
@@ -51,7 +55,8 @@ interface LogsRepositoryInterface
     );
 
     /**
-     * Delete logs by ID
+     * Delete logs by ID method.
+     *
      * @param string $logsId
      * @return bool true on success
      * @throws \Magento\Framework\Exception\NoSuchEntityException

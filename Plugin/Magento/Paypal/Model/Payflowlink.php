@@ -13,6 +13,7 @@ class Payflowlink
 
     /**
      * Payflowlink constructor.
+     *
      * @param Registry $registry
      */
     public function __construct(
@@ -22,8 +23,10 @@ class Payflowlink
     }
 
     /**
+     * Before process method.
+     *
      * @param \Magento\Paypal\Model\Payflowlink $subject
-     * @param $responseData
+     * @param mixed $responseData
      * @return array
      */
     public function beforeProcess(\Magento\Paypal\Model\Payflowlink $subject, $responseData)

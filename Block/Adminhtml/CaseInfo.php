@@ -40,6 +40,7 @@ class CaseInfo extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
 
     /**
      * CaseInfo constructor.
+     *
      * @param Casedata $caseEntity
      * @param LogsCollectionFactory $logsCollectionFactory
      * @param \Magento\Backend\Block\Template\Context $context
@@ -83,14 +84,26 @@ class CaseInfo extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
         $this->casedataFactory = $casedataFactory;
     }
 
+    /**
+     * InitConstructor
+     *
+     * @param ProductMetadataInterface $productMetadataInterface
+     * @param \Magento\Backend\Block\Template\Context $context
+     * @param \Magento\Framework\Registry $registry
+     * @param \Magento\Sales\Helper\Admin $adminHelper
+     * @param array $data
+     * @param ShippingHelper $shippingHelper
+     * @param TaxHelper $taxHelper
+     * @return void
+     */
     public function initConstructor(
-        $productMetadataInterface,
-        $context,
-        $registry,
-        $adminHelper,
-        $data,
-        $shippingHelper,
-        $taxHelper
+        ProductMetadataInterface $productMetadataInterface,
+        \Magento\Backend\Block\Template\Context $context,
+        \Magento\Framework\Registry $registry,
+        \Magento\Sales\Helper\Admin $adminHelper,
+        array $data,
+        ShippingHelper $shippingHelper,
+        TaxHelper $taxHelper
     ) {
         if (version_compare($productMetadataInterface->getVersion(), '2.4.0') >= 0) {
             parent::__construct(
@@ -163,6 +176,8 @@ class CaseInfo extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
     }
 
     /**
+     * Get checkpoint action reason method.
+     *
      * @return array|mixed|null
      */
     public function getCheckpointActionReason()
@@ -171,6 +186,8 @@ class CaseInfo extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
     }
 
     /**
+     * Has logs to download method.
+     *
      * @return array|mixed|null
      */
     public function hasLogsToDownload()

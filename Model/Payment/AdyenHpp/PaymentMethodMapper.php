@@ -9,6 +9,8 @@ use Signifyd\Connect\Model\Payment\Base\PaymentMethodBase;
 class PaymentMethodMapper extends PaymentMethodBase
 {
     /**
+     * Get payment method from order method.
+     *
      * @param Order $order
      * @return int|string
      */
@@ -20,6 +22,8 @@ class PaymentMethodMapper extends PaymentMethodBase
     }
 
     /**
+     * Get payment method from quote method.
+     *
      * @param Quote $quote
      * @return null
      */
@@ -30,6 +34,13 @@ class PaymentMethodMapper extends PaymentMethodBase
         return $this->adyenHppMapping($paymentBrandCode, $quote);
     }
 
+    /**
+     * Adyen hpp mapping method.
+     *
+     * @param mixed $paymentBrandCode
+     * @param mixed $entity
+     * @return int|string
+     */
     public function adyenHppMapping($paymentBrandCode, $entity)
     {
         $paymentMethod = $entity->getPayment()->getMethod();

@@ -8,6 +8,8 @@ use Signifyd\Connect\Model\Casedata;
 interface AsyncCheckerInterface
 {
     /**
+     * Invoke method.
+     *
      * @param Order $order
      * @param Casedata $case
      * @return bool|void

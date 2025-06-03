@@ -6,9 +6,14 @@ use Signifyd\Connect\Model\Payment\Base\ExpMonthMapper as Base_ExpMonthMapper;
 
 class ExpMonthMapper extends Base_ExpMonthMapper
 {
+    /**
+     * @var string[]
+     */
     public $allowedMethods = ['cybersource', 'chcybersource'];
 
     /**
+     * Get payment data method.
+     *
      * @param \Magento\Sales\Model\Order $order
      * @return null|string
      */

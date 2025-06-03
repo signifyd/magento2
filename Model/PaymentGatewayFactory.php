@@ -18,6 +18,7 @@ class PaymentGatewayFactory
 
     /**
      * PaymentGatewayFactory constructor.
+     *
      * @param ObjectManagerInterface $objectManager
      */
     public function __construct(
@@ -27,7 +28,9 @@ class PaymentGatewayFactory
     }
 
     /**
-     * @param $gatewayIntegrationSettings
+     * Get method.
+     *
+     * @param array $gatewayIntegrationSettings
      * @return false|mixed
      */
     public function get($gatewayIntegrationSettings)
@@ -47,7 +50,9 @@ class PaymentGatewayFactory
     }
 
     /**
-     * @param $gatewayIntegrationSettings
+     * Create method.
+     *
+     * @param array $gatewayIntegrationSettings
      * @return false|mixed
      */
     public function create($gatewayIntegrationSettings)
@@ -72,7 +77,9 @@ class PaymentGatewayFactory
     }
 
     /**
-     * @param $gatewayIntegrationSettings
+     * Get gateway class method.
+     *
+     * @param array $gatewayIntegrationSettings
      * @return false|string
      */
     public function getGatewayClass($gatewayIntegrationSettings)

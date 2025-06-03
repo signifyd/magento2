@@ -42,7 +42,8 @@ class Order
     public $orderHelper;
 
     /**
-     * Cancel constructor.
+     * Order constructor.
+     *
      * @param Logger $logger
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
@@ -63,8 +64,23 @@ class Order
         $this->orderHelper = $orderHelper;
     }
 
-    public function aroundOnTransaction(StripeIntegrationOrder $subject, callable $proceed, $order, $object, $transactionId)
-    {
+    /**
+     * Around on transaction method.
+     *
+     * @param StripeIntegrationOrder $subject
+     * @param callable $proceed
+     * @param Order $order
+     * @param mixed $object
+     * @param mixed $transactionId
+     * @return void
+     */
+    public function aroundOnTransaction(
+        StripeIntegrationOrder $subject,
+        callable $proceed,
+        $order,
+        $object,
+        $transactionId
+    ) {
         try {
             $orderId = $order->getId();
             $case = $this->casedataFactory->create();

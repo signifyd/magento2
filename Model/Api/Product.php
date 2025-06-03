@@ -37,6 +37,8 @@ class Product
     public $subscriptionFactory;
 
     /**
+     * Product construct.
+     *
      * @param CategoryCollectionFactory $categoryCollectionFactory
      * @param CategoryFactory $categoryFactory
      * @param CategoryResourceModel $categoryResourceModel
@@ -59,7 +61,8 @@ class Product
 
     /**
      * Construct a new Product object
-     * @param $entity OrderItem|QuoteItem
+     *
+     * @param OrderItem|QuoteItem $entity
      * @return array
      */
     public function __invoke($entity)
@@ -76,6 +79,8 @@ class Product
     }
 
     /**
+     * Make product from order method.
+     *
      * @param OrderItem $item
      * @return array
      */
@@ -161,6 +166,8 @@ class Product
     }
 
     /**
+     * Make product from quote method.
+     *
      * @param QuoteItem $item
      * @return array
      */
@@ -245,13 +252,22 @@ class Product
         return $product;
     }
 
+    /**
+     * Get product image method.
+     *
+     * @param mixed $product
+     * @return string|null
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
     protected function getProductImage($product)
     {
         $productImage = $product->getImage();
 
         if (isset($productImage)) {
             $productImageUrl = $this->storeManagerInterface->getStore()
-                    ->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) . 'catalog/product' . $productImage;
+                    ->getBaseUrl(
+                        \Magento\Framework\UrlInterface::URL_TYPE_MEDIA
+                    ) . 'catalog/product' . $productImage;
         } else {
             $productImageUrl = null;
         }

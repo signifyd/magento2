@@ -13,6 +13,8 @@ class Fulfillments
     public $jsonSerializer;
 
     /**
+     * Fulfillments construct.
+     *
      * @param JsonSerializer $jsonSerializer
      */
     public function __construct(
@@ -23,7 +25,8 @@ class Fulfillments
 
     /**
      * Construct a new Fulfillments object
-     * @param $fulfillmentData
+     *
+     * @param mixed $fulfillmentData
      * @return array
      */
     public function __invoke($fulfillmentData)

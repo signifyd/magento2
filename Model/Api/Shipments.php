@@ -41,6 +41,8 @@ class Shipments
     public $minDeliveryDateFactory;
 
     /**
+     * Shipments construct.
+     *
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param JsonSerializer $jsonSerializer
      * @param CarrierFactory $carrierFactory
@@ -66,7 +68,8 @@ class Shipments
 
     /**
      * Construct a new Shipment object
-     * @param $entity Order|Quote
+     *
+     * @param Order|Quote $entity
      * @return array
      */
     public function __invoke($entity)
@@ -83,6 +86,8 @@ class Shipments
     }
 
     /**
+     * Make shipments method.
+     *
      * @param Order $order
      * @return array
      */
@@ -126,6 +131,8 @@ class Shipments
     }
 
     /**
+     * Make shipments from quote method.
+     *
      * @param Quote $quote
      * @return array
      */
@@ -168,6 +175,14 @@ class Shipments
         return $shipments;
     }
 
+    /**
+     * Get fulfillment method mapping method.
+     *
+     * @param mixed $shippingMethod
+     * @param string $scopeType
+     * @param null|int|string|\Magento\Framework\App\ScopeInterface $scopeCode
+     * @return int|mixed|string|null
+     */
     public function getFulfillmentMethodMapping(
         $shippingMethod,
         $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT,

@@ -22,6 +22,7 @@ class MerchantPlatform
 
     /**
      * Construct a new MerchantPlatform object
+     *
      * @return array
      */
     public function __invoke()

@@ -19,6 +19,9 @@ class CreateTest extends OrderTestCase
      */
     public $retryCaseJob;
 
+    /**
+     * @var string
+     */
     public $paymentMethod = 'banktransfer';
 
     public function setUp(): void

@@ -25,6 +25,7 @@ class RetryReroute
 
     /**
      * RetryFulfillmentJob constructor.
+     *
      * @param Logger $logger
      * @param ReroutesToRetry $reroutesToRetry
      * @param ProcessCronReroute $processCronReroute
@@ -40,6 +41,8 @@ class RetryReroute
     }
 
     /**
+     * Execute method.
+     *
      * @return void
      */
     public function execute()

@@ -12,6 +12,8 @@ class SignifydClient
     public $moduleList;
 
     /**
+     * SignifydClient construct.
+     *
      * @param ModuleListInterface $moduleList
      */
     public function __construct(
@@ -22,6 +24,7 @@ class SignifydClient
 
     /**
      * Construct a new SignifydClient object
+     *
      * @return array
      */
     public function __invoke()

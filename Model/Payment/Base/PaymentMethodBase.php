@@ -39,6 +39,8 @@ abstract class PaymentMethodBase implements PaymentMethodMappingInterface
     public $scopeConfigInterface;
 
     /**
+     * PaymentMethodBase construct.
+     *
      * @param JsonSerializer $jsonSerializer
      * @param Logger $logger
      * @param ConfigHelper $configHelper
@@ -57,6 +59,8 @@ abstract class PaymentMethodBase implements PaymentMethodMappingInterface
     }
 
     /**
+     * Get data method.
+     *
      * @param Order|Quote $entity
      * @return mixed
      */
@@ -74,7 +78,9 @@ abstract class PaymentMethodBase implements PaymentMethodMappingInterface
     }
 
     /**
-     * @param $paymentMethod
+     * Make payment method method.
+     *
+     * @param mixed $paymentMethod
      * @return int|string
      */
     public function makePaymentMethod($paymentMethod)

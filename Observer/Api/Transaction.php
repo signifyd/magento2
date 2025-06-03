@@ -27,6 +27,7 @@ class Transaction implements ObserverInterface
 
     /**
      * Transaction constructor.
+     *
      * @param Logger $logger
      * @param ConfigHelper $configHelper
      * @param ProcessTransactionFactory $processTransactionFactory
@@ -41,6 +42,12 @@ class Transaction implements ObserverInterface
         $this->processTransactionFactory = $processTransactionFactory;
     }
 
+    /**
+     * Execute method.
+     *
+     * @param Observer $observer
+     * @return void
+     */
     public function execute(Observer $observer)
     {
         if ($this->configHelper->isEnabled()) {

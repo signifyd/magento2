@@ -179,9 +179,10 @@ class CheckoutOrder
 
     /**
      * Construct a new signifyd Order object
+     *
      * @param Quote $quote
-     * @param $checkoutPaymentDetails
-     * @param $paymentMethod
+     * @param mixed $checkoutPaymentDetails
+     * @param mixed $paymentMethod
      * @return array
      */
     public function __invoke(Quote $quote, $checkoutPaymentDetails = null, $paymentMethod = null)

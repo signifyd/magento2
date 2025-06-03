@@ -80,6 +80,7 @@ class WaitingSubmission
 
     /**
      * WaitingSubmission constructor.
+     *
      * @param ConfigHelper $configHelper
      * @param Logger $logger
      * @param OrderResourceModel $orderResourceModel
@@ -122,6 +123,8 @@ class WaitingSubmission
     }
 
     /**
+     * Invoke method.
+     *
      * @param array $waitingSubmissionCases
      * @return void
      */

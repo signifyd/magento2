@@ -27,6 +27,7 @@ class Fingerprint extends DataObject implements SectionSourceInterface
 
     /**
      * FingerprintSection constructor.
+     *
      * @param Session $session
      * @param DeviceHelper $deviceHelper
      * @param StoreManagerInterface $storeManagerInterface
@@ -42,6 +43,8 @@ class Fingerprint extends DataObject implements SectionSourceInterface
     }
 
     /**
+     * Get device fingerprint method.
+     *
      * @return string
      */
     public function getDeviceFingerprint()
@@ -51,6 +54,8 @@ class Fingerprint extends DataObject implements SectionSourceInterface
     }
 
     /**
+     * Get quote id method.
+     *
      * @return bool
      */
     public function getQuoteId()
@@ -59,6 +64,8 @@ class Fingerprint extends DataObject implements SectionSourceInterface
     }
 
     /**
+     * Is enabled method.
+     *
      * @return bool
      */
     public function isEnabled()
@@ -71,6 +78,8 @@ class Fingerprint extends DataObject implements SectionSourceInterface
     }
 
     /**
+     * Get section data method.
+     *
      * @return array
      */
     public function getSectionData()

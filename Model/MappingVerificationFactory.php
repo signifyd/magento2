@@ -31,6 +31,8 @@ class MappingVerificationFactory
     public $configHelper;
 
     /**
+     * MappingVerificationFactory construct.
+     *
      * @param ObjectManagerInterface $objectManager
      * @param ConfigInterface $config
      * @param PaymentMethodMappingInterface $paymentMethodDefaultAdapter
@@ -48,15 +50,28 @@ class MappingVerificationFactory
         $this->configHelper = $configHelper;
     }
 
+    /**
+     * Create payment method method.
+     *
+     * @param string $paymentCode
+     * @return PaymentMethodMappingInterface
+     * @throws LocalizedException
+     */
     public function createPaymentMethod($paymentCode)
     {
-        return $this->create($this->paymentMethodDefaultAdapter, $paymentCode, 'signifyd_payment_method_adapter');
+        return $this->create(
+            $this->paymentMethodDefaultAdapter,
+            $paymentCode,
+            'signifyd_payment_method_adapter'
+        );
     }
 
     /**
+     * Create method.
+     *
      * @param PaymentMethodMappingInterface $defaultAdapter
-     * @param $paymentCode
-     * @param $configKey
+     * @param string $paymentCode
+     * @param string $configKey
      * @return PaymentMethodMappingInterface
      * @throws LocalizedException If payment verification instance
      *  does not implement PaymentMethodMappingInterface.
@@ -77,7 +92,11 @@ class MappingVerificationFactory
         $mapper = $this->objectManager->create($verificationClass);
         if (!$mapper instanceof PaymentMethodMappingInterface) {
             throw new LocalizedException(
-                __('Signifyd_Connect: %1 must implement %2', $verificationClass, PaymentMethodMappingInterface::class)
+                __(
+                    'Signifyd_Connect: %1 must implement %2',
+                    $verificationClass,
+                    PaymentMethodMappingInterface::class
+                )
             );
         }
         return $mapper;

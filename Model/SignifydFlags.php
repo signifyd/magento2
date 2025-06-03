@@ -2,13 +2,29 @@
 
 namespace Signifyd\Connect\Model;
 
+use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Filesystem\Driver\File;
+
 class SignifydFlags
 {
-    const FILE_NAME = 'signifyd_flags.json';
+    public const FILE_NAME = 'signifyd_flags.json';
 
+    /**
+     * @var DirectoryList
+     */
     public $directoryList;
+
+    /**
+     * @var File
+     */
     public $fileDriver;
 
+    /**
+     * SignifydFlages construct.
+     *
+     * @param DirectoryList $directoryList
+     * @param File $fileDriver
+     */
     public function __construct(
         \Magento\Framework\App\Filesystem\DirectoryList $directoryList,
         \Magento\Framework\Filesystem\Driver\File $fileDriver
@@ -18,7 +34,9 @@ class SignifydFlags
     }
 
     /**
-     * @param $time
+     * Update webhook flag method.
+     *
+     * @param mixed $time
      * @return void
      * @throws \Magento\Framework\Exception\FileSystemException
      */
@@ -39,7 +57,9 @@ class SignifydFlags
     }
 
     /**
-     * @param $time
+     * Update cron flag
+     *
+     * @param mixed $time
      * @return void
      * @throws \Magento\Framework\Exception\FileSystemException
      */
@@ -60,6 +80,8 @@ class SignifydFlags
     }
 
     /**
+     * Read flags method.
+     *
      * @return mixed|null
      * @throws \Magento\Framework\Exception\FileSystemException
      */

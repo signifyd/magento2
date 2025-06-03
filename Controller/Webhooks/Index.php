@@ -116,6 +116,7 @@ class Index extends Action
 
     /**
      * Index constructor.
+     *
      * @param Context $context
      * @param Logger $logger
      * @param ConfigHelper $configHelper
@@ -126,14 +127,15 @@ class Index extends Action
      * @param OrderResourceModel $orderResourceModel
      * @param JsonSerializer $jsonSerializer
      * @param ResourceConnection $resourceConnection
-     * @param StoreManagerInterface $storeManagerInterface
      * @param OrderFactory $orderFactory
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param UpdateCaseV2Factory $updateCaseV2Factory
      * @param UpdateCaseFactory $updateCaseFactory
      * @param UpdateOrderFactory $updateOrderFactory
+     * @param StoreManagerInterface $storeManagerInterface
      * @param Client $client
      * @param SignifydFlags $signifydFlags
+     * @throws LocalizedException
      */
     public function __construct(
         Context $context,
@@ -186,6 +188,8 @@ class Index extends Action
     }
 
     /**
+     * Get raw post method.
+     *
      * @return string
      */
     protected function getRawPost()
@@ -199,6 +203,12 @@ class Index extends Action
         return '';
     }
 
+    /**
+     * Execute method.
+     *
+     * @return null
+     * @throws LocalizedException
+     */
     public function execute()
     {
         $request = $this->getRawPost();
@@ -218,6 +228,17 @@ class Index extends Action
         return $this->processRequest($request, $hash, $topic);
     }
 
+    /**
+     * Process request method.
+     *
+     * @param string $request
+     * @param bool|string $hash
+     * @param bool|string $topic
+     * @return void
+     * @throws LocalizedException
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Magento\Framework\Exception\FileSystemException
+     */
     public function processRequest($request, $hash, $topic)
     {
         if (empty($hash) || empty($request)) {
@@ -301,8 +322,7 @@ class Index extends Action
             ) {
                 $httpCode = Http::STATUS_CODE_400;
                 throw new LocalizedException(__("Case {$caseId} it is not ready to be updated"));
-            } elseif (
-                $case->getPolicyName() === Casedata::PRE_AUTH &&
+            } elseif ($case->getPolicyName() === Casedata::PRE_AUTH &&
                 $case->getGuarantee() !== 'HOLD' &&
                 $case->getGuarantee() !== 'PENDING'
             ) {
@@ -331,15 +351,19 @@ class Index extends Action
 
                 if ($checkpointActionReason == 'MERCHANT_REVIEW') {
                     $httpCode = Http::STATUS_CODE_200;
-                    $this->logger->info("WEBHOOK: Case {$case->getId()} will not be processed because the ".
-                        "request was made via 'Order review flag' in the Signifyd dashboard"
-                        , ['entity' => $case]);
+                    $this->logger->info(
+                        "WEBHOOK: Case {$case->getId()} will not be processed because the ".
+                        "request was made via 'Order review flag' in the Signifyd dashboard",
+                        ['entity' => $case]
+                    );
                     throw new LocalizedException(__("Request made via 'Order review flag'"));
                 }
             }
 
-            $this->logger->info("WEBHOOK: Processing case {$case->getId()} with request {$request} "
-                , ['entity' => $case]);
+            $this->logger->info(
+                "WEBHOOK: Processing case {$case->getId()} with request {$request} ",
+                ['entity' => $case]
+            );
             $this->storeManagerInterface->setCurrentStore($order->getStore()->getStoreId());
             $currentCaseHash = sha1(implode(',', $case->getData()));
 

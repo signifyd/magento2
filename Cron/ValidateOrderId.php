@@ -29,6 +29,8 @@ class ValidateOrderId
     public $scopeConfigInterface;
 
     /**
+     * ValidateOrderId construct.
+     *
      * @param CasedataCollectionFactory $casedataCollection
      * @param WriterInterface $writerInterface
      * @param ScopeConfigInterface $scopeConfigInterface
@@ -43,6 +45,11 @@ class ValidateOrderId
         $this->scopeConfigInterface = $scopeConfigInterface;
     }
 
+    /**
+     * Execute method.
+     *
+     * @return void
+     */
     public function execute()
     {
         $upgradeInconsistency = $this->scopeConfigInterface->getValue("signifyd/general/upgrade4.3_inconsistency");

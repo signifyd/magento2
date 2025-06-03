@@ -42,7 +42,8 @@ class Webhook
     public $objectManagerInterface;
 
     /**
-     * Cancel constructor.
+     * Webhook constructor.
+     *
      * @param Logger $logger
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
@@ -66,9 +67,18 @@ class Webhook
         $this->objectManagerInterface = $objectManagerInterface;
     }
 
+    /**
+     * Around process notification method.
+     *
+     * @param AdyenWebhook $subject
+     * @param callable $proceed
+     * @param mixed $notification
+     * @return mixed
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     */
     public function aroundProcessNotification(AdyenWebhook $subject, callable $proceed, $notification)
     {
-        if (is_null($notification->getMerchantReference())) {
+        if ($notification->getMerchantReference() === null) {
             return $proceed($notification);
         }
 

@@ -49,6 +49,7 @@ class Unhold
 
     /**
      * Unhold constructor.
+     *
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderHelper $orderHelper
      * @param Session $authSession
@@ -76,8 +77,10 @@ class Unhold
     }
 
     /**
+     * After execute method.
+     *
      * @param \Magento\Sales\Controller\Adminhtml\Order $subject
-     * @param $result
+     * @param mixed $result
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      */
     public function afterExecute(\Magento\Sales\Controller\Adminhtml\Order $subject, $result)

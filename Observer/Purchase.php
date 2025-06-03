@@ -66,12 +66,14 @@ class Purchase implements ObserverInterface
 
     /**
      * Methods that should wait e-mail sent to hold order
+     *
      * @var array
      */
     public $specialMethods = ['payflow_express'];
 
     /**
      * List of methods that uses a different event for triggering case creation
+     *
      * This is useful when it's needed case creation to be delayed to wait for other processes like data return from
      * payment method
      *
@@ -141,6 +143,7 @@ class Purchase implements ObserverInterface
 
     /**
      * Purchase constructor.
+     *
      * @param Logger $logger
      * @param ConfigHelper $configHelper
      * @param CasedataFactory $casedataFactory
@@ -201,6 +204,8 @@ class Purchase implements ObserverInterface
     }
 
     /**
+     * Execute method.
+     *
      * @param Observer $observer
      * @param bool $checkOwnEventsMethods
      */
@@ -410,7 +415,9 @@ class Purchase implements ObserverInterface
             if (in_array($paymentMethod, $this->getAsyncPaymentMethodsConfig()) && $hasAsyncRestriction === false) {
 
                 /** @var \Signifyd\Connect\Model\Payment\Base\AsyncChecker $asyncCheck */
-                $asyncCheck = $this->paymentVerificationFactory->createPaymentAsyncChecker($order->getPayment()->getMethod());
+                $asyncCheck = $this->paymentVerificationFactory->createPaymentAsyncChecker(
+                    $order->getPayment()->getMethod()
+                );
             }
 
             if (isset($asyncCheck)) {
@@ -516,6 +523,7 @@ class Purchase implements ObserverInterface
     /**
      * Get async payment methods from store configs
      *
+     * @param mixed $paymentMethod
      * @return bool
      */
     public function getHasAsyncRestriction($paymentMethod)
@@ -531,10 +539,8 @@ class Purchase implements ObserverInterface
                 return version_compare($stripeVersion, '3.4.0') >= 0;
             }
         } catch (\Exception $e) {
-
+            return false;
         }
-
-        return false;
     }
 
     /**
@@ -569,7 +575,7 @@ class Purchase implements ObserverInterface
     /**
      * Check if state is restricted
      *
-     * @param $state
+     * @param mixed $state
      * @param string $action
      * @return bool
      */
@@ -601,7 +607,11 @@ class Purchase implements ObserverInterface
     }
 
     /**
-     * @param $order
+     * Hold order method.
+     *
+     * @param Order $order
+     * @param Casedata $case
+     * @param bool $isPassive
      * @return bool
      */
     public function holdOrder(Order $order, Casedata $case, $isPassive = false)

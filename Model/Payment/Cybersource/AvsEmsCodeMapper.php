@@ -6,6 +6,9 @@ use Signifyd\Connect\Model\Payment\Base\AvsEmsCodeMapper as Base_AvsEmsCodeMappe
 
 class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
 {
+    /**
+     * @var string[]
+     */
     public $allowedMethods = ['cybersource', 'chcybersource'];
 
     /**

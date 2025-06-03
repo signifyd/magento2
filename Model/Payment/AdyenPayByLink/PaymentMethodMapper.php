@@ -14,6 +14,8 @@ class PaymentMethodMapper extends PaymentMethodBase
     public $creditCard = ['amex', 'cup', 'discover', 'jcb', 'mc', 'visa'];
 
     /**
+     * Get payment method from order method.
+     *
      * @param Order $order
      * @return int|string
      */
@@ -25,6 +27,8 @@ class PaymentMethodMapper extends PaymentMethodBase
     }
 
     /**
+     * Get payment method from quote method.
+     *
      * @param Quote $quote
      * @return null
      */
@@ -35,6 +39,13 @@ class PaymentMethodMapper extends PaymentMethodBase
         return $this->adyenPayByLinkMapping($payByLinkMethod, $quote);
     }
 
+    /**
+     * Adyen pay by link mapping method.
+     *
+     * @param string $payByLinkMethod
+     * @param mixed $entity
+     * @return int|string
+     */
     public function adyenPayByLinkMapping($payByLinkMethod, $entity)
     {
         $paymentMethod = $entity->getPayment()->getMethod();

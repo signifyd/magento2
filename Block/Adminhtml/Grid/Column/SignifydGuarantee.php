@@ -20,6 +20,7 @@ class SignifydGuarantee extends AbstractRenderer
 
     /**
      * SignifydGuarantee constructor.
+     *
      * @param CasedataResourceModel $casedataResourceModel
      * @param CasedataFactory $casedataFactory
      * @param \Magento\Backend\Block\Context $context
@@ -36,6 +37,12 @@ class SignifydGuarantee extends AbstractRenderer
         parent::__construct($context, $data);
     }
 
+    /**
+     * Render method.
+     *
+     * @param \Magento\Framework\DataObject $row
+     * @return string
+     */
     public function render(\Magento\Framework\DataObject $row)
     {
         $return = '';

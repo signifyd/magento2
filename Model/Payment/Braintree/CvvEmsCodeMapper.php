@@ -17,6 +17,9 @@ use Signifyd\Connect\Model\Payment\Base\CvvEmsCodeMapper as Base_CvvEmsCodeMappe
  */
 class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
 {
+    /**
+     * @var string[]
+     */
     public $allowedMethods = ['braintree'];
 
     /**

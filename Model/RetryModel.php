@@ -13,12 +13,19 @@ class RetryModel extends AbstractHelper
      */
     public $logger;
 
+    /**
+     * @var mixed
+     */
     public $objectCollectionFactory;
 
+    /**
+     * @var mixed
+     */
     public $objectResourceModel;
 
     /**
      * Retry constructor.
+     *
      * @param Context $context
      * @param Logger $logger
      */
@@ -32,7 +39,8 @@ class RetryModel extends AbstractHelper
     }
 
     /**
-     * @param $status
+     * Invoke method.
+     *
      * @return mixed
      */
     public function __invoke()

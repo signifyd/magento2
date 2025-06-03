@@ -13,7 +13,8 @@ interface RerouteRepositoryInterface
 {
 
     /**
-     * Save reroute
+     * Save reroute method.
+     *
      * @param \Signifyd\Connect\Api\Data\RerouteInterface $reroute
      * @return \Signifyd\Connect\Api\Data\RerouteInterface
      * @throws \Magento\Framework\Exception\LocalizedException
@@ -23,7 +24,8 @@ interface RerouteRepositoryInterface
     );
 
     /**
-     * Retrieve reroute
+     * Retrieve reroute method.
+     *
      * @param string $rerouteId
      * @return \Signifyd\Connect\Api\Data\RerouteInterface
      * @throws \Magento\Framework\Exception\LocalizedException
@@ -32,6 +34,7 @@ interface RerouteRepositoryInterface
 
     /**
      * Retrieve reroute matching the specified criteria.
+     *
      * @param \Magento\Framework\Api\SearchCriteriaInterface $searchCriteria
      * @return \Signifyd\Connect\Api\Data\RerouteSearchResultsInterface
      * @throws \Magento\Framework\Exception\LocalizedException
@@ -41,7 +44,8 @@ interface RerouteRepositoryInterface
     );
 
     /**
-     * Delete reroute
+     * Delete reroute method.
+     *
      * @param \Signifyd\Connect\Api\Data\RerouteInterface $reroute
      * @return bool true on success
      * @throws \Magento\Framework\Exception\LocalizedException
@@ -51,7 +55,8 @@ interface RerouteRepositoryInterface
     );
 
     /**
-     * Delete reroute by ID
+     * Delete reroute by ID method.
+     *
      * @param string $rerouteId
      * @return bool true on success
      * @throws \Magento\Framework\Exception\NoSuchEntityException

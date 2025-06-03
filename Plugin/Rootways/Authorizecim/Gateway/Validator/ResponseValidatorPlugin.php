@@ -20,6 +20,8 @@ class ResponseValidatorPlugin
     public $logger;
 
     /**
+     * ResponseValidatorPlugin construct.
+     *
      * @param TransactionIntegration $transactionIntegration
      * @param LoggerInterface $logger
      */
@@ -31,6 +33,13 @@ class ResponseValidatorPlugin
         $this->logger = $logger;
     }
 
+    /**
+     * Before validate method.
+     *
+     * @param AuthorizecimResponseValidator $subject
+     * @param array $validationSubject
+     * @return array[]
+     */
     public function beforeValidate(AuthorizecimResponseValidator $subject, array $validationSubject)
     {
         try {
@@ -52,6 +61,18 @@ class ResponseValidatorPlugin
         return [$validationSubject];
     }
 
+    /**
+     * Submit error to signifyd method.
+     *
+     * @param array $errorCode
+     * @param array $errorMessages
+     * @return void
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws \Signifyd\Core\Exceptions\ApiException
+     * @throws \Signifyd\Core\Exceptions\InvalidClassException
+     */
     protected function submitErrorToSignifyd($errorCode, $errorMessages)
     {
         $authorizeErrorCode = $errorCode[0] ?? '';

@@ -55,13 +55,14 @@ class Payment
     public $client;
 
     /**
-     * CheckoutPaymentsDetailsHandler constructor.
+     * Payment constructor.
      *
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
      * @param StoreManagerInterface $storeManager
      * @param CheckoutSession $checkoutSession
+     * @param TransactionsFactory $transactionsFactory
      * @param ConfigHelper $configHelper
      * @param Client $client
      */
@@ -86,8 +87,10 @@ class Payment
     }
 
     /**
+     * Before error method.
+     *
      * @param  HolacashPayment $subject
-     * @param  $response
+     * @param  mixed $response
      * @return null
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      * @throws \Magento\Framework\Exception\NoSuchEntityException

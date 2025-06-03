@@ -19,6 +19,8 @@ class CoverageRequestUpdate implements DataPatchInterface
     public $configHelper;
 
     /**
+     * CoverageRequestUpdate construct.
+     *
      * @param WriterInterface $configWriter
      * @param ConfigHelper $configHelper
      */
@@ -31,6 +33,8 @@ class CoverageRequestUpdate implements DataPatchInterface
     }
 
     /**
+     * Apply method.
+     *
      * @return $this|CoverageRequestUpdate
      */
     public function apply()
@@ -51,7 +55,7 @@ class CoverageRequestUpdate implements DataPatchInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function getAliases()
     {
@@ -59,7 +63,7 @@ class CoverageRequestUpdate implements DataPatchInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public static function getDependencies()
     {

@@ -8,6 +8,9 @@ use Signifyd\Connect\Model\SignifydFlags;
 
 class WebhookData extends Field
 {
+    /**
+     * @var string
+     */
     protected $_template = 'Signifyd_Connect::system/config/field/webhook_data.phtml';
 
     /**
@@ -16,6 +19,8 @@ class WebhookData extends Field
     public $signifydFlags;
 
     /**
+     * WebhookData construct.
+     *
      * @param \Magento\Backend\Block\Template\Context $context
      * @param SignifydFlags $signifydFlags
      * @param array $data
@@ -30,6 +35,8 @@ class WebhookData extends Field
     }
 
     /**
+     * Get element html method.
+     *
      * @param AbstractElement $element
      *
      * @return string

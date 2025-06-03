@@ -9,6 +9,9 @@ use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
  */
 class Fulfillment extends AbstractDb
 {
+    /**
+     * @var bool
+     */
     protected $_isPkAutoIncrement = false;
 
     /**

@@ -57,8 +57,7 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
         ConfigHelper                $configHelper,
         StoreManagerInterface       $storeManager,
         ModuleListInterface         $moduleListInterface
-    )
-    {
+    ) {
         $this->readFactory = $readFactory;
         $this->componentRegistrar = $componentRegistrar;
         $this->configHelper = $configHelper;
@@ -118,7 +117,7 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
 
         $data = json_decode($composerJsonData, true);
 
-        if (is_null($data)) {
+        if ($data === null) {
             return '';
         }
 

@@ -6,6 +6,9 @@ use Signifyd\Connect\Model\Payment\Base\ExpYearMapper as Base_ExpYearMapper;
 
 class ExpYearMapper extends Base_ExpYearMapper
 {
+    /**
+     * @var string[]
+     */
     public $allowedMethods = ['authorizenet_directpost'];
 
     /**

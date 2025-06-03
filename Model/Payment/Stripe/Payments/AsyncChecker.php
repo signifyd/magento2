@@ -9,6 +9,8 @@ use Signifyd\Connect\Model\Casedata;
 class AsyncChecker extends BaseAsyncChecker
 {
     /**
+     * Invoke method.
+     *
      * @param Order $order
      * @param Casedata $case
      * @return bool|void

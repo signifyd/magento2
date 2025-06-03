@@ -24,6 +24,8 @@ class CardholderMapper extends DataMapper
     }
 
     /**
+     * Get payment data from gateway response method.
+     *
      * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
      * @return string
      */

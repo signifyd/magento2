@@ -22,6 +22,7 @@ class OrderHelper
 
     /**
      * OrderHelper constructor.
+     *
      * @param HistoryFactory $historyFactory
      * @param HistoryResourceModel $historyResourceModel
      */
@@ -34,6 +35,8 @@ class OrderHelper
     }
 
     /**
+     * Get cannot hold reason method.
+     *
      * @param Order $order
      * @return string
      */
@@ -63,6 +66,8 @@ class OrderHelper
     }
 
     /**
+     * Get cannot unhold reason method.
+     *
      * @param Order $order
      * @return string
      */
@@ -82,6 +87,8 @@ class OrderHelper
     }
 
     /**
+     * Get cannot cancel reason method.
+     *
      * @param Order $order
      * @return string
      */
@@ -120,6 +127,8 @@ class OrderHelper
     }
 
     /**
+     * Get cannot invoice reason method.
+     *
      * @param Order $order
      * @return string
      */
@@ -158,6 +167,8 @@ class OrderHelper
     }
 
     /**
+     * Is invoice valid method.
+     *
      * @param Invoice $invoice
      * @return bool
      * @throws LocalizedException
@@ -179,8 +190,11 @@ class OrderHelper
      * Add a comment history to a order without saving the order object
      *
      * @param Order $order
-     * @param $comment
-     * @param false $isVisibleOnFront
+     * @param string $comment
+     * @param bool $isVisibleOnFront
+     * @param bool $isPassive
+     * @return void
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
      */
     public function addCommentToStatusHistory(Order $order, $comment, $isVisibleOnFront = false, $isPassive = false)
     {

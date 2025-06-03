@@ -11,6 +11,8 @@ class Fulfillment
     public $fulfillmentsFactory;
 
     /**
+     * Fulfillment construct
+     *
      * @param FulfillmentsFactory $fulfillmentsFactory
      */
     public function __construct(
@@ -21,7 +23,8 @@ class Fulfillment
 
     /**
      * Construct a new Fulfillment object
-     * @param $fulfillment
+     *
+     * @param mixed $fulfillment
      * @return array
      */
     public function __invoke($fulfillment)

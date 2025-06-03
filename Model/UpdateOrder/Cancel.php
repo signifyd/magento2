@@ -6,6 +6,7 @@
 namespace Signifyd\Connect\Model\UpdateOrder;
 
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Signifyd\Connect\Helper\ConfigHelper;
@@ -49,6 +50,8 @@ class Cancel
     public $signifydOrderResourceModel;
 
     /**
+     * Cancel construct.
+     *
      * @param ConfigHelper $configHelper
      * @param OrderHelper $orderHelper
      * @param Logger $logger
@@ -72,6 +75,17 @@ class Cancel
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
     }
 
+    /**
+     * Invoke method.
+     *
+     * @param Order $order
+     * @param mixed $case
+     * @param mixed $orderAction
+     * @param bool $completeCase
+     * @return mixed|true
+     * @throws LocalizedException
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     */
     public function __invoke($order, $case, $orderAction, $completeCase)
     {
         if ($order->canUnhold()) {

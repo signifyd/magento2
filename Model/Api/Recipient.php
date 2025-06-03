@@ -25,6 +25,8 @@ class Recipient
     public $addressFactory;
 
     /**
+     * Recipient construct.
+     *
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param JsonSerializer $jsonSerializer
      * @param AddressFactory $addressFactory
@@ -41,7 +43,8 @@ class Recipient
 
     /**
      * Construct a new Recipient object
-     * @param $entity Order|Quote
+     *
+     * @param Order|Quote $entity
      * @return array
      */
     public function __invoke($entity)
@@ -58,7 +61,9 @@ class Recipient
     }
 
     /**
-     * @param $order Order
+     * Make recipient method.
+     *
+     * @param Order $order
      * @return array
      */
     protected function makeRecipient(Order $order)
@@ -84,7 +89,9 @@ class Recipient
     }
 
     /**
-     * @param $quote Quote
+     * Make recipient from quote method.
+     *
+     * @param Quote $quote
      * @return array
      */
     protected function makeRecipientFromQuote(Quote $quote)

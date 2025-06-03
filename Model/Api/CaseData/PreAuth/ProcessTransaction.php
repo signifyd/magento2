@@ -79,7 +79,8 @@ class ProcessTransaction
     /**
      * Process pre auth transactions
      *
-     * @param $order
+     * @param \Magento\Sales\Model\Order $order
+     *
      * @return void
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      * @throws \Signifyd\Core\Exceptions\ApiException

@@ -26,6 +26,7 @@ class Fulfillment implements ObserverInterface
 
     /**
      * Fulfillment constructor.
+     *
      * @param Registry $registry
      * @param FulfillmentHelper $fulfillmentHelper
      * @param Logger $logger
@@ -41,6 +42,8 @@ class Fulfillment implements ObserverInterface
     }
 
     /**
+     * Execute method.
+     *
      * @param \Magento\Framework\Event\Observer $observer
      */
     public function execute(\Magento\Framework\Event\Observer $observer)

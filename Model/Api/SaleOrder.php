@@ -79,6 +79,8 @@ class SaleOrder
     public $logger;
 
     /**
+     * SaleOrder construct.
+     *
      * @param Registry $registry
      * @param PurchaseFactory $purchaseFactory
      * @param UserAccountFactory $userAccountFactory
@@ -128,7 +130,8 @@ class SaleOrder
 
     /**
      * Construct a new signifyd Order object
-     * @param $order Order
+     *
+     * @param Order $order
      * @return array
      */
     public function __invoke($order)

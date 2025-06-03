@@ -7,7 +7,9 @@ namespace Signifyd\Connect\Model\UpdateOrder;
 
 use Magento\Framework\DB\TransactionFactory;
 use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
+use Magento\Sales\Model\Order\Invoice;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Sales\Model\ResourceModel\Order\Invoice as InvoiceResourceModel;
 use Magento\Sales\Model\Service\InvoiceService;
@@ -72,6 +74,8 @@ class Capture
     public $signifydOrderResourceModel;
 
     /**
+     * Capture construct.
+     *
      * @param ConfigHelper $configHelper
      * @param OrderHelper $orderHelper
      * @param Logger $logger
@@ -107,6 +111,17 @@ class Capture
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
     }
 
+    /**
+     * Invoke method.
+     *
+     * @param Order $order
+     * @param mixed $case
+     * @param mixed $enableTransaction
+     * @param bool $completeCase
+     * @return bool|mixed
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     public function __invoke($order, $case, $enableTransaction, $completeCase)
     {
         try {
@@ -205,8 +220,10 @@ class Capture
     }
 
     /**
-     * @param $invoice
-     * @param $order
+     * Send invoice method.
+     *
+     * @param Invoice $invoice
+     * @param Order $order
      * @return void
      */
     protected function sendInvoice($invoice, $order)
@@ -220,7 +237,9 @@ class Capture
     }
 
     /**
-     * @param $reason
+     * Validate reason
+     *
+     * @param string $reason
      * @return bool
      */
     protected function validateReason($reason)
@@ -232,6 +251,15 @@ class Capture
         return false;
     }
 
+    /**
+     * Handle transaction method.
+     *
+     * @param mixed $enableTransaction
+     * @param Order $order
+     * @param Invoice $invoice
+     * @return void
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     */
     public function handleTransaction($enableTransaction, $order, $invoice)
     {
         if ($enableTransaction) {

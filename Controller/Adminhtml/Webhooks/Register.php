@@ -44,6 +44,7 @@ class Register extends Action
 
     /**
      * Register constructor.
+     *
      * @param Action\Context $context
      * @param WebhookLink $webhookLink
      * @param WebhooksApiFactory $webhooksApiFactory
@@ -70,6 +71,11 @@ class Register extends Action
         $this->client = $client;
     }
 
+    /**
+     * Execute method.
+     *
+     * @return \Magento\Backend\Model\View\Result\Redirect|\Magento\Framework\App\ResponseInterface|\Magento\Framework\Controller\ResultInterface
+     */
     public function execute()
     {
         /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */

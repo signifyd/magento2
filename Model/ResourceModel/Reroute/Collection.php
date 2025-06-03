@@ -13,7 +13,7 @@ class Collection extends AbstractCollection
 {
 
     /**
-     * @inheritDoc
+     * @var string
      */
     protected $_idFieldName = 'reroute_id';
 

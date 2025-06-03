@@ -6,7 +6,9 @@
 namespace Signifyd\Connect\Model\UpdateOrder;
 
 use Magento\Sales\Model\Order\CreditmemoFactory;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
+use Magento\Sales\Model\Order\Invoice;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Sales\Model\Service\CreditmemoService;
 use Signifyd\Connect\Helper\ConfigHelper;
@@ -60,6 +62,8 @@ class Refund
     public $signifydOrderResourceModel;
 
     /**
+     * Refund construct.
+     *
      * @param ConfigHelper $configHelper
      * @param OrderHelper $orderHelper
      * @param Logger $logger
@@ -89,6 +93,16 @@ class Refund
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
     }
 
+    /**
+     * Invoke method.
+     *
+     * @param Order $order
+     * @param mixed $case
+     * @param mixed $completeCase
+     * @return mixed|true
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     public function __invoke($order, $case, $completeCase)
     {
         try {
@@ -163,8 +177,10 @@ class Refund
     }
 
     /**
-     * @param $invoices
-     * @param $order
+     * Create invoices credit memo method.
+     *
+     * @param Invoice[] $invoices
+     * @param Order $order
      * @return void
      */
     protected function createInvoicesCreditMemo($invoices, $order)

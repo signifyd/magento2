@@ -54,6 +54,8 @@ class DeleteLogs
     public $logsFile;
 
     /**
+     * DeleteLogs method.
+     *
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param LogsCollectionFactory $logsCollectionFactory
      * @param LogsResourceModel $logsResourceModel
@@ -83,6 +85,12 @@ class DeleteLogs
         $this->logsFile = $logsFile;
     }
 
+    /**
+     * Execute method.
+     *
+     * @return void
+     * @throws \Magento\Framework\Exception\FileSystemException
+     */
     public function execute()
     {
         $logsRetentionPeriod = $this->scopeConfigInterface->getValue("signifyd/advanced/logs_retention_period");

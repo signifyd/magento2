@@ -8,6 +8,13 @@ use Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult;
 
 class SalesOrderGridPlugin
 {
+    /**
+     * Around get select method.
+     *
+     * @param SearchResult $subject
+     * @param \Closure $proceed
+     * @return mixed
+     */
     public function aroundGetSelect(
         SearchResult $subject,
         \Closure $proceed
@@ -21,13 +28,25 @@ class SalesOrderGridPlugin
                 $select->joinLeft(
                     ['signifyd_connect_case' => $subject->getTable('signifyd_connect_case')],
                     'main_table.entity_id = signifyd_connect_case.order_id',
-                    ['signifyd_score' => 'signifyd_connect_case.score', 'signifyd_guarantee' => 'signifyd_connect_case.guarantee', 'checkpoint_action_reason' => 'signifyd_connect_case.checkpoint_action_reason']
+                    [
+                        'signifyd_score' => 'signifyd_connect_case.score',
+                        'signifyd_guarantee' => 'signifyd_connect_case.guarantee',
+                        'checkpoint_action_reason' => 'signifyd_connect_case.checkpoint_action_reason'
+                    ]
                 );
             }
         }
         return $select;
     }
 
+    /**
+     * Before add field to filter method.
+     *
+     * @param SearchResult $subject
+     * @param mixed $field
+     * @param mixed $condition
+     * @return array
+     */
     public function beforeAddFieldToFilter(
         SearchResult $subject,
         $field,

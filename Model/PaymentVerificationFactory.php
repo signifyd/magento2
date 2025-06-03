@@ -76,6 +76,8 @@ class PaymentVerificationFactory
     public $configHelper;
 
     /**
+     * PaymentVerificationFactory construct.
+     *
      * @param ObjectManagerInterface $objectManager
      * @param ConfigInterface $config
      * @param PaymentVerificationInterface $avsDefaultAdapter
@@ -85,6 +87,7 @@ class PaymentVerificationFactory
      * @param PaymentVerificationInterface $expMonthDefaultAdapter
      * @param PaymentVerificationInterface $expYearDefaultAdapter
      * @param PaymentVerificationInterface $binDefaultAdapter
+     * @param PaymentVerificationInterface $transactionIdDefaultAdapter
      * @param AsyncCheckerInterface $asyncCheckDefaultAdapter
      * @param ConfigHelper $configHelper
      */
@@ -118,6 +121,7 @@ class PaymentVerificationFactory
 
     /**
      * Creates instance of CVV code verification.
+     *
      * Exception will be thrown if mapper does not implement PaymentVerificationInterface.
      *
      * @param string $paymentCode
@@ -131,6 +135,7 @@ class PaymentVerificationFactory
 
     /**
      * Creates instance of AVS code verification.
+     *
      * Exception will be thrown if mapper does not implement PaymentVerificationInterface.
      *
      * @param string $paymentCode
@@ -144,6 +149,7 @@ class PaymentVerificationFactory
 
     /**
      * Creates instance of cardholder mapper.
+     *
      * Exception will be thrown if mapper does not implement PaymentVerificationInterface.
      *
      * @param string $paymentCode
@@ -157,6 +163,7 @@ class PaymentVerificationFactory
 
     /**
      * Creates instance of last4 mapper.
+     *
      * Exception will be thrown if mapper does not implement PaymentVerificationInterface.
      *
      * @param string $paymentCode
@@ -170,6 +177,7 @@ class PaymentVerificationFactory
 
     /**
      * Creates instance of expiration month mapper.
+     *
      * Exception will be thrown if mapper does not implement PaymentVerificationInterface.
      *
      * @param string $paymentCode
@@ -183,6 +191,7 @@ class PaymentVerificationFactory
 
     /**
      * Creates instance of expiration year mapper.
+     *
      * Exception will be thrown if mapper does not implement PaymentVerificationInterface.
      *
      * @param string $paymentCode
@@ -196,6 +205,7 @@ class PaymentVerificationFactory
 
     /**
      * Creates instance of bin mapper.
+     *
      * Exception will be thrown if mapper does not implement PaymentVerificationInterface.
      *
      * @param string $paymentCode
@@ -209,6 +219,7 @@ class PaymentVerificationFactory
 
     /**
      * Creates instance of bin mapper.
+     *
      * Exception will be thrown if mapper does not implement PaymentVerificationInterface.
      *
      * @param string $paymentCode
@@ -220,9 +231,9 @@ class PaymentVerificationFactory
         return $this->create($this->transactionIdDefaultAdapter, $paymentCode, 'signifyd_transaction_id_adapter');
     }
 
-
     /**
      * Creates instance of bin mapper.
+     *
      * Exception will be thrown if mapper does not implement AsyncCheckerInterface.
      *
      * @param string $paymentCode
@@ -236,6 +247,7 @@ class PaymentVerificationFactory
 
     /**
      * Creates instance of PaymentVerificationInterface.
+     *
      * Default implementation will be returned if payment method does not implement PaymentVerificationInterface.
      *
      * Will search for payment verification class on payment/[method]/[config_key] configuration path first
@@ -266,7 +278,12 @@ class PaymentVerificationFactory
         $mapper = $this->objectManager->create($verificationClass);
         if (!$mapper instanceof PaymentVerificationInterface && !$mapper instanceof AsyncCheckerInterface) {
             throw new LocalizedException(
-                __('Signifyd_Connect: %1 must implement %2', $verificationClass, PaymentVerificationInterface::class, AsyncCheckerInterface::class)
+                __(
+                    'Signifyd_Connect: %1 must implement %2',
+                    $verificationClass,
+                    PaymentVerificationInterface::class,
+                    AsyncCheckerInterface::class
+                )
             );
         }
         return $mapper;

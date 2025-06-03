@@ -10,8 +10,6 @@ class Router implements \Magento\Framework\App\RouterInterface
     public $actionFactory;
 
     /**
-     * Response
-     *
      * @var \Magento\Framework\App\ResponseInterface
      */
     public $_response;

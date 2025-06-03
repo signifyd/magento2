@@ -31,6 +31,7 @@ class RetryFulfillmentJob
 
     /**
      * RetryFulfillmentJob constructor.
+     *
      * @param Logger $logger
      * @param FulfillmentsToRetryFactory $fulfillmentsToRetryFactory
      * @param FulfillmentFactory $fulfillmentFactory
@@ -49,6 +50,8 @@ class RetryFulfillmentJob
     }
 
     /**
+     * Execute method.
+     *
      * @return void
      */
     public function execute()

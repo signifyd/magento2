@@ -14,6 +14,7 @@ class CronJob implements ObserverInterface
 
     /**
      * CronJob constructor.
+     *
      * @param Registry $registry
      */
     public function __construct(Registry $registry)
@@ -21,6 +22,12 @@ class CronJob implements ObserverInterface
         $this->registry = $registry;
     }
 
+    /**
+     * Execute method.
+     *
+     * @param \Magento\Framework\Event\Observer $observer
+     * @return void
+     */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
         $cronJob = $observer->getEvent()->getData('job_name');

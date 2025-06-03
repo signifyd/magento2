@@ -26,6 +26,7 @@ class View
 
     /**
      * View constructor.
+     *
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param UpdateOrderAction $updateOrderAction
@@ -40,6 +41,17 @@ class View
         $this->updateOrderAction = $updateOrderAction;
     }
 
+    /**
+     * Before add button method.
+     *
+     * @param MagentoOrderView $subject
+     * @param mixed $buttonId
+     * @param array $data
+     * @param int $level
+     * @param int $sortOrder
+     * @param string $region
+     * @return array
+     */
     public function beforeAddButton(
         MagentoOrderView $subject,
         $buttonId,

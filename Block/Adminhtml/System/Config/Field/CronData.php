@@ -8,6 +8,9 @@ use Signifyd\Connect\Model\SignifydFlags;
 
 class CronData extends Field
 {
+    /**
+     * @var string
+     */
     protected $_template = 'Signifyd_Connect::system/config/field/cron_data.phtml';
 
     /**
@@ -16,6 +19,8 @@ class CronData extends Field
     public $signifydFlags;
 
     /**
+     * CronData construct.
+     *
      * @param \Magento\Backend\Block\Template\Context $context
      * @param SignifydFlags $signifydFlags
      * @param array $data
@@ -30,6 +35,8 @@ class CronData extends Field
     }
 
     /**
+     * Get element html method.
+     *
      * @param AbstractElement $element
      *
      * @return string

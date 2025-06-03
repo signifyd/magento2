@@ -14,6 +14,7 @@ use Magento\Framework\UrlInterface;
 use Magento\Framework\Controller\Result\RedirectFactory;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Quote\Model\Quote;
 use Signifyd\Connect\Model\Api\CheckoutOrderFactory;
 use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Casedata;
@@ -108,6 +109,7 @@ class PreAuth implements ObserverInterface
 
     /**
      * PreAuth constructor.
+     *
      * @param Logger $logger
      * @param CartRepositoryInterface $quoteRepository
      * @param ResponseFactory $responseFactory
@@ -161,6 +163,13 @@ class PreAuth implements ObserverInterface
         $this->recipient = $recipient;
     }
 
+    /**
+     * Execute method.
+     *
+     * @param Observer $observer
+     * @return void
+     * @throws LocalizedException
+     */
     public function execute(Observer $observer)
     {
         try {
@@ -292,7 +301,10 @@ class PreAuth implements ObserverInterface
                         $dataArray['paymentMethod']['additional_data']['cardExpiryYear'] ?? null;
 
                     if ($paymentMethod === 'rootways_authorizecim_option') {
-                        $checkoutPaymentDetails = $this->mappingForAuthnetRootwaysCim($checkoutPaymentDetails, $dataArray);
+                        $checkoutPaymentDetails = $this->mappingForAuthnetRootwaysCim(
+                            $checkoutPaymentDetails,
+                            $dataArray
+                        );
                     }
 
                     if ($paymentMethod === 'authnetcim') {
@@ -381,8 +393,10 @@ class PreAuth implements ObserverInterface
     }
 
     /**
-     * @param $caseResponse
-     * @param $caseAction
+     * Get stop checkout process method.
+     *
+     * @param mixed $caseResponse
+     * @param mixed $caseAction
      * @return bool
      */
     public function getStopCheckoutProcess($caseResponse, $caseAction)
@@ -395,9 +409,9 @@ class PreAuth implements ObserverInterface
     /**
      * Add data to payment
      *
-     * @param $quote
-     * @param $checkoutPaymentDetails
-     * @param $paymentMethod
+     * @param Quote $quote
+     * @param array $checkoutPaymentDetails
+     * @param mixed $paymentMethod
      * @return void
      */
     public function addSignifydDataToPayment($quote, $checkoutPaymentDetails, $paymentMethod)
@@ -443,8 +457,10 @@ class PreAuth implements ObserverInterface
     }
 
     /**
-     * @param $checkoutPaymentDetails
-     * @param $dataArray
+     * Mapping for authnet rootways cim method.
+     *
+     * @param array $checkoutPaymentDetails
+     * @param array $dataArray
      * @return mixed
      */
     public function mappingForAuthnetRootwaysCim($checkoutPaymentDetails, $dataArray)
@@ -467,8 +483,10 @@ class PreAuth implements ObserverInterface
     }
 
     /**
-     * @param $checkoutPaymentDetails
-     * @param $dataArray
+     * Mapping for authnet method.
+     *
+     * @param array $checkoutPaymentDetails
+     * @param array $dataArray
      * @return mixed
      */
     public function mappingForAuthnet($checkoutPaymentDetails, $dataArray)

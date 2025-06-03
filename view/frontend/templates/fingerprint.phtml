@@ -35,7 +35,9 @@ $scriptString = <<<script
                     checkSessionId: function(dataOrderSessionId) {
                         var me = this;
             
-                        if (typeof dataOrderSessionId !== 'undefined' && dataOrderSessionId.length > 0) {                        
+                        if (
+                            typeof dataOrderSessionId !== 'undefined' && dataOrderSessionId.length > 0
+                        ) {                        
                             if (typeof $.cookie('signifyd-' + dataOrderSessionId) !== 'undefined' &&
                                 $.cookie('signifyd-' + dataOrderSessionId) !== null &&
                                 $.cookie('signifyd-' + dataOrderSessionId) !== 'null'

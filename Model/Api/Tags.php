@@ -22,6 +22,8 @@ class Tags
 
     /**
      * Construct a new Tags object
+     *
+     * @param null|int|string|\Magento\Framework\App\ScopeInterface $storeId
      * @return array
      */
     public function __invoke($storeId)

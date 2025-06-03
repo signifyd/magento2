@@ -28,7 +28,9 @@ class Casedata extends AbstractDb
 
     /**
      * Casedata constructor.
+     *
      * @param ScopeConfigInterface $scopeConfigInterface
+     * @param \Magento\Framework\Model\ResourceModel\Db\Context $context
      */
     public function __construct(
         ScopeConfigInterface $scopeConfigInterface,
@@ -48,12 +50,16 @@ class Casedata extends AbstractDb
 
     /**
      * Load case and add lock to start_lock field
-     * Case will be automatically unlocked on save or after $maxLockTime
+     *
+     *  Case will be automatically unlocked on save or after $maxLockTime
      *
      * @param \Signifyd\Connect\Model\Casedata $case
-     * @param $value
-     * @param null $field
+     * @param mixed $value
+     * @param ?string $field
+     * @param int $retry
      * @return Casedata
+     * @throws StateException
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
      */
     public function loadForUpdate(\Signifyd\Connect\Model\Casedata $case, $value, $field = null, $retry = 0)
     {
@@ -87,6 +93,8 @@ class Casedata extends AbstractDb
     }
 
     /**
+     * Get load select method.
+     *
      * @param string $field
      * @param mixed $value
      * @param \Magento\Framework\Model\AbstractModel $object
@@ -104,6 +112,8 @@ class Casedata extends AbstractDb
     }
 
     /**
+     * Save method.
+     *
      * @param \Magento\Framework\Model\AbstractModel $case
      * @return Casedata
      * @throws \Magento\Framework\Exception\AlreadyExistsException
@@ -115,6 +125,8 @@ class Casedata extends AbstractDb
     }
 
     /**
+     * Is case locked method.
+     *
      * @param \Signifyd\Connect\Model\Casedata $case
      * @return bool
      */

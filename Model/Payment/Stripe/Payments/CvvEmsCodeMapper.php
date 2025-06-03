@@ -8,6 +8,9 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
 {
     use MapperTrait;
 
+    /**
+     * @var string[]
+     */
     public $allowedMethods = ['stripe_payments'];
 
     /**

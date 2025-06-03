@@ -11,7 +11,7 @@ use Magento\Framework\UrlInterface;
  */
 class InconsistencyMessage implements MessageInterface
 {
-    const MESSAGE_IDENTITY = 'signifyd_system_message';
+    public const MESSAGE_IDENTITY = 'signifyd_system_message';
 
     /**
      * @var ScopeConfigInterface
@@ -24,6 +24,8 @@ class InconsistencyMessage implements MessageInterface
     public $urlInterface;
 
     /**
+     * InconsistencyMessage construct.
+     *
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param UrlInterface $urlInterface
      */
@@ -35,11 +37,21 @@ class InconsistencyMessage implements MessageInterface
         $this->urlInterface = $urlInterface;
     }
 
+    /**
+     * Get identity method.
+     *
+     * @return string
+     */
     public function getIdentity()
     {
         return self::MESSAGE_IDENTITY;
     }
 
+    /**
+     * Is displayed method.
+     *
+     * @return bool
+     */
     public function isDisplayed()
     {
         $upgradeInconsistency = $this->scopeConfigInterface->getValue("signifyd/general/upgrade4.3_inconsistency");
@@ -51,6 +63,11 @@ class InconsistencyMessage implements MessageInterface
         return false;
     }
 
+    /**
+     * Get text method.
+     *
+     * @return \Magento\Framework\Phrase|string
+     */
     public function getText()
     {
         return __("Signifyd database inconsistency detected. This required immediate fix. Learn how on " .
@@ -59,11 +76,21 @@ class InconsistencyMessage implements MessageInterface
         "After fix the issue, you can <a href='" . $this->getFixUrl() . "'>mark as fixed</a>.");
     }
 
+    /**
+     * Get severity method.
+     *
+     * @return int
+     */
     public function getSeverity()
     {
         return self::SEVERITY_MAJOR;
     }
 
+    /**
+     * Get fix url method.
+     *
+     * @return string
+     */
     public function getFixUrl()
     {
         return $this->urlInterface->getUrl('signifyd_backend/markasfixed/index');

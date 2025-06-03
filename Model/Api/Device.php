@@ -30,6 +30,8 @@ class Device
     public $fingerprintFactory;
 
     /**
+     * Device construct.
+     *
      * @param RemoteAddress $remoteAddress
      * @param ConfigHelper $configHelper
      * @param DeviceHelper $deviceHelper
@@ -49,9 +51,10 @@ class Device
 
     /**
      * Construct a new Device object
-     * @param $quoteId
-     * @param $storeId
-     * @param $order
+     *
+     * @param string $quoteId
+     * @param bool|int|\Magento\Store\Api\Data\StoreInterface|null|string $storeId
+     * @param Order $order
      * @return array|null
      */
     public function __invoke($quoteId, $storeId, $order = null)
@@ -73,6 +76,7 @@ class Device
 
     /**
      * Getting the ip address of the order
+     *
      * @param Order $order
      * @return mixed
      */
@@ -91,7 +95,8 @@ class Device
 
     /**
      * Filter the ip address
-     * @param $ip
+     *
+     * @param string $ipString
      * @return mixed
      */
     protected function filterIp($ipString)

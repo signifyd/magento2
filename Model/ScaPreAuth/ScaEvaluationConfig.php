@@ -14,6 +14,8 @@ class ScaEvaluationConfig extends AbstractModel
     public $configHelper;
 
     /**
+     * ScaEvaluationConfig method.
+     *
      * @param Context $context
      * @param Registry $registry
      * @param ConfigHelper $configHelper
@@ -34,6 +36,8 @@ class ScaEvaluationConfig extends AbstractModel
     }
 
     /**
+     * Is sca enabled method.
+     *
      * @param int $storeId
      * @param string $paymentMethod
      * @return bool

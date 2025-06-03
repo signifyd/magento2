@@ -20,7 +20,6 @@ use Signifyd\Connect\Model\ResourceModel\Reroute\CollectionFactory as RerouteCol
 
 class RerouteRepository implements RerouteRepositoryInterface
 {
-
     /**
      * @var Reroute
      */
@@ -46,8 +45,9 @@ class RerouteRepository implements RerouteRepositoryInterface
      */
     public $resource;
 
-
     /**
+     * RerouteRepository construct.
+     *
      * @param ResourceReroute $resource
      * @param RerouteInterfaceFactory $rerouteFactory
      * @param RerouteCollectionFactory $rerouteCollectionFactory

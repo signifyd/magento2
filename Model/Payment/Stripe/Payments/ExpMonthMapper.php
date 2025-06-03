@@ -8,6 +8,9 @@ class ExpMonthMapper extends Base_ExpMonthMapper
 {
     use MapperTrait;
 
+    /**
+     * @var string[]
+     */
     public $allowedMethods = ['stripe_payments'];
 
     /**

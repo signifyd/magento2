@@ -15,6 +15,8 @@ class RecordReturn
     public $productFactory;
 
     /**
+     * RecordReturn construct.
+     *
      * @param DeviceFactory $deviceFactory
      * @param ProductFactory $productFactory
      */
@@ -28,7 +30,8 @@ class RecordReturn
 
     /**
      * Construct a new RecordReturn object
-     * @param $order
+     *
+     * @param \Magento\Sales\Model\Order $order
      * @return array
      */
     public function __invoke($order)

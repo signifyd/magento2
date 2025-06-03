@@ -11,9 +11,8 @@ use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
 
 class Collection extends AbstractCollection
 {
-
     /**
-     * @inheritDoc
+     * @var string
      */
     protected $_idFieldName = 'logs_id';
 

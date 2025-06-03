@@ -24,8 +24,9 @@ class Index extends \Magento\Backend\App\Action
 
     /**
      * UpgradeSchema constructor.
-     * @param WriterInterface $configWriter
+     *
      * @param Context $context
+     * @param WriterInterface $configWriter
      */
     public function __construct(
         Context $context,
@@ -35,6 +36,11 @@ class Index extends \Magento\Backend\App\Action
         $this->configWriter = $configWriter;
     }
 
+    /**
+     * Execute method.
+     *
+     * @return \Magento\Backend\Model\View\Result\Redirect|\Magento\Framework\App\ResponseInterface|\Magento\Framework\Controller\ResultInterface
+     */
     public function execute()
     {
         /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */

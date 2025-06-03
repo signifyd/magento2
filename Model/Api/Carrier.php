@@ -31,7 +31,8 @@ class Carrier
 
     /**
      * Construct a new Carrier object
-     * @param $shippingMethod
+     *
+     * @param mixed $shippingMethod
      * @return int|string|null
      */
     public function __invoke($shippingMethod)

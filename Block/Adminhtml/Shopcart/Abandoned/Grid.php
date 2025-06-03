@@ -62,23 +62,25 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
     }
 
     /**
-     * @param $productMetadataInterface
-     * @param $context
-     * @param $backendHelper
-     * @param $quotesFactory
-     * @param $urlDecoder
-     * @param $parameters
-     * @param $data
+     * InitConstructor method.
+     *
+     * @param ProductMetadataInterface $productMetadataInterface
+     * @param \Magento\Backend\Block\Template\Context $context
+     * @param \Magento\Backend\Helper\Data $backendHelper
+     * @param \Magento\Reports\Model\ResourceModel\Quote\CollectionFactory $quotesFactory
+     * @param DecoderInterface $urlDecoder
+     * @param Parameters $parameters
+     * @param array $data
      * @return void
      */
     public function initConstructor(
-        $productMetadataInterface,
-        $context,
-        $backendHelper,
-        $quotesFactory,
-        $urlDecoder,
-        $parameters,
-        $data
+        ProductMetadataInterface $productMetadataInterface,
+        \Magento\Backend\Block\Template\Context $context,
+        \Magento\Backend\Helper\Data $backendHelper,
+        \Magento\Reports\Model\ResourceModel\Quote\CollectionFactory $quotesFactory,
+        DecoderInterface $urlDecoder,
+        Parameters $parameters,
+        array $data
     ) {
         if (version_compare($productMetadataInterface->getVersion(), '2.4.7') >= 0) {
             parent::__construct($context, $backendHelper, $quotesFactory, $urlDecoder, $parameters, $data);

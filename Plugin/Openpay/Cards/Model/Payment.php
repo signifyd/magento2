@@ -55,7 +55,8 @@ class Payment
     public $client;
 
     /**
-     * CheckoutPaymentsDetailsHandler constructor.
+     * Payment constructor.
+     *
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
@@ -86,8 +87,10 @@ class Payment
     }
 
     /**
+     * Before error method.
+     *
      * @param OpenpayPayment $subject
-     * @param $e
+     * @param mixed $e
      * @return null
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      * @throws \Magento\Framework\Exception\NoSuchEntityException

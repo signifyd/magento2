@@ -18,6 +18,8 @@ class PaymentMethod
     public $logger;
 
     /**
+     * PaymentMethod construct.
+     *
      * @param MappingVerificationFactory $mappingVerificationFactory
      * @param Logger $logger
      */
@@ -31,12 +33,15 @@ class PaymentMethod
 
     /**
      * Construct a new PaymentMethod object
-     * @param $entity
+     *
+     * @param mixed $entity
      * @return int|mixed|string
      */
     public function __invoke($entity)
     {
-        $paymentMethodAdapter = $this->mappingVerificationFactory->createPaymentMethod($entity->getPayment()->getMethod());
+        $paymentMethodAdapter = $this->mappingVerificationFactory->createPaymentMethod(
+            $entity->getPayment()->getMethod()
+        );
 
         $this->logger->debug('Getting payment method using ' . get_class($paymentMethodAdapter));
 

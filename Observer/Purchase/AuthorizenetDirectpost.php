@@ -8,6 +8,8 @@ use Magento\Framework\Event\Observer;
 class AuthorizenetDirectpost extends Purchase
 {
     /**
+     * Execute method.
+     *
      * @param Observer $observer
      * @param bool $checkOwnEventsMethods
      */

@@ -32,6 +32,8 @@ class UserAccount
     protected $resourceConnection;
 
     /**
+     * UserAccount construct.
+     *
      * @param CustomerFactory $customerFactory
      * @param CustomerResourceModel $customerResourceModel
      * @param OrderCollectionFactory $orderCollectionFactory
@@ -51,7 +53,8 @@ class UserAccount
 
     /**
      * Construct a new UserAccount object
-     * @param $entity Order|Quote
+     *
+     * @param Order|Quote $entity
      * @return array
      */
     public function __invoke($entity)
@@ -68,7 +71,9 @@ class UserAccount
     }
 
     /**
-     * @param $order Order
+     * Make user account method.
+     *
+     * @param Order $order
      * @return array
      */
     protected function makeUserAccount(Order $order)
@@ -116,6 +121,12 @@ class UserAccount
         return $user;
     }
 
+    /**
+     * Get aggregate data method.
+     *
+     * @param string|int $customerId
+     * @return false|mixed
+     */
     public function getAggregateData($customerId)
     {
         $salesOrder = $this->resourceConnection->getTableName('sales_order');
@@ -128,7 +139,9 @@ class UserAccount
     }
 
     /**
-     * @param $quote Quote
+     * Make user account from quote method.
+     *
+     * @param Quote $quote
      * @return array
      */
     protected function makeUserAccountFromQuote(Quote $quote)

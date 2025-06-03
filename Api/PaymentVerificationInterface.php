@@ -17,6 +17,7 @@ interface PaymentVerificationInterface
 {
     /**
      * Must return desired data. This is the event that is called from outside
+     *
      * Throws an exception if provided payment method is different to verification implementation.
      *
      * @param \Magento\Sales\Model\Order $order
@@ -27,6 +28,7 @@ interface PaymentVerificationInterface
 
     /**
      * Actually gets data from payment method
+     *
      * Throws an exception if provided payment method is different to verification implementation.
      *
      * @param \Magento\Sales\Model\Order $order

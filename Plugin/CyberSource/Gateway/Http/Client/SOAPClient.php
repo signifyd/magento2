@@ -19,7 +19,8 @@ class SOAPClient
     public $registry;
 
     /**
-     * CheckoutPaymentsDetailsHandler constructor.
+     * SOAPClient constructor.
+     *
      * @param TransactionIntegration $transactionIntegration
      * @param Registry $registry
      */
@@ -32,8 +33,10 @@ class SOAPClient
     }
 
     /**
+     * After place request method.
+     *
      * @param CyberSOAPClient $subject
-     * @param $response
+     * @param mixed $response
      * @return mixed
      */
     public function afterPlaceRequest(CyberSOAPClient $subject, $response)

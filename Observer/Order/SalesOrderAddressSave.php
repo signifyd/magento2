@@ -49,6 +49,17 @@ class SalesOrderAddressSave implements ObserverInterface
      */
     public $rerouteResourceModel;
 
+    /**
+     * SalesOrderAddressSave method.
+     *
+     * @param CasedataFactory $casedataFactory
+     * @param CasedataResourceModel $casedataResourceModel
+     * @param ConfigHelper $configHelper
+     * @param Logger $logger
+     * @param ProcessCronReroute $processCronReroute
+     * @param RerouteFactory $rerouteFactory
+     * @param RerouteResourceModel $rerouteResourceModel
+     */
     public function __construct(
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
@@ -67,6 +78,12 @@ class SalesOrderAddressSave implements ObserverInterface
         $this->rerouteResourceModel = $rerouteResourceModel;
     }
 
+    /**
+     * Execute method.
+     *
+     * @param Observer $observer
+     * @return void
+     */
     public function execute(Observer $observer)
     {
         try {

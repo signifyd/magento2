@@ -13,6 +13,8 @@ class Core
     public $transactionIntegration;
 
     /**
+     * Core construct.
+     *
      * @param TransactionIntegration $transactionIntegration
      */
     public function __construct(
@@ -22,8 +24,10 @@ class Core
     }
 
     /**
+     * After post payment V1 method.
+     *
      * @param MercadoPagoCore $subject
-     * @param $response
+     * @param array $response
      * @return mixed
      */
     public function afterPostPaymentV1(MercadoPagoCore $subject, $response)

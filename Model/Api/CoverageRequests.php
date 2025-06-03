@@ -19,6 +19,8 @@ class CoverageRequests
     public $configHelper;
 
     /**
+     * CoverageRequests construct.
+     *
      * @param JsonSerializer $jsonSerializer
      * @param ConfigHelper $configHelper
      */
@@ -32,7 +34,8 @@ class CoverageRequests
 
     /**
      * Construct a new CoverageRequests object
-     * @param $paymentMethod
+     *
+     * @param mixed $paymentMethod
      * @return array|string[]|null
      */
     public function __invoke($paymentMethod = null)
@@ -51,8 +54,10 @@ class CoverageRequests
     }
 
     /**
-     * @param $decision
-     * @param $paymentMethod
+     * Get decision for method method.
+     *
+     * @param string $decision
+     * @param mixed $paymentMethod
      * @return array|null
      */
     protected function getDecisionForMethod($decision, $paymentMethod)

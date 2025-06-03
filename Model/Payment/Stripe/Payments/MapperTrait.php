@@ -5,6 +5,8 @@ namespace Signifyd\Connect\Model\Payment\Stripe\Payments;
 trait MapperTrait
 {
     /**
+     * Get charge method.
+     *
      * @param \Magento\Sales\Model\Order $order
      * @return bool|\Stripe\Charge
      */
@@ -21,7 +23,10 @@ trait MapperTrait
             if (is_object($charge)) {
                 return $charge;
             } else {
-                $this->logger->debug('No Stripe charge on registry, fetching from Stripe API', ['entity' => $order]);
+                $this->logger->debug(
+                    'No Stripe charge on registry, fetching from Stripe API',
+                    ['entity' => $order]
+                );
 
                 $lastTransactionId = $order->getPayment()->getLastTransId();
 
@@ -46,8 +51,9 @@ trait MapperTrait
                     $customCurlClient = true;
                 }
 
-                if (class_exists('StripeIntegration\Payments\Model\Config')) {
-                    $this->objectManagerInterface->get('StripeIntegration\Payments\Model\Config')->getStripeClient();
+                if (class_exists(\StripeIntegration\Payments\Model\Config::class)) {
+                    $this->objectManagerInterface
+                        ->get(\StripeIntegration\Payments\Model\Config::class)->getStripeClient();
                 }
 
                 $paymentIntent = \Stripe\PaymentIntent::retrieve($lastTransactionId);

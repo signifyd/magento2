@@ -63,6 +63,7 @@ abstract class DataMapper implements PaymentVerificationInterface
 
     /**
      * DataMapper constructor.
+     *
      * @param Registry $registry
      * @param JsonSerializer $jsonSerializer
      * @param PaymentGatewayFactory $paymentGatewayFactory
@@ -90,7 +91,9 @@ abstract class DataMapper implements PaymentVerificationInterface
     }
 
     /**
-     * @param $key
+     * Get signifyd payment data method.
+     *
+     * @param mixed $key
      * @return bool|mixed
      */
     public function getSignifydPaymentData($key = null)
@@ -115,6 +118,8 @@ abstract class DataMapper implements PaymentVerificationInterface
     }
 
     /**
+     * Check method method.
+     *
      * @param \Magento\Sales\Api\Data\OrderPaymentInterface $orderPayment
      * @return bool
      */
@@ -124,12 +129,15 @@ abstract class DataMapper implements PaymentVerificationInterface
             return true;
         } else {
             throw new \InvalidArgumentException(
-                'The "' . $orderPayment->getMethod() . '" it is not supported by ' . get_class($this) . ' mapper.'
+                'The "' . $orderPayment->getMethod() . '" it is not supported by ' . get_class($this) .
+                ' mapper.'
             );
         }
     }
 
     /**
+     * Get code method.
+     *
      * @param \Magento\Sales\Model\Order $order
      * @return string
      */
@@ -144,7 +152,8 @@ abstract class DataMapper implements PaymentVerificationInterface
 
     /**
      * This method must be called to retrieve data. Use getPaymentMethod to actual retrieve data from payment method\
-     * on extending classes
+     *
+     * On extending classes
      *
      * @param \Magento\Sales\Model\Order $order
      * @return mixed
@@ -176,6 +185,8 @@ abstract class DataMapper implements PaymentVerificationInterface
     }
 
     /**
+     * Get gateway integration settings method.
+     *
      * @param \Magento\Sales\Model\Order $order
      * @return array|bool|float|int|mixed|string
      */
@@ -240,10 +251,12 @@ abstract class DataMapper implements PaymentVerificationInterface
                         );
                         break;
                     case 'path_secure':
-                        $gatewayIntegrationSettings['params'][$key] = $this->encryptor->decrypt($this->configHelper->getConfigData(
-                            $param['path'],
-                            $order
-                        ));
+                        $gatewayIntegrationSettings['params'][$key] = $this->encryptor->decrypt(
+                            $this->configHelper->getConfigData(
+                                $param['path'],
+                                $order
+                            )
+                        );
                         break;
                 }
             }
@@ -255,6 +268,8 @@ abstract class DataMapper implements PaymentVerificationInterface
     }
 
     /**
+     * Get transaction id method.
+     *
      * @param \Magento\Sales\Model\Order $order
      * @return string|string[]|null
      */

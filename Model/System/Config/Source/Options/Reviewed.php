@@ -25,7 +25,8 @@ class Reviewed implements OptionSourceInterface
     public $request;
 
     /**
-     * Positive constructor.
+     * Reviewed constructor.
+     *
      * @param ScopeConfigInterface $coreConfig
      * @param \Magento\Framework\App\RequestInterface $request
      */
@@ -37,6 +38,11 @@ class Reviewed implements OptionSourceInterface
         $this->request = $request;
     }
 
+    /**
+     * To option array method.
+     *
+     * @return array|array[]
+     */
     public function toOptionArray()
     {
         $options = [

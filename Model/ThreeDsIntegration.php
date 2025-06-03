@@ -76,11 +76,15 @@ class ThreeDsIntegration
      */
     public $client;
 
+    /**
+     * @var string[]
+     */
     public $signifydFields = ['eci', 'cavv', 'version', 'transStatus', 'transStatusReason', 'acsOperatorId',
         'dsTransId', 'threeDsServerTransId', 'cavvAlgorithm', 'exemptionIndicator', 'timestamp'];
 
     /**
-     * CheckoutPaymentsDetailsHandler constructor.
+     * ThreeDsIntegration constructor.
+     *
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
@@ -122,7 +126,16 @@ class ThreeDsIntegration
         $this->client = $client;
     }
 
-
+    /**
+     * Set three ds data method.
+     *
+     * @param array $threeDsData
+     * @param int|string $quoteId
+     * @return void
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
     public function setThreeDsData(array $threeDsData, $quoteId = null)
     {
         if (empty($threeDsData)) {
@@ -163,6 +176,12 @@ class ThreeDsIntegration
         $this->validateSentTransaction($quoteId);
     }
 
+    /**
+     * Validate sent transaction method.
+     *
+     * @param int|string $quoteId
+     * @return void
+     */
     public function validateSentTransaction($quoteId)
     {
         try {
@@ -199,6 +218,12 @@ class ThreeDsIntegration
         }
     }
 
+    /**
+     * Validate fields method.
+     *
+     * @param array $threeDsData
+     * @return array
+     */
     public function validateFields(array $threeDsData)
     {
         $invalidFields = [];

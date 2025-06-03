@@ -8,6 +8,9 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
 {
     use MapperTrait;
 
+    /**
+     * @var string[]
+     */
     public $allowedMethods = ['stripe_payments'];
 
     /**

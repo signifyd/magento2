@@ -16,6 +16,13 @@ class Version extends Field
      */
     public $moduleResource;
 
+    /**
+     * Version construct.
+     *
+     * @param ResourceInterface $moduleResource
+     * @param \Magento\Backend\Block\Template\Context $context
+     * @param array $data
+     */
     public function __construct(
         ResourceInterface $moduleResource,
         \Magento\Backend\Block\Template\Context $context,
@@ -26,6 +33,12 @@ class Version extends Field
         parent::__construct($context, $data);
     }
 
+    /**
+     * Get element html method.
+     *
+     * @param AbstractElement $element
+     * @return false|string
+     */
     protected function _getElementHtml(AbstractElement $element)
     {
         return $this->moduleResource->getDbVersion('Signifyd_Connect');

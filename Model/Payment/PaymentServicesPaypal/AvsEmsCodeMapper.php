@@ -6,6 +6,9 @@ use Signifyd\Connect\Model\Payment\Base\AvsEmsCodeMapper as Base_AvsEmsCodeMappe
 
 class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
 {
+    /**
+     * @var string[]
+     */
     public $allowedMethods = ['payment_services_paypal_hosted_fields', 'payment_services_paypal_smart_buttons'];
 
     /**

@@ -17,7 +17,6 @@ use Signifyd\Connect\Model\UpdateOrderFactory;
 
 class InReview
 {
-
     /**
      * @var JsonSerializer
      */
@@ -80,7 +79,7 @@ class InReview
 
     /**
      * InReview constructor.
-     * 
+     *
      * @param JsonSerializer $jsonSerializer
      * @param Logger $logger
      * @param ConfigHelper $configHelper
@@ -123,6 +122,8 @@ class InReview
     }
 
     /**
+     * Invoke method.
+     *
      * @param array $inReviewCases
      * @return void
      */
@@ -146,10 +147,13 @@ class InReview
                 $reInitStripe($order);
 
                 try {
-                    $response = $this->client->getSignifydSaleApi($case)->getCase($case->getData('order_increment'));
+                    $response = $this->client->getSignifydSaleApi($case)->getCase(
+                        $case->getData('order_increment')
+                    );
                     
                     $this->logger->info(
-                        "Get case api response: " . $this->jsonSerializer->serialize($response), ['entity' => $case]
+                        "Get case api response: " . $this->jsonSerializer->serialize($response),
+                        ['entity' => $case]
                     );
 
                     $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));

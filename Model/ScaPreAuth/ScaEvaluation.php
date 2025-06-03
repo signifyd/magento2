@@ -5,6 +5,7 @@ use Magento\Framework\Model\AbstractModel;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Registry;
 use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Quote\Model\Quote;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
@@ -38,6 +39,8 @@ class ScaEvaluation extends AbstractModel
     public $configHelper;
 
     /**
+     * ScaEvaluation method.
+     *
      * @param Context $context
      * @param Registry $registry
      * @param CasedataFactory $casedataFactory
@@ -64,7 +67,9 @@ class ScaEvaluation extends AbstractModel
     }
 
     /**
-     * @param $quote
+     * Get sca evaluation method.
+     *
+     * @param Quote $quote
      * @return false|\Signifyd\Models\ScaEvaluation
      */
     public function getScaEvaluation($quote)

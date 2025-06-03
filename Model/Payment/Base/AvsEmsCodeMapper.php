@@ -36,7 +36,7 @@ class AvsEmsCodeMapper extends DataMapper
     /**
      * Validate response
      *
-     * @param $response
+     * @param mixed $response
      * @return bool
      */
     public function validate($response)
@@ -45,6 +45,8 @@ class AvsEmsCodeMapper extends DataMapper
     }
 
     /**
+     * Get payment data from gateway response method.
+     *
      * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
      * @return string
      */

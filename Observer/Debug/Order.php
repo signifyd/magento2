@@ -40,6 +40,7 @@ class Order implements ObserverInterface
 
     /**
      * Order constructor.
+     *
      * @param Debugger $logger
      * @param ConfigHelper $configHelper
      * @param UrlInterface $url
@@ -57,6 +58,12 @@ class Order implements ObserverInterface
         $this->registry = $registry;
     }
 
+    /**
+     * Execute method.
+     *
+     * @param Observer $observer
+     * @return void
+     */
     public function execute(Observer $observer)
     {
         try {
@@ -98,6 +105,11 @@ class Order implements ObserverInterface
         }
     }
 
+    /**
+     * Get debug backtrace method.
+     *
+     * @return array
+     */
     public function getDebugBacktrace()
     {
         $debugBacktrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);

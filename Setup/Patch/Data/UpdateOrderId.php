@@ -25,6 +25,8 @@ class UpdateOrderId implements DataPatchInterface
     public $configWriter;
 
     /**
+     * UpdateOrderId construct.
+     *
      * @param SchemaSetupInterface $schemaSetupInterface
      * @param Install $logger
      * @param WriterInterface $configWriter
@@ -40,6 +42,8 @@ class UpdateOrderId implements DataPatchInterface
     }
 
     /**
+     * Apply method.
+     *
      * @return $this|UpdateOrderId
      */
     public function apply()
@@ -75,7 +79,7 @@ class UpdateOrderId implements DataPatchInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function getAliases()
     {
@@ -83,7 +87,7 @@ class UpdateOrderId implements DataPatchInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public static function getDependencies()
     {

@@ -31,6 +31,8 @@ class TransactionPayment
     public $scaEvaluationConfig;
 
     /**
+     * TransactionPayment construct.
+     *
      * @param StoreManagerInterface $storeManager
      * @param Logger $logger
      * @param ScaEvaluation $scaEvaluation
@@ -48,6 +50,14 @@ class TransactionPayment
         $this->scaEvaluationConfig = $scaEvaluationConfig;
     }
 
+    /**
+     * After place request method.
+     *
+     * @param AdyenTransactionPayment $subject
+     * @param mixed $response
+     * @return mixed
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
     public function afterPlaceRequest(AdyenTransactionPayment $subject, $response)
     {
         $storeId = $this->storeManager->getStore()->getId();

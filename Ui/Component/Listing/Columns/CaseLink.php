@@ -34,6 +34,7 @@ class CaseLink extends Column
 
     /**
      * CaseLink constructor.
+     *
      * @param ContextInterface $context
      * @param UiComponentFactory $uiComponentFactory
      * @param SerializerInterface $serializer
@@ -100,8 +101,10 @@ class CaseLink extends Column
     }
 
     /**
-     * @param $case
-     * @param $name
+     * Get name signifyd guarantee method.
+     *
+     * @param mixed $case
+     * @param mixed $name
      * @return string
      */
     public function getNameSignifydGuarantee($case, $name)

@@ -6,6 +6,9 @@ use Signifyd\Connect\Model\Payment\Base\Last4Mapper as Base_Last4Mapper;
 
 class Last4Mapper extends Base_Last4Mapper
 {
+    /**
+     * @var string[]
+     */
     public $allowedMethods = ['authorizenet_directpost'];
 
     /**

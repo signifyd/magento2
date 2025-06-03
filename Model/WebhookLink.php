@@ -29,8 +29,10 @@ class WebhookLink implements CommentInterface
 
     /**
      * WebhookLink constructor.
+     *
      * @param \Magento\Framework\Url $urlInterface
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
+     * @param \Magento\Framework\App\RequestInterface $request
      */
     public function __construct(
         \Magento\Framework\Url $urlInterface,
@@ -43,6 +45,8 @@ class WebhookLink implements CommentInterface
     }
 
     /**
+     * Get comment text method.
+     *
      * @param string $elementValue
      * @return string
      */
@@ -56,6 +60,12 @@ class WebhookLink implements CommentInterface
             "and syncing of guarantees back to Magento.";
     }
 
+    /**
+     * Get url method.
+     *
+     * @return string|null
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     public function getUrl()
     {
         if ($this->urlBuilder != null) {

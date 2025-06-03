@@ -20,6 +20,8 @@ class Verifications
     public $paymentVerificationFactory;
 
     /**
+     * Verifications construct.
+     *
      * @param Logger $logger
      * @param PaymentVerificationFactory $paymentVerificationFactory
      */
@@ -33,6 +35,7 @@ class Verifications
 
     /**
      * Construct a new Verifications object
+     *
      * @param Order $order
      * @return array
      */

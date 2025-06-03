@@ -8,6 +8,9 @@ class Last4Mapper extends Base_Last4Mapper
 {
     use MapperTrait;
 
+    /**
+     * @var string[]
+     */
     public $allowedMethods = ['stripe_payments'];
 
     /**

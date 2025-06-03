@@ -38,6 +38,8 @@ class Hold
     public $orderResourceModel;
 
     /**
+     * Hold construct.
+     *
      * @param ConfigHelper $configHelper
      * @param OrderHelper $orderHelper
      * @param Logger $logger
@@ -55,6 +57,17 @@ class Hold
         $this->orderResourceModel = $orderResourceModel;
     }
 
+    /**
+     * Invoke method.
+     *
+     * @param Order $order
+     * @param mixed $case
+     * @param mixed $orderAction
+     * @param bool $completeCase
+     * @return mixed|true
+     * @throws LocalizedException
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     */
     public function __invoke($order, $case, $orderAction, $completeCase)
     {
         if ($order->canHold()) {

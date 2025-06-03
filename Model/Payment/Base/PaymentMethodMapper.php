@@ -8,6 +8,8 @@ use Magento\Sales\Model\Order;
 class PaymentMethodMapper extends PaymentMethodBase
 {
     /**
+     * Get payment method from order method.
+     *
      * @param Order $order
      * @return int|string
      */
@@ -22,6 +24,8 @@ class PaymentMethodMapper extends PaymentMethodBase
     }
 
     /**
+     * Get payment method from quote method.
+     *
      * @param Quote $quote
      * @return int|string
      */

@@ -34,6 +34,7 @@ class Cancel implements ObserverInterface
 
     /**
      * Cancel constructor.
+     *
      * @param Logger $logger
      * @param \Signifyd\Connect\Helper\ConfigHelper $configHelper
      * @param Client $client
@@ -48,6 +49,12 @@ class Cancel implements ObserverInterface
         $this->client = $client;
     }
 
+    /**
+     * Execute method.
+     *
+     * @param Observer $observer
+     * @return void
+     */
     public function execute(Observer $observer)
     {
         try {

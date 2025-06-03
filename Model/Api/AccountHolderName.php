@@ -34,7 +34,8 @@ class AccountHolderName
 
     /**
      * Construct a new AccountHolderName object
-     * @param $entity Order|Quote
+     *
+     * @param Order|Quote $entity
      * @return array
      */
     public function __invoke($entity)
@@ -51,6 +52,8 @@ class AccountHolderName
     }
 
     /**
+     * Get cardholder from quote method.
+     *
      * @param Quote $quote
      * @return array|string|string[]|null
      */

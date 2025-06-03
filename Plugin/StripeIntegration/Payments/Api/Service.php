@@ -23,8 +23,10 @@ class Service
     }
 
     /**
+     * Before confirm payment method.
+     *
      * @param StripeService $subject
-     * @param $e
+     * @param array $result
      * @return void|null
      */
     public function beforeConfirm_payment(StripeService $subject, $result)

@@ -43,6 +43,7 @@ class PreAuthTransaction
 
     /**
      * PreAuthTransaction constructor.
+     *
      * @param Logger $logger
      * @param OrderResourceModel $orderResourceModel
      * @param OrderFactory $orderFactory
@@ -67,6 +68,8 @@ class PreAuthTransaction
     }
 
     /**
+     * Invoke method.
+     *
      * @param array $preAuthCases
      * @return void
      */

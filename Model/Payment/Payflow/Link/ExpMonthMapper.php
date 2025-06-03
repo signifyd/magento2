@@ -6,6 +6,9 @@ use Signifyd\Connect\Model\Payment\Base\ExpMonthMapper as Base_ExpMonthMapper;
 
 class ExpMonthMapper extends Base_ExpMonthMapper
 {
+    /**
+     * @var string[]
+     */
     public $allowedMethods = ['payflow_link', 'payflow_advanced'];
 
     /**

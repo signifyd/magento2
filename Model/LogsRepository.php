@@ -46,8 +46,9 @@ class LogsRepository implements LogsRepositoryInterface
      */
     public $logsCollectionFactory;
 
-
     /**
+     * LogsRepository construct.
+     *
      * @param ResourceLogs $resource
      * @param LogsInterfaceFactory $logsFactory
      * @param LogsCollectionFactory $logsCollectionFactory

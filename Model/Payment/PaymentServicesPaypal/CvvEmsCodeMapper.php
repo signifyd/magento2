@@ -6,6 +6,9 @@ use Signifyd\Connect\Model\Payment\Base\CvvEmsCodeMapper as Base_CvvEmsCodeMappe
 
 class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
 {
+    /**
+     * @var string[]
+     */
     public $allowedMethods = ['payment_services_paypal_hosted_fields', 'payment_services_paypal_smart_buttons'];
 
     /**

@@ -22,28 +22,28 @@ use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 class Casedata extends AbstractModel
 {
     /* The status when a case is created */
-    const WAITING_SUBMISSION_STATUS = "waiting_submission";
+    public const WAITING_SUBMISSION_STATUS = "waiting_submission";
 
     /* The status for a case when the first response from Signifyd is received */
-    const IN_REVIEW_STATUS = "in_review";
+    public const IN_REVIEW_STATUS = "in_review";
 
     /* The status for a case that is completed */
-    const COMPLETED_STATUS = "completed";
+    public const COMPLETED_STATUS = "completed";
 
     /* The status for a case that is awiting async payment methods to finish */
-    const ASYNC_WAIT = "async_wait";
+    public const ASYNC_WAIT = "async_wait";
 
     /* The status for new case */
-    const NEW = "new";
+    public const NEW = "new";
 
     /* Synchronous response */
-    const PRE_AUTH = "pre_auth";
+    public const PRE_AUTH = "pre_auth";
 
     /* Asynchronous response */
-    const POST_AUTH = "post_auth";
+    public const POST_AUTH = "post_auth";
 
     /* Awaiting payment response */
-    const AWAITING_PSP = "awaiting_psp";
+    public const AWAITING_PSP = "awaiting_psp";
 
     /**
      * @var ConfigHelper
@@ -122,6 +122,13 @@ class Casedata extends AbstractModel
         $this->_init(\Signifyd\Connect\Model\ResourceModel\Casedata::class);
     }
 
+    /**
+     * Get order method.
+     *
+     * @param bool $forceLoad
+     * @param bool $loadForUpdate
+     * @return \Magento\Sales\Model\Order
+     */
     public function getOrder($forceLoad = false, $loadForUpdate = false)
     {
         if (isset($this->order) === false || $forceLoad) {
@@ -142,7 +149,9 @@ class Casedata extends AbstractModel
     }
 
     /**
-     * @param $index
+     * Get entries method.
+     *
+     * @param mixed $index
      * @return array|mixed|null
      */
     public function getEntries($index = null)
@@ -169,8 +178,10 @@ class Casedata extends AbstractModel
     }
 
     /**
-     * @param $index
-     * @param $value
+     * Set entries method.
+     *
+     * @param mixed $index
+     * @param mixed $value
      * @return $this
      */
     public function setEntries($index, $value = null)
@@ -191,7 +202,9 @@ class Casedata extends AbstractModel
     }
 
     /**
-     * @param $index
+     * Unset entries method.
+     *
+     * @param mixed $index
      * @return $this
      */
     public function unsetEntries($index)
@@ -225,7 +238,8 @@ class Casedata extends AbstractModel
     /**
      * Everytime a update is triggered reset retries
      *
-     * @param $updated
+     * @param mixed $updated
+     * @param bool $updateRetries
      * @return mixed
      */
     public function setUpdated($updated = null, $updateRetries = true)

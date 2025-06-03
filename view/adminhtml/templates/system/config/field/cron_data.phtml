@@ -1,8 +1,9 @@
 <?php
 /** @var \Signifyd\Connect\Block\Adminhtml\System\Config\Field\CronData $block */
+/** @var \Magento\Framework\Escaper $escaper */
 ?>
 <?php if ($cronData = $block->getLastCronData()): ?>
-    <div><?= $block->escapeHtml($cronData) ?></div>
+    <div><?= $escaper->escapeHtml($cronData) ?></div>
 <?php else: ?>
     <div>No cron data available.</div>
 <?php endif; ?>

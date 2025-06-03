@@ -9,73 +9,82 @@ namespace Signifyd\Connect\Api\Data;
 
 interface RerouteInterface
 {
-
-    const ORDER_ID = 'order_id';
-    const REROUTE_ID = 'reroute_id';
-    const MAGENTO_STATUS = 'magento_status';
-    const RETRIES = 'retries';
-    const INSERTED_AT = 'inserted_at';
+    public const ORDER_ID = 'order_id';
+    public const REROUTE_ID = 'reroute_id';
+    public const MAGENTO_STATUS = 'magento_status';
+    public const RETRIES = 'retries';
+    public const INSERTED_AT = 'inserted_at';
 
     /**
-     * Get reroute_id
+     * Get reroute id method.
+     *
      * @return string|null
      */
     public function getRerouteId();
 
     /**
-     * Set reroute_id
+     * Set reroute id method.
+     *
      * @param string $rerouteId
      * @return $this
      */
     public function setRerouteId($rerouteId);
 
     /**
-     * Get order_id
+     * Get order idmethod.
+     *
      * @return string|null
      */
     public function getOrderId();
 
     /**
-     * Set order_id
+     * Set order idmethod.
+     *
      * @param string $orderId
      * @return $this
      */
     public function setOrderId($orderId);
 
     /**
-     * Get magento_status
+     * Get magento status method.
+     *
      * @return string|null
      */
     public function getMagentoStatus();
 
     /**
-     * Set magento_status
+     * Set magento status method.
+     *
      * @param string $magentoStatus
      * @return $this
      */
     public function setMagentoStatus($magentoStatus);
 
     /**
-     * Get retries
+     * Get retries method.
+     *
      * @return string|null
      */
     public function getRetries();
 
     /**
-     * Set retries
+     * Set retries method.
+     *
      * @param string $retries
      * @return $this
      */
     public function setRetries($retries);
 
     /**
-     * Get inserted_at
+     * Get inserted at method.
+     *
      * @return string|null
      */
     public function getInsertedAt();
 
     /**
-     * Set inserted_at
+     * Set inserted at method.
+     *
      * @param string $insertedAt
      * @return $this
      */

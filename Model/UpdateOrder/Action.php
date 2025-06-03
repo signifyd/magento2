@@ -37,6 +37,8 @@ class Action
     public $configHelper;
 
     /**
+     * Action construct.
+     *
      * @param Logger $logger
      * @param OrderFactory $orderFactory
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
@@ -55,7 +57,9 @@ class Action
     }
 
     /**
-     * @param $guaranteeDisposition
+     * Handle guarantee change method.
+     *
+     * @param mixed $case
      * @return array|string[]
      */
     public function handleGuaranteeChange($case)
@@ -99,7 +103,10 @@ class Action
     }
 
     /**
-     * @return string
+     * Get positive action method.
+     *
+     * @param mixed $case
+     * @return mixed|string
      */
     public function getPositiveAction($case)
     {
@@ -111,6 +118,9 @@ class Action
     }
 
     /**
+     * Get negative action
+     *
+     * @param mixed $case
      * @return mixed|string
      */
     public function getNegativeAction($case)
@@ -123,6 +133,9 @@ class Action
     }
 
     /**
+     * Is hold released method.
+     *
+     * @param mixed $case
      * @return bool
      */
     public function isHoldReleased($case)

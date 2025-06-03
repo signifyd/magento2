@@ -72,6 +72,7 @@ class FulfillmentHelper
 
     /**
      * FulfillmentHelper constructor.
+     *
      * @param CasedataFactory $casedataFactory
      * @param FulfillmentFactory $fulfillmentFactory
      * @param CasedataResourceModel $casedataResourceModel
@@ -110,6 +111,12 @@ class FulfillmentHelper
         $this->shipments = $shipments;
     }
 
+    /**
+     * Post fulfillment to signifyd method.
+     *
+     * @param \Magento\Sales\Model\Order\Shipment $shipment
+     * @return bool
+     */
     public function postFulfillmentToSignifyd(\Magento\Sales\Model\Order\Shipment $shipment)
     {
         $order = $shipment->getOrder();
@@ -174,7 +181,9 @@ class FulfillmentHelper
     }
 
     /**
-     * @param $shipmentIncrementId
+     * Get fulfillment from database method.
+     *
+     * @param mixed $shipmentIncrementId
      * @return \Signifyd\Connect\Model\Fulfillment
      */
     public function getFulfillmentFromDatabase($shipmentIncrementId)
@@ -185,6 +194,8 @@ class FulfillmentHelper
     }
 
     /**
+     * Prepare fulfillment to database method.
+     *
      * @param array $fulfillmentData
      * @return \Signifyd\Connect\Model\Fulfillment
      */
@@ -209,7 +220,9 @@ class FulfillmentHelper
     }
 
     /**
-     * @param $data
+     * Serialize method.
+     *
+     * @param array|bool|float|int|null|string $data
      * @return bool|string
      */
     public function serialize($data)
@@ -222,6 +235,8 @@ class FulfillmentHelper
     }
 
     /**
+     * Generate fulfillment data method.
+     *
      * @param \Magento\Sales\Model\Order\Shipment $shipment
      * @return bool|array
      */
@@ -257,6 +272,12 @@ class FulfillmentHelper
         return $fulfillment;
     }
 
+    /**
+     * Make destination method.
+     *
+     * @param \Magento\Sales\Model\Order\Shipment $shipment
+     * @return array
+     */
     public function makeDestination(\Magento\Sales\Model\Order\Shipment $shipment)
     {
         $destination = [];
@@ -269,6 +290,8 @@ class FulfillmentHelper
     }
 
     /**
+     * Get tracking numbers method.
+     *
      * @param \Magento\Sales\Model\Order\Shipment $shipment
      * @return array
      */
@@ -297,6 +320,8 @@ class FulfillmentHelper
     }
 
     /**
+     * Get created at method.
+     *
      * @param \Magento\Sales\Model\Order\Shipment $shipment
      * @return string
      */
@@ -309,6 +334,8 @@ class FulfillmentHelper
     }
 
     /**
+     * Get delivery email method.
+     *
      * @param \Magento\Sales\Model\Order\Shipment $shipment
      * @return string|null
      */
@@ -355,6 +382,8 @@ class FulfillmentHelper
     }
 
     /**
+     * Get products method.
+     *
      * @param \Magento\Sales\Model\Order\Shipment $shipment
      * @return array
      */
@@ -382,6 +411,8 @@ class FulfillmentHelper
     }
 
     /**
+     * Get item url method.
+     *
      * @param \Magento\Sales\Model\Order\Shipment\Item $item
      * @return string
      */
@@ -397,6 +428,8 @@ class FulfillmentHelper
     }
 
     /**
+     * Get item image method.
+     *
      * @param \Magento\Sales\Model\Order\Shipment\Item $item
      * @return null|string
      */
@@ -441,6 +474,8 @@ class FulfillmentHelper
     }
 
     /**
+     * Get delivery address method.
+     *
      * @param \Magento\Sales\Model\Order\Shipment $shipment
      * @return array
      */
@@ -458,6 +493,8 @@ class FulfillmentHelper
     }
 
     /**
+     * Get street address method.
+     *
      * @param \Magento\Sales\Model\Order\Shipment $shipment
      * @return string
      */

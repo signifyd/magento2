@@ -6,7 +6,8 @@ class Address
 {
     /**
      * Construct a new Address object
-     * @param $mageAddress
+     *
+     * @param mixed $mageAddress
      * @return array
      */
     public function __invoke($mageAddress)

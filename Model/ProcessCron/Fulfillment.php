@@ -61,6 +61,7 @@ class Fulfillment
 
     /**
      * Fulfillment constructor.
+     *
      * @param ConfigHelper $configHelper
      * @param FulfillmentResourceModel $fulfillmentResourceModel
      * @param Logger $logger
@@ -94,7 +95,9 @@ class Fulfillment
     }
 
     /**
-     * @param $fulfillments
+     * Invoke method.
+     *
+     * @param mixed $fulfillments
      * @return void
      */
     public function __invoke($fulfillments)

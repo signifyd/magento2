@@ -7,6 +7,11 @@ use Magento\Framework\Data\OptionSourceInterface;
 
 class SignifydGuaranteeStatus extends AbstractSource implements OptionSourceInterface
 {
+    /**
+     * To option array method.
+     *
+     * @return array[]
+     */
     public function toOptionArray()
     {
         $guaranteeStatus = [
@@ -19,6 +24,11 @@ class SignifydGuaranteeStatus extends AbstractSource implements OptionSourceInte
         return $guaranteeStatus;
     }
 
+    /**
+     * Get all options method.
+     *
+     * @return array[]
+     */
     public function getAllOptions()
     {
         return $this->toOptionArray();
