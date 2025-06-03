@@ -1,0 +1,21 @@
+diff --git a/vendor/hyva-themes/magento2-hyva-checkout-braintree/view/frontend/templates/checkout/payment/method/card.phtml b/vendor/hyva-themes/magento2-hyva-checkout-braintree/view/frontend/templates/checkout/payment/method/card.phtml
+index 9a93750..d201e1c 100644
+--- a/vendor/hyva-themes/magento2-hyva-checkout-braintree/view/frontend/templates/checkout/payment/method/card.phtml
++++ b/vendor/hyva-themes/magento2-hyva-checkout-braintree/view/frontend/templates/checkout/payment/method/card.phtml
+@@ -374,6 +374,16 @@ $availableCardTypes = $cardViewModel->getAvailableCardTypes();
+                         throw new Error('<?= $escaper->escapeJs(__("3DS validation failed.")) ?>');
+                     }
+ 
++                    const responseDetails = response.details || {};
++                    const cardDetails = {
++                        cardBin: responseDetails.bin || null,
++                        cardExpiryMonth: responseDetails.expirationMonth || null,
++                        cardExpiryYear: responseDetails.expirationYear || null,
++                        holderName: responseDetails.holderName || null,
++                        cardLast4: responseDetails.lastFour || null
++                    };
++
++                    await Magewire.find('checkout.payment.method.' + 'signifyd').call('setCardData', cardDetails);
+                     await Magewire.find('checkout.payment.method.' + braintreeId).call('setIsVaulted', vault);
+                     await Magewire.find('checkout.payment.method.' + braintreeId).call('setToken', response.nonce);
+                     clearError();
