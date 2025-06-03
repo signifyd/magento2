@@ -238,6 +238,7 @@ class Purchase implements ObserverInterface
             $casesFromQuotes = $this->casedataCollectionFactory->create();
             $casesFromQuotes->addFieldToFilter('quote_id', ['eq' => $order->getQuoteId()]);
             $casesFromQuotes->addFieldToFilter('policy_name', ['eq' => Casedata::PRE_AUTH]);
+            $casesFromQuotes->setOrder('created', 'DESC');
 
             if ($casesFromQuotes->count() > 0 &&
                 $casesFromQuotes->getFirstItem()->getMagentoStatus() != 'completed'
@@ -293,8 +294,7 @@ class Purchase implements ObserverInterface
             }
 
             $paymentMethod = $order->getPayment()->getMethod();
-            $isOrderProcessedByAmazon = $paymentMethod === 'amazon_payment_v2' &&
-                $this->configHelper->getIsOrderProcessedByAmazon($order) === true;
+            $isOrderProcessedByAmazon = $this->configHelper->getIsOrderProcessedByAmazon($order);
 
             $checkOwnEventsMethodsEvent = $observer->getEvent()->getCheckOwnEventsMethods();
 
@@ -495,6 +495,11 @@ class Purchase implements ObserverInterface
 
             if (isset($order) && $order instanceof Order) {
                 $context['entity'] = $order;
+            }
+
+            if (isset($case) && $order instanceof Order) {
+                $case->setData('magento_status', Casedata::WAITING_SUBMISSION_STATUS);
+                $this->casedataResourceModel->save($case);
             }
 
             $this->logger->error($ex->getMessage(), $context);
