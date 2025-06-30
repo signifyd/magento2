@@ -1,9 +1,9 @@
 diff --git a/vendor/signifyd/module-connect/Model/ParadoxLabs/Authnetcim/Model/Gateway.php b/vendor/signifyd/module-connect/Model/ParadoxLabs/Authnetcim/Model/Gateway.php
 new file mode 100644
-index 0000000..0dbba48
+index 0000000..1328141
 --- /dev/null
 +++ b/vendor/signifyd/module-connect/Model/ParadoxLabs/Authnetcim/Model/Gateway.php
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,132 @@
 +<?php
 +
 +namespace Signifyd\Connect\Model\ParadoxLabs\Authnetcim\Model;
@@ -46,6 +46,9 @@ index 0000000..0dbba48
 +
 +    protected function handleTransactionError()
 +    {
++        $signifydReason = null;
++        $signifydReasonMessage = null;
++
 +        if (empty($this->lastResponse) === false &&
 +            isset($this->lastResponse['transactionResponse']) &&
 +            isset($this->lastResponse['transactionResponse']['responseCode']) &&
@@ -105,9 +108,25 @@ index 0000000..0dbba48
 +            }
 +
 +            if (isset($this->lastResponse['transactionResponse']['errors']['error']['errorText'])) {
-+                $this->transactionIntegration->setGatewayStatusMessage(
-+                    $this->lastResponse['transactionResponse']['errors']['error']['errorText']
-+                );
++                $signifydReasonMessage = $this->lastResponse['transactionResponse']['errors']['error']['errorText'];
++            }
++        } elseif (empty($this->lastResponse) === false &&
++            isset($this->lastResponse['messages']) &&
++            isset($this->lastResponse['messages']['resultCode']) &&
++            $this->lastResponse['messages']['resultCode'] == 'Error'
++        ) {
++            $signifydReason = 'CARD_DECLINED';
++
++            if (isset($this->lastResponse['messages']['message'])&&
++                isset($this->lastResponse['messages']['message']['text'])
++            ) {
++                $signifydReasonMessage = $this->lastResponse['messages']['message']['text'];
++            }
++        }
++
++        if (isset($signifydReason)) {
++            if (isset($signifydReasonMessage)) {
++                $this->transactionIntegration->setGatewayStatusMessage($signifydReasonMessage);
 +            }
 +
 +            $this->transactionIntegration->setGatewayRefusedReason($signifydReason);
@@ -119,12 +138,12 @@ index 0000000..0dbba48
 +}
 \ No newline at end of file
 diff --git a/vendor/signifyd/module-connect/etc/di.xml b/vendor/signifyd/module-connect/etc/di.xml
-index 7ab144e..0ed7291 100644
+index cc164e3..167207c 100644
 --- a/vendor/signifyd/module-connect/etc/di.xml
 +++ b/vendor/signifyd/module-connect/etc/di.xml
-@@ -178,6 +178,7 @@
+@@ -186,6 +186,7 @@
      </type>
-
+ 
      <!-- Preferences -->
 +    <preference for="ParadoxLabs\Authnetcim\Model\Gateway" type="Signifyd\Connect\Model\ParadoxLabs\Authnetcim\Model\Gateway" />
      <preference for="Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid" type="Signifyd\Connect\Block\Adminhtml\Shopcart\Abandoned\Grid" />
