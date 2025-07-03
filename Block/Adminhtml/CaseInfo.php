@@ -92,8 +92,8 @@ class CaseInfo extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
      * @param \Magento\Framework\Registry $registry
      * @param \Magento\Sales\Helper\Admin $adminHelper
      * @param array $data
-     * @param ShippingHelper $shippingHelper
-     * @param TaxHelper $taxHelper
+     * @param ?ShippingHelper $shippingHelper
+     * @param ?TaxHelper $taxHelper
      * @return void
      */
     public function initConstructor(
@@ -102,8 +102,8 @@ class CaseInfo extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
         \Magento\Framework\Registry $registry,
         \Magento\Sales\Helper\Admin $adminHelper,
         array $data,
-        ShippingHelper $shippingHelper,
-        TaxHelper $taxHelper
+        ?ShippingHelper $shippingHelper,
+        ?TaxHelper $taxHelper
     ) {
         if (version_compare($productMetadataInterface->getVersion(), '2.4.0') >= 0) {
             parent::__construct(

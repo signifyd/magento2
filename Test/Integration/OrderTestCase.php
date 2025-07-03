@@ -11,6 +11,10 @@ use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteIdMask;
 use Magento\Quote\Model\QuoteIdMaskFactory;
 use Magento\Sales\Model\OrderRepository;
+use Signifyd\Connect\Model\Api\Core\Client;
+use Signifyd\Connect\Model\Api\CheckoutOrderFactory;
+use Signifyd\Connect\Model\Api\SaleOrderFactory;
+use Signifyd\Connect\Model\Api\TransactionsFactory;
 
 class OrderTestCase extends TestCase
 {
@@ -20,6 +24,26 @@ class OrderTestCase extends TestCase
     public $quoteIdMaskFactory;
 
     /**
+     * @var Client
+     */
+    public $client;
+
+    /**
+     * @var CheckoutOrderFactory
+     */
+    public $checkoutOrderFactory;
+
+    /**
+     * @var SaleOrderFactory
+     */
+    public $saleOrderFactory;
+
+    /**
+     * @var TransactionsFactory
+     */
+    public $transactionsFactory;
+
+    /**
      * @inheritdoc
      */
     protected function setUp(): void
@@ -27,14 +51,10 @@ class OrderTestCase extends TestCase
         parent::setUp();
 
         $this->quoteIdMaskFactory = $this->objectManager->get(QuoteIdMaskFactory::class);
-        $this->transactionsFactory = $this->objectManager->create(
-            \Signifyd\Connect\Model\Api\TransactionsFactory::class
-        );
-        $this->checkoutOrderFactory = $this->objectManager->create(
-            \Signifyd\Connect\Model\Api\CheckoutOrderFactory::class
-        );
-        $this->saleOrderFactory = $this->objectManager->create(\Signifyd\Connect\Model\Api\SaleOrderFactory::class);
-        $this->client = $this->objectManager->create(\Signifyd\Connect\Model\Api\Core\Client::class);
+        $this->transactionsFactory = $this->objectManager->create(TransactionsFactory::class);
+        $this->checkoutOrderFactory = $this->objectManager->create(CheckoutOrderFactory::class);
+        $this->saleOrderFactory = $this->objectManager->create(SaleOrderFactory::class);
+        $this->client = $this->objectManager->create(Client::class);
     }
 
     /**
