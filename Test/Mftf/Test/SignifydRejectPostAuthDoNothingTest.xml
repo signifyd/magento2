@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="SignifydRejectPostAuthDoNothingTest" extends="SignifydSuccessPostAuthCaseTest">
+        <annotations>
+            <features value="Sales"/>
+            <stories value="Post Auth do nothing negative action"/>
+            <title value="Post Auth do nothing negative action"/>
+            <description value="Validate post auth do nothing negative action"/>
+            <severity value="CRITICAL"/>
+            <group value="checkout"/>
+        </annotations>
+        <before>
+            <createData entity="Signifyd_Customer_Refuse" stepKey="createCustomer"/>
+
+            <!-- Set Signifyd positive action to unhold to Signifyd put order on hold -->
+            <magentoCLI command="config:set {{GuaranteePositiveAction.path}} {{GuaranteePositiveAction.unhold}}" stepKey="setPositiveAction"/>
+
+            <!-- Set Signifyd negative action-->
+            <magentoCLI command="config:set {{GuaranteeNegativeAction.path}} {{GuaranteeNegativeAction.nothing}}" stepKey="setNegativeAction"/>
+        </before>
+
+        <!-- Cron run -->
+        <wait stepKey="waitCaseToBeCreatedOnSignifyd" time="25" before="goToOrdersPage"/>
+        <magentoCLI command="cron:run" stepKey="cronRun" before="goToOrdersPage"/>
+        <wait stepKey="waitCronRun" time="15" before="goToOrdersPage"/>
+
+        <!-- Assert that the case was reject -->
+        <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="REJECT" stepKey="seeCaseCreated"/>
+        <!-- Assert that the order is on hold -->
+        <see selector="{{AdminSignifydSection.magentoOrderStatus}}" userInput="On Hold" stepKey="seeOrderStatus"/>
+    </test>
+</tests>

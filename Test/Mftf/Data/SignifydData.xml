@@ -15,6 +15,24 @@
         <data key="post">POST_AUTH</data>
         <data key="path">signifyd/general/policy_name</data>
     </entity>
+    <entity name="SignifydEnableConfig">
+        <data key="path">signifyd/general/enabled</data>
+        <data key="yes">1</data>
+        <data key="no">0</data>
+        <data key="passive">passive</data>
+    </entity>
+    <entity name="GuaranteePositiveAction">
+        <data key="nothing">nothing</data>
+        <data key="unhold">unhold</data>
+        <data key="capture">capture</data>
+        <data key="path">signifyd/advanced/guarantee_positive_action</data>
+    </entity>
+    <entity name="GuaranteeNegativeAction">
+        <data key="nothing">nothing</data>
+        <data key="cancel">cancel</data>
+        <data key="refund">refund</data>
+        <data key="path">signifyd/advanced/guarantee_negative_action</data>
+    </entity>
     <entity name="Signifyd_Customer_Refuse" type="customer">
         <data key="group_id">1</data>
         <data key="default_billing">true</data>

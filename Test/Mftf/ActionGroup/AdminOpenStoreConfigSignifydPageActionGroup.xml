@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<actionGroups xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/actionGroupSchema.xsd">
+    <actionGroup name="AdminOpenStoreConfigSignifydPageActionGroup">
+        <annotations>
+            <description>Go to admin store configuration Signifyd page.</description>
+        </annotations>
+
+        <amOnPage url="{{AdminConfigSignifydPage.url}}" stepKey="openAdminStoreConfigSignifydPage" />
+        <waitForPageLoad stepKey="waitForPageLoad" />
+    </actionGroup>
+</actionGroups>

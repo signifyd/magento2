@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="SignifydSuccessPostAuthUnholdCaseTest" extends="SignifydSuccessPostAuthCaseTest">
+        <annotations>
+            <features value="Sales"/>
+            <stories value="Post Auth unhold positive action"/>
+            <title value="Post Auth unhold positive action"/>
+            <description value="Validate post Auth unhold positive action"/>
+            <severity value="CRITICAL"/>
+            <group value="checkout"/>
+        </annotations>
+        <before>
+            <!-- Set Signifyd positive action-->
+            <magentoCLI command="config:set {{GuaranteePositiveAction.path}} {{GuaranteePositiveAction.unhold}}" stepKey="setPositiveAction"/>
+        </before>
+
+        <!-- Cron run -->
+        <wait stepKey="waitCaseToBeCreatedOnSignifyd" time="25" before="goToOrdersPage"/>
+        <magentoCLI command="cron:run" stepKey="cronRun" before="goToOrdersPage"/>
+        <wait stepKey="waitCronRun" time="15" before="goToOrdersPage"/>
+
+        <!-- Assert that the case was accepted -->
+        <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="ACCEPT" stepKey="seeCaseCreated"/>
+        <!-- Assert that the order is on hold -->
+        <see selector="{{AdminSignifydSection.magentoOrderStatus}}" userInput="Pending" stepKey="seeOrderStatus"/>
+    </test>
+</tests>

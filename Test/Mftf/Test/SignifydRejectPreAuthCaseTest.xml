@@ -4,7 +4,7 @@
        xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
     <test name="SignifydRejectPreAuthCaseTest" extends="SignifydSuccessPostAuthCaseTest">
         <annotations>
-            <features value="Signifyd Pre Auth Refused"/>
+            <features value="Sales"/>
             <stories value="Pre auth case refused"/>
             <title value="Pre auth case refused"/>
             <description value="Order creation blocked at checkout"/>

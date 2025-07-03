@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="SignifydRejectPostAuthCancelTest" extends="SignifydSuccessPostAuthCaseTest">
+        <annotations>
+            <features value="Sales"/>
+            <stories value="Post Auth do cancel negative action"/>
+            <title value="Post Auth do cancel negative action"/>
+            <description value="Validate post auth do cancel negative action"/>
+            <severity value="CRITICAL"/>
+            <group value="checkout"/>
+        </annotations>
+        <before>
+            <createData entity="Signifyd_Customer_Refuse" stepKey="createCustomer"/>
+
+            <!-- Set Signifyd negative action-->
+            <magentoCLI command="config:set {{GuaranteeNegativeAction.path}} {{GuaranteeNegativeAction.cancel}}" stepKey="setNegativeAction"/>
+        </before>
+
+        <!-- Cron run -->
+        <wait stepKey="waitCaseToBeCreatedOnSignifyd" time="25" before="goToOrdersPage"/>
+        <magentoCLI command="cron:run" stepKey="cronRun" before="goToOrdersPage"/>
+        <wait stepKey="waitCronRun" time="15" before="goToOrdersPage"/>
+
+        <!-- Assert that the case was accepted -->
+        <see selector="{{AdminSignifydSection.signifydDecision}}" userInput="REJECT" stepKey="seeCaseCreated"/>
+        <!-- Assert that the order is on hold -->
+        <see selector="{{AdminSignifydSection.magentoOrderStatus}}" userInput="Canceled" stepKey="seeOrderStatus"/>
+    </test>
+</tests>
