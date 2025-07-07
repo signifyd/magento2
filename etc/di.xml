@@ -121,10 +121,6 @@
         <plugin name="Signifyd_Connect_Plugin_Holacash_Model_Payment" type="\Signifyd\Connect\Plugin\Holacash\Model\Payment" />
     </type>
 
-    <type name="StripeIntegration\Payments\Api\Service">
-        <plugin name="Signifyd_Connect_Plugin_StripeIntegration_Payments_Api_Service" type="\Signifyd\Connect\Plugin\StripeIntegration\Payments\Api\Service" />
-    </type>
-
     <type name="Adyen\Payment\Gateway\Http\Client\TransactionPayment">
         <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Gateway_Http_Client_TransactionPayment" type="\Signifyd\Connect\Plugin\Adyen\Payment\Gateway\Http\Client\TransactionPayment" />
     </type>
@@ -183,6 +179,14 @@
 
     <type name="Adyen\Payment\Controller\Webhook\Index">
         <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Controller_Webhook_Index" type="\Signifyd\Connect\Plugin\Adyen\Payment\Controller\Webhook\Index" />
+    </type>
+
+    <!-- Around order placement for StripeIntegration -->
+    <type name="Magento\Sales\Model\Service\OrderService">
+        <plugin name="signifydConnectOrderService"
+                type="Signifyd\Connect\Plugin\Magento\Sales\Model\Service\OrderService"
+                sortOrder="5"
+                disabled="false"/>
     </type>
 
     <!-- Preferences -->

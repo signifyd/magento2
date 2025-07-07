@@ -34,46 +34,25 @@ trait MapperTrait
                     return false;
                 }
 
-                if (class_exists('\Stripe\PaymentIntent') == false) {
-                    return false;
-                }
-
-                $customCurlClient = false;
-
-                if (class_exists(\Stripe\HttpClient\CurlClient::class) &&
-                    is_callable([\Stripe\ApiRequestor::class, 'setHttpClient'])
-                ) {
-                    $curl = new \Stripe\HttpClient\CurlClient();
-                    $curl->setTimeout(2);
-                    $curl->setConnectTimeout(1);
-                    \Stripe\ApiRequestor::setHttpClient($curl);
-
-                    $customCurlClient = true;
-                }
-
                 if (class_exists(\StripeIntegration\Payments\Model\Config::class)) {
-                    $this->objectManagerInterface
+                    $stripeClient = $this->objectManagerInterface
                         ->get(\StripeIntegration\Payments\Model\Config::class)->getStripeClient();
                 }
 
-                $paymentIntent = \Stripe\PaymentIntent::retrieve($lastTransactionId);
-
-                if ($customCurlClient == true) {
-                    \Stripe\ApiRequestor::setHttpClient(null);
-                }
+                $paymentIntent = $stripeClient->paymentIntents->retrieve($lastTransactionId, []);
 
                 if (is_object($paymentIntent) &&
-                    is_object($paymentIntent->charges) &&
-                    is_array($paymentIntent->charges->data)
+                    isset($paymentIntent->latest_charge)
                 ) {
-                    $charge = array_pop($paymentIntent->charges->data);
+                    $charge = $stripeClient->charges->retrieve($paymentIntent->latest_charge, []);
 
-                    if (is_object($charge) == false) {
+                    if (is_object($charge)) {
+                        $this->registry->setData($registryKey, $charge);
+
+                        return $charge;
+                    } else {
                         return false;
                     }
-
-                    $this->registry->setData($registryKey, $charge);
-                    return $charge;
                 }
             }
         } catch (\Exception $e) {
