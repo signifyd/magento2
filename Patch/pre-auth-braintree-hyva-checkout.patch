@@ -1,0 +1,111 @@
+diff --git a/vendor/signifyd/module-connect/Model/Magewire/Checkout/Payment/Method/Signifyd.php b/vendor/signifyd/module-connect/Model/Magewire/Checkout/Payment/Method/Signifyd.php
+new file mode 100644
+index 0000000..b1e2470
+--- /dev/null
++++ b/vendor/signifyd/module-connect/Model/Magewire/Checkout/Payment/Method/Signifyd.php
+@@ -0,0 +1,63 @@
++<?php
++declare(strict_types=1);
++
++namespace Signifyd\Connect\Model\Magewire\Checkout\Payment\Method;
++
++use Exception;
++use Magento\Checkout\Model\Session;
++use Magento\Framework\Exception\LocalizedException;
++use Magento\Framework\Exception\NoSuchEntityException;
++use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
++use Magewirephp\Magewire\Component\Form;
++use Rakit\Validation\Validator;
++
++class Signifyd extends Form
++{
++    /**
++     * @var Session
++     */
++    private Session $sessionCheckout;
++
++    /**
++     * @var QuoteResourceModel
++     */
++    private QuoteResourceModel $quoteResourceModel;
++
++    /**
++     * Signifyd constructor.
++     *
++     * @param Validator $validator
++     * @param Session $sessionCheckout
++     * @param QuoteResourceModel $quoteResourceModel
++     */
++    public function __construct(
++        Validator $validator,
++        Session $sessionCheckout,
++        QuoteResourceModel $quoteResourceModel
++    ) {
++        $this->sessionCheckout = $sessionCheckout;
++        $this->quoteResourceModel = $quoteResourceModel;
++        parent::__construct($validator);
++    }
++
++    /**
++     * Set setCardData
++     *
++     * @param array $cardDetails
++     * @return void
++     * @throws LocalizedException
++     * @throws NoSuchEntityException
++     * @throws Exception
++     */
++    public function setCardData(array $cardDetails): void
++    {
++        $quote = $this->sessionCheckout->getQuote();
++
++        $quote->getPayment()
++            ->setAdditionalInformation(
++                $cardDetails
++            );
++
++        $this->quoteResourceModel->save($quote);
++    }
++}
+diff --git a/vendor/signifyd/module-connect/view/frontend/layout/hyva_checkout_components.xml b/vendor/signifyd/module-connect/view/frontend/layout/hyva_checkout_components.xml
+new file mode 100644
+index 0000000..0dc4401
+--- /dev/null
++++ b/vendor/signifyd/module-connect/view/frontend/layout/hyva_checkout_components.xml
+@@ -0,0 +1,18 @@
++<?xml version="1.0"?>
++<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
++    <body>
++        <referenceContainer name="checkout.payment.methods.before">
++            <block name="checkout.payment.method.signifyd"
++                   as="signifyd"
++                   after="-"
++                   template="Signifyd_Connect::checkout/payment/method/signifyd.phtml">
++                <arguments>
++                    <argument name="magewire" xsi:type="object">
++                        \Signifyd\Connect\Model\Magewire\Checkout\Payment\Method\Signifyd
++                    </argument>
++                </arguments>
++            </block>
++        </referenceContainer>
++    </body>
++</page>
+\ No newline at end of file
+diff --git a/vendor/signifyd/module-connect/view/frontend/templates/checkout/payment/method/signifyd.phtml b/vendor/signifyd/module-connect/view/frontend/templates/checkout/payment/method/signifyd.phtml
+new file mode 100644
+index 0000000..497c4b8
+--- /dev/null
++++ b/vendor/signifyd/module-connect/view/frontend/templates/checkout/payment/method/signifyd.phtml
+@@ -0,0 +1,10 @@
++<?php
++
++/** @var Escaper $escaper */
++
++use Magento\Framework\Escaper;
++
++?>
++
++<div id="signifyd">
++</div>
+\ No newline at end of file

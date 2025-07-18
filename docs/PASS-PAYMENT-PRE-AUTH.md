@@ -114,6 +114,18 @@ git apply pre-auth-authorizenet.patch
     - Expiry date: no
     - Cardholder name: no
 
+### Braintree on Hyvä Checkout
+#### Magento built in + hyva-themes/magento2-hyva-checkout-braintree Hyvä Compatibility module
+#### Tested on Braintree module 4.6.1-p5
+#### Braintree Hyvä compatibility module 1.1.0
+
+- Call transaction API on failure: yes
+- Payment data available:
+    - Bin: yes
+    - Last4: yes
+    - Expiry date: yes
+    - Cardholder name: no
+
 ### OpenPay
 #### Link to the extension https://github.com/open-pay/openpay-magento2-cards
 #### Tested on 2.3.0
