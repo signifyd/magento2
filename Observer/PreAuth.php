@@ -314,7 +314,7 @@ class PreAuth implements ObserverInterface
                         $checkoutPaymentDetails = $this->mappingForAuthnet($checkoutPaymentDetails, $dataArray);
                     }
                 }
-            } else {
+            } elseif (isset($payment)) {
                 $checkoutPaymentDetails['cardBin'] = $payment->getAdditionalInformation('cardBin');
                 $checkoutPaymentDetails['cardExpiryMonth'] = $payment->getAdditionalInformation('cardExpiryMonth');
                 $checkoutPaymentDetails['cardExpiryYear'] = $payment->getAdditionalInformation('cardExpiryYear');

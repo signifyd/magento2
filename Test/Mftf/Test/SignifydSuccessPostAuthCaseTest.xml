@@ -19,6 +19,9 @@
             <createData entity="Simple_US_Customer" stepKey="createCustomer"/>
             <actionGroup ref="AdminLoginActionGroup" stepKey="loginAsAdmin"/>
 
+            <!-- Make sure the product is in stock -->
+            <magentoCLI command="indexer:reindex" stepKey="reindexAll"/>
+
             <!-- Enable Signifyd module -->
             <magentoCLI command="config:set {{SignifydEnableConfig.path}} {{SignifydEnableConfig.yes}}" stepKey="enableExtension"/>
 
