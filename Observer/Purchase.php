@@ -482,6 +482,14 @@ class Purchase implements ObserverInterface
                 $case->setUpdated();
             }
 
+            // Flag added to keep the order on hold after Signifyd processing.
+            // This is necessary due to a race condition: during Signifyd's processing,
+            // the Stripe charge observer may be triggered at the same time,
+            // which could cause the order status to change prematurely.
+            if ($order->getPayment()->getMethod() == 'stripe_payments') {
+                $case->setEntries('is_holded', 1);
+            }
+
             $this->casedataResourceModel->save($case);
 
             // Initial hold order
