@@ -2,13 +2,13 @@
 
 namespace Signifyd\Connect\Plugin\StripeIntegration\Payments\Model\Stripe\Event;
 
+use Magento\Framework\ObjectManagerInterface;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use StripeIntegration\Payments\Model\Stripe\Event\ChargeSucceeded as StripeChargeSucceeded;
-use StripeIntegration\Payments\Helper\Webhooks;
 
 class ChargeSucceeded
 {
@@ -38,9 +38,9 @@ class ChargeSucceeded
     public $orderHelper;
 
     /**
-     * @var Webhooks
+     * @var ObjectManagerInterface
      */
-    public $webhooksHelper;
+    public $objectManagerInterface;
 
     /**
      * ChargeSucceeded constructor.
@@ -50,7 +50,7 @@ class ChargeSucceeded
      * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
      * @param OrderHelper $orderHelper
-     * @param Webhooks $webhooksHelper
+     * @param ObjectManagerInterface $objectManagerInterface
      */
     public function __construct(
         Logger $logger,
@@ -58,14 +58,14 @@ class ChargeSucceeded
         CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
         OrderHelper $orderHelper,
-        Webhooks $webhooksHelper
+        ObjectManagerInterface $objectManagerInterface
     ) {
         $this->logger = $logger;
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
         $this->orderHelper = $orderHelper;
-        $this->webhooksHelper = $webhooksHelper;
+        $this->objectManagerInterface = $objectManagerInterface;
     }
 
     /**
@@ -83,7 +83,10 @@ class ChargeSucceeded
         $object
     ) {
         try {
-            $order = $this->webhooksHelper->loadOrderFromEvent($arrEvent);
+            $webhooksHelper = $this->objectManagerInterface->create(
+                \StripeIntegration\Payments\Helper\Webhooks::class
+            );
+            $order = $webhooksHelper->loadOrderFromEvent($arrEvent);
             $orderId = $order->getId();
             $case = $this->casedataFactory->create();
             $this->casedataResourceModel->load($case, $orderId, 'order_id');
