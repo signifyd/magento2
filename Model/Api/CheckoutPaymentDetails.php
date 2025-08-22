@@ -71,6 +71,21 @@ class CheckoutPaymentDetails
     public $cardBrandFactory;
 
     /**
+     * @var CardFundingFactory
+     */
+    public $cardFundingFactory;
+
+    /**
+     * @var BankRoutingCountryFactory
+     */
+    public $bankRoutingCountryFactory;
+
+    /**
+     * @var BankRoutingNumberFactory
+     */
+    public $bankRoutingNumberFactory;
+
+    /**
      * @param AddressFactory $addressFactory
      * @param AccountHolderNameFactory $accountHolderNameFactory
      * @param Logger $logger
@@ -83,6 +98,9 @@ class CheckoutPaymentDetails
      * @param CardInstallmentsFactory $cardInstallmentsFactory
      * @param AccountLast4Factory $accountLast4Factory
      * @param CardBrandFactory $cardBrandFactory
+     * @param CardFundingFactory $cardFundingFactory
+     * @param BankRoutingCountryFactory $bankRoutingCountryFactory
+     * @param BankRoutingNumberFactory $bankRoutingNumberFactory
      */
     public function __construct(
         AddressFactory $addressFactory,
@@ -96,7 +114,10 @@ class CheckoutPaymentDetails
         CardTokenFactory $cardTokenFactory,
         CardInstallmentsFactory $cardInstallmentsFactory,
         AccountLast4Factory $accountLast4Factory,
-        CardBrandFactory $cardBrandFactory
+        CardBrandFactory $cardBrandFactory,
+        CardFundingFactory $cardFundingFactory,
+        BankRoutingCountryFactory $bankRoutingCountryFactory,
+        BankRoutingNumberFactory $bankRoutingNumberFactory
     ) {
         $this->addressFactory = $addressFactory;
         $this->accountHolderNameFactory = $accountHolderNameFactory;
@@ -110,6 +131,9 @@ class CheckoutPaymentDetails
         $this->cardInstallmentsFactory = $cardInstallmentsFactory;
         $this->accountLast4Factory = $accountLast4Factory;
         $this->cardBrandFactory = $cardBrandFactory;
+        $this->cardFundingFactory = $cardFundingFactory;
+        $this->bankRoutingCountryFactory = $bankRoutingCountryFactory;
+        $this->bankRoutingNumberFactory = $bankRoutingNumberFactory;
     }
 
     /**
@@ -182,6 +206,9 @@ class CheckoutPaymentDetails
         $checkoutPaymentDetails['cardLast4'] = $this->getLast4($order);
         $checkoutPaymentDetails['cardBrand'] = $cardBrand();
         $checkoutPaymentDetails['cardInstallments'] = $cardInstallments;
+        $checkoutPaymentDetails['cardFunding'] = ($this->cardFundingFactory->create())();
+        $checkoutPaymentDetails['bankRoutingNumber'] = ($this->bankRoutingNumberFactory->create())();
+        $checkoutPaymentDetails['bankRoutingCountry'] = ($this->bankRoutingCountryFactory->create())();
 
         return $checkoutPaymentDetails;
     }

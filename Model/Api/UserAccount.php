@@ -32,23 +32,47 @@ class UserAccount
     protected $resourceConnection;
 
     /**
+     * @var SavedPaymentsFactory
+     */
+    protected $savedPaymentsFactory;
+
+    /**
+     * @var SavedAddressesFactory
+     */
+    protected $savedAddressesFactory;
+
+    /**
+     * @var AssociateIdFactory
+     */
+    protected $associateIdFactory;
+
+    /**
      * UserAccount construct.
      *
      * @param CustomerFactory $customerFactory
      * @param CustomerResourceModel $customerResourceModel
      * @param OrderCollectionFactory $orderCollectionFactory
      * @param ResourceConnection $resourceConnection
+     * @param SavedPaymentsFactory $savedPaymentsFactory
+     * @param SavedAddressesFactory $savedAddressesFactory
+     * @param AssociateIdFactory $associateIdFactory
      */
     public function __construct(
         CustomerFactory $customerFactory,
         CustomerResourceModel $customerResourceModel,
         OrderCollectionFactory $orderCollectionFactory,
-        ResourceConnection $resourceConnection
+        ResourceConnection $resourceConnection,
+        SavedPaymentsFactory $savedPaymentsFactory,
+        SavedAddressesFactory $savedAddressesFactory,
+        AssociateIdFactory $associateIdFactory
     ) {
         $this->customerFactory = $customerFactory;
         $this->customerResourceModel = $customerResourceModel;
         $this->orderCollectionFactory = $orderCollectionFactory;
         $this->resourceConnection = $resourceConnection;
+        $this->savedPaymentsFactory = $savedPaymentsFactory;
+        $this->savedAddressesFactory = $savedAddressesFactory;
+        $this->associateIdFactory = $associateIdFactory;
     }
 
     /**
@@ -85,6 +109,11 @@ class UserAccount
         $user['aggregateOrderDollars'] = 0.0;
         $user['email'] = $order->getCustomerEmail();
         $user['phone'] = $order->getBillingAddress()->getTelephone();
+        $user['associateId'] = ($this->associateIdFactory->create())();
+        $user['savedPayments'] = $order->getCustomerId() ?
+            ($this->savedPaymentsFactory->create())($order->getCustomerId()) : [];
+        $user['savedAddresses'] = $order->getCustomerId() ?
+            ($this->savedAddressesFactory->create())($order->getCustomerId()) : [];
 
         /* @var \Magento\Customer\Model\Customer $customer */
         $customer = $this->customerFactory->create();
@@ -153,6 +182,11 @@ class UserAccount
         $user['phone'] = $quote->getBillingAddress()->getTelephone();
         $user['aggregateOrderCount'] = 0;
         $user['aggregateOrderDollars'] = 0.0;
+        $user['associateId'] = ($this->associateIdFactory->create())();
+        $user['savedPayments'] = $quote->getCustomerId() ?
+            ($this->savedPaymentsFactory->create())($quote->getCustomerId()) : [];
+        $user['savedAddresses'] = $quote->getCustomerId() ?
+            ($this->savedAddressesFactory->create())($quote->getCustomerId()) : [];
 
         /* @var \Magento\Customer\Model\Customer $customer */
         $customer = $this->customerFactory->create();

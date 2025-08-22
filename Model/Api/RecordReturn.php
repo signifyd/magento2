@@ -15,17 +15,49 @@ class RecordReturn
     public $productFactory;
 
     /**
+     * @var ReturnTagsFactory
+     */
+    public $returnTagsFactory;
+
+    /**
+     * @var ReturnDateFactory
+     */
+    public $returnDateFactory;
+
+    /**
+     * @var ReturnStatusFactory
+     */
+    public $returnStatusFactory;
+
+    /**
+     * @var ReturnSubReasonFactory
+     */
+    public $returnSubReasonFactory;
+
+    /**
      * RecordReturn construct.
      *
      * @param DeviceFactory $deviceFactory
      * @param ProductFactory $productFactory
+     * @param ReturnTagsFactory $returnTagsFactory
+     * @param ReturnDateFactory $returnDateFactory
+     * @param ReturnStatusFactory $returnStatusFactory
+     * @param ReturnSubReasonFactory $returnSubReasonFactory
      */
     public function __construct(
         DeviceFactory $deviceFactory,
-        ProductFactory $productFactory
+        ProductFactory $productFactory,
+        ReturnTagsFactory $returnTagsFactory,
+        ReturnDateFactory $returnDateFactory,
+        ReturnStatusFactory $returnStatusFactory,
+        ReturnSubReasonFactory $returnSubReasonFactory
     ) {
         $this->deviceFactory = $deviceFactory;
         $this->productFactory = $productFactory;
+        $this->returnTagsFactory = $returnTagsFactory;
+        $this->returnDateFactory = $returnDateFactory;
+        $this->returnStatusFactory = $returnStatusFactory;
+        $this->returnSubReasonFactory = $returnSubReasonFactory;
     }
 
     /**
@@ -49,11 +81,15 @@ class RecordReturn
                 $makeProduct = $this->productFactory->create();
                 $productToReturn = $makeProduct($item);
                 $productToReturn['reason'] = 'CANCELATION';
+                $productToReturn['subReason'] = ($this->returnSubReasonFactory->create())();
                 $recordReturn['returnedItems'][] = $productToReturn;
             }
         }
 
         $recordReturn['orderId'] = $order->getIncrementId();
+        $recordReturn['returnStatus'] = ($this->returnStatusFactory->create())();
+        $recordReturn['returnDate'] = ($this->returnDateFactory->create())();
+        $recordReturn['tags'] = ($this->returnTagsFactory->create())();
         $recordReturn['returnId'] = uniqid();
         $recordReturn['device'] = $device($order->getQuoteId(), $order->getStoreId(), $order);
 

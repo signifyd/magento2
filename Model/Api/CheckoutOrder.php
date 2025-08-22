@@ -112,6 +112,11 @@ class CheckoutOrder
     public $logger;
 
     /**
+     * @var DecisionMechanismFactory
+     */
+    public $decisionMechanismFactory;
+
+    /**
      * @param Registry $registry
      * @param PurchaseFactory $purchaseFactory
      * @param UserAccountFactory $userAccountFactory
@@ -132,6 +137,7 @@ class CheckoutOrder
      * @param PaymentMethodFactory $paymentMethodFactory
      * @param ConfigHelper $configHelper
      * @param Logger $logger
+     * @param DecisionMechanismFactory $decisionMechanismFactory
      */
     public function __construct(
         Registry $registry,
@@ -153,7 +159,8 @@ class CheckoutOrder
         MerchantCategoryCodeFactory $merchantCategoryCodeFactory,
         PaymentMethodFactory $paymentMethodFactory,
         ConfigHelper $configHelper,
-        Logger $logger
+        Logger $logger,
+        DecisionMechanismFactory $decisionMechanismFactory
     ) {
         $this->registry = $registry;
         $this->purchaseFactory = $purchaseFactory;
@@ -175,6 +182,7 @@ class CheckoutOrder
         $this->paymentMethodFactory = $paymentMethodFactory;
         $this->configHelper = $configHelper;
         $this->logger = $logger;
+        $this->decisionMechanismFactory = $decisionMechanismFactory;
     }
 
     /**
@@ -222,6 +230,7 @@ class CheckoutOrder
             $signifydOrder['sellers'] = $sellers();
             $signifydOrder['tags'] = $tags($quote->getStoreId());
             $signifydOrder['customerOrderRecommendation'] = $customerOrderRecommendation();
+            $signifydOrder['decisionMechanism'] = ($this->decisionMechanismFactory->create())();
 
             $policyConfig = $this->configHelper->getPolicyName(
                 $quote->getStore()->getScopeType(),

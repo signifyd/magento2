@@ -74,6 +74,16 @@ class SaleOrder
     public $merchantCategoryCodeFactory;
 
     /**
+     * @var DecisionMechanismFactory
+     */
+    public $decisionMechanismFactory;
+
+    /**
+     * @var DecisionDeliveryFactory
+     */
+    public $decisionDeliveryFactory;
+
+    /**
      * @var Logger
      */
     public $logger;
@@ -95,6 +105,8 @@ class SaleOrder
      * @param MembershipsFactory $membershipsFactory
      * @param MerchantCategoryCodeFactory $merchantCategoryCodeFactory
      * @param Logger $logger
+     * @param DecisionMechanismFactory $decisionMechanismFactory
+     * @param DecisionDeliveryFactory $decisionDeliveryFactory
      */
     public function __construct(
         Registry $registry,
@@ -110,7 +122,9 @@ class SaleOrder
         CustomerOrderRecommendationFactory $customerOrderRecommendationFactory,
         MembershipsFactory $membershipsFactory,
         MerchantCategoryCodeFactory $merchantCategoryCodeFactory,
-        Logger $logger
+        Logger $logger,
+        DecisionMechanismFactory $decisionMechanismFactory,
+        DecisionDeliveryFactory $decisionDeliveryFactory
     ) {
         $this->registry = $registry;
         $this->purchaseFactory = $purchaseFactory;
@@ -126,6 +140,8 @@ class SaleOrder
         $this->membershipsFactory = $membershipsFactory;
         $this->merchantCategoryCodeFactory = $merchantCategoryCodeFactory;
         $this->logger = $logger;
+        $this->decisionMechanismFactory = $decisionMechanismFactory;
+        $this->decisionDeliveryFactory = $decisionDeliveryFactory;
     }
 
     /**
@@ -157,6 +173,8 @@ class SaleOrder
             $signifydOrder['userAccount'] = $userAccount($order);
             $signifydOrder['memberships'] = $memberships();
             $signifydOrder['coverageRequests'] = $coverageRequests($order->getPayment()->getMethod());
+            $signifydOrder['decisionMechanism'] = ($this->decisionMechanismFactory->create())();
+            $signifydOrder['decisionDelivery'] = ($this->decisionDeliveryFactory->create())();
             $signifydOrder['merchantCategoryCode'] = $merchantCategoryCode();
             $signifydOrder['device'] = $device($order->getQuoteId(), $order->getStoreId(), $order);
             $signifydOrder['merchantPlatform'] = $merchantPlatform();
