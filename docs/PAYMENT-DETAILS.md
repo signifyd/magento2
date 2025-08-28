@@ -193,7 +193,7 @@ Here is a list of the payment methods that have a payment data collected. If the
 
 ### Stripe Payments
 #### Link to the extension https://commercemarketplace.adobe.com/stripe-stripe-payments.html
-#### Tested on 3.5.16
+#### Tested on 4.4.4
 - Code: stripe_payments
 
 **Available data**
