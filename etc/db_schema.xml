@@ -27,9 +27,6 @@
         <index referenceId="INDEX_MAGENTO_STATUS" indexType="btree">
             <column name="magento_status"/>
         </index>
-        <index referenceId="INDEX_ORDER_ID" indexType="btree">
-            <column name="order_id"/>
-        </index>
         <index referenceId="INDEX_CODE" indexType="btree">
             <column name="code"/>
         </index>
