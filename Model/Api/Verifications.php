@@ -106,7 +106,6 @@ class Verifications
                 return null;
             }
 
-            $cvvCode = trim(strtoupper($cvvCode));
             return $cvvCode;
         } catch (Exception $e) {
             $this->logger->error(
