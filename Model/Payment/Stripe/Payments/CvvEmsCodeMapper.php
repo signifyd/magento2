@@ -36,11 +36,8 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     {
         $charge = $this->getCharge($order);
 
-        if (is_object($charge) == false) {
-            $cvvStatus = null;
-        }
-
-        if (isset($charge->payment_method_details) &&
+        if (is_object($charge) &&
+            isset($charge->payment_method_details) &&
             isset($charge->payment_method_details->card) &&
             isset($charge->payment_method_details->card->checks) &&
             isset($charge->payment_method_details->card->checks->cvc_check)
