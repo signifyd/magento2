@@ -277,9 +277,6 @@ class Purchase implements ObserverInterface
                     if ($this->shouldHoldOrder($order, $casesFromQuoteLoaded, $isPassive)) {
                         $this->holdOrder($order);
                     }
-
-                    $order->addCommentToStatusHistory("Signifyd: after order place");
-                    $this->signifydOrderResourceModel->save($order);
                 }
 
                 return;
@@ -372,9 +369,6 @@ class Purchase implements ObserverInterface
                         $this->holdOrder($order);
                     }
 
-                    $order->addCommentToStatusHistory("Signifyd: after order place");
-                    $this->signifydOrderResourceModel->save($order);
-
                     $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
                     $this->casedataResourceModel->save($case);
                 }
@@ -446,9 +440,6 @@ class Purchase implements ObserverInterface
                     if ($this->shouldHoldOrder($order, $case, $isPassive)) {
                         $this->holdOrder($order);
                     }
-
-                    $order->addCommentToStatusHistory("Signifyd: after order place");
-                    $this->signifydOrderResourceModel->save($order);
                 } catch (\Exception $ex) {
                     $this->logger->error($ex->__toString(), ['entity' => $order]);
                 }
@@ -478,9 +469,6 @@ class Purchase implements ObserverInterface
                         if ($this->shouldHoldOrder($order, $case, $isPassive)) {
                             $this->holdOrder($order);
                         }
-
-                        $order->addCommentToStatusHistory("Signifyd: after order place");
-                        $this->signifydOrderResourceModel->save($order);
                     } catch (\Exception $ex) {
                         $this->logger->error($ex->__toString(), ['entity' => $order]);
                     }
@@ -504,13 +492,26 @@ class Purchase implements ObserverInterface
                 $case->setUpdated();
             }
 
+            // Flag added to keep the order on hold after Signifyd processing.
+            // This is necessary due to a race condition: during Signifyd's processing,
+            // the Stripe charge observer may be triggered at the same time,
+            // which could cause the order status to change prematurely.
+            if ($order->getPayment()->getMethod() == 'stripe_payments' &&
+                $this->shouldHoldOrder($order, $case, $isPassive)
+            ) {
+                $case->setEntries('is_holded', 1);
+            }
+
+            $this->casedataResourceModel->save($case);
+
             // Initial hold order
             if ($this->shouldHoldOrder($order, $case, $isPassive)) {
                 $this->holdOrder($order);
             }
 
-            $order->addCommentToStatusHistory("Signifyd: after order place");
-            $this->signifydOrderResourceModel->save($order);
+            if ($isPassive === false) {
+                $this->signifydOrderResourceModel->save($order);
+            }
         } catch (\Exception $ex) {
             $context = [];
 
@@ -643,11 +644,6 @@ class Purchase implements ObserverInterface
      */
     public function shouldHoldOrder(Order $order, Casedata $case, bool $isPassive = false): bool
     {
-        if ($isPassive === true) {
-            $this->casedataResourceModel->save($case);
-            return false;
-        }
-
         $positiveAction = $this->updateOrderAction->getPositiveAction($case);
         $negativeAction = $this->updateOrderAction->getNegativeAction($case);
 
@@ -701,19 +697,9 @@ class Purchase implements ObserverInterface
                 return false;
             }
 
-            // Flag added to keep the order on hold after Signifyd processing.
-            // This is necessary due to a race condition: during Signifyd's processing,
-            // the Stripe charge observer may be triggered at the same time,
-            // which could cause the order status to change prematurely.
-            if ($order->getPayment()->getMethod() == 'stripe_payments') {
-                $case->setEntries('is_holded', 1);
-                $this->casedataResourceModel->save($case);
-            }
-
             return true;
         }
 
-        $this->casedataResourceModel->save($case);
         return false;
     }
 
@@ -721,15 +707,21 @@ class Purchase implements ObserverInterface
      * Hold order method.
      *
      * @param Order $order
+     * @param bool $isPassive
      * @throws AlreadyExistsException|LocalizedException
      */
-    public function holdOrder(Order $order): void
+    public function holdOrder(Order $order, bool $isPassive = false): void
     {
         $this->logger->debug(
             'Purchase Observer Order Hold: No: ' . $order->getIncrementId(),
             ['entity' => $order]
         );
 
-        $order->hold();
+        if ($isPassive === false) {
+            $order->hold();
+        }
+
+        $order->addCommentToStatusHistory("Signifyd: after order place");
+        $this->signifydOrderResourceModel->save($order);
     }
 }
