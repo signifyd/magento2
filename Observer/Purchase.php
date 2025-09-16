@@ -274,9 +274,7 @@ class Purchase implements ObserverInterface
                 if ($casesFromQuote->getData('guarantee') == 'HOLD' ||
                     $casesFromQuote->getData('guarantee') == 'PENDING'
                 ) {
-                    if ($this->shouldHoldOrder($order, $casesFromQuoteLoaded, $isPassive)) {
-                        $this->holdOrder($order);
-                    }
+                    $this->holdOrder($order, $casesFromQuoteLoaded, $isPassive);
                 }
 
                 return;
@@ -365,9 +363,7 @@ class Purchase implements ObserverInterface
             } elseif ($case->getData('magento_status') != Casedata::NEW) {
                 if ($isOrderProcessedByAmazon && $case->getMagentoStatus() === Casedata::AWAITING_PSP) {
                     // Hold order after Amazon capture the payment
-                    if ($this->shouldHoldOrder($order, $case, $isPassive)) {
-                        $this->holdOrder($order);
-                    }
+                    $this->holdOrder($order, $case, $isPassive);
 
                     $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
                     $this->casedataResourceModel->save($case);
@@ -437,9 +433,7 @@ class Purchase implements ObserverInterface
                     );
 
                     // Initial hold order
-                    if ($this->shouldHoldOrder($order, $case, $isPassive)) {
-                        $this->holdOrder($order);
-                    }
+                    $this->holdOrder($order, $case, $isPassive);
                 } catch (\Exception $ex) {
                     $this->logger->error($ex->__toString(), ['entity' => $order]);
                 }
@@ -466,9 +460,7 @@ class Purchase implements ObserverInterface
                         );
 
                         // Initial hold order
-                        if ($this->shouldHoldOrder($order, $case, $isPassive)) {
-                            $this->holdOrder($order);
-                        }
+                        $this->holdOrder($order, $case, $isPassive);
                     } catch (\Exception $ex) {
                         $this->logger->error($ex->__toString(), ['entity' => $order]);
                     }
@@ -497,7 +489,8 @@ class Purchase implements ObserverInterface
             // the Stripe charge observer may be triggered at the same time,
             // which could cause the order status to change prematurely.
             if ($order->getPayment()->getMethod() == 'stripe_payments' &&
-                $this->shouldHoldOrder($order, $case, $isPassive)
+                $this->shouldHoldOrder($order, $case) &&
+                $isPassive === false
             ) {
                 $case->setEntries('is_holded', 1);
             }
@@ -505,9 +498,7 @@ class Purchase implements ObserverInterface
             $this->casedataResourceModel->save($case);
 
             // Initial hold order
-            if ($this->shouldHoldOrder($order, $case, $isPassive)) {
-                $this->holdOrder($order);
-            }
+            $this->holdOrder($order, $case, $isPassive);
 
             if ($isPassive === false) {
                 $this->signifydOrderResourceModel->save($order);
@@ -642,7 +633,7 @@ class Purchase implements ObserverInterface
      * @return bool
      * @throws AlreadyExistsException
      */
-    public function shouldHoldOrder(Order $order, Casedata $case, bool $isPassive = false): bool
+    public function shouldHoldOrder(Order $order, Casedata $case): bool
     {
         $positiveAction = $this->updateOrderAction->getPositiveAction($case);
         $negativeAction = $this->updateOrderAction->getNegativeAction($case);
@@ -710,8 +701,12 @@ class Purchase implements ObserverInterface
      * @param bool $isPassive
      * @throws AlreadyExistsException|LocalizedException
      */
-    public function holdOrder(Order $order, bool $isPassive = false): void
+    public function holdOrder(Order $order, Casedata $case, bool $isPassive = false): void
     {
+        if ($this->shouldHoldOrder($order, $case)) {
+            return;
+        }
+
         $this->logger->debug(
             'Purchase Observer Order Hold: No: ' . $order->getIncrementId(),
             ['entity' => $order]
