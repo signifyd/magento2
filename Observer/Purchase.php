@@ -703,7 +703,7 @@ class Purchase implements ObserverInterface
      */
     public function holdOrder(Order $order, Casedata $case, bool $isPassive = false): void
     {
-        if ($this->shouldHoldOrder($order, $case)) {
+        if ($this->shouldHoldOrder($order, $case) === false) {
             return;
         }
 
