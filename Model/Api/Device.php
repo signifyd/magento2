@@ -80,7 +80,7 @@ class Device
      * @param Order $order
      * @return mixed
      */
-    protected function getIPAddress(Order $order)
+    public function getIPAddress(Order $order)
     {
         if ($order->getRemoteIp()) {
             if ($order->getXForwardedFor()) {
@@ -99,7 +99,7 @@ class Device
      * @param string $ipString
      * @return mixed
      */
-    protected function filterIp($ipString)
+    public function filterIp($ipString)
     {
         $matches = [];
 

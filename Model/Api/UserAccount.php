@@ -29,7 +29,7 @@ class UserAccount
     /**
      * @var ResourceConnection
      */
-    protected $resourceConnection;
+    public $resourceConnection;
 
     /**
      * UserAccount construct.
@@ -76,7 +76,7 @@ class UserAccount
      * @param Order $order
      * @return array
      */
-    protected function makeUserAccount(Order $order)
+    public function makeUserAccount(Order $order)
     {
         $user = [];
         $user['username'] = $order->getCustomerEmail();
@@ -129,13 +129,23 @@ class UserAccount
      */
     public function getAggregateData($customerId)
     {
-        $salesOrder = $this->resourceConnection->getTableName('sales_order');
-        $customerOrderHistory = "SELECT customer_id, SUM(grand_total) AS 'sum_grand_total', count(*) AS  " .
-            "'totals_order'  FROM " . $salesOrder . " WHERE customer_id = " . $customerId;
         $connection = $this->resourceConnection->getConnection();
-        $historyDataArray = $connection->fetchAll($customerOrderHistory);
+        $salesOrder = $this->resourceConnection->getTableName('sales_order');
 
-        return reset($historyDataArray);
+        $select = $connection->select()
+            ->from(
+                ['so' => $salesOrder],
+                [
+                    'customer_id',
+                    'sum_grand_total' => new \Zend_Db_Expr('SUM(grand_total)'),
+                    'totals_order' => new \Zend_Db_Expr('COUNT(*)')
+                ]
+            )
+            ->where('so.customer_id = ?', $customerId);
+
+        $historyDataArray = $connection->fetchRow($select);
+
+        return $historyDataArray ?: false;
     }
 
     /**
@@ -144,7 +154,7 @@ class UserAccount
      * @param Quote $quote
      * @return array
      */
-    protected function makeUserAccountFromQuote(Quote $quote)
+    public function makeUserAccountFromQuote(Quote $quote)
     {
         $user = [];
         $user['email'] = $quote->getCustomerEmail();

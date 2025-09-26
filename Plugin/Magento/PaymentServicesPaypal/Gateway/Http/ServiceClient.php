@@ -8,6 +8,27 @@ use Signifyd\Connect\Model\TransactionIntegration;
 
 class ServiceClient
 {
+    private const CAPTURE_ERRORS = [
+        'INVALID_CURRENCY_CODE' => 'Currency code should be a three-character currency code.',
+        // phpcs:disable Magento2.Files.LineLength, Generic.Files.LineLength
+        'CANNOT_BE_ZERO_OR_NEGATIVE' => 'Must be greater than zero. If the currency supports decimals, only two decimal place precision is supported.',
+        'DECIMAL_PRECISION' => 'The value of the field should not be more than two decimal places.',
+        'DECIMALS_NOT_SUPPORTED' => 'Currency does not support decimals.',
+        'TRANSACTION_REFUSED' => 'PayPal\'s internal controls prevent authorization from being captured.',
+        'AUTHORIZATION_VOIDED' => 'A voided authorization cannot be captured or reauthorized.',
+        // phpcs:disable Magento2.Files.LineLength, Generic.Files.LineLength
+        'MAX_CAPTURE_COUNT_EXCEEDED' => 'Maximum number of allowable captures has been reached. No additional captures are possible for this authorization. Please contact customer service or your account manager to change the number of captures that be made for a given authorization.',
+        // phpcs:disable Magento2.Files.LineLength, Generic.Files.LineLength
+        'DUPLICATE_INVOICE_ID' => 'Requested invoice number has been previously captured. Possible duplicate transaction.',
+        'AUTH_CAPTURE_CURRENCY_MISMATCH' => 'Currency of capture must be the same as currency of authorization.',
+        'AUTHORIZATION_ALREADY_CAPTURED' => 'Authorization has already been captured.',
+        'PAYER_CANNOT_PAY' => 'Payer cannot pay for this transaction.',
+        'AUTHORIZATION_EXPIRED' => 'An expired authorization cannot be captured.',
+        'MAX_CAPTURE_AMOUNT_EXCEEDED' => 'Capture amount exceeds allowable limit.',
+        'PAYEE_ACCOUNT_LOCKED_OR_CLOSED' => 'Transaction could not complete because payee account is locked or closed.',
+        'PAYER_ACCOUNT_LOCKED_OR_CLOSED' => 'The payer account cannot be used for this transaction.'
+    ];
+
     /**
      * @var TransactionIntegration
      */
@@ -47,7 +68,7 @@ class ServiceClient
             );
             $processingErrorResponse =  __('Error happened when processing the request. Please try again later.');
 
-            $errorCode = array_search($e->getMessage(), PaymentServicesPaypalServiceClient::CAPTURE_ERRORS);
+            $errorCode = array_search($e->getMessage(), self::CAPTURE_ERRORS);
 
             if ($errorCode === false) {
                 if ($e->getMessage() == $deniedResponse) {

@@ -80,15 +80,20 @@ class FilterCasesByStatus extends AbstractHelper
         $current = date('Y-m-d H:i:s', $time);
         $from = date('Y-m-d H:i:s', $lastTime);
 
-        /** @var  \Signifyd\Connect\Model\ResourceModel\Casedata\Collection $casesCollection */
+        /** @var \Signifyd\Connect\Model\ResourceModel\Casedata\Collection $casesCollection */
         $casesCollection = $this->casedataCollectionFactory->create();
+
         $casesCollection->addFieldToFilter('updated', ['gteq' => $from]);
         $casesCollection->addFieldToFilter('policy_name', ['eq' => $policyName]);
         $casesCollection->addFieldToFilter('magento_status', ['eq' => $status]);
         $casesCollection->addFieldToFilter('retries', ['lt' => count($retryTimes)]);
+
+        $connection = $this->casedataResourceModel->getConnection();
+        $currentQuoted = $connection->quote($current);
+
         $casesCollection->addExpressionFieldToSelect(
             'seconds_after_update',
-            "TIME_TO_SEC(TIMEDIFF('{$current}', updated))",
+            "TIME_TO_SEC(TIMEDIFF($currentQuoted, updated))",
             ['updated']
         );
 
@@ -108,7 +113,7 @@ class FilterCasesByStatus extends AbstractHelper
                 if ($secondsAfterUpdate > $retryTimes[$retries]) {
                     $processedByGateway = $case->getEntries('processed_by_gateway');
 
-                    if (isset($processedByGateway) === false || $processedByGateway === true) {
+                    if (!isset($processedByGateway) || $processedByGateway === true) {
                         $casesToRetry[$caseToUpdate->getId()] = $caseToUpdate;
                     }
 
@@ -140,7 +145,7 @@ class FilterCasesByStatus extends AbstractHelper
      *
      * @return array
      */
-    protected function calculateRetryTimes()
+    public function calculateRetryTimes()
     {
         $retryTimes = [];
 

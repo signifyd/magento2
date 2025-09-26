@@ -6,7 +6,9 @@
 namespace Signifyd\Connect\Controller\Webhooks;
 
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\Response\Http;
+use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
@@ -14,7 +16,6 @@ use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Magento\Framework\Data\Form\FormKey;
-use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Filesystem\Driver\File;
 use Signifyd\Connect\Model\Api\Core\Client;
@@ -24,15 +25,14 @@ use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
-use Magento\Framework\App\ResourceConnection;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\UpdateOrderFactory;
-use Signifyd\Connect\Model\SignifydFlags;
+use Magento\Framework\Controller\ResultFactory;
 
 /**
  * Controller action for handling webhook posts from Signifyd service
  */
-class Index extends Action
+class Index implements HttpPostActionInterface
 {
     /**
      * @var Logger
@@ -70,11 +70,6 @@ class Index extends Action
     public $jsonSerializer;
 
     /**
-     * @var ResourceConnection
-     */
-    public $resourceConnection;
-
-    /**
      * @var StoreManagerInterface
      */
     public $storeManagerInterface;
@@ -110,9 +105,14 @@ class Index extends Action
     public $client;
 
     /**
-     * @var SignifydFlags
+     * @var RequestInterface
      */
-    public $signifydFlags;
+    public $request;
+
+    /**
+     * @var ResultFactory
+     */
+    public $resultFactory;
 
     /**
      * Index constructor.
@@ -126,7 +126,6 @@ class Index extends Action
      * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
      * @param JsonSerializer $jsonSerializer
-     * @param ResourceConnection $resourceConnection
      * @param OrderFactory $orderFactory
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param UpdateCaseV2Factory $updateCaseV2Factory
@@ -134,7 +133,7 @@ class Index extends Action
      * @param UpdateOrderFactory $updateOrderFactory
      * @param StoreManagerInterface $storeManagerInterface
      * @param Client $client
-     * @param SignifydFlags $signifydFlags
+     * @param RequestInterface $request
      * @throws LocalizedException
      */
     public function __construct(
@@ -147,7 +146,6 @@ class Index extends Action
         CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
         JsonSerializer $jsonSerializer,
-        ResourceConnection $resourceConnection,
         OrderFactory $orderFactory,
         SignifydOrderResourceModel $signifydOrderResourceModel,
         UpdateCaseV2Factory $updateCaseV2Factory,
@@ -155,10 +153,9 @@ class Index extends Action
         UpdateOrderFactory $updateOrderFactory,
         StoreManagerInterface $storeManagerInterface,
         Client $client,
-        SignifydFlags $signifydFlags
+        RequestInterface $request,
+        ResultFactory $resultFactory
     ) {
-        parent::__construct($context);
-
         $this->logger = $logger;
         $this->configHelper = $configHelper;
         $this->file = $file;
@@ -166,7 +163,6 @@ class Index extends Action
         $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
         $this->jsonSerializer = $jsonSerializer;
-        $this->resourceConnection = $resourceConnection;
         $this->storeManagerInterface = $storeManagerInterface;
         $this->orderFactory = $orderFactory;
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
@@ -174,15 +170,15 @@ class Index extends Action
         $this->updateCaseFactory = $updateCaseFactory;
         $this->updateOrderFactory = $updateOrderFactory;
         $this->client = $client;
-        $this->signifydFlags = $signifydFlags;
+        $this->request = $request;
+        $this->resultFactory = $resultFactory;
 
         // Compatibility with Magento 2.3+ which required form_key on every request
         // Magento expects class to implement \Magento\Framework\App\CsrfAwareActionInterface but this causes
         // a backward incompatibility to Magento versions below 2.3
         if (interface_exists(\Magento\Framework\App\CsrfAwareActionInterface::class)) {
-            $request = $this->getRequest();
-            if ($request instanceof RequestInterface && $request->isPost() && empty($request->getParam('form_key'))) {
-                $request->setParam('form_key', $formKey->getFormKey());
+            if ($this->request->isPost() && empty($this->request->getParam('form_key'))) {
+                $this->request->setParam('form_key', $formKey->getFormKey());
             }
         }
     }
@@ -192,7 +188,7 @@ class Index extends Action
      *
      * @return string
      */
-    protected function getRawPost()
+    public function getRawPost()
     {
         $post = $this->file->fileGetContents("php://input");
 
@@ -204,21 +200,21 @@ class Index extends Action
     }
 
     /**
-     * Execute method.
-     *
-     * @return null
+     * @return \Magento\Framework\Controller\ResultInterface
      * @throws LocalizedException
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws \Magento\Framework\Exception\FileSystemException
      */
     public function execute()
     {
         $request = $this->getRawPost();
 
-        if (empty($this->getRequest()->getHeader('signifyd-checkpoint')) === false) {
-            $hash = $this->getRequest()->getHeader('signifyd-sec-hmac-sha256');
-            $topic = $this->getRequest()->getHeader('signifyd-topic');
+        if (empty($this->request->getHeader('signifyd-checkpoint')) === false) {
+            $hash = $this->request->getHeader('signifyd-sec-hmac-sha256');
+            $topic = $this->request->getHeader('signifyd-topic');
         } else {
-            $hash = $this->getRequest()->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
-            $topic = $this->getRequest()->getHeader('X-SIGNIFYD-TOPIC');
+            $hash = $this->request->getHeader('X-SIGNIFYD-SEC-HMAC-SHA256');
+            $topic = $this->request->getHeader('X-SIGNIFYD-TOPIC');
         }
 
         $this->logger->debug('WEBHOOK: request: ' . $request);
@@ -229,32 +225,33 @@ class Index extends Action
     }
 
     /**
-     * Process request method.
-     *
-     * @param string $request
-     * @param bool|string $hash
-     * @param bool|string $topic
-     * @return void
+     * @param $request
+     * @param $hash
+     * @param $topic
+     * @return \Magento\Framework\Controller\ResultInterface
      * @throws LocalizedException
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      * @throws \Magento\Framework\Exception\FileSystemException
      */
     public function processRequest($request, $hash, $topic)
     {
+        /** @var Json $result */
+        $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);
+
         if (empty($hash) || empty($request)) {
-            $this->getResponse()->appendBody("You have successfully reached the webhook endpoint");
-            $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
-            return;
+            $result->setData(['message' =>"You have successfully reached the webhook endpoint"]);
+            $result->setHttpResponseCode(Http::STATUS_CODE_200);
+            return $result;
         }
 
         try {
             $requestJson = (object) $this->jsonSerializer->unserialize($request);
         } catch (\InvalidArgumentException $e) {
             $message = 'Invalid JSON provided on request body';
-            $this->getResponse()->appendBody($message);
+            $result->setData(['message' =>$message]);
             $this->logger->debug("WEBHOOK: {$message}");
-            $this->getResponse()->setStatusCode(Http::STATUS_CODE_400);
-            return;
+            $result->setHttpResponseCode(Http::STATUS_CODE_400);
+            return $result;
         }
 
         if (isset($requestJson->caseId)) {
@@ -264,23 +261,24 @@ class Index extends Action
             $caseId = $requestJson->signifydId;
             $webHookVersion = "v3";
         } else {
-            $httpCode = Http::STATUS_CODE_200;
-            throw new LocalizedException(__("Invalid body, no 'caseId' field found on request"));
+            $result->setData(['message' =>"Invalid body, no 'caseId' field found on request"]);
+            $result->setHttpResponseCode(Http::STATUS_CODE_500);
+            return $result;
         }
 
         switch ($topic) {
             case 'cases/test':
                 // Test is only verifying that the endpoint is reachable. So we just complete here
-                $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
-                return;
+                $result->setHttpResponseCode(Http::STATUS_CODE_200);
+                return $result;
 
             case 'cases/creation':
                 if ($this->configHelper->isScoreOnly() === false) {
                     $message = 'Case creation will not be processed by Magento';
-                    $this->getResponse()->appendBody($message);
+                    $result->setData(['message' =>$message]);
                     $this->logger->debug("WEBHOOK: {$message}");
-                    $this->getResponse()->setStatusCode(Http::STATUS_CODE_200);
-                    return;
+                    $result->setHttpResponseCode(Http::STATUS_CODE_200);
+                    return $result;
                 }
                 break;
         }
@@ -294,50 +292,59 @@ class Index extends Action
             try {
                 $this->casedataResourceModel->loadForUpdate($case, (string) $caseId, 'code');
             } catch (\Exception $e) {
-                $httpCode = Http::STATUS_CODE_423;
-                throw new LocalizedException(__($e->getMessage()));
+                $result->setData(['message' => __($e->getMessage())]);
+                $result->setHttpResponseCode(Http::STATUS_CODE_423);
+                return $result;
             }
 
             if ($case->isEmpty()) {
-                $httpCode = Http::STATUS_CODE_400;
-                throw new LocalizedException(__("Case {$caseId} on request not found on Magento"));
+                $result->setData(['message' => __("Case {$caseId} on request not found on Magento")]);
+                $result->setHttpResponseCode(Http::STATUS_CODE_400);
+                return $result;
             }
 
             if ($case->getEntries('processed_by_gateway') === false) {
                 $this->casedataResourceModel->save($case);
-                $httpCode = Http::STATUS_CODE_400;
-                throw new LocalizedException(__("Case {$caseId} awaiting gateway processing"));
+                $result->setData(['message' => __("Case {$caseId} awaiting gateway processing")]);
+                $result->setHttpResponseCode(Http::STATUS_CODE_400);
+                return $result;
             }
 
             $signifydWebhookApi = $this->client->getSignifydWebhookApi($case);
 
             if ($signifydWebhookApi->validWebhookRequest($request, $hash, $topic) == false) {
-                $httpCode = Http::STATUS_CODE_403;
-                throw new LocalizedException(__("Invalid webhook request"));
+                $result->setData(['message' => __("Invalid webhook request")]);
+                $result->setHttpResponseCode(Http::STATUS_CODE_403);
+                return $result;
             } elseif ($this->configHelper->isEnabled($case) == false) {
-                $httpCode = Http::STATUS_CODE_400;
-                throw new LocalizedException(__('Signifyd plugin it is not enabled'));
+                $result->setData(['message' => __("Signifyd plugin it is not enabled")]);
+                $result->setHttpResponseCode(Http::STATUS_CODE_400);
+                return $result;
             } elseif ($case->getMagentoStatus() == Casedata::WAITING_SUBMISSION_STATUS ||
                 $case->getMagentoStatus() == Casedata::AWAITING_PSP
             ) {
-                $httpCode = Http::STATUS_CODE_400;
-                throw new LocalizedException(__("Case {$caseId} it is not ready to be updated"));
+                $result->setData(['message' => __("Case {$caseId} it is not ready to be updated")]);
+                $result->setHttpResponseCode(Http::STATUS_CODE_400);
+                return $result;
             } elseif ($case->getPolicyName() === Casedata::PRE_AUTH &&
                 $case->getGuarantee() !== 'HOLD' &&
                 $case->getGuarantee() !== 'PENDING'
             ) {
-                $httpCode = Http::STATUS_CODE_200;
-                throw new LocalizedException(
-                    __("Case {$caseId} already completed by synchronous response, no action will be taken")
-                );
+                $result->setData([
+                    'message' =>
+                        __("Case {$caseId} already completed by synchronous response, no action will be taken")
+                ]);
+                $result->setHttpResponseCode(Http::STATUS_CODE_200);
+                return $result;
             }
 
             $order = $this->orderFactory->create();
             $this->signifydOrderResourceModel->load($order, $case->getData('order_id'));
 
             if ($order->isEmpty()) {
-                $httpCode = Http::STATUS_CODE_400;
-                throw new LocalizedException(__("Order not found"));
+                $result->setData(['message' => __("Order not found")]);
+                $result->setHttpResponseCode(Http::STATUS_CODE_400);
+                return $result;
             }
 
             if ($this->configHelper->processMerchantReview($order) === false &&
@@ -350,13 +357,15 @@ class Index extends Action
                 }
 
                 if ($checkpointActionReason == 'MERCHANT_REVIEW') {
-                    $httpCode = Http::STATUS_CODE_200;
                     $this->logger->info(
                         "WEBHOOK: Case {$case->getId()} will not be processed because the ".
                         "request was made via 'Order review flag' in the Signifyd dashboard",
                         ['entity' => $case]
                     );
-                    throw new LocalizedException(__("Request made via 'Order review flag'"));
+
+                    $result->setData(['message' => __("Request made via 'Order review flag'")]);
+                    $result->setHttpResponseCode(Http::STATUS_CODE_200);
+                    return $result;
                 }
             }
 
@@ -381,20 +390,26 @@ class Index extends Action
             $newCaseHash = sha1(implode(',', $case->getData()));
 
             if ($currentCaseHash == $newCaseHash) {
-                $httpCode = Http::STATUS_CODE_200;
                 $this->logger->debug(
                     "Case {$caseId} already update with this data, no action will be taken",
                     ['entity' => $case]
                 );
-                throw new LocalizedException(
-                    __("Case {$caseId} already update with this data, no action will be taken")
-                );
+
+                $result->setData([
+                    'message' =>
+                        __("Case {$caseId} already update with this data, no action will be taken")
+                ]);
+                $result->setHttpResponseCode(Http::STATUS_CODE_200);
+                return $result;
             }
 
             $updateOrder = $this->updateOrderFactory->create();
             $case = $updateOrder($case);
 
             $this->casedataResourceModel->save($case);
+
+            $result->setHttpResponseCode(Http::STATUS_CODE_200);
+            return $result;
         } catch (\Exception $e) {
             $context = [];
 
@@ -405,8 +420,10 @@ class Index extends Action
             }
 
             $httpCode = empty($httpCode) ? 403 : $httpCode;
-            $this->getResponse()->appendBody($e->getMessage());
+            $result->setHttpResponseCode($httpCode);
+            $result->setData(['message' =>$e->getMessage()]);
             $this->logger->error("WEBHOOK: {$e->getMessage()}", $context);
+            return $result;
         } catch (\Error $e) {
             $context = [];
 
@@ -417,12 +434,10 @@ class Index extends Action
             }
 
             $httpCode = empty($httpCode) ? 403 : $httpCode;
-            $this->getResponse()->appendBody($e->getMessage());
+            $result->setHttpResponseCode($httpCode);
+            $result->setData(['message' =>$e->getMessage()]);
             $this->logger->error("WEBHOOK: {$e->getMessage()}", $context);
+            return $result;
         }
-
-        $httpCode = empty($httpCode) ? 200 : $httpCode;
-        $this->getResponse()->setStatusCode($httpCode);
-        $this->signifydFlags->updateWebhookFlag();
     }
 }

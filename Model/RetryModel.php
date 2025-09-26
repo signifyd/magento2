@@ -53,12 +53,17 @@ class RetryModel extends AbstractHelper
         $from = date('Y-m-d H:i:s', $lastTime);
 
         $objectCollection = $this->objectCollectionFactory->create();
+
         $objectCollection->addFieldToFilter('inserted_at', ['gteq' => $from]);
         $objectCollection->addFieldToFilter('magento_status', ['eq' => 'waiting_submission']);
         $objectCollection->addFieldToFilter('retries', ['lt' => count($retryTimes)]);
+
+        $connection = $this->objectResourceModel->getConnection();
+        $currentQuoted = $connection->quote($current);
+
         $objectCollection->addExpressionFieldToSelect(
             'seconds_after_inserted_at',
-            "TIME_TO_SEC(TIMEDIFF('{$current}', inserted_at))",
+            "TIME_TO_SEC(TIMEDIFF($currentQuoted, inserted_at))",
             ['inserted_at']
         );
 
@@ -83,7 +88,7 @@ class RetryModel extends AbstractHelper
      *
      * @return array
      */
-    protected function calculateRetryTimes()
+    public function calculateRetryTimes()
     {
         $retryTimes = [];
 

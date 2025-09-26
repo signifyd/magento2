@@ -127,8 +127,7 @@ class Before implements ObserverInterface
                 isset($dataArray['paymentMethod']['additional_data']) &&
                 isset($dataArray['paymentMethod']['additional_data']['card_bin'])) {
                 $order->getPayment()->setAdditionalInformation(
-                    'card_bin',
-                    $dataArray['paymentMethod']['additional_data']['card_bin']
+                    ['card_bin' => $dataArray['paymentMethod']['additional_data']['card_bin']]
                 );
             }
         }

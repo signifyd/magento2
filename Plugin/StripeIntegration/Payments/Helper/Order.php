@@ -115,7 +115,7 @@ class Order
         } catch (\Exception $ex) {
             $context = [];
 
-            if (isset($order) && $order instanceof Order) {
+            if ($order instanceof Order) {
                 $context['entity'] = $order;
             }
 
@@ -123,7 +123,7 @@ class Order
         } catch (\Error $ex) {
             $context = [];
 
-            if (isset($order) && $order instanceof Order) {
+            if ($order instanceof Order) {
                 $context['entity'] = $order;
             }
 

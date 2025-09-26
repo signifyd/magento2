@@ -16,7 +16,7 @@ class PaymentMethodMapper extends PaymentMethodBase
      */
     public function getPaymentMethodFromOrder(Order $order)
     {
-        $paymentBrandCode = $order->getPayment()->getAdditionalInformation('brand_code');
+        $paymentBrandCode = $order->getPayment()->getAdditionalInformation()['brand_code'];
 
         return $this->adyenHppMapping($paymentBrandCode, $order);
     }

@@ -48,30 +48,39 @@ class UpdateOrderId implements DataPatchInterface
      */
     public function apply()
     {
+        $connection = $this->schemaSetupInterface->getConnection();
         $signifydConnectCase = $this->schemaSetupInterface->getTable('signifyd_connect_case');
         $salesOrder = $this->schemaSetupInterface->getTable('sales_order');
 
         try {
-            $this->schemaSetupInterface->getConnection()->query(
-                "UPDATE ". $signifydConnectCase ." JOIN " . $salesOrder . " ON " .
-                $signifydConnectCase .".order_increment = " . $salesOrder . ".increment_id SET " .
-                $signifydConnectCase .".order_id = " . $salesOrder . ".entity_id WHERE " .
-                $signifydConnectCase . ".magento_status='complete'"
-            );
-        } catch (\Exception $e) {
-            $this->logger->debug('Update order_id on magento status complete failed');
-            $this->configWriter->save("signifyd/general/upgrade4.3_inconsistency", "setup");
-        }
+            $select = $connection->select()
+                ->from(['soc' => $salesOrder], ['increment_id', 'entity_id'])
+                ->joinInner(
+                    ['so' => $signifydConnectCase],
+                    'so.order_increment = soc.increment_id',
+                    ['case_id' => 'so.entity_id', 'magento_status']
+                );
 
-        try {
-            $this->schemaSetupInterface->getConnection()->query(
-                "UPDATE ". $signifydConnectCase ." JOIN " . $salesOrder . " ON " .
-                $signifydConnectCase .".order_increment = " . $salesOrder . ".increment_id SET ".
-                $signifydConnectCase .".order_id = " . $salesOrder . ".entity_id WHERE ".
-                $signifydConnectCase . ".magento_status<>'complete'"
-            );
+            $rows = $connection->fetchAll($select);
+
+            foreach ($rows as $row) {
+                try {
+                    $connection->update(
+                        $signifydConnectCase,
+                        ['order_id' => $row['entity_id']],
+                        [
+                            'order_increment = ?' => $row['increment_id'],
+                            'magento_status ' .
+                            ($row['magento_status'] === 'complete' ? '= ?' : '<> ?') => $row['magento_status']
+                        ]
+                    );
+                } catch (\Exception $e) {
+                    $this->logger->debug('Failed updating order_id for increment ' . $row['increment_id']);
+                    $this->configWriter->save("signifyd/general/upgrade4.3_inconsistency", "setup");
+                }
+            }
         } catch (\Exception $e) {
-            $this->logger->debug('Update order_id on magento status different from complete failed');
+            $this->logger->debug('General failure updating order_id relations');
             $this->configWriter->save("signifyd/general/upgrade4.3_inconsistency", "setup");
         }
 

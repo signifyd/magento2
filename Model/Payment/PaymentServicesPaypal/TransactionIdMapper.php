@@ -19,7 +19,7 @@ class TransactionIdMapper extends Base_TransactionIdMapper
      */
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
-        $transactionId = $order->getPayment()->getAdditionalInformation('paypal_txn_id');
+        $transactionId = $order->getPayment()->getAdditionalInformation()['paypal_txn_id'];
 
         $message = 'Transaction id found on payment mapper: ' . (empty($transactionId) ? 'false' : $transactionId);
         $this->logger->debug($message, ['entity' => $order]);

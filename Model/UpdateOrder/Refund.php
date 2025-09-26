@@ -183,7 +183,7 @@ class Refund
      * @param Order $order
      * @return void
      */
-    protected function createInvoicesCreditMemo($invoices, $order)
+    public function createInvoicesCreditMemo($invoices, $order)
     {
         foreach ($invoices as $invoice) {
             $creditmemo = $this->creditmemoFactory->createByOrder($order);

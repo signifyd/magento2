@@ -48,37 +48,34 @@ class Logger
     }
 
     /**
-     * Around add record method.
+     * After plugin para addRecord
      *
      * @param SignifydLogger $subject
-     * @param callable $proceed
+     * @param mixed $result
      * @param mixed $level
      * @param mixed $message
      * @param array $context
      * @param mixed $datetime
-     * @return bool
+     * @return mixed
      */
-    public function aroundAddRecord(
+    public function afterAddRecord(
         SignifydLogger $subject,
-        callable $proceed,
+        $result,
         $level,
         $message,
-        $context = [],
+        array $context = [],
         $datetime = null
     ) {
-        $result = $proceed($level, $message, $context, $datetime);
-
         if (isset($context['entity'])) {
             $log = $this->configHelper->getConfigData('signifyd/logs/log', $context['entity']);
 
             try {
-                /** @var \Signifyd\Connect\Model\Logs $modelLogs */
                 $modelLogs = $this->getSignifydLogModel($context['entity']);
                 $type = $level === 200 ? 'Info' : 'Debug';
                 $modelLogs->setType($type);
                 $modelLogs->setEntry($message);
                 $this->logsResourceModel->save($modelLogs);
-            } catch (\Error|\Exception $e) {
+            } catch (\Throwable $e) {
                 return false;
             }
             unset($context['entity']);

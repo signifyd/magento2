@@ -221,7 +221,7 @@ class Transactions
      * @param Order $order
      * @return array
      */
-    protected function makeTransactions(Order $order)
+    public function makeTransactions(Order $order)
     {
         $lastTransaction = $order->getPayment()->getLastTransId();
         $transactionsFromOrder = $this->transactionCollectionFactory->create()
@@ -288,7 +288,7 @@ class Transactions
      * @param array $methodData
      * @return array
      */
-    protected function makeCheckoutTransactions(Quote $quote, $checkoutToken, $methodData = [])
+    public function makeCheckoutTransactions(Quote $quote, $checkoutToken, $methodData = [])
     {
         $reservedOrderId = $quote->getReservedOrderId();
 
@@ -344,7 +344,7 @@ class Transactions
      * @param Order $order
      * @return int|null
      */
-    protected function getTransactionId(Order $order)
+    public function getTransactionId(Order $order)
     {
         try {
             $paymentMethod = $order->getPayment()->getMethod();
@@ -372,7 +372,7 @@ class Transactions
      * @param mixed $quoteId
      * @return string|null
      */
-    protected function makeScaExemptionRequested($quoteId = null)
+    public function makeScaExemptionRequested($quoteId = null)
     {
         if (isset($quoteId)) {
             $quote = $this->quoteFactory->create();
