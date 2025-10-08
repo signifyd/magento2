@@ -140,9 +140,7 @@ class CheckoutPaymentDetails
      */
     protected function makeCheckoutPaymentDetails(Order $order)
     {
-        $cardInstallmentsvalue = $this->cardInstallmentsFactory->create();
-        $cardInstallments = $cardInstallmentsvalue();
-        $cardholder = $this->accountHolderNameFactory->create();
+        $cardInstallments = ($this->cardInstallmentsFactory->create())();
 
         if (isset($cardInstallments) === false &&
             $order->getPayment()->getMethod() == 'openpay_cards' &&
@@ -157,30 +155,22 @@ class CheckoutPaymentDetails
             ];
         }
 
-        $signifydAddress = $this->addressFactory->create();
-        $accountHolderTaxId = $this->accountHolderTaxIdFactory->create();
-        $accountHolderTaxIdCountry = $this->accountHolderTaxIdCountryFactory->create();
-        $abaRoutingNumber = $this->abaRoutingNumberFactory->create();
-        $cardTokenProvider = $this->cardTokenProviderFactory->create();
-        $cardToken = $this->cardTokenFactory->create();
-        $accountLast4 = $this->accountLast4Factory->create();
-        $cardBrand = $this->cardBrandFactory->create();
         $billingAddress = $order->getBillingAddress();
 
         $checkoutPaymentDetails = [];
-        $checkoutPaymentDetails['billingAddress'] = $signifydAddress($billingAddress);
-        $checkoutPaymentDetails['accountHolderName'] = $cardholder($order);
-        $checkoutPaymentDetails['accountHolderTaxId'] = $accountHolderTaxId();
-        $checkoutPaymentDetails['accountHolderTaxIdCountry'] = $accountHolderTaxIdCountry();
-        $checkoutPaymentDetails['accountLast4'] = $accountLast4();
-        $checkoutPaymentDetails['abaRoutingNumber'] = $abaRoutingNumber();
-        $checkoutPaymentDetails['cardToken'] = $cardToken();
-        $checkoutPaymentDetails['cardTokenProvider'] = $cardTokenProvider();
+        $checkoutPaymentDetails['billingAddress'] = ($this->addressFactory->create())($billingAddress);
+        $checkoutPaymentDetails['accountHolderName'] = ($this->accountHolderNameFactory->create())($order);
+        $checkoutPaymentDetails['accountHolderTaxId'] = ($this->accountHolderTaxIdFactory->create())();
+        $checkoutPaymentDetails['accountHolderTaxIdCountry'] = ($this->accountHolderTaxIdCountryFactory->create())();
+        $checkoutPaymentDetails['accountLast4'] = ($this->accountLast4Factory->create())();
+        $checkoutPaymentDetails['abaRoutingNumber'] = ($this->abaRoutingNumberFactory->create())();
+        $checkoutPaymentDetails['cardToken'] = ($this->cardTokenFactory->create())();
+        $checkoutPaymentDetails['cardTokenProvider'] = ($this->cardTokenProviderFactory->create())();
         $checkoutPaymentDetails['cardBin'] = $this->getBin($order);
         $checkoutPaymentDetails['cardExpiryMonth'] = $this->getExpMonth($order);
         $checkoutPaymentDetails['cardExpiryYear'] = $this->getExpYear($order);
         $checkoutPaymentDetails['cardLast4'] = $this->getLast4($order);
-        $checkoutPaymentDetails['cardBrand'] = $cardBrand();
+        $checkoutPaymentDetails['cardBrand'] = ($this->cardBrandFactory->create())();
         $checkoutPaymentDetails['cardInstallments'] = $cardInstallments;
 
         return $checkoutPaymentDetails;
@@ -196,8 +186,6 @@ class CheckoutPaymentDetails
     protected function makeCheckoutPaymentDetailsFromQuote(Quote $quote, $methodData = [])
     {
         $checkoutPaymentDetails = [];
-        $signifydAddress = $this->addressFactory->create();
-        $cardholder = $this->accountHolderNameFactory->create();
 
         if (is_array($methodData)) {
             $checkoutPaymentDetails['cardLast4'] = $methodData['cardLast4'] ?? null;
@@ -206,12 +194,10 @@ class CheckoutPaymentDetails
         }
 
         $billingAddress = $quote->getBillingAddress();
-        $accountHolderTaxIdCountry = $this->accountHolderTaxIdCountryFactory->create();
-        $accountHolderTaxId = $this->accountHolderTaxIdFactory->create();
-        $checkoutPaymentDetails['accountHolderName'] = $cardholder($quote);
-        $checkoutPaymentDetails['accountHolderTaxId'] = $accountHolderTaxId();
-        $checkoutPaymentDetails['accountHolderTaxIdCountry'] = $accountHolderTaxIdCountry();
-        $checkoutPaymentDetails['billingAddress'] = $signifydAddress($billingAddress);
+        $checkoutPaymentDetails['accountHolderName'] = ($this->accountHolderNameFactory->create())($quote);
+        $checkoutPaymentDetails['accountHolderTaxId'] = ($this->accountHolderTaxIdFactory->create())();
+        $checkoutPaymentDetails['accountHolderTaxIdCountry'] = ($this->accountHolderTaxIdCountryFactory->create())();
+        $checkoutPaymentDetails['billingAddress'] = ($this->addressFactory->create())($billingAddress);
 
         return $checkoutPaymentDetails;
     }

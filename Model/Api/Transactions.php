@@ -239,36 +239,27 @@ class Transactions
         }
 
         $transactionId = $this->getTransactionId($order);
-        $makePaymentMethod = $this->paymentMethodFactory->create();
-        $verifications = $this->verificationsFactory->create();
-        $checkoutPaymentDetails = $this->checkoutPaymentDetailsFactory->create();
-        $parentTransactionId = $this->parentTransactionIdFactory->create();
-        $gatewayStatusMessage = $this->gatewayStatusMessageFactory->create();
-        $gatewayErrorCode = $this->gatewayErrorCodeFactory->create();
-        $paypalPendingReasonCode = $this->paypalPendingReasonCodeFactory->create();
-        $paypalProtectionEligibility = $this->paypalProtectionEligibilityFactory->create();
-        $paypalProtectionEligibilityType = $this->paypalProtectionEligibilityTypeFactory->create();
-        $sourceAccountDetails = $this->sourceAccountDetailsFactory->create();
-        $acquirerDetails = $this->acquirerDetailsFactory->create();
 
         $lastTransaction['gatewayStatusCode'] = 'SUCCESS';
-        $lastTransaction['paymentMethod'] = $makePaymentMethod($order);
-        $lastTransaction['checkoutPaymentDetails'] = $checkoutPaymentDetails($order);
+        $lastTransaction['paymentMethod'] = ($this->paymentMethodFactory->create())();
+        $lastTransaction['checkoutPaymentDetails'] = ($this->checkoutPaymentDetailsFactory->create())($order);
         $lastTransaction['amount'] = $order->getGrandTotal();
         $lastTransaction['currency'] = $order->getOrderCurrencyCode();
         $lastTransaction['gateway'] = $order->getPayment()->getMethod();
-        $lastTransaction['sourceAccountDetails'] = $sourceAccountDetails();
-        $lastTransaction['acquirerDetails'] = $acquirerDetails();
-        $lastTransaction['gatewayErrorCode'] = $gatewayErrorCode();
-        $lastTransaction['gatewayStatusMessage'] = $gatewayStatusMessage();
+        $lastTransaction['sourceAccountDetails'] = ($this->sourceAccountDetailsFactory->create())();
+        $lastTransaction['acquirerDetails'] = ($this->acquirerDetailsFactory->create())();
+        $lastTransaction['gatewayErrorCode'] = ($this->gatewayErrorCodeFactory->create())();
+        $lastTransaction['gatewayStatusMessage'] = ($this->gatewayStatusMessageFactory->create())();
         $lastTransaction['createdAt'] = date('c', strtotime($transactionDate));
-        $lastTransaction['parentTransactionId'] = $parentTransactionId();
+        $lastTransaction['parentTransactionId'] = ($this->parentTransactionIdFactory->create())();
         $lastTransaction['scaExemptionRequested'] = $this->makeScaExemptionRequested($order->getQuoteId());
-        $lastTransaction['verifications'] = $verifications($order);
+        $lastTransaction['verifications'] = ($this->verificationsFactory->create())($order);
         $lastTransaction['threeDsResult'] = $this->makeThreeDsResult($order->getQuoteId());
-        $lastTransaction['paypalPendingReasonCode'] = $paypalPendingReasonCode();
-        $lastTransaction['paypalProtectionEligibility'] = $paypalProtectionEligibility();
-        $lastTransaction['paypalProtectionEligibilityType'] = $paypalProtectionEligibilityType();
+        $lastTransaction['paypalPendingReasonCode'] = ($this->paypalPendingReasonCodeFactory->create())();
+        $lastTransaction['paypalProtectionEligibility'] = ($this->paypalProtectionEligibilityFactory->create())();
+        $lastTransaction['paypalProtectionEligibilityType'] = (
+            $this->paypalProtectionEligibilityTypeFactory->create()
+        )();
 
         if (isset($transactionId) === false) {
             $transactionId = sha1($this->jsonSerializer->serialize($lastTransaction));
@@ -298,38 +289,30 @@ class Transactions
             $this->quoteResourceModel->save($quote);
         }
 
-        $gatewayStatusMessage = $this->gatewayStatusMessageFactory->create();
         $checkoutTransaction = [];
         $checkoutTransaction['checkoutId'] = $checkoutToken;
         $checkoutTransaction['orderId'] = $reservedOrderId;
         $errorCode = $methodData['gatewayRefusedReason'] ?? "CARD_DECLINED";
-        $statusMessage = $methodData['gatewayStatusMessage'] ?? $gatewayStatusMessage();
+        $statusMessage = $methodData['gatewayStatusMessage'] ?? ($this->gatewayStatusMessageFactory->create())();
         $gateway = $methodData['gateway'] ?? null;
-        $makePaymentMethod = $this->paymentMethodFactory->create();
-        $checkoutPaymentDetails = $this->checkoutPaymentDetailsFactory->create();
-        $paypalPendingReasonCode = $this->paypalPendingReasonCodeFactory->create();
-        $paypalProtectionEligibility = $this->paypalProtectionEligibilityFactory->create();
-        $paypalProtectionEligibilityType = $this->paypalProtectionEligibilityTypeFactory->create();
-        $sourceAccountDetails = $this->sourceAccountDetailsFactory->create();
-        $acquirerDetails = $this->acquirerDetailsFactory->create();
 
         $transactions = [];
         $transaction = [];
         $transaction['gatewayStatusCode'] = 'FAILURE';
-        $transaction['paymentMethod'] = $makePaymentMethod($quote);
-        $transaction['checkoutPaymentDetails'] = $checkoutPaymentDetails($quote, $methodData);
+        $transaction['paymentMethod'] = ($this->paymentMethodFactory->create())($quote);
+        $transaction['checkoutPaymentDetails'] = ($this->checkoutPaymentDetailsFactory->create())($quote, $methodData);
         $transaction['amount'] = $quote->getGrandTotal();
         $transaction['currency'] = $quote->getBaseCurrencyCode();
         $transaction['gateway'] = $gateway;
-        $transaction['sourceAccountDetails'] = $sourceAccountDetails();
-        $transaction['acquirerDetails'] = $acquirerDetails();
+        $transaction['sourceAccountDetails'] = ($this->sourceAccountDetailsFactory->create())();
+        $transaction['acquirerDetails'] = ($this->acquirerDetailsFactory->create())();
         $transaction['gatewayErrorCode'] = $errorCode;
         $transaction['gatewayStatusMessage'] = $statusMessage;
         $transaction['scaExemptionRequested'] = $this->makeScaExemptionRequested($quote->getId());
         $transaction['threeDsResult'] = $this->makeThreeDsResult($quote->getId());
-        $transaction['paypalPendingReasonCode'] = $paypalPendingReasonCode();
-        $transaction['paypalProtectionEligibility'] = $paypalProtectionEligibility();
-        $transaction['paypalProtectionEligibilityType'] = $paypalProtectionEligibilityType();
+        $transaction['paypalPendingReasonCode'] = ($this->paypalPendingReasonCodeFactory->create())();
+        $transaction['paypalProtectionEligibility'] = ($this->paypalProtectionEligibilityFactory->create())();
+        $transaction['paypalProtectionEligibilityType'] = $this->paypalProtectionEligibilityTypeFactory->create();
         $transaction['transactionId'] = sha1($this->jsonSerializer->serialize($transaction));
 
         $transactions[] = $transaction;

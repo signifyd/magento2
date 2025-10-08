@@ -37,7 +37,6 @@ class RecordReturn
     public function __invoke($order)
     {
         $recordReturn = [];
-        $device = $this->deviceFactory->create();
         $items = $order->getAllItems();
         $recordReturn['returnedItems'] = [];
 
@@ -46,8 +45,7 @@ class RecordReturn
             $children = $item->getChildrenItems();
 
             if (is_array($children) == false || empty($children)) {
-                $makeProduct = $this->productFactory->create();
-                $productToReturn = $makeProduct($item);
+                $productToReturn = ($this->productFactory->create())($item);
                 $productToReturn['reason'] = 'CANCELATION';
                 $recordReturn['returnedItems'][] = $productToReturn;
             }
@@ -55,7 +53,7 @@ class RecordReturn
 
         $recordReturn['orderId'] = $order->getIncrementId();
         $recordReturn['returnId'] = uniqid();
-        $recordReturn['device'] = $device($order->getQuoteId(), $order->getStoreId(), $order);
+        $recordReturn['device'] = ($this->deviceFactory->create())($order->getQuoteId(), $order->getStoreId(), $order);
 
         $recordReturn['refund']['amount'] = $order->getGrandTotal();
         $recordReturn['refund']['currency'] = $order->getOrderCurrencyCode();

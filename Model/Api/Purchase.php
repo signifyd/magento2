@@ -96,17 +96,14 @@ class Purchase
             $children = $item->getChildrenItems();
 
             if (is_array($children) == false || empty($children)) {
-                $makeProduct = $this->productFactory->create();
-                $purchase['products'][] = $makeProduct($item);
+                $purchase['products'][] = ($this->productFactory->create())($item);
             }
         }
 
-        $makeShipments = $this->shipmentsFactory->create();
-        $purchase['shipments'] = $makeShipments($order);
+        $purchase['shipments'] = ($this->shipmentsFactory->create())($order);
         $purchase['confirmationPhone'] = $order->getBillingAddress()->getTelephone();
         $purchase['totalShippingCost'] = $order->getShippingAmount();
         $couponCode = $order->getCouponCode();
-        $receivedBy = $this->receivedByFactory->create();
 
         if (empty($couponCode) === false) {
             $purchase['discountCodes'] = [
@@ -115,7 +112,7 @@ class Purchase
             ];
         }
 
-        $purchase['receivedBy'] = $receivedBy();
+        $purchase['receivedBy'] = ($this->receivedByFactory->create())();
 
         return $purchase;
     }
@@ -144,19 +141,16 @@ class Purchase
             $children = $item->getChildren();
 
             if (is_array($children) == false || empty($children)) {
-                $makeProduct = $this->productFactory->create();
-                $purchase['products'][] = $makeProduct($item);
+                $purchase['products'][] = ($this->productFactory->create())($item);
             }
         }
 
-        $makeShipments = $this->shipmentsFactory->create();
         $shippingAmount = $quote->getShippingAddress()->getShippingAmount();
-        $receivedBy = $this->receivedByFactory->create();
-        $purchase['shipments'] = $makeShipments($quote);
+        $purchase['shipments'] = ($this->shipmentsFactory->create())($quote);
         $purchase['confirmationPhone'] = $quote->getBillingAddress()->getTelephone();
         $purchase['totalShippingCost'] = is_numeric($shippingAmount) ? floatval($shippingAmount) : null;
         $purchase['discountCodes'] = null;
-        $purchase['receivedBy'] = $receivedBy();
+        $purchase['receivedBy'] = ($this->receivedByFactory->create())();
 
         return $purchase;
     }

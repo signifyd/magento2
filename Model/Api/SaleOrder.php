@@ -139,32 +139,23 @@ class SaleOrder
         $signifydOrder = [];
 
         try {
-            $purchase = $this->purchaseFactory->create();
-            $userAccount = $this->userAccountFactory->create();
-            $coverageRequests = $this->coverageRequestsFactory->create();
-            $device = $this->deviceFactory->create();
-            $merchantPlatform = $this->merchantPlatformFactory->create();
-            $signifydClient = $this->signifydClientFactory->create();
-            $transactions = $this->transactionsFactory->create();
-            $tags = $this->tagsFactory->create();
-            $sellers = $this->sellersFactory->create();
-            $customerOrderRecommendation = $this->customerOrderRecommendationFactory->create();
-            $memberships = $this->membershipsFactory->create();
-            $merchantCategoryCode = $this->merchantCategoryCodeFactory->create();
-
             $signifydOrder['orderId'] = $order->getIncrementId();
-            $signifydOrder['purchase'] = $purchase($order);
-            $signifydOrder['userAccount'] = $userAccount($order);
-            $signifydOrder['memberships'] = $memberships();
-            $signifydOrder['coverageRequests'] = $coverageRequests($order->getPayment()->getMethod());
-            $signifydOrder['merchantCategoryCode'] = $merchantCategoryCode();
-            $signifydOrder['device'] = $device($order->getQuoteId(), $order->getStoreId(), $order);
-            $signifydOrder['merchantPlatform'] = $merchantPlatform();
-            $signifydOrder['signifydClient'] = $signifydClient();
-            $signifydOrder['transactions'] = $transactions($order);
-            $signifydOrder['sellers'] = $sellers();
-            $signifydOrder['tags'] = $tags($order->getStoreId());
-            $signifydOrder['customerOrderRecommendation'] = $customerOrderRecommendation();
+            $signifydOrder['purchase'] = ($this->purchaseFactory->create())($order);
+            $signifydOrder['userAccount'] = ($this->userAccountFactory->create())($order);
+            $signifydOrder['memberships'] = ($this->membershipsFactory->create())();
+            $signifydOrder['coverageRequests'] = (
+                $this->coverageRequestsFactory->create())($order->getPayment()->getMethod()
+            );
+            $signifydOrder['merchantCategoryCode'] = ($this->merchantCategoryCodeFactory->create())();
+            $signifydOrder['device'] = (
+                $this->deviceFactory->create()
+            )($order->getQuoteId(), $order->getStoreId(), $order);
+            $signifydOrder['merchantPlatform'] = ($this->merchantPlatformFactory->create())();
+            $signifydOrder['signifydClient'] = ($this->signifydClientFactory->create())();
+            $signifydOrder['transactions'] = ($this->transactionsFactory->create())($order);
+            $signifydOrder['sellers'] = ($this->sellersFactory->create())();
+            $signifydOrder['tags'] = ($this->tagsFactory->create())($order->getStoreId());
+            $signifydOrder['customerOrderRecommendation'] = ($this->customerOrderRecommendationFactory->create())();
 
             /**
              * This registry entry it's used to collect data from some payment methods like Payflow Link
