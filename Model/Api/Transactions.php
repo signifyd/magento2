@@ -241,7 +241,7 @@ class Transactions
         $transactionId = $this->getTransactionId($order);
 
         $lastTransaction['gatewayStatusCode'] = 'SUCCESS';
-        $lastTransaction['paymentMethod'] = ($this->paymentMethodFactory->create())();
+        $lastTransaction['paymentMethod'] = ($this->paymentMethodFactory->create())($order);
         $lastTransaction['checkoutPaymentDetails'] = ($this->checkoutPaymentDetailsFactory->create())($order);
         $lastTransaction['amount'] = $order->getGrandTotal();
         $lastTransaction['currency'] = $order->getOrderCurrencyCode();
