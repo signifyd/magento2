@@ -47,8 +47,6 @@ class AsyncChecker extends BaseAsyncChecker
      */
     public function __invoke(Order $order, Casedata $case)
     {
-        $cvvCode = $this->cvvEmsCodeMapper->getData($order);
-
         if ($this->isModuleVersionAtLeast340() === false) {
             if (($case->getOrder()->getPayment()->getMethod() === 'stripe_payments' &&
                 $case->getEntries('stripe_status') !== 'approved')
@@ -61,6 +59,8 @@ class AsyncChecker extends BaseAsyncChecker
                 return false;
             }
         } else {
+            $cvvCode = $this->cvvEmsCodeMapper->getData($order);
+
             if (isset($cvvCode) === false) {
                 $this->logger->info(
                     "CRON: case no: {$case->getOrderIncrement()}" .
