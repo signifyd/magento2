@@ -23,6 +23,12 @@ class CreateTest extends OrderTestCase
      * @var string
      */
     public $paymentMethod = 'banktransfer';
+    public $updateCaseFactory;
+    public $updateOrderFactory;
+    public $logsFile;
+    public $filesystem;
+    public $directoryList;
+    public $driverFile;
 
     public function setUp(): void
     {
