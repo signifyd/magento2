@@ -42,7 +42,13 @@ class OrderService
         try {
             return $proceed($order);
         } catch (\Exception $e) {
-            $declineCode = $e->getError()?->decline_code;
+            try {
+                $declineCode = $e->getError()?->decline_code;
+            } catch (\Exception $e) {
+                $declineCode = null;
+            } catch (\Error $e) {
+                $declineCode = null;
+            }
 
             if (isset($declineCode) === false) {
                 throw $e;
