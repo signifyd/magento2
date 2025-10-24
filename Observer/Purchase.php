@@ -11,7 +11,7 @@ use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\LocalizedException;
 use Signifyd\Connect\Model\Registry;
-use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
+use Signifyd\Connect\Model\JsonSerializer;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Signifyd\Connect\Logger\Logger;
@@ -341,7 +341,7 @@ class Purchase implements ObserverInterface
 
                 $makeRecipient = $this->recipientFactory->create();
                 $recipient = $makeRecipient($order);
-                $recipientJson = $this->jsonSerializer->serialize($recipient);
+                $recipientJson = $this->jsonSerializer->serialize($recipient, $order);
                 $hashToValidateReroute = sha1($recipientJson);
 
                 $case->setEntries('hash', $hashToValidateReroute);

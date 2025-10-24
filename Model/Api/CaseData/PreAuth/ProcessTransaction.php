@@ -2,7 +2,7 @@
 
 namespace Signifyd\Connect\Model\Api\CaseData\PreAuth;
 
-use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
+use Signifyd\Connect\Model\JsonSerializer;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\Core\Client;
@@ -117,7 +117,7 @@ class ProcessTransaction
             $saleTransaction['orderId'] = $order->getIncrementId();
             $saleTransaction['transactions'] = $makeTransactions($order);
 
-            $saleTransactionJson = $this->jsonSerializer->serialize($saleTransaction);
+            $saleTransactionJson = $this->jsonSerializer->serialize($saleTransaction, $order);
             $newHashToValidateReroute = sha1($saleTransactionJson);
             $currentHashToValidateReroute = $case->getEntries('transaction_hash');
 

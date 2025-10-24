@@ -3,7 +3,7 @@
 namespace Signifyd\Connect\Model\Api;
 
 use Braintree\Exception;
-use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
+use Signifyd\Connect\Model\JsonSerializer;
 use Magento\Framework\Stdlib\DateTime\DateTimeFactory;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteFactory;
@@ -271,7 +271,7 @@ class Transactions
         $lastTransaction['paypalProtectionEligibilityType'] = $paypalProtectionEligibilityType();
 
         if (isset($transactionId) === false) {
-            $transactionId = sha1($this->jsonSerializer->serialize($lastTransaction));
+            $transactionId = sha1($this->jsonSerializer->serialize($lastTransaction, $order));
         }
 
         $lastTransaction['transactionId'] = $transactionId;
@@ -330,7 +330,7 @@ class Transactions
         $transaction['paypalPendingReasonCode'] = $paypalPendingReasonCode();
         $transaction['paypalProtectionEligibility'] = $paypalProtectionEligibility();
         $transaction['paypalProtectionEligibilityType'] = $paypalProtectionEligibilityType();
-        $transaction['transactionId'] = sha1($this->jsonSerializer->serialize($transaction));
+        $transaction['transactionId'] = sha1($this->jsonSerializer->serialize($transaction, $quote));
 
         $transactions[] = $transaction;
         $checkoutTransaction['transactions'] = $transactions;
