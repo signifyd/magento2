@@ -50,11 +50,11 @@ class JsonSerializer
 
     /**
      * @param $string
-     * @return void
+     * @return array|bool|float|int|mixed|string|null
      */
     public function unserialize($string)
     {
-        $this->jsonSerializer->unserialize($string);
+        return $this->jsonSerializer->unserialize($string);
     }
 
     /**
