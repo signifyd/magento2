@@ -4,11 +4,11 @@ namespace Signifyd\Connect\Plugin\Adyen\Payment\Controller\Webhook;
 
 use Adyen\Payment\Controller\Webhook\Index as AdyenIndex;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
@@ -18,14 +18,14 @@ use Magento\Framework\App\Request\Http as RequestHttp;
 class Index
 {
     /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
+    /**
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var Logger
@@ -75,8 +75,8 @@ class Index
     /**
      * Index constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
      * @param StoreManagerInterface $storeManager
      * @param QuoteFactory $quoteFactory
@@ -88,8 +88,8 @@ class Index
      * @param RequestHttp $requestHttp
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         Logger $logger,
         StoreManagerInterface $storeManager,
         QuoteFactory $quoteFactory,
@@ -100,8 +100,8 @@ class Index
         JsonSerializer $jsonSerializer,
         RequestHttp $requestHttp
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
         $this->storeManager = $storeManager;
         $this->quoteFactory = $quoteFactory;
@@ -156,8 +156,7 @@ class Index
             $reason = $notificationItems['notificationItems'][0]['NotificationRequestItem']['reason'];
 
             /** @var \Signifyd\Connect\Model\Casedata $case */
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $orderIncrement, 'order_increment');
+            $case = $this->casedataRepository->getByOrderId($orderIncrement);
 
             if ($case->isEmpty() === false && $isSuccess === "false") {
                 if ($case->getEntries('AdyenRefusedReason') == $reason) {
@@ -171,7 +170,7 @@ class Index
 
                 $adyenData = [];
                 $case->setEntries("AdyenRefusedReason", $reason);
-                $this->casedataResourceModel->save($case);
+                $this->casedataRepository->save($case);
 
                 switch ($reason) {
                     case "Expired Card":

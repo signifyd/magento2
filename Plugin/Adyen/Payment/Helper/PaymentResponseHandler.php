@@ -8,10 +8,10 @@ use Signifyd\Connect\Model\Registry;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Casedata;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\ThreeDsIntegration;
 use Adyen\Payment\Helper\PaymentResponseHandler as AdyenPaymentResponseHandler;
@@ -20,6 +20,11 @@ use Signifyd\Connect\Model\CasedataFactory;
 
 class PaymentResponseHandler
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var ThreeDsIntegration
      */
@@ -61,11 +66,6 @@ class PaymentResponseHandler
     protected $casedataFactory;
 
     /**
-     * @var CasedataResourceModel
-     */
-    protected $casedataResourceModel;
-
-    /**
      * @var Registry
      */
     protected $registry;
@@ -73,6 +73,7 @@ class PaymentResponseHandler
     /**
      * PaymentResponseHandler construct.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param ThreeDsIntegration $threeDsIntegration
      * @param HttpRequest $httpRequest
      * @param JsonSerializer $jsonSerializer
@@ -80,11 +81,11 @@ class PaymentResponseHandler
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param Logger $logger
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param OrderHelper $orderHelper
      * @param Registry $registry
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         ThreeDsIntegration $threeDsIntegration,
         HttpRequest $httpRequest,
         JsonSerializer $jsonSerializer,
@@ -92,10 +93,10 @@ class PaymentResponseHandler
         SignifydOrderResourceModel $signifydOrderResourceModel,
         Logger $logger,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         OrderHelper $orderHelper,
         Registry $registry
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->threeDsIntegration = $threeDsIntegration;
         $this->httpRequest = $httpRequest;
         $this->jsonSerializer = $jsonSerializer;
@@ -103,7 +104,6 @@ class PaymentResponseHandler
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
         $this->logger = $logger;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->orderHelper = $orderHelper;
         $this->registry = $registry;
     }
@@ -261,9 +261,7 @@ class PaymentResponseHandler
                     'Adyen refused payment'
                 );
 
-                $orderId = $order->getId();
-                $case = $this->casedataFactory->create();
-                $this->casedataResourceModel->load($case, $orderId, 'order_id');
+                $case = $this->casedataRepository->getByOrderId($order->getId());
 
                 if ($case->isEmpty()) {
                     return [$paymentsResponse, $payment, $order];

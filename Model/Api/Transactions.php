@@ -10,14 +10,19 @@ use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory as TransactionCollectionFactory;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\PaymentVerificationFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ScaPreAuth\ScaEvaluation;
 
 class Transactions
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var TransactionCollectionFactory
      */
@@ -62,11 +67,6 @@ class Transactions
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var ScaEvaluation
@@ -126,6 +126,7 @@ class Transactions
     /**
      * Transactions construct.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param TransactionCollectionFactory $transactionCollectionFactory
      * @param DateTimeFactory $dateTimeFactory
      * @param JsonSerializer $jsonSerializer
@@ -135,7 +136,6 @@ class Transactions
      * @param PaymentMethodFactory $paymentMethodFactory
      * @param QuoteFactory $quoteFactory
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param ScaEvaluation $scaEvaluation
      * @param VerificationsFactory $verificationsFactory
      * @param CheckoutPaymentDetailsFactory $checkoutPaymentDetailsFactory
@@ -149,6 +149,7 @@ class Transactions
      * @param AcquirerDetailsFactory $acquirerDetailsFactory
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         TransactionCollectionFactory $transactionCollectionFactory,
         DateTimeFactory $dateTimeFactory,
         JsonSerializer $jsonSerializer,
@@ -158,7 +159,6 @@ class Transactions
         PaymentMethodFactory $paymentMethodFactory,
         QuoteFactory $quoteFactory,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         ScaEvaluation $scaEvaluation,
         VerificationsFactory $verificationsFactory,
         CheckoutPaymentDetailsFactory $checkoutPaymentDetailsFactory,
@@ -171,6 +171,7 @@ class Transactions
         SourceAccountDetailsFactory $sourceAccountDetailsFactory,
         AcquirerDetailsFactory $acquirerDetailsFactory
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->transactionCollectionFactory = $transactionCollectionFactory;
         $this->dateTimeFactory = $dateTimeFactory;
         $this->jsonSerializer = $jsonSerializer;
@@ -180,7 +181,6 @@ class Transactions
         $this->paymentMethodFactory = $paymentMethodFactory;
         $this->quoteFactory = $quoteFactory;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->scaEvaluation = $scaEvaluation;
         $this->verificationsFactory = $verificationsFactory;
         $this->checkoutPaymentDetailsFactory = $checkoutPaymentDetailsFactory;
@@ -383,8 +383,7 @@ class Transactions
             }
 
             /** @var \Signifyd\Connect\Model\Casedata $case */
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $quoteId, 'quote_id');
+            $case = $this->casedataRepository->getByQuoteId($quoteId);
 
             if ($case->isEmpty()) {
                 return null;
@@ -415,8 +414,7 @@ class Transactions
      */
     public function makeThreeDsResult($quoteId)
     {
-        $case = $this->casedataFactory->create();
-        $this->casedataResourceModel->load($case, $quoteId, 'quote_id');
+        $case = $this->casedataRepository->getByQuoteId($quoteId);
 
         if (empty($case->getEntries('threeDs'))) {
             return null;

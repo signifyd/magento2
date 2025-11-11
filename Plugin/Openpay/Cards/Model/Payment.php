@@ -2,12 +2,12 @@
 
 namespace Signifyd\Connect\Plugin\Openpay\Cards\Model;
 
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Api\TransactionsFactory;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
 use Openpay\Cards\Model\Payment as OpenpayPayment;
 use Magento\Checkout\Model\Session as CheckoutSession;
@@ -15,14 +15,14 @@ use Magento\Checkout\Model\Session as CheckoutSession;
 class Payment
 {
     /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
+    /**
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var Logger
@@ -57,8 +57,8 @@ class Payment
     /**
      * Payment constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
      * @param StoreManagerInterface $storeManager
      * @param TransactionsFactory $transactionsFactory
@@ -67,8 +67,8 @@ class Payment
      * @param CheckoutSession $checkoutSession
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         Logger $logger,
         StoreManagerInterface $storeManager,
         TransactionsFactory $transactionsFactory,
@@ -76,8 +76,8 @@ class Payment
         Client $client,
         CheckoutSession $checkoutSession
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
         $this->storeManager = $storeManager;
         $this->checkoutSession = $checkoutSession;
@@ -115,10 +115,8 @@ class Payment
             return null;
         }
 
-        $quoteId = $quote->getId();
         /** @var \Signifyd\Connect\Model\Casedata $case */
-        $case = $this->casedataFactory->create();
-        $this->casedataResourceModel->load($case, $quoteId, 'quote_id');
+        $case = $this->casedataRepository->getByQuoteId($quote->getId());
 
         if ($case->isEmpty()) {
             return null;
@@ -184,7 +182,7 @@ class Payment
         $openPayData['gateway'] = 'openpay_cards';
 
         $case->setEntries("OpenPayRefusedReason", $signifydReason);
-        $this->casedataResourceModel->save($case);
+        $this->casedataRepository->save($case);
         $makeTransactions = $this->transactionsFactory->create();
         $transaction = $makeTransactions($quote, $case->getCheckoutToken(), $openPayData);
 

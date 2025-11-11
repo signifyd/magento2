@@ -2,11 +2,11 @@
 
 namespace Signifyd\Connect\Plugin\Braintree;
 
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\Casedata;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Quote\Model\QuoteFactory;
@@ -16,14 +16,14 @@ use Signifyd\Connect\Model\Api\TransactionsFactory;
 class GeneralResponseValidator
 {
     /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
+    /**
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var Logger
@@ -63,8 +63,8 @@ class GeneralResponseValidator
     /**
      * GenericResponseValidator constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
      * @param StoreManagerInterface $storeManager
      * @param QuoteFactory $quoteFactory
@@ -74,8 +74,8 @@ class GeneralResponseValidator
      * @param Client $client
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         Logger $logger,
         StoreManagerInterface $storeManager,
         QuoteFactory $quoteFactory,
@@ -84,8 +84,8 @@ class GeneralResponseValidator
         ConfigHelper $configHelper,
         Client $client
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
         $this->storeManager = $storeManager;
         $this->quoteFactory = $quoteFactory;
@@ -143,7 +143,6 @@ class GeneralResponseValidator
             isset($responseBraintree['avsPostalCodeResponseCode']) &&
             isset($responseBraintree['avsStreetAddressResponseCode'])
         ) {
-            $orderIncrement = $responseBraintree['orderId'];
 
             if ($responseBraintree['cvvResponseCode'] != 'M') {
                 $reason = 'cvv_' . $responseBraintree['cvvResponseCode'];
@@ -156,8 +155,7 @@ class GeneralResponseValidator
             }
 
             /** @var \Signifyd\Connect\Model\Casedata $case */
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $orderIncrement, 'order_increment');
+            $case = $this->casedataRepository->getByOrderId($responseBraintree['orderId']);
 
             if ($case->isEmpty() === false) {
                 switch ($reason) {
@@ -198,7 +196,7 @@ class GeneralResponseValidator
                 $branitreeData['gateway'] = 'braintree';
 
                 $case->setEntries("BraintreeRefusedReason", $signifydReason);
-                $this->casedataResourceModel->save($case);
+                $this->casedataRepository->save($case);
 
                 if (isset($responseBraintree['creditCard'])) {
                     $branitreeData['cardLast4'] = $responseBraintree['creditCard']['last4'] ?? null;

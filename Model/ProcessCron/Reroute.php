@@ -3,6 +3,7 @@
 namespace Signifyd\Connect\Model\ProcessCron;
 
 use Magento\Sales\Model\OrderFactory;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\Core\Client;
@@ -10,7 +11,6 @@ use Signifyd\Connect\Model\Api\DeviceFactory;
 use Signifyd\Connect\Model\Api\ShipmentsFactory;
 use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\UpdateOrderFactory;
 use Signifyd\Models\PaymentUpdateFactory;
@@ -20,6 +20,11 @@ use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 class Reroute
 {
     /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
+    /**
      * @var PaymentUpdateFactory
      */
     public $paymentUpdateFactory;
@@ -28,11 +33,6 @@ class Reroute
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var ConfigHelper
@@ -92,9 +92,9 @@ class Reroute
     /**
      * Reroute construct.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param PaymentUpdateFactory $paymentUpdateFactory
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param ConfigHelper $configHelper
      * @param JsonSerializer $jsonSerializer
      * @param Logger $logger
@@ -108,9 +108,9 @@ class Reroute
      * @param RerouteResourceModel $rerouteResourceModel
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         PaymentUpdateFactory $paymentUpdateFactory,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         ConfigHelper $configHelper,
         JsonSerializer $jsonSerializer,
         Logger $logger,
@@ -123,9 +123,9 @@ class Reroute
         SignifydOrderResourceModel $signifydOrderResourceModel,
         RerouteResourceModel $rerouteResourceModel
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->paymentUpdateFactory = $paymentUpdateFactory;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->configHelper = $configHelper;
         $this->jsonSerializer = $jsonSerializer;
         $this->logger = $logger;
@@ -150,7 +150,7 @@ class Reroute
         try {
             $orderId = $reroute->getOrderId();
             $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->loadForUpdate($case, $orderId, 'order_id');
+            $this->casedataRepository->loadForUpdate($case, $orderId, 'order_id');
             $order = $this->orderFactory->create();
             $this->signifydOrderResourceModel->load($order, $orderId);
 
@@ -198,7 +198,7 @@ class Reroute
                 $case = $updateOrder($case);
             }
 
-            $this->casedataResourceModel->save($case);
+            $this->casedataRepository->save($case);
         } catch (\Exception $e) {
             $this->logger->error(
                 "Failed to process Reroute to order {$reroute->getOrderId()}: "

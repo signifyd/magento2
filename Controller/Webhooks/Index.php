@@ -11,6 +11,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Magento\Framework\Data\Form\FormKey;
@@ -22,7 +23,6 @@ use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\Casedata\UpdateCaseV2Factory;
 use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\App\ResourceConnection;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
@@ -34,6 +34,11 @@ use Signifyd\Connect\Model\SignifydFlags;
  */
 class Index extends Action
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var Logger
      */
@@ -53,11 +58,6 @@ class Index extends Action
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var OrderResourceModel
@@ -118,12 +118,12 @@ class Index extends Action
      * Index constructor.
      *
      * @param Context $context
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param Logger $logger
      * @param ConfigHelper $configHelper
      * @param FormKey $formKey
      * @param File $file
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
      * @param JsonSerializer $jsonSerializer
      * @param ResourceConnection $resourceConnection
@@ -139,12 +139,12 @@ class Index extends Action
      */
     public function __construct(
         Context $context,
+        CasedataRepositoryInterface $casedataRepository,
         Logger $logger,
         ConfigHelper $configHelper,
         FormKey $formKey,
         File $file,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
         JsonSerializer $jsonSerializer,
         ResourceConnection $resourceConnection,
@@ -159,11 +159,11 @@ class Index extends Action
     ) {
         parent::__construct($context);
 
+        $this->casedataRepository = $casedataRepository;
         $this->logger = $logger;
         $this->configHelper = $configHelper;
         $this->file = $file;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
         $this->jsonSerializer = $jsonSerializer;
         $this->resourceConnection = $resourceConnection;
@@ -292,7 +292,7 @@ class Index extends Action
             $httpCode = null;
 
             try {
-                $this->casedataResourceModel->loadForUpdate($case, (string) $caseId, 'code');
+                $this->casedataRepository->loadForUpdate($case, (string) $caseId, 'code');
             } catch (\Exception $e) {
                 $httpCode = Http::STATUS_CODE_423;
                 throw new LocalizedException(__($e->getMessage()));
@@ -304,7 +304,7 @@ class Index extends Action
             }
 
             if ($case->getEntries('processed_by_gateway') === false) {
-                $this->casedataResourceModel->save($case);
+                $this->casedataRepository->save($case);
                 $httpCode = Http::STATUS_CODE_400;
                 throw new LocalizedException(__("Case {$caseId} awaiting gateway processing"));
             }
@@ -394,13 +394,13 @@ class Index extends Action
             $updateOrder = $this->updateOrderFactory->create();
             $case = $updateOrder($case);
 
-            $this->casedataResourceModel->save($case);
+            $this->casedataRepository->save($case);
         } catch (\Exception $e) {
             $context = [];
 
             // Triggering case save to unlock case
-            if ($case instanceof \Signifyd\Connect\Model\ResourceModel\Casedata) {
-                $this->casedataResourceModel->save($case);
+            if ($case instanceof CasedataRepositoryInterface) {
+                $this->casedataRepository->save($case);
                 $context['entity'] = $case;
             }
 
@@ -411,8 +411,8 @@ class Index extends Action
             $context = [];
 
             // Triggering case save to unlock case
-            if ($case instanceof \Signifyd\Connect\Model\ResourceModel\Casedata) {
-                $this->casedataResourceModel->save($case);
+            if ($case instanceof CasedataRepositoryInterface) {
+                $this->casedataFactory->save($case);
                 $context['entity'] = $case;
             }
 

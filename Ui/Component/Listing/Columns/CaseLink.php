@@ -9,8 +9,8 @@ use Magento\Framework\View\Element\UiComponent\ContextInterface;
 use Magento\Framework\View\Element\UiComponentFactory;
 use Magento\Ui\Component\Listing\Columns\Column;
 use Magento\Framework\Serialize\SerializerInterface;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 
 /**
  * Class CaseLink show case link on orger grid
@@ -23,14 +23,14 @@ class CaseLink extends Column
     public $serializer;
 
     /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
+    /**
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * CaseLink constructor.
@@ -38,8 +38,8 @@ class CaseLink extends Column
      * @param ContextInterface $context
      * @param UiComponentFactory $uiComponentFactory
      * @param SerializerInterface $serializer
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param array $components
      * @param array $data
      */
@@ -47,13 +47,13 @@ class CaseLink extends Column
         ContextInterface $context,
         UiComponentFactory $uiComponentFactory,
         SerializerInterface $serializer,
+        CasedataRepositoryInterface $casedataRepository,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         array $components = [],
         array $data = []
     ) {
         $this->serializer = $serializer;
-        $this->casedataResourceModel = $casedataResourceModel;
+        $this->casedataRepository = $casedataRepository;
         $this->casedataFactory = $casedataFactory;
 
         parent::__construct($context, $uiComponentFactory, $components, $data);
@@ -71,9 +71,7 @@ class CaseLink extends Column
             $name = $this->getData('name');
 
             foreach ($dataSource['data']['items'] as &$item) {
-                /** @var \Signifyd\Connect\Model\Casedata $case */
-                $case = $this->casedataFactory->create();
-                $this->casedataResourceModel->load($case, $item['entity_id'], 'order_id');
+                $case = $this->casedataRepository->getByOrderId($item['entity_id']);
 
                 switch ($name) {
                     case "signifyd_score":

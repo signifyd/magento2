@@ -4,25 +4,25 @@ namespace Signifyd\Connect\Observer\Order;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ProcessCron\Reroute as ProcessCronReroute;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\RerouteFactory;
 use Signifyd\Connect\Model\ResourceModel\Reroute as RerouteResourceModel;
 
 class SalesOrderAddressSave implements ObserverInterface
 {
     /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
+    /**
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var ConfigHelper
@@ -52,8 +52,8 @@ class SalesOrderAddressSave implements ObserverInterface
     /**
      * SalesOrderAddressSave method.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param ConfigHelper $configHelper
      * @param Logger $logger
      * @param ProcessCronReroute $processCronReroute
@@ -61,16 +61,16 @@ class SalesOrderAddressSave implements ObserverInterface
      * @param RerouteResourceModel $rerouteResourceModel
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         ConfigHelper $configHelper,
         Logger $logger,
         ProcessCronReroute $processCronReroute,
         RerouteFactory $rerouteFactory,
         RerouteResourceModel $rerouteResourceModel
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->configHelper = $configHelper;
         $this->logger = $logger;
         $this->processCronReroute = $processCronReroute;
@@ -103,8 +103,7 @@ class SalesOrderAddressSave implements ObserverInterface
             }
 
             $orderId = $order->getId();
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $orderId, 'order_id');
+            $case = $this->casedataRepository->getByOrderId($orderId);
 
             if ($case->isEmpty()) {
                 return;

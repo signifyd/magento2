@@ -7,11 +7,16 @@ use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Api\OrderRepositoryInterface as MagentoOrderRepositoryInterface;
 use Magento\Sales\Api\Data\OrderExtensionFactory;
 use Magento\Sales\Api\Data\OrderInterface;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 
 class OrderRepositoryInterface
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var OrderFactory
      */
@@ -23,11 +28,6 @@ class OrderRepositoryInterface
     public $orderExtensionFactory;
 
     /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
-
-    /**
      * @var CasedataFactory
      */
     public $casedataFactory;
@@ -35,20 +35,20 @@ class OrderRepositoryInterface
     /**
      * OrderRepositoryInterface construct.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param OrderExtensionFactory $extensionFactory
      * @param OrderFactory $orderFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param CasedataFactory $casedataFactory
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         OrderExtensionFactory $extensionFactory,
         OrderFactory $orderFactory,
-        CasedataResourceModel $casedataResourceModel,
         CasedataFactory $casedataFactory
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->orderExtensionFactory = $extensionFactory;
         $this->orderFactory = $orderFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->casedataFactory = $casedataFactory;
     }
 
@@ -62,8 +62,7 @@ class OrderRepositoryInterface
     {
         try {
             /** @var \Signifyd\Connect\Model\Casedata $case */
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
+            $case = $this->casedataRepository->getByOrderId($order->getId());
 
             if ($case->isEmpty()) {
                 return;

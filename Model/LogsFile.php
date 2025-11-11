@@ -11,8 +11,8 @@ use Magento\Framework\Filesystem\Io\File;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResource;
 use Magento\Sales\Model\OrderFactory;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Logs\CollectionFactory as LogsCollectionFactory;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
@@ -39,6 +39,11 @@ class LogsFile
      * @var OrderFactory
      */
     public $orderFactory;
+
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
 
     /**
      * @var LogsCollectionFactory
@@ -81,16 +86,12 @@ class LogsFile
     public $casedataFactory;
 
     /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
-
-    /**
      * LogsFile construct.
      *
      * @param DirectoryList $directoryList
      * @param File $file
      * @param OrderFactory $orderFactory
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param LogsCollectionFactory $logsCollectionFactory
      * @param Logger $logger
@@ -100,12 +101,12 @@ class LogsFile
      * @param ConfigDataCollectionFactory $configDataCollectionFactory
      * @param StatusCollectionFactory $statusCollectionFactory
      * @param \Signifyd\Connect\Model\CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      */
     public function __construct(
         DirectoryList $directoryList,
         File $file,
         OrderFactory $orderFactory,
+        CasedataRepositoryInterface $casedataRepository,
         SignifydOrderResourceModel $signifydOrderResourceModel,
         LogsCollectionFactory $logsCollectionFactory,
         Logger $logger,
@@ -115,12 +116,12 @@ class LogsFile
         ConfigDataCollectionFactory $configDataCollectionFactory,
         StatusCollectionFactory $statusCollectionFactory,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel
     ) {
         $this->directoryList = $directoryList;
         $this->file = $file;
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
         $this->orderFactory = $orderFactory;
+        $this->casedataRepository = $casedataRepository;
         $this->logsCollectionFactory = $logsCollectionFactory;
         $this->logger = $logger;
         $this->quoteFactory = $quoteFactory;
@@ -129,7 +130,6 @@ class LogsFile
         $this->configDataCollectionFactory = $configDataCollectionFactory;
         $this->statusCollectionFactory = $statusCollectionFactory;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
     }
 
     /**
@@ -211,7 +211,7 @@ class LogsFile
             $this->quoteResource->load($quote, $order->getQuoteId());
 
             $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->loadForUpdate($case, $orderId, 'order_id');
+            $this->casedataRepository->loadForUpdate($case, $orderId, 'order_id');
 
             $fileData .= 'case: ' . $case->toJson() . PHP_EOL;
             $fileData .= 'quote: ' . $quote->toJson() . PHP_EOL;

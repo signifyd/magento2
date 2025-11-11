@@ -3,21 +3,21 @@
 namespace Signifyd\Connect\Plugin\Magento\Sales\Block\Adminhtml\Order;
 
 use Magento\Sales\Block\Adminhtml\Order\View as MagentoOrderView;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\UpdateOrder\Action as UpdateOrderAction;
 
 class View
 {
     /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
+    /**
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var UpdateOrderAction
@@ -27,16 +27,16 @@ class View
     /**
      * View constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param UpdateOrderAction $updateOrderAction
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         UpdateOrderAction $updateOrderAction
     ) {
-        $this->casedataResourceModel = $casedataResourceModel;
+        $this->casedataRepository = $casedataRepository;
         $this->casedataFactory = $casedataFactory;
         $this->updateOrderAction = $updateOrderAction;
     }
@@ -62,8 +62,7 @@ class View
     ) {
         if ($buttonId == 'order_unhold') {
             /** @var \Signifyd\Connect\Model\Casedata $case */
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $subject->getOrder()->getId(), 'order_id');
+            $case = $this->casedataRepository->getByOrderId($subject->getOrder()->getId());
 
             if (!$case->isEmpty()) {
                 $guarantee = $case->getData('guarantee');

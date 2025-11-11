@@ -10,16 +10,16 @@ use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\LocalizedException;
-use Signifyd\Connect\Model\Registry;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
+use Signifyd\Connect\Model\Registry;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata\CollectionFactory as CasedataCollectionFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -37,6 +37,11 @@ use Signifyd\Connect\Model\PaymentVerificationFactory;
 class Purchase implements ObserverInterface
 {
     /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
+    /**
      * @var Logger
      */
     public $logger;
@@ -50,11 +55,6 @@ class Purchase implements ObserverInterface
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var SignifydOrderResourceModel
@@ -146,10 +146,10 @@ class Purchase implements ObserverInterface
     /**
      * Purchase constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param Logger $logger
      * @param ConfigHelper $configHelper
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param OrderFactory $orderFactory
      * @param UpdateOrderAction $updateOrderAction
@@ -166,10 +166,10 @@ class Purchase implements ObserverInterface
      * @param Registry $registry
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         Logger $logger,
         ConfigHelper $configHelper,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         SignifydOrderResourceModel $signifydOrderResourceModel,
         OrderFactory $orderFactory,
         UpdateOrderAction $updateOrderAction,
@@ -185,10 +185,10 @@ class Purchase implements ObserverInterface
         PaymentVerificationFactory $paymentVerificationFactory,
         Registry $registry
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->logger = $logger;
         $this->configHelper = $configHelper;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
         $this->orderFactory = $orderFactory;
         $this->updateOrderAction = $updateOrderAction;
@@ -247,8 +247,7 @@ class Purchase implements ObserverInterface
             ) {
                 $casesFromQuote = $casesFromQuotes->getFirstItem();
                 /** @var \Signifyd\Connect\Model\Casedata $casesFromQuoteLoaded */
-                $casesFromQuoteLoaded = $this->casedataFactory->create();
-                $this->casedataResourceModel->load($casesFromQuoteLoaded, $casesFromQuote->getCode(), 'code');
+                $casesFromQuoteLoaded = $this->casedataRepository->getByCode($casesFromQuote->getCode());
                 $orderId = $casesFromQuoteLoaded->getData('order_id');
 
                 if (isset($orderId) &&
@@ -269,7 +268,7 @@ class Purchase implements ObserverInterface
                     $casesFromQuoteLoaded->setData('magento_status', Casedata::COMPLETED_STATUS);
                 }
 
-                $this->casedataResourceModel->save($casesFromQuoteLoaded);
+                $this->casedataRepository->save($casesFromQuoteLoaded);
 
                 if ($casesFromQuote->getData('guarantee') == 'HOLD' ||
                     $casesFromQuote->getData('guarantee') == 'PENDING'
@@ -328,11 +327,10 @@ class Purchase implements ObserverInterface
             }
 
             /** @var \Signifyd\Connect\Model\Casedata $case */
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
+            $case = $this->casedataRepository->getByOrderId($order->getId());
 
             if ($case->isEmpty()) {
-                $this->casedataResourceModel->load($case, $order->getQuoteId(), 'quote_id');
+                $this->casedataRepository->getByQuoteId($order->getQuoteId());
 
                 if (empty($case->getData('order_id')) === false &&
                     $case->getData('order_id') !== $order->getId()) {
@@ -359,14 +357,14 @@ class Purchase implements ObserverInterface
                     }
                 }
 
-                $this->casedataResourceModel->save($case);
+                $this->casedataRepository->save($case);
             } elseif ($case->getData('magento_status') != Casedata::NEW) {
                 if ($isOrderProcessedByAmazon && $case->getMagentoStatus() === Casedata::AWAITING_PSP) {
                     // Hold order after Amazon capture the payment
                     $this->holdOrder($order, $case, $isPassive);
 
                     $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
-                    $this->casedataResourceModel->save($case);
+                    $this->casedataRepository->save($case);
                 }
 
                 return;
@@ -426,7 +424,7 @@ class Purchase implements ObserverInterface
                 $case->setMagentoStatus(Casedata::ASYNC_WAIT);
 
                 try {
-                    $this->casedataResourceModel->save($case);
+                    $this->casedataRepository->save($case);
                     $this->logger->debug(
                         'Case for order:#' . $incrementId . ' was not sent because of an async payment method',
                         ['entity' => $case]
@@ -453,7 +451,7 @@ class Purchase implements ObserverInterface
                     $case->setMagentoStatus(Casedata::WAITING_SUBMISSION_STATUS);
 
                     try {
-                        $this->casedataResourceModel->save($case);
+                        $this->casedataRepository->save($case);
                         $this->logger->debug(
                             'Case for order:#' . $incrementId . ' was not sent because the operation timed out',
                             ['entity' => $case]
@@ -495,7 +493,7 @@ class Purchase implements ObserverInterface
                 $case->setEntries('is_holded', 1);
             }
 
-            $this->casedataResourceModel->save($case);
+            $this->casedataRepository->save($case);
 
             // Initial hold order
             $this->holdOrder($order, $case, $isPassive);
@@ -512,7 +510,7 @@ class Purchase implements ObserverInterface
 
             if (isset($case) && $order instanceof Order) {
                 $case->setData('magento_status', Casedata::WAITING_SUBMISSION_STATUS);
-                $this->casedataResourceModel->save($case);
+                $this->casedataRepository->save($case);
             }
 
             $this->logger->error($ex->getMessage(), $context);

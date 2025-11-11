@@ -10,7 +10,6 @@ use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ScaPreAuth\ScaEvaluation;
 
 class CheckoutDataBuilderSca
@@ -61,11 +60,6 @@ class CheckoutDataBuilderSca
     public $casedataFactory;
 
     /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
-
-    /**
      * CheckoutDataBuilder constructor.
      *
      * @param QuoteResourceModel $quoteResourceModel
@@ -76,7 +70,6 @@ class CheckoutDataBuilderSca
      * @param StoreManagerInterface $storeManagerInterface
      * @param ScaEvaluation $scaEvaluation
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      */
     public function __construct(
         QuoteResourceModel $quoteResourceModel,
@@ -87,7 +80,6 @@ class CheckoutDataBuilderSca
         StoreManagerInterface $storeManagerInterface,
         ScaEvaluation $scaEvaluation,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel
     ) {
         $this->quoteResourceModel = $quoteResourceModel;
         $this->quoteFactory = $quoteFactory;
@@ -97,7 +89,6 @@ class CheckoutDataBuilderSca
         $this->storeManagerInterface = $storeManagerInterface;
         $this->scaEvaluation = $scaEvaluation;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
     }
 
     /**

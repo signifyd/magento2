@@ -5,11 +5,11 @@ namespace Signifyd\Connect\Model\ProcessCron\CaseData;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\UpdateOrderFactory;
 use Signifyd\Connect\Model\Api\SaleOrderFactory;
@@ -17,6 +17,11 @@ use Signifyd\Connect\Model\PaymentVerificationFactory;
 
 class AsyncWaiting
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var Logger
      */
@@ -53,11 +58,6 @@ class AsyncWaiting
     public $updateOrderFactory;
 
     /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
-
-    /**
      * @var StoreManagerInterface
      */
     public $storeManagerInterface;
@@ -75,6 +75,7 @@ class AsyncWaiting
     /**
      * AsyncWaiting constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param ConfigHelper $configHelper
      * @param Logger $logger
      * @param OrderResourceModel $orderResourceModel
@@ -82,12 +83,12 @@ class AsyncWaiting
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param UpdateCaseFactory $updateCaseFactory
      * @param UpdateOrderFactory $updateOrderFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param StoreManagerInterface $storeManagerInterface
      * @param SaleOrderFactory $saleOrderFactory
      * @param PaymentVerificationFactory $paymentVerificationFactory
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         ConfigHelper $configHelper,
         Logger $logger,
         OrderResourceModel $orderResourceModel,
@@ -95,11 +96,11 @@ class AsyncWaiting
         SignifydOrderResourceModel $signifydOrderResourceModel,
         UpdateCaseFactory $updateCaseFactory,
         UpdateOrderFactory $updateOrderFactory,
-        CasedataResourceModel $casedataResourceModel,
         StoreManagerInterface $storeManagerInterface,
         SaleOrderFactory $saleOrderFactory,
         PaymentVerificationFactory $paymentVerificationFactory
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->configHelper = $configHelper;
         $this->logger = $logger;
         $this->orderResourceModel = $orderResourceModel;
@@ -107,7 +108,6 @@ class AsyncWaiting
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
         $this->updateCaseFactory = $updateCaseFactory;
         $this->updateOrderFactory = $updateOrderFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->storeManagerInterface = $storeManagerInterface;
         $this->saleOrderFactory = $saleOrderFactory;
         $this->paymentVerificationFactory = $paymentVerificationFactory;
@@ -138,7 +138,7 @@ class AsyncWaiting
                 if (empty($case->getEntries('async_action')) === false &&
                     $case->getEntries('async_action') === 'delete'
                 ) {
-                    $this->casedataResourceModel->delete($case);
+                    $this->casedataRepository->delete($case);
                 }
 
                 /** @var \Signifyd\Connect\Model\Payment\Base\AsyncChecker $asyncCheck */
@@ -148,12 +148,12 @@ class AsyncWaiting
 
                 if ($asyncCheck($order, $case)) {
                     try {
-                        $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
+                        $this->casedataRepository->loadForUpdate($case, (string) $case->getData('entity_id'));
 
                         $case->setMagentoStatus(Casedata::WAITING_SUBMISSION_STATUS);
                         $case->setUpdated();
 
-                        $this->casedataResourceModel->save($case);
+                        $this->casedataRepository->save($case);
                     } catch (\Exception $e) {
                         $this->logger->error('CRON: Failed to save case data to database: ' . $e->getMessage());
                     }

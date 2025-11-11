@@ -8,11 +8,11 @@ namespace Signifyd\Connect\Plugin\StripeIntegration\Payments\Helper;
 
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use StripeIntegration\Payments\Helper\Generic as StripeIntegrationGeneric;
 
 /**
@@ -20,6 +20,11 @@ use StripeIntegration\Payments\Helper\Generic as StripeIntegrationGeneric;
  */
 class Generic
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var Logger
      */
@@ -41,31 +46,26 @@ class Generic
     public $casedataFactory;
 
     /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
-
-    /**
      * Generic constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param Logger $logger
      * @param OrderHelper $orderHelper
      * @param OrderResourceModel $orderResourceModel
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         Logger $logger,
         OrderHelper $orderHelper,
         OrderResourceModel $orderResourceModel,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->logger = $logger;
         $this->orderHelper = $orderHelper;
         $this->orderResourceModel = $orderResourceModel;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
     }
 
     /**
@@ -84,9 +84,7 @@ class Generic
         $refundOffline = null
     ) {
         try {
-            $orderId = $order->getId();
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $orderId, 'order_id');
+            $case = $this->casedataRepository->getByOrderId($order->getId());
 
             if ($case->isEmpty()) {
                 return [$order, $refundInvoices, $refundOffline];
@@ -94,7 +92,7 @@ class Generic
 
             if ($case->getData('magento_status') === Casedata::ASYNC_WAIT && empty($case->getData('code'))) {
                 $case->setEntries('async_action', 'delete');
-                $this->casedataResourceModel->save($case);
+                $this->casedataRepository->save($case);
             }
 
             if ($order->canUnhold()) {

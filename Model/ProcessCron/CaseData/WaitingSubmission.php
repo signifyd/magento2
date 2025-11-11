@@ -5,12 +5,12 @@ namespace Signifyd\Connect\Model\ProcessCron\CaseData;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\Stripe\ReInitFactory as ReInitStripeFactory;
 use Signifyd\Connect\Model\UpdateOrderFactory;
@@ -18,6 +18,11 @@ use Signifyd\Connect\Model\Api\SaleOrderFactory;
 
 class WaitingSubmission
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var Logger
      */
@@ -54,11 +59,6 @@ class WaitingSubmission
     public $updateOrderFactory;
 
     /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
-
-    /**
      * @var StoreManagerInterface
      */
     public $storeManagerInterface;
@@ -81,6 +81,7 @@ class WaitingSubmission
     /**
      * WaitingSubmission constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param ConfigHelper $configHelper
      * @param Logger $logger
      * @param OrderResourceModel $orderResourceModel
@@ -88,13 +89,13 @@ class WaitingSubmission
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param UpdateCaseFactory $updateCaseFactory
      * @param UpdateOrderFactory $updateOrderFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param StoreManagerInterface $storeManagerInterface
      * @param ReInitStripeFactory $reInitStripeFactory
      * @param SaleOrderFactory $saleOrderFactory
      * @param Client $client
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         ConfigHelper $configHelper,
         Logger $logger,
         OrderResourceModel $orderResourceModel,
@@ -102,12 +103,12 @@ class WaitingSubmission
         SignifydOrderResourceModel $signifydOrderResourceModel,
         UpdateCaseFactory $updateCaseFactory,
         UpdateOrderFactory $updateOrderFactory,
-        CasedataResourceModel $casedataResourceModel,
         StoreManagerInterface $storeManagerInterface,
         ReInitStripeFactory $reInitStripeFactory,
         SaleOrderFactory $saleOrderFactory,
         Client $client
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->configHelper = $configHelper;
         $this->logger = $logger;
         $this->orderResourceModel = $orderResourceModel;
@@ -115,7 +116,6 @@ class WaitingSubmission
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
         $this->updateCaseFactory = $updateCaseFactory;
         $this->updateOrderFactory = $updateOrderFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->storeManagerInterface = $storeManagerInterface;
         $this->reInitStripeFactory = $reInitStripeFactory;
         $this->saleOrderFactory = $saleOrderFactory;
@@ -148,7 +148,7 @@ class WaitingSubmission
                 $reInitStripe($order);
 
                 try {
-                    $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
+                    $this->casedataRepository->loadForUpdate($case, (string) $case->getData('entity_id'));
                     $saleOrder = $this->saleOrderFactory->create();
                     $order->setData('origin_store_code', $case->getData('origin_store_code'));
                     $caseModel = $saleOrder($order);
@@ -160,7 +160,7 @@ class WaitingSubmission
                         $case->setCode($investigationId);
                         $case->setMagentoStatus(Casedata::IN_REVIEW_STATUS);
                         $case->setUpdated();
-                        $this->casedataResourceModel->save($case);
+                        $this->casedataRepository->save($case);
                     }
                 } catch (\Exception $e) {
                     $this->logger->error(

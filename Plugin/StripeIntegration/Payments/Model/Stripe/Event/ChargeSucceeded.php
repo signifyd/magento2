@@ -4,14 +4,19 @@ namespace Signifyd\Connect\Plugin\StripeIntegration\Payments\Model\Stripe\Event;
 
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use StripeIntegration\Payments\Model\Stripe\Event\ChargeSucceeded as StripeChargeSucceeded;
 
 class ChargeSucceeded
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var Logger
      */
@@ -21,11 +26,6 @@ class ChargeSucceeded
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var OrderResourceModel
@@ -45,24 +45,24 @@ class ChargeSucceeded
     /**
      * ChargeSucceeded constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param Logger $logger
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
      * @param OrderHelper $orderHelper
      * @param ObjectManagerInterface $objectManagerInterface
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         Logger $logger,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
         OrderHelper $orderHelper,
         ObjectManagerInterface $objectManagerInterface
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->logger = $logger;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
         $this->orderHelper = $orderHelper;
         $this->objectManagerInterface = $objectManagerInterface;
@@ -87,9 +87,7 @@ class ChargeSucceeded
                 \StripeIntegration\Payments\Helper\Webhooks::class
             );
             $order = $webhooksHelper->loadOrderFromEvent($arrEvent);
-            $orderId = $order->getId();
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $orderId, 'order_id');
+            $case = $this->casedataRepository->getByOrderId($order->getId());
 
             if ($case->isEmpty()) {
                 return $result;
@@ -110,7 +108,7 @@ class ChargeSucceeded
                 );
 
                 $case->unsetEntries('is_holded');
-                $this->casedataResourceModel->save($case);
+                $this->casedataRepository->save($case);
             }
         } catch (\Exception $ex) {
             $context = [];

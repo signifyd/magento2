@@ -3,15 +3,20 @@
 namespace Signifyd\Connect\Plugin\Adyen\Payment\Helper;
 
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Adyen\Payment\Helper\Webhook as AdyenWebhook;
 
 class Webhook
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var Logger
      */
@@ -21,11 +26,6 @@ class Webhook
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var OrderResourceModel
@@ -44,24 +44,24 @@ class Webhook
     /**
      * Webhook constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param Logger $logger
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
      * @param OrderHelper $orderHelper
      * @param ObjectManagerInterface $objectManagerInterface
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         Logger $logger,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
         OrderHelper $orderHelper,
         ObjectManagerInterface $objectManagerInterface
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->logger = $logger;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
         $this->orderHelper = $orderHelper;
         $this->objectManagerInterface = $objectManagerInterface;
@@ -92,12 +92,10 @@ class Webhook
             return $proceed($notification);
         }
 
-        $orderId = $order->getId();
-        $case = $this->casedataFactory->create();
-        $this->casedataResourceModel->load($case, $orderId, 'order_id');
+        $case = $this->casedataRepository->getByOrderId($order->getId());
 
         if ($case->isEmpty()) {
-            $this->casedataResourceModel->save($case);
+            $this->casedataRepository->save($case);
             return $proceed($notification);
         }
 
@@ -146,7 +144,7 @@ class Webhook
         }
 
         $case->setEntries('processed_by_gateway', true);
-        $this->casedataResourceModel->save($case);
+        $this->casedataRepository->save($case);
 
         if (isset($returnValue)) {
             return $returnValue;

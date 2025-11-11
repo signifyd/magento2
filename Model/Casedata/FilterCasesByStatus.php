@@ -4,8 +4,8 @@ namespace Signifyd\Connect\Model\Casedata;
 
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Model\ResourceModel\Casedata\CollectionFactory as CasedataCollectionFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Helper\ConfigHelper;
@@ -13,14 +13,14 @@ use Signifyd\Connect\Helper\ConfigHelper;
 class FilterCasesByStatus extends AbstractHelper
 {
     /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
+    /**
      * @var CasedataCollectionFactory
      */
     public $casedataCollectionFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var Logger
@@ -41,24 +41,24 @@ class FilterCasesByStatus extends AbstractHelper
      * FilterCasesByStatus constructor.
      *
      * @param Context $context
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param CasedataCollectionFactory $casedataCollectionFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
      * @param CasedataFactory $casedataFactory
      * @param ConfigHelper $configHelper
      */
     public function __construct(
         Context $context,
+        CasedataRepositoryInterface $casedataRepository,
         CasedataCollectionFactory $casedataCollectionFactory,
-        CasedataResourceModel $casedataResourceModel,
         Logger $logger,
         CasedataFactory $casedataFactory,
         ConfigHelper $configHelper
     ) {
         parent::__construct($context);
 
+        $this->casedataRepository = $casedataRepository;
         $this->casedataCollectionFactory = $casedataCollectionFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
         $this->casedataFactory = $casedataFactory;
         $this->configHelper = $configHelper;
@@ -100,7 +100,7 @@ class FilterCasesByStatus extends AbstractHelper
         foreach ($casesCollection->getItems() as $case) {
             try {
                 $caseToUpdate = $this->casedataFactory->create();
-                $this->casedataResourceModel->loadForUpdate($caseToUpdate, $case->getId());
+                $this->casedataRepository->loadForUpdate($caseToUpdate, $case->getId());
 
                 $retries = $caseToUpdate->getData('retries');
                 $secondsAfterUpdate = $case->getData('seconds_after_update');
@@ -114,7 +114,7 @@ class FilterCasesByStatus extends AbstractHelper
 
                     $caseToUpdate->setData('retries', $retries + 1);
                     $caseToUpdate->setUpdated(null, false);
-                    $this->casedataResourceModel->save($caseToUpdate);
+                    $this->casedataRepository->save($caseToUpdate);
                 }
             } catch (\Exception $e) {
                 $this->logger->error(

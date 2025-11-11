@@ -3,16 +3,21 @@
 namespace Signifyd\Connect\Model\Api\CaseData\PreAuth;
 
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Api\TransactionsFactory;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 
 class ProcessTransaction
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var Logger
      */
@@ -22,11 +27,6 @@ class ProcessTransaction
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var ConfigHelper
@@ -50,26 +50,27 @@ class ProcessTransaction
 
     /**
      * Transaction constructor.
+     *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param Logger $logger
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param ConfigHelper $configHelper
      * @param TransactionsFactory $transactionsFactory
      * @param Client $client
      * @param JsonSerializer $jsonSerializer
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         Logger $logger,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         ConfigHelper $configHelper,
         TransactionsFactory $transactionsFactory,
         Client $client,
         JsonSerializer $jsonSerializer
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->logger = $logger;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->configHelper = $configHelper;
         $this->transactionsFactory = $transactionsFactory;
         $this->client = $client;
@@ -107,8 +108,7 @@ class ProcessTransaction
         }
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
-        $case = $this->casedataFactory->create();
-        $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
+        $case = $this->casedataRepository->getByOrderId($order->getId());
 
         if ($case->isEmpty() == false && $case->getPolicyName() == Casedata::PRE_AUTH) {
             $makeTransactions = $this->transactionsFactory->create();
@@ -135,7 +135,7 @@ class ProcessTransaction
 
             $this->client->postTransactionToSignifyd($saleTransaction, $order);
             $case->setEntries('transaction_hash', $newHashToValidateReroute);
-            $this->casedataResourceModel->save($case);
+            $this->casedataRepository->save($case);
         }
     }
 }

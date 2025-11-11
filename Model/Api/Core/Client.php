@@ -6,11 +6,11 @@ use Magento\Framework\Filesystem\DirectoryList;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Core\Api\CheckoutApiFactory;
 use Signifyd\Core\Api\SaleApiFactory;
 use Signifyd\Core\Api\WebhooksApiFactory;
@@ -19,6 +19,11 @@ use Signifyd\Connect\Model\Api\RecordReturnFactory;
 
 class Client
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var ConfigHelper
      */
@@ -43,11 +48,6 @@ class Client
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var OrderResourceModel
@@ -98,8 +98,8 @@ class Client
      * @param Logger $logger
      * @param OrderHelper $orderHelper
      * @param JsonSerializer $jsonSerializer
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
      * @param RecordReturnFactory $recordReturnFactory
      * @param DirectoryList $directory
@@ -113,8 +113,8 @@ class Client
         Logger $logger,
         OrderHelper $orderHelper,
         JsonSerializer $jsonSerializer,
+        CasedataRepositoryInterface $casedataRepository,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
         RecordReturnFactory $recordReturnFactory,
         DirectoryList $directory,
@@ -127,8 +127,8 @@ class Client
         $this->logger = $logger;
         $this->orderHelper = $orderHelper;
         $this->jsonSerializer = $jsonSerializer;
+        $this->casedataRepository = $casedataRepository;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
         $this->recordReturnFactory = $recordReturnFactory;
         $this->directory = $directory;
@@ -224,8 +224,7 @@ class Client
         $this->logger->debug("Trying to cancel case for order " . $order->getIncrementId(), ['entity' => $order]);
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
-        $case = $this->casedataFactory->create();
-        $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
+        $case = $this->casedataRepository->getByOrderId($order->getId());
 
         if ($case->isEmpty() || empty($case->getCode())) {
             $this->logger->debug(
@@ -274,18 +273,18 @@ class Client
                 $case->setData('guarantee', 'CANCELED');
                 $this->logger->debug("Return recorded with id {$returnId}", ['entity' => $order]);
                 $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: Return recorded with id {$returnId}");
-                $isCaseLocked = $this->casedataResourceModel->isCaseLocked($case);
+                $isCaseLocked = $this->casedataRepository->isCaseLocked($case);
 
                 // Some other process already locked the case, will not load or save
                 if ($isCaseLocked === false) {
-                    $this->casedataResourceModel->save($case);
+                    $this->casedataRepository->save($case);
                 }
 
                 return true;
             } catch (\Exception $e) {
                 // Triggering case save to unlock case
                 if ($case instanceof \Signifyd\Connect\Model\Casedata) {
-                    $this->casedataResourceModel->save($case);
+                    $this->casedataRepository->save($case);
                 }
 
                 $this->logger->error('Failed to save case data to database: ' . $e->getMessage(), ['entity' => $order]);

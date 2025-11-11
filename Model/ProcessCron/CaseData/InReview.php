@@ -6,17 +6,22 @@ use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\Stripe\ReInitFactory as ReInitStripeFactory;
 use Signifyd\Connect\Model\UpdateOrderFactory;
 
 class InReview
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var JsonSerializer
      */
@@ -58,11 +63,6 @@ class InReview
     public $updateOrderFactory;
 
     /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
-
-    /**
      * @var StoreManagerInterface
      */
     public $storeManagerInterface;
@@ -80,6 +80,7 @@ class InReview
     /**
      * InReview constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param JsonSerializer $jsonSerializer
      * @param Logger $logger
      * @param ConfigHelper $configHelper
@@ -88,12 +89,12 @@ class InReview
      * @param SignifydOrderResourceModel $signifydOrderResourceModel
      * @param UpdateCaseFactory $updateCaseFactory
      * @param UpdateOrderFactory $updateOrderFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param StoreManagerInterface $storeManagerInterface
      * @param ReInitStripeFactory $reInitStripeFactory
      * @param Client $client
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         JsonSerializer $jsonSerializer,
         Logger $logger,
         ConfigHelper $configHelper,
@@ -102,11 +103,11 @@ class InReview
         SignifydOrderResourceModel $signifydOrderResourceModel,
         UpdateCaseFactory $updateCaseFactory,
         UpdateOrderFactory $updateOrderFactory,
-        CasedataResourceModel $casedataResourceModel,
         StoreManagerInterface $storeManagerInterface,
         ReInitStripeFactory $reInitStripeFactory,
         Client $client
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->jsonSerializer = $jsonSerializer;
         $this->logger = $logger;
         $this->configHelper = $configHelper;
@@ -115,7 +116,6 @@ class InReview
         $this->signifydOrderResourceModel = $signifydOrderResourceModel;
         $this->updateCaseFactory = $updateCaseFactory;
         $this->updateOrderFactory = $updateOrderFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->storeManagerInterface = $storeManagerInterface;
         $this->reInitStripeFactory = $reInitStripeFactory;
         $this->client = $client;
@@ -156,7 +156,7 @@ class InReview
                         ['entity' => $case]
                     );
 
-                    $this->casedataResourceModel->loadForUpdate($case, (string) $case->getData('entity_id'));
+                    $this->casedataRepository->loadForUpdate($case, (string) $case->getData('entity_id'));
 
                     $currentCaseHash = sha1(implode(',', $case->getData()));
                     $updateCase = $this->updateCaseFactory->create();
@@ -171,7 +171,7 @@ class InReview
                         );
 
                         // Triggering case save to unlock case
-                        $this->casedataResourceModel->save($case);
+                        $this->casedataRepository->save($case);
 
                         continue;
                     }
@@ -179,11 +179,11 @@ class InReview
                     $updateOrder = $this->updateOrderFactory->create();
                     $case = $updateOrder($case);
 
-                    $this->casedataResourceModel->save($case);
+                    $this->casedataRepository->save($case);
                 } catch (\Exception $e) {
                     // Triggering case save to unlock case
                     if ($case instanceof \Signifyd\Connect\Model\Casedata) {
-                        $this->casedataResourceModel->save($case);
+                        $this->casedataRepository->save($case);
                     }
 
                     $this->logger->error(

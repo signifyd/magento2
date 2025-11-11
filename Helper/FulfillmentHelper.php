@@ -2,9 +2,9 @@
 
 namespace Signifyd\Connect\Helper;
 
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\FulfillmentFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Fulfillment as FulfillmentResourceModel;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\CarrierFactory;
@@ -16,6 +16,11 @@ use Signifyd\Connect\Model\Api\Shipments;
 class FulfillmentHelper
 {
     /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
+    /**
      * @var CasedataFactory
      */
     public $casedataFactory;
@@ -24,11 +29,6 @@ class FulfillmentHelper
      * @var FulfillmentFactory
      */
     public $fulfillmentFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var FulfillmentResourceModel
@@ -73,9 +73,9 @@ class FulfillmentHelper
     /**
      * FulfillmentHelper constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param CasedataFactory $casedataFactory
      * @param FulfillmentFactory $fulfillmentFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param FulfillmentResourceModel $fulfillmentResourceModel
      * @param Logger $logger
      * @param ConfigHelper $configHelper
@@ -86,9 +86,9 @@ class FulfillmentHelper
      * @param Shipments $shipments
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         CasedataFactory $casedataFactory,
         FulfillmentFactory $fulfillmentFactory,
-        CasedataResourceModel $casedataResourceModel,
         FulfillmentResourceModel $fulfillmentResourceModel,
         Logger $logger,
         ConfigHelper $configHelper,
@@ -98,9 +98,9 @@ class FulfillmentHelper
         OriginFactory $originFactory,
         Shipments $shipments
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->casedataFactory = $casedataFactory;
         $this->fulfillmentFactory = $fulfillmentFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->fulfillmentResourceModel = $fulfillmentResourceModel;
         $this->logger = $logger;
         $this->configHelper = $configHelper;
@@ -129,9 +129,7 @@ class FulfillmentHelper
         $orderIncrementId = $order->getIncrementId();
         $orderId = $order->getId();
 
-        $case = $this->casedataFactory->create();
-        $this->casedataResourceModel->load($case, $orderId, 'order_id');
-
+        $case = $this->casedataRepository->getByOrderId($orderId);
         $caseCode = $case instanceof \Signifyd\Connect\Model\Casedata ? $case->getCode() : null;
 
         if (empty($caseCode)) {
