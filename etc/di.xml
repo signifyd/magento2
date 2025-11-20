@@ -185,6 +185,10 @@
         <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Controller_Webhook_Index" type="\Signifyd\Connect\Plugin\Adyen\Payment\Controller\Webhook\Index" />
     </type>
 
+    <type name="Magento\QuoteGraphQl\Model\Resolver\SetPaymentMethodOnCart">
+        <plugin name="signifyd_connect_plugin_save_pre_auth_data" type="\Signifyd\Connect\Plugin\QuoteGraphQl\Model\Resolver\SetPaymentMethodOnCart"/>
+    </type>
+
     <!-- Around order placement for StripeIntegration -->
     <type name="Magento\Sales\Model\Service\OrderService">
         <plugin name="signifydConnectOrderService"
