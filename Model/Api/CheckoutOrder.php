@@ -199,18 +199,6 @@ class CheckoutOrder
 
         try {
             $reservedOrderId = $quote->getReservedOrderId();
-            $purchase = $this->purchaseFactory->create();
-            $userAccount = $this->userAccountFactory->create();
-            $coverageRequests = $this->coverageRequestsFactory->create();
-            $device = $this->deviceFactory->create();
-            $merchantPlatform = $this->merchantPlatformFactory->create();
-            $signifydClient = $this->signifydClientFactory->create();
-            $tags = $this->tagsFactory->create();
-            $address = $this->addressFactory->create();
-            $sellers = $this->sellersFactory->create();
-            $customerOrderRecommendation = $this->customerOrderRecommendationFactory->create();
-            $memberships = $this->membershipsFactory->create();
-            $merchantCategoryCode = $this->merchantCategoryCodeFactory->create();
 
             if (empty($reservedOrderId)) {
                 $quote->reserveOrderId();
@@ -219,17 +207,17 @@ class CheckoutOrder
             }
 
             $signifydOrder['orderId'] = $reservedOrderId;
-            $signifydOrder['purchase'] = $purchase($quote);
-            $signifydOrder['userAccount'] = $userAccount($quote);
-            $signifydOrder['memberships'] = $memberships();
-            $signifydOrder['coverageRequests'] = $coverageRequests($paymentMethod);
-            $signifydOrder['merchantCategoryCode'] = $merchantCategoryCode();
-            $signifydOrder['device'] = $device($quote->getId(), $quote->getStore());
-            $signifydOrder['merchantPlatform'] = $merchantPlatform();
-            $signifydOrder['signifydClient'] = $signifydClient();
-            $signifydOrder['sellers'] = $sellers();
-            $signifydOrder['tags'] = $tags($quote->getStoreId());
-            $signifydOrder['customerOrderRecommendation'] = $customerOrderRecommendation();
+            $signifydOrder['purchase'] = ($this->purchaseFactory->create())($quote);
+            $signifydOrder['userAccount'] = ($this->userAccountFactory->create())($quote);
+            $signifydOrder['memberships'] = ($this->membershipsFactory->create())();
+            $signifydOrder['coverageRequests'] = ($this->coverageRequestsFactory->create())($paymentMethod);
+            $signifydOrder['merchantCategoryCode'] = ($this->merchantCategoryCodeFactory->create())();
+            $signifydOrder['device'] = ($this->deviceFactory->create())($quote->getId(), $quote->getStore());
+            $signifydOrder['merchantPlatform'] = ($this->merchantPlatformFactory->create())();
+            $signifydOrder['signifydClient'] = ($this->signifydClientFactory->create())();
+            $signifydOrder['sellers'] = ($this->sellersFactory->create())();
+            $signifydOrder['tags'] = ($this->tagsFactory->create())($quote->getStoreId());
+            $signifydOrder['customerOrderRecommendation'] = ($this->customerOrderRecommendationFactory->create())();
             $signifydOrder['decisionMechanism'] = ($this->decisionMechanismFactory->create())();
 
             $policyConfig = $this->configHelper->getPolicyName(
@@ -246,18 +234,18 @@ class CheckoutOrder
             $signifydOrder['additionalEvalRequests'] = $evalRequest;
             $signifydOrder['checkoutId'] = sha1($this->jsonSerializer->serialize($signifydOrder));
             $transactions = [];
-            $sourceAccountDetails = $this->sourceAccountDetailsFactory->create();
-            $acquirerDetails = $this->acquirerDetailsFactory->create();
 
             if (isset($paymentMethod)) {
                 $transaction = [];
                 $billingAddres = $quote->getBillingAddress();
                 $makePaymentMethod = $this->paymentMethodFactory->create();
-                $transaction['checkoutPaymentDetails']['billingAddress'] = $address($billingAddres);
+                $transaction['checkoutPaymentDetails']['billingAddress'] = (
+                    $this->addressFactory->create()
+                )($billingAddres);
                 $transaction['currency'] = $quote->getBaseCurrencyCode();
                 $transaction['amount'] = $quote->getGrandTotal();
-                $transaction['sourceAccountDetails'] = $sourceAccountDetails();
-                $transaction['acquirerDetails'] = $acquirerDetails();
+                $transaction['sourceAccountDetails'] = ($this->sourceAccountDetailsFactory->create())();
+                $transaction['acquirerDetails'] = ($this->acquirerDetailsFactory->create())();
                 $transaction['paymentMethod'] = $makePaymentMethod($quote);
                 $transaction['gateway'] = $paymentMethod;
 

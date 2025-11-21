@@ -111,11 +111,10 @@ class ProcessTransaction
         $this->casedataResourceModel->load($case, $order->getId(), 'order_id');
 
         if ($case->isEmpty() == false && $case->getPolicyName() == Casedata::PRE_AUTH) {
-            $makeTransactions = $this->transactionsFactory->create();
             $saleTransaction = [];
             $saleTransaction['checkoutId'] = $case->getCheckoutToken();
             $saleTransaction['orderId'] = $order->getIncrementId();
-            $saleTransaction['transactions'] = $makeTransactions($order);
+            $saleTransaction['transactions'] = ($this->transactionsFactory->create())($order);
 
             $saleTransactionJson = $this->jsonSerializer->serialize($saleTransaction);
             $newHashToValidateReroute = sha1($saleTransactionJson);

@@ -252,8 +252,7 @@ class Client
         }
 
         $this->logger->debug('Return case ' . $case->getData('order_id'), ['entity' => $order]);
-        $recordReturn = $this->recordReturnFactory->create();
-        $recordReturnData = $recordReturn($order);
+        $recordReturnData = ($this->recordReturnFactory->create())($order);
 
         $this->logger->info(
             "Call record a return with: " . $this->jsonSerializer->serialize($recordReturnData),

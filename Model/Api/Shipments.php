@@ -95,16 +95,12 @@ class Shipments
     {
         $shipments = [];
         $shippingMethod = $order->getShippingMethod(true);
-        $carrier = $this->carrierFactory->create();
-        $recipientFactory = $this->recipientFactory->create();
-        $originFactory = $this->originFactory->create();
-        $minDeliveryDate = $this->minDeliveryDateFactory->create();
 
         $shipment = [];
-        $shipment['destination'] = $recipientFactory($order);
-        $shipment['origin'] = $originFactory($order->getStoreId());
-        $shipment['carrier'] = $carrier($shippingMethod);
-        $shipment['minDeliveryDate'] = $minDeliveryDate();
+        $shipment['destination'] = ($this->recipientFactory->create())($order);
+        $shipment['origin'] = ($this->originFactory->create())($order->getStoreId());
+        $shipment['carrier'] = ($this->carrierFactory->create())($shippingMethod);
+        $shipment['minDeliveryDate'] = ($this->minDeliveryDateFactory->create())();
         $shipment['maxDeliveryDate'] = null;
         $shipment['shipmentId'] = null;
         $shipment['fulfillmentMethod'] = $this->getFulfillmentMethodMapping(
@@ -140,16 +136,12 @@ class Shipments
     {
         $shipments = [];
         $shippingMethod = $quote->getShippingAddress()->getShippingMethod();
-        $carrier = $this->carrierFactory->create();
-        $recipientFactory = $this->recipientFactory->create();
-        $originFactory = $this->originFactory->create();
-        $minDeliveryDate = $this->minDeliveryDateFactory->create();
 
         $shipment = [];
-        $shipment['destination'] = $recipientFactory($quote);
-        $shipment['origin'] = $originFactory($quote->getStoreId());
-        $shipment['carrier'] = $carrier($shippingMethod);
-        $shipment['minDeliveryDate'] = $minDeliveryDate();
+        $shipment['destination'] = ($this->recipientFactory->create())($quote);
+        $shipment['origin'] = ($this->originFactory->create())($quote->getStoreId());
+        $shipment['carrier'] = ($this->carrierFactory->create())($shippingMethod);
+        $shipment['minDeliveryDate'] = ($this->minDeliveryDateFactory->create())();
         $shipment['maxDeliveryDate'] = null;
         $shipment['shipmentId'] = null;
         $shipment['fulfillmentMethod'] = $this->getFulfillmentMethodMapping(

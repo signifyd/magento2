@@ -66,11 +66,10 @@ class Device
             return null;
         }
 
-        $fingerprint = $this->fingerprintFactory->create();
         $device = [];
         $device['clientIpAddress'] = $filterIpd;
         $device['sessionId'] = $this->deviceHelper->generateFingerprint($quoteId, $storeId);
-        $device['fingerprint'] = $fingerprint();
+        $device['fingerprint'] = ($this->fingerprintFactory->create())();
         return $device;
     }
 

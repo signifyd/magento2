@@ -29,12 +29,10 @@ class Fulfillment
      */
     public function __invoke($fulfillment)
     {
-        $fulfillments = $this->fulfillmentsFactory->create();
-
         $fulfillmentData = [];
         $fulfillmentData['orderId'] = $fulfillment->getData('order_id');
         $fulfillmentData['fulfillmentStatus'] = $fulfillment->getData('fulfillment_status');
-        $fulfillmentData['fulfillments'] = $fulfillments($fulfillment);
+        $fulfillmentData['fulfillments'] = ($this->fulfillmentsFactory->create())($fulfillment);
 
         return $fulfillmentData;
     }

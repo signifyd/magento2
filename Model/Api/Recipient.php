@@ -72,11 +72,9 @@ class Recipient
         $address = $order->getShippingAddress();
 
         if ($address !== null) {
-            $formatAddress = $this->addressFactory->create();
-
             $recipient['fullName'] = $address->getName();
             $recipient['organization'] = $address->getCompany();
-            $recipient['address'] = $formatAddress($address);
+            $recipient['address'] = ($this->addressFactory->create())($address);
         } else {
             $recipient['email'] = $order->getCustomerEmail();
         }
@@ -101,11 +99,9 @@ class Recipient
             $quote->getShippingAddress() : $quote->getBillingAddress();
 
         if ($address !== null) {
-            $formatAddress = $this->addressFactory->create();
-
             $recipient['fullName'] = $address->getName();
             $recipient['organization'] = $address->getCompany();
-            $recipient['address'] = $formatAddress($address);
+            $recipient['address'] = ($this->addressFactory->create())($address);
         } else {
             $recipient['email'] = $quote->getCustomerEmail();
         }
