@@ -24,6 +24,18 @@ class CreateTest extends OrderTestCase
      */
     public $paymentMethod = 'banktransfer';
 
+    public $updateCaseFactory;
+
+    public $updateOrderFactory;
+
+    public $logsFile;
+
+    public $filesystem;
+
+    public $directoryList;
+
+    public $driverFile;
+
     public function setUp(): void
     {
         parent::setUp();
