@@ -18,6 +18,7 @@ use Magento\Quote\Model\Quote;
 use Signifyd\Connect\Model\Api\CheckoutOrderFactory;
 use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Casedata;
+use Signifyd\Connect\Model\Registry;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
 use Magento\Framework\App\Request\Http as RequestHttp;
@@ -108,6 +109,11 @@ class PreAuth implements ObserverInterface
     public $recipient;
 
     /**
+     * @var Registry
+     */
+    public $registry;
+
+    /**
      * PreAuth constructor.
      *
      * @param Logger $logger
@@ -126,6 +132,7 @@ class PreAuth implements ObserverInterface
      * @param CheckoutOrderFactory $checkoutOrderFactory
      * @param Client $client
      * @param Recipient $recipient
+     * @param Registry $registry
      */
     public function __construct(
         Logger $logger,
@@ -143,7 +150,8 @@ class PreAuth implements ObserverInterface
         ObjectManagerInterface $objectManagerInterface,
         CheckoutOrderFactory $checkoutOrderFactory,
         Client $client,
-        Recipient $recipient
+        Recipient $recipient,
+        Registry $registry
     ) {
         $this->logger = $logger;
         $this->quoteRepository = $quoteRepository;
@@ -161,6 +169,7 @@ class PreAuth implements ObserverInterface
         $this->checkoutOrderFactory = $checkoutOrderFactory;
         $this->client = $client;
         $this->recipient = $recipient;
+        $this->registry = $registry;
     }
 
     /**
@@ -203,6 +212,10 @@ class PreAuth implements ObserverInterface
             } else {
                 $payment = $quote->getPayment();
                 $paymentMethod = $payment->getMethod();
+            }
+
+            if (isset($paymentMethod) === false) {
+                $paymentMethod = $this->registry->getData('paymentMethod');
             }
 
             if (isset($paymentMethod) && $this->configHelper->isPaymentRestricted($paymentMethod)) {
