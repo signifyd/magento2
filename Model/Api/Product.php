@@ -37,6 +37,16 @@ class Product
     public $subscriptionFactory;
 
     /**
+     * @var GiftMessageFactory
+     */
+    public $giftMessageFactory;
+
+    /**
+     * @var RegistryIdFactory
+     */
+    public $registryIdFactory;
+
+    /**
      * Product construct.
      *
      * @param CategoryCollectionFactory $categoryCollectionFactory
@@ -44,19 +54,25 @@ class Product
      * @param CategoryResourceModel $categoryResourceModel
      * @param StoreManagerInterface $storeManagerInterface
      * @param SubscriptionFactory $subscriptionFactory
+     * @param GiftMessageFactory $giftMessageFactory
+     * @param RegistryIdFactory $registryIdFactory
      */
     public function __construct(
         CategoryCollectionFactory $categoryCollectionFactory,
         CategoryFactory $categoryFactory,
         CategoryResourceModel $categoryResourceModel,
         StoreManagerInterface $storeManagerInterface,
-        SubscriptionFactory $subscriptionFactory
+        SubscriptionFactory $subscriptionFactory,
+        GiftMessageFactory $giftMessageFactory,
+        RegistryIdFactory $registryIdFactory
     ) {
         $this->categoryCollectionFactory = $categoryCollectionFactory;
         $this->categoryFactory = $categoryFactory;
         $this->categoryResourceModel = $categoryResourceModel;
         $this->storeManagerInterface = $storeManagerInterface;
         $this->subscriptionFactory = $subscriptionFactory;
+        $this->giftMessageFactory = $giftMessageFactory;
+        $this->registryIdFactory = $registryIdFactory;
     }
 
     /**
@@ -147,7 +163,6 @@ class Product
             }
         }
 
-        $subscription = $this->subscriptionFactory->create();
         $product = [];
         $product['itemName'] = $item->getName();
         $product['itemPrice'] = $itemPrice;
@@ -160,7 +175,9 @@ class Product
         $product['itemUrl'] = $item->getProduct()->getProductUrl();
         $product['itemWeight'] = $item->getProduct()->getWeight();
         $product['shipmentId'] = null;
-        $product['subscription'] = $subscription();
+        $product['subscription'] = ($this->subscriptionFactory->create())();
+        $product['giftMessage'] = ($this->giftMessageFactory->create())();
+        $product['registryId'] = ($this->registryIdFactory->create())();
 
         return $product;
     }
@@ -234,7 +251,6 @@ class Product
             }
         }
 
-        $subscription = $this->subscriptionFactory->create();
         $product = [];
         $product['itemName'] = $item->getName();
         $product['itemPrice'] = $itemPrice;
@@ -247,7 +263,9 @@ class Product
         $product['itemUrl'] = $item->getProduct()->getProductUrl();
         $product['itemWeight'] = $item->getProduct()->getWeight();
         $product['shipmentId'] = null;
-        $product['subscription'] = $subscription();
+        $product['subscription'] = ($this->subscriptionFactory->create())();
+        $product['giftMessage'] = ($this->giftMessageFactory->create())();
+        $product['registryId'] = ($this->registryIdFactory->create())();
 
         return $product;
     }

@@ -29,23 +29,31 @@ class Purchase
     public $receivedByFactory;
 
     /**
+     * @var OrderSourceFactory
+     */
+    public $orderSourceFactory;
+
+    /**
      * Purchase construct.
      *
      * @param DateTimeFactory $dateTimeFactory
      * @param ProductFactory $productFactory
      * @param ShipmentsFactory $shipmentsFactory
      * @param ReceivedByFactory $receivedByFactory
+     * @param OrderSourceFactory $orderSourceFactory
      */
     public function __construct(
         DateTimeFactory $dateTimeFactory,
         ProductFactory $productFactory,
         ShipmentsFactory $shipmentsFactory,
-        ReceivedByFactory $receivedByFactory
+        ReceivedByFactory $receivedByFactory,
+        OrderSourceFactory $orderSourceFactory
     ) {
         $this->dateTimeFactory = $dateTimeFactory;
         $this->productFactory = $productFactory;
         $this->shipmentsFactory = $shipmentsFactory;
         $this->receivedByFactory = $receivedByFactory;
+        $this->orderSourceFactory = $orderSourceFactory;
     }
 
     /**
@@ -105,6 +113,7 @@ class Purchase
         $purchase['shipments'] = $makeShipments($order);
         $purchase['confirmationPhone'] = $order->getBillingAddress()->getTelephone();
         $purchase['totalShippingCost'] = $order->getShippingAmount();
+        $purchase['orderSource'] = ($this->orderSourceFactory->create())();
         $couponCode = $order->getCouponCode();
         $receivedBy = $this->receivedByFactory->create();
 
@@ -155,6 +164,7 @@ class Purchase
         $purchase['shipments'] = $makeShipments($quote);
         $purchase['confirmationPhone'] = $quote->getBillingAddress()->getTelephone();
         $purchase['totalShippingCost'] = is_numeric($shippingAmount) ? floatval($shippingAmount) : null;
+        $purchase['orderSource'] = ($this->orderSourceFactory->create())();
         $purchase['discountCodes'] = null;
         $purchase['receivedBy'] = $receivedBy();
 
