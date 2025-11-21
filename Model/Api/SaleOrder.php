@@ -160,8 +160,7 @@ class SaleOrder
             $signifydOrder['userAccount'] = ($this->userAccountFactory->create())($order);
             $signifydOrder['memberships'] = ($this->membershipsFactory->create())();
             $signifydOrder['coverageRequests'] = (
-                $this->coverageRequestsFactory->create())($order->getPayment()->getMethod()
-            );
+                $this->coverageRequestsFactory->create())($order->getPayment()->getMethod());
             $signifydOrder['merchantCategoryCode'] = ($this->merchantCategoryCodeFactory->create())();
             $signifydOrder['device'] = (
                 $this->deviceFactory->create()

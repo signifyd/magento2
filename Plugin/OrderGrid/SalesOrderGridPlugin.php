@@ -48,8 +48,8 @@ class SalesOrderGridPlugin
      */
     public function beforeAddFieldToFilter(
         SearchResult $subject,
-                     $field,
-                     $condition = null
+        $field,
+        $condition = null
     ) {
         if ($field === 'signifyd_guarantee') {
             if (isset($condition['eq']) && $condition['eq'] === 'ACCEPT') {
