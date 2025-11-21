@@ -90,7 +90,8 @@ class UserAccount
         $customer = $this->customerFactory->create();
         $this->customerResourceModel->load($customer, $order->getCustomerId());
 
-        if ($customer !== null && !$customer->isEmpty()) {
+        $customerId = is_object($customer) ? $customer->getId() : null;
+        if (empty($customerId) === false) {
             $user['createdDate'] = date('c', strtotime($customer->getCreatedAt()));
             $user['lastUpdateDate'] = date('c', strtotime($customer->getData('updated_at')));
             $user['emailLastUpdateDate'] = null;
@@ -158,7 +159,8 @@ class UserAccount
         $customer = $this->customerFactory->create();
         $this->customerResourceModel->load($customer, $quote->getCustomerId());
 
-        if ($customer !== null && !$customer->isEmpty()) {
+        $customerId = is_object($customer) ? $customer->getId() : null;
+        if (empty($customerId) === false) {
             $user['createdDate'] = date('c', strtotime($customer->getCreatedAt()));
             $user['lastUpdateDate'] = date('c', strtotime($customer->getData('updated_at')));
             $user['emailLastUpdateDate'] = null;

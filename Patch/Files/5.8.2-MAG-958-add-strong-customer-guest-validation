@@ -1,0 +1,24 @@
+diff --git a/vendor/signifyd/module-connect/Model/Api/UserAccount.php b/vendor/signifyd/module-connect/Model/Api/UserAccount.php
+index d5ceeb9..9595ea7 100644
+--- a/vendor/signifyd/module-connect/Model/Api/UserAccount.php
++++ b/vendor/signifyd/module-connect/Model/Api/UserAccount.php
+@@ -85,7 +85,8 @@ class UserAccount
+         $customer = $this->customerFactory->create();
+         $this->customerResourceModel->load($customer, $order->getCustomerId());
+
+-        if ($customer !== null && !$customer->isEmpty()) {
++        $customerId = is_object($customer) ? $customer->getId() : null;
++        if (empty($customerId) === false) {
+             $user['createdDate'] = date('c', strtotime($customer->getCreatedAt()));
+             $user['lastUpdateDate'] = date('c', strtotime($customer->getData('updated_at')));
+             $user['emailLastUpdateDate'] = null;
+@@ -145,7 +146,8 @@ class UserAccount
+         $customer = $this->customerFactory->create();
+         $this->customerResourceModel->load($customer, $quote->getCustomerId());
+
+-        if ($customer !== null && !$customer->isEmpty()) {
++        $customerId = is_object($customer) ? $customer->getId() : null;
++        if (empty($customerId) === false) {
+             $user['createdDate'] = date('c', strtotime($customer->getCreatedAt()));
+             $user['lastUpdateDate'] = date('c', strtotime($customer->getData('updated_at')));
+             $user['emailLastUpdateDate'] = null;
