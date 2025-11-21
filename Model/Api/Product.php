@@ -100,7 +100,7 @@ class Product
      * @param OrderItem $item
      * @return array
      */
-    protected function makeProductFromOrder(OrderItem $item)
+    public function makeProductFromOrder(OrderItem $item)
     {
         $product = $item->getProduct();
         $productImageUrl = $this->getProductImage($product);
@@ -188,7 +188,7 @@ class Product
      * @param QuoteItem $item
      * @return array
      */
-    protected function makeProductFromQuote(QuoteItem $item)
+    public function makeProductFromQuote(QuoteItem $item)
     {
         $product = $item->getProduct();
         $productImageUrl = $this->getProductImage($product);
@@ -277,7 +277,7 @@ class Product
      * @return string|null
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    protected function getProductImage($product)
+    public function getProductImage($product)
     {
         $productImage = $product->getImage();
 

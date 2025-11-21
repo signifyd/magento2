@@ -7,6 +7,7 @@ use Magento\Backend\App\Action;
 use Signifyd\Connect\Model\LogsFile;
 use Magento\Framework\App\Response\Http\FileFactory;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\App\RequestInterface;
 
 class Logs extends Action
 {
@@ -26,6 +27,11 @@ class Logs extends Action
     public $filesystem;
 
     /**
+     * @var RequestInterface
+     */
+    public $request;
+
+    /**
      * Array of actions which can be processed without secret key validation
      *
      * @var string[]
@@ -37,17 +43,20 @@ class Logs extends Action
      * @param LogsFile $logsFile
      * @param FileFactory $fileFactory
      * @param Filesystem $filesystem
+     * @param RequestInterface $request
      */
     public function __construct(
         Action\Context $context,
         LogsFile $logsFile,
         FileFactory $fileFactory,
-        Filesystem $filesystem
+        Filesystem $filesystem,
+        RequestInterface $request
     ) {
         parent::__construct($context);
         $this->logsFile = $logsFile;
         $this->fileFactory = $fileFactory;
         $this->filesystem = $filesystem;
+        $this->request = $request;
     }
 
     /**
@@ -61,7 +70,7 @@ class Logs extends Action
             /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */
             $resultRedirect = $this->resultRedirectFactory->create();
 
-            $orderId = $this->getRequest()->getParam('order_id');
+            $orderId = $this->request->getParam('order_id');
 
             if (isset($orderId) === false) {
                 $this->messageManager->addErrorMessage(__('Failed to retrieve order id.'));

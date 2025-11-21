@@ -60,7 +60,7 @@ class CoverageRequests
      * @param mixed $paymentMethod
      * @return array|null
      */
-    protected function getDecisionForMethod($decision, $paymentMethod)
+    public function getDecisionForMethod($decision, $paymentMethod)
     {
         if (isset($paymentMethod) === false) {
             return null;

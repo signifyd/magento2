@@ -34,11 +34,12 @@ trait MapperTrait
                     return false;
                 }
 
-                if (class_exists(\StripeIntegration\Payments\Model\Config::class)) {
-                    $stripeClient = $this->objectManagerInterface
-                        ->get(\StripeIntegration\Payments\Model\Config::class)->getStripeClient();
+                if (class_exists(\StripeIntegration\Payments\Model\Config::class) === false) {
+                    return false;
                 }
 
+                $stripeClient = $this->objectManagerInterface
+                    ->get(\StripeIntegration\Payments\Model\Config::class)->getStripeClient();
                 $paymentIntent = $stripeClient->paymentIntents->retrieve($lastTransactionId, []);
 
                 if (is_object($paymentIntent) &&

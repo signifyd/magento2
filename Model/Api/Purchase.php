@@ -81,7 +81,7 @@ class Purchase
      * @param Order $order
      * @return array
      */
-    protected function makePurchaseFromOrder(Order $order)
+    public function makePurchaseFromOrder(Order $order)
     {
         $originStoreCode = $order->getData('origin_store_code');
         $items = $order->getAllItems();
@@ -135,7 +135,7 @@ class Purchase
      * @param Quote $quote
      * @return array
      */
-    protected function makePurchaseFromQuote(Quote $quote)
+    public function makePurchaseFromQuote(Quote $quote)
     {
         $items = $quote->getAllItems();
         $purchase = [];

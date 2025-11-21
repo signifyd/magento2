@@ -66,7 +66,7 @@ class Recipient
      * @param Order $order
      * @return array
      */
-    protected function makeRecipient(Order $order)
+    public function makeRecipient(Order $order)
     {
         $recipient = [];
         $address = $order->getShippingAddress();
@@ -94,7 +94,7 @@ class Recipient
      * @param Quote $quote
      * @return array
      */
-    protected function makeRecipientFromQuote(Quote $quote)
+    public function makeRecipientFromQuote(Quote $quote)
     {
         $recipient = [];
         $address = $quote->getShippingAddress()->getCity() !== null ?

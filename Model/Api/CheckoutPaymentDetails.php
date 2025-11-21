@@ -162,13 +162,13 @@ class CheckoutPaymentDetails
      * @param Order $order
      * @return array
      */
-    protected function makeCheckoutPaymentDetails(Order $order)
+    public function makeCheckoutPaymentDetails(Order $order)
     {
         $cardInstallmentsvalue = $this->cardInstallmentsFactory->create();
         $cardInstallments = $cardInstallmentsvalue();
         $cardholder = $this->accountHolderNameFactory->create();
 
-        if (isset($cardInstallments) === false &&
+        if ($cardInstallments === false &&
             $order->getPayment()->getMethod() == 'openpay_cards' &&
             is_array($order->getPayment()->getData('additional_information')) &&
             isset($order->getPayment()->getData('additional_information')['interest_free']) &&
@@ -220,7 +220,7 @@ class CheckoutPaymentDetails
      * @param array $methodData
      * @return array
      */
-    protected function makeCheckoutPaymentDetailsFromQuote(Quote $quote, $methodData = [])
+    public function makeCheckoutPaymentDetailsFromQuote(Quote $quote, $methodData = [])
     {
         $checkoutPaymentDetails = [];
         $signifydAddress = $this->addressFactory->create();

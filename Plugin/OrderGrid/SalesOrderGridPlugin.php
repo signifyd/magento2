@@ -2,30 +2,28 @@
 
 namespace Signifyd\Connect\Plugin\OrderGrid;
 
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Sales\Model\ResourceModel\Order\Grid\Collection;
+use Magento\Framework\DB\Select;
 use Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult;
+use Zend_Db_Select_Exception;
 
 class SalesOrderGridPlugin
 {
     /**
-     * Around get select method.
-     *
      * @param SearchResult $subject
-     * @param \Closure $proceed
-     * @return mixed
+     * @param mixed $select
+     * @return Select
+     * @throws Zend_Db_Select_Exception
      */
-    public function aroundGetSelect(
+    public function afterGetSelect(
         SearchResult $subject,
-        \Closure $proceed
+        mixed $result
     ) {
-        $select = $proceed();
         $connection = $subject->getResource()->getConnection();
 
         if ($subject->getMainTable() === $connection->getTableName('sales_order_grid')) {
-            $parts = $select->getPart(\Magento\Framework\DB\Select::FROM);
+            $parts = $result->getPart(Select::FROM);
             if (!isset($parts['signifyd_connect_case'])) {
-                $select->joinLeft(
+                $result->joinLeft(
                     ['signifyd_connect_case' => $subject->getTable('signifyd_connect_case')],
                     'main_table.entity_id = signifyd_connect_case.order_id',
                     [
@@ -36,7 +34,8 @@ class SalesOrderGridPlugin
                 );
             }
         }
-        return $select;
+
+        return $result;
     }
 
     /**
@@ -49,8 +48,8 @@ class SalesOrderGridPlugin
      */
     public function beforeAddFieldToFilter(
         SearchResult $subject,
-        $field,
-        $condition = null
+                     $field,
+                     $condition = null
     ) {
         if ($field === 'signifyd_guarantee') {
             if (isset($condition['eq']) && $condition['eq'] === 'ACCEPT') {

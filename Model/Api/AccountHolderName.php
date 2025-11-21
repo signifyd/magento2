@@ -57,12 +57,12 @@ class AccountHolderName
      * @param Quote $quote
      * @return array|string|string[]|null
      */
-    protected function getCardholderFromQuote(Quote $quote)
+    public function getCardholderFromQuote(Quote $quote)
     {
         try {
             $firstname = $quote->getBillingAddress()->getFirstname();
             $lastname = $quote->getBillingAddress()->getLastname();
-            $cardholder = trim($firstname ?? '') . ' ' . trim($lastname ?? '');
+            $cardholder = trim($firstname) . ' ' . trim($lastname);
             $cardholder = strtoupper($cardholder);
             $cardholder = preg_replace('/  +/', ' ', $cardholder);
 
@@ -79,7 +79,7 @@ class AccountHolderName
      * @param Order $order
      * @return string
      */
-    protected function getCardholder(Order $order)
+    public function getCardholder(Order $order)
     {
         try {
             $paymentMethod = $order->getPayment()->getMethod();

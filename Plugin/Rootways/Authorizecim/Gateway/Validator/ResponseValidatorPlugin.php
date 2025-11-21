@@ -73,7 +73,7 @@ class ResponseValidatorPlugin
      * @throws \Signifyd\Core\Exceptions\ApiException
      * @throws \Signifyd\Core\Exceptions\InvalidClassException
      */
-    protected function submitErrorToSignifyd($errorCode, $errorMessages)
+    public function submitErrorToSignifyd($errorCode, $errorMessages)
     {
         $authorizeErrorCode = $errorCode[0] ?? '';
         $authorizeErrorMessages = $errorMessages[0]->getText() ?? '';

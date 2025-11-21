@@ -91,7 +91,7 @@ class Shipments
      * @param Order $order
      * @return array
      */
-    protected function makeShipments(Order $order)
+    public function makeShipments(Order $order)
     {
         $shipments = [];
         $shippingMethod = $order->getShippingMethod(true);
@@ -136,7 +136,7 @@ class Shipments
      * @param Quote $quote
      * @return array
      */
-    protected function makeShipmentsFromQuote(Quote $quote)
+    public function makeShipmentsFromQuote(Quote $quote)
     {
         $shipments = [];
         $shippingMethod = $quote->getShippingAddress()->getShippingMethod();

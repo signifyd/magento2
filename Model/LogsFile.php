@@ -68,12 +68,12 @@ class LogsFile
     /**
      * @var ConfigDataCollectionFactory
      */
-    protected $configDataCollectionFactory;
+    public $configDataCollectionFactory;
 
     /**
      * @var StatusCollectionFactory
      */
-    protected $statusCollectionFactory;
+    public $statusCollectionFactory;
 
     /**
      * @var CasedataFactory

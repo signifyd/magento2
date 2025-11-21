@@ -226,7 +226,7 @@ class Capture
      * @param Order $order
      * @return void
      */
-    protected function sendInvoice($invoice, $order)
+    public function sendInvoice($invoice, $order)
     {
         try {
             $this->invoiceSender->send($invoice);
@@ -242,7 +242,7 @@ class Capture
      * @param string $reason
      * @return bool
      */
-    protected function validateReason($reason)
+    public function validateReason($reason)
     {
         if ($reason == "no items can be invoiced") {
             return true;

@@ -8,6 +8,7 @@ use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Helper\OrderHelper;
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\App\RequestInterface;
 use Signifyd\Connect\Model\UpdateOrder\Action as UpdateOrderAction;
 
 class Unhold
@@ -48,6 +49,11 @@ class Unhold
     public $updateOrderAction;
 
     /**
+     * @var RequestInterface
+     */
+    public $request;
+
+    /**
      * Unhold constructor.
      *
      * @param OrderRepositoryInterface $orderRepository
@@ -57,6 +63,7 @@ class Unhold
      * @param CasedataResourceModel $casedataResourceModel
      * @param ResourceConnection $resourceConnection
      * @param UpdateOrderAction $updateOrderAction
+     * @param RequestInterface $request
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -65,7 +72,8 @@ class Unhold
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
         ResourceConnection $resourceConnection,
-        UpdateOrderAction $updateOrderAction
+        UpdateOrderAction $updateOrderAction,
+        RequestInterface $request
     ) {
         $this->orderRepository = $orderRepository;
         $this->orderHelper = $orderHelper;
@@ -74,6 +82,7 @@ class Unhold
         $this->casedataFactory = $casedataFactory;
         $this->resourceConnection = $resourceConnection;
         $this->updateOrderAction = $updateOrderAction;
+        $this->request = $request;
     }
 
     /**
@@ -85,8 +94,8 @@ class Unhold
      */
     public function afterExecute(\Magento\Sales\Controller\Adminhtml\Order $subject, $result)
     {
-        $signifydUnhold = $subject->getRequest()->getParam('signifyd_unhold');
-        $orderId = $subject->getRequest()->getParam('order_id');
+        $signifydUnhold = $this->request->getParam('signifyd_unhold');
+        $orderId = $this->request->getParam('order_id');
 
         if (empty($signifydUnhold)) {
             return $result;

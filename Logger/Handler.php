@@ -13,5 +13,5 @@ class Handler extends \Magento\Framework\Logger\Handler\Base
      * Logging Level
      * @var int
      */
-    protected $loggerType = Logger::DEBUG;
+    protected $loggerType = \Monolog\Level::Debug;
 }

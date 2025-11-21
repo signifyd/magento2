@@ -43,32 +43,32 @@ class PaymentResponseHandler
     /**
      * @var SignifydOrderResourceModel
      */
-    protected $signifydOrderResourceModel;
+    public $signifydOrderResourceModel;
 
     /**
      * @var Logger
      */
-    protected $logger;
+    public $logger;
 
     /**
      * @var OrderHelper
      */
-    protected $orderHelper;
+    public $orderHelper;
 
     /**
      * @var CasedataFactory
      */
-    protected $casedataFactory;
+    public $casedataFactory;
 
     /**
      * @var CasedataResourceModel
      */
-    protected $casedataResourceModel;
+    public $casedataResourceModel;
 
     /**
      * @var Registry
      */
-    protected $registry;
+    public $registry;
 
     /**
      * PaymentResponseHandler construct.
@@ -295,7 +295,7 @@ class PaymentResponseHandler
         } catch (\Exception $ex) {
             $context = [];
 
-            if (isset($order) && $order instanceof Order) {
+            if ($order instanceof Order) {
                 $context['entity'] = $order;
             }
 
@@ -303,7 +303,7 @@ class PaymentResponseHandler
         } catch (\Error $ex) {
             $context = [];
 
-            if (isset($order) && $order instanceof Order) {
+            if ($order instanceof Order) {
                 $context['entity'] = $order;
             }
 

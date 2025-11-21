@@ -141,7 +141,7 @@ class Purchase implements ObserverInterface
     /**
      * @var Registry
      */
-    protected $registry;
+    public $registry;
 
     /**
      * Purchase constructor.
@@ -217,7 +217,7 @@ class Purchase implements ObserverInterface
         $order = $observer->getEvent()->getOrder();
 
         try {
-            /** @var $order Order */
+            /** @var Order $order */
             $order = $observer->getEvent()->getOrder();
 
             $this->logger->info('Processing Signifyd event ' . $observer->getEvent()->getName(), ['entity' => $order]);
@@ -506,7 +506,7 @@ class Purchase implements ObserverInterface
         } catch (\Exception $ex) {
             $context = [];
 
-            if (isset($order) && $order instanceof Order) {
+            if ($order instanceof Order) {
                 $context['entity'] = $order;
             }
 
@@ -559,6 +559,8 @@ class Purchase implements ObserverInterface
         } catch (\Exception $e) {
             return false;
         }
+
+        return false;
     }
 
     /**

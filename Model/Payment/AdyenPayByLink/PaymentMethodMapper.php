@@ -21,7 +21,7 @@ class PaymentMethodMapper extends PaymentMethodBase
      */
     public function getPaymentMethodFromOrder(Order $order)
     {
-        $payByLinkMethod = $order->getPayment()->getAdditionalInformation('payment_method');
+        $payByLinkMethod = $order->getPayment()->getAdditionalInformation()['payment_method'];
 
         return $this->adyenPayByLinkMapping($payByLinkMethod, $order);
     }
@@ -34,7 +34,7 @@ class PaymentMethodMapper extends PaymentMethodBase
      */
     public function getPaymentMethodFromQuote(Quote $quote)
     {
-        $payByLinkMethod = $quote->getPayment()->getAdditionalInformation('payment_method');
+        $payByLinkMethod = $quote->getPayment()->getAdditionalInformation()['payment_method'];
 
         return $this->adyenPayByLinkMapping($payByLinkMethod, $quote);
     }
@@ -50,7 +50,7 @@ class PaymentMethodMapper extends PaymentMethodBase
     {
         $paymentMethod = $entity->getPayment()->getMethod();
 
-        if (isset($payByLinkMethod) === false) {
+        if ($payByLinkMethod === false) {
             $this->logger->info('Adyen Pay By Link method code not found', ['entity' => $entity]);
 
             return $this->makePaymentMethod($paymentMethod);

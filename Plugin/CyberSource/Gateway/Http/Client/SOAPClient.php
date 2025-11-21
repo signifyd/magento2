@@ -215,7 +215,7 @@ class SOAPClient
                 break;
         }
 
-        if (isset($signifydReason) === false || isset($signifydMessage) === false) {
+        if (isset($signifydReason) === false || $signifydMessage === false) {
             return $response;
         }
 
