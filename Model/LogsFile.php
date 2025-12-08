@@ -13,7 +13,6 @@ use Magento\Quote\Model\ResourceModel\Quote as QuoteResource;
 use Magento\Sales\Model\OrderFactory;
 use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Logs\CollectionFactory as LogsCollectionFactory;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Magento\Sales\Model\ResourceModel\Order\Status\History\CollectionFactory as HistoryCollectionFactory;
@@ -81,11 +80,6 @@ class LogsFile
     protected $statusCollectionFactory;
 
     /**
-     * @var CasedataFactory
-     */
-    public $casedataFactory;
-
-    /**
      * LogsFile construct.
      *
      * @param DirectoryList $directoryList
@@ -100,7 +94,6 @@ class LogsFile
      * @param HistoryCollectionFactory $historyCollectionFactory
      * @param ConfigDataCollectionFactory $configDataCollectionFactory
      * @param StatusCollectionFactory $statusCollectionFactory
-     * @param \Signifyd\Connect\Model\CasedataFactory $casedataFactory
      */
     public function __construct(
         DirectoryList $directoryList,
@@ -114,8 +107,7 @@ class LogsFile
         QuoteResource $quoteResource,
         HistoryCollectionFactory $historyCollectionFactory,
         ConfigDataCollectionFactory $configDataCollectionFactory,
-        StatusCollectionFactory $statusCollectionFactory,
-        CasedataFactory $casedataFactory,
+        StatusCollectionFactory $statusCollectionFactory
     ) {
         $this->directoryList = $directoryList;
         $this->file = $file;
@@ -129,7 +121,6 @@ class LogsFile
         $this->historyCollectionFactory = $historyCollectionFactory;
         $this->configDataCollectionFactory = $configDataCollectionFactory;
         $this->statusCollectionFactory = $statusCollectionFactory;
-        $this->casedataFactory = $casedataFactory;
     }
 
     /**
@@ -210,8 +201,7 @@ class LogsFile
             $quote = $this->quoteFactory->create();
             $this->quoteResource->load($quote, $order->getQuoteId());
 
-            $case = $this->casedataFactory->create();
-            $this->casedataRepository->loadForUpdate($case, $orderId, 'order_id');
+            $case = $this->casedataRepository->getForUpdate($orderId, 'order_id');
 
             $fileData .= 'case: ' . $case->toJson() . PHP_EOL;
             $fileData .= 'quote: ' . $quote->toJson() . PHP_EOL;

@@ -148,7 +148,7 @@ class AsyncWaiting
 
                 if ($asyncCheck($order, $case)) {
                     try {
-                        $this->casedataRepository->loadForUpdate($case, (string) $case->getData('entity_id'));
+                        $case = $this->casedataRepository->getForUpdate((string) $case->getData('entity_id'));
 
                         $case->setMagentoStatus(Casedata::WAITING_SUBMISSION_STATUS);
                         $case->setUpdated();

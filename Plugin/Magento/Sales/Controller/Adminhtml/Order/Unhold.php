@@ -5,7 +5,6 @@ namespace Signifyd\Connect\Plugin\Magento\Sales\Controller\Adminhtml\Order;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Backend\Model\Auth\Session;
 use Signifyd\Connect\Api\CasedataRepositoryInterface;
-use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Helper\OrderHelper;
 use Magento\Framework\App\ResourceConnection;
 use Signifyd\Connect\Model\UpdateOrder\Action as UpdateOrderAction;
@@ -33,11 +32,6 @@ class Unhold
     public $authSession;
 
     /**
-     * @var CasedataFactory
-     */
-    public $casedataFactory;
-
-    /**
      * @var ResourceConnection
      */
     public $resourceConnection;
@@ -54,7 +48,6 @@ class Unhold
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderHelper $orderHelper
      * @param Session $authSession
-     * @param CasedataFactory $casedataFactory
      * @param ResourceConnection $resourceConnection
      * @param UpdateOrderAction $updateOrderAction
      */
@@ -63,7 +56,6 @@ class Unhold
         OrderRepositoryInterface $orderRepository,
         OrderHelper $orderHelper,
         Session $authSession,
-        CasedataFactory $casedataFactory,
         ResourceConnection $resourceConnection,
         UpdateOrderAction $updateOrderAction
     ) {
@@ -71,7 +63,6 @@ class Unhold
         $this->orderRepository = $orderRepository;
         $this->orderHelper = $orderHelper;
         $this->authSession = $authSession;
-        $this->casedataFactory = $casedataFactory;
         $this->resourceConnection = $resourceConnection;
         $this->updateOrderAction = $updateOrderAction;
     }
@@ -99,15 +90,13 @@ class Unhold
         try {
             /** @var \Magento\Sales\Model\Order $order */
             $order = $this->orderRepository->get($orderId);
-            /** @var \Signifyd\Connect\Model\Casedata $case */
-            $case = $this->casedataFactory->create();
 
             $this->orderHelper->addCommentToStatusHistory(
                 $order,
                 "Signifyd: order status updated by {$this->authSession->getUser()->getUserName()}"
             );
 
-            $this->casedataRepository->loadForUpdate($case, $order->getId(), 'order_id', 2);
+            $case = $this->casedataRepository->getForUpdate($order->getId(), 'order_id', 2);
 
             if ($this->updateOrderAction->isHoldReleased($case) === false) {
                 $case->setEntries('hold_released', 1);

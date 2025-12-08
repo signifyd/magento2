@@ -9,9 +9,7 @@ declare(strict_types=1);
 namespace Signifyd\Connect\Model;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\StateException;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
@@ -48,11 +46,7 @@ class CasedataRepository implements CasedataRepositoryInterface
     }
 
     /**
-     * Load case by Id
-     *
-     * @param int $id
-     * @return Casedata
-     * @throws NoSuchEntityException
+     * @inheritDoc
      */
     public function getById(int $id): Casedata
     {
@@ -63,11 +57,7 @@ class CasedataRepository implements CasedataRepositoryInterface
     }
 
     /**
-     * Load case by Code
-     *
-     * @param string $code
-     * @return Casedata
-     * @throws NoSuchEntityException
+     * @inheritDoc
      */
     public function getByCode(string $code): Casedata
     {
@@ -78,11 +68,7 @@ class CasedataRepository implements CasedataRepositoryInterface
     }
 
     /**
-     * Load case by Order Id
-     *
-     * @param int $orderId
-     * @return Casedata
-     * @throws NoSuchEntityException
+     * @inheritDoc
      */
     public function getByOrderId(int $orderId): Casedata
     {
@@ -93,11 +79,18 @@ class CasedataRepository implements CasedataRepositoryInterface
     }
 
     /**
-     * Load case by Quote Id
-     *
-     * @param int $quoteId
-     * @return Casedata
-     * @throws NoSuchEntityException
+     * @inheritDoc
+     */
+    public function getByOrderIncrementId(int $orderIncrementId): Casedata
+    {
+        $case = $this->casedataFactory->create();
+        $this->casedataResource->load($case, $orderIncrementId, 'order_increment');
+
+        return $case;
+    }
+
+    /**
+     * @inheritDoc
      */
     public function getByQuoteId(int $quoteId): Casedata
     {
@@ -108,11 +101,7 @@ class CasedataRepository implements CasedataRepositoryInterface
     }
 
     /**
-     * Save case
-     *
-     * @param Casedata $case
-     * @return Casedata
-     * @throws CouldNotSaveException
+     * @inheritDoc
      */
     public function save(Casedata $case): Casedata
     {
@@ -129,11 +118,7 @@ class CasedataRepository implements CasedataRepositoryInterface
     }
 
     /**
-     * Delete case
-     *
-     * @param Casedata $case
-     * @return bool
-     * @throws CouldNotDeleteException
+     * @inheritDoc
      */
     public function delete(Casedata $case): bool
     {
@@ -149,14 +134,18 @@ class CasedataRepository implements CasedataRepositoryInterface
     }
 
     /**
-     * Load case and add lock to start_lock field (case will be automatically unlocked)
-     *
-     * @param Casedata $case
-     * @param int|string $value
-     * @param ?string $field
-     * @param int $retry
-     * @return AbstractDb
-     * @throws StateException|AlreadyExistsException
+     * @inheritDoc
+     */
+    public function getForUpdate(int|string $value, string $field = null, int $retry = 0): Casedata
+    {
+        $case = $this->casedataFactory->create();
+        $this->loadForUpdate($case, $value, $field, $retry);
+
+        return $case;
+    }
+
+    /**
+     * @inheritDoc
      */
     public function loadForUpdate(Casedata $case, int|string $value, string $field = null, int $retry = 0): AbstractDb
     {
@@ -190,10 +179,7 @@ class CasedataRepository implements CasedataRepositoryInterface
     }
 
     /**
-     * Check if case is locked
-     *
-     * @param Casedata $case
-     * @return bool
+     * @inheritDoc
      */
     public function isCaseLocked(Casedata $case): bool
     {

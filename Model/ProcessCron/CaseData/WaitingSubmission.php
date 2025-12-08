@@ -148,7 +148,7 @@ class WaitingSubmission
                 $reInitStripe($order);
 
                 try {
-                    $this->casedataRepository->loadForUpdate($case, (string) $case->getData('entity_id'));
+                    $case = $this->casedataRepository->getForUpdate((string) $case->getData('entity_id'));
                     $saleOrder = $this->saleOrderFactory->create();
                     $order->setData('origin_store_code', $case->getData('origin_store_code'));
                     $caseModel = $saleOrder($order);

@@ -156,7 +156,7 @@ class Index
             $reason = $notificationItems['notificationItems'][0]['NotificationRequestItem']['reason'];
 
             /** @var \Signifyd\Connect\Model\Casedata $case */
-            $case = $this->casedataRepository->getByOrderId($orderIncrement);
+            $case = $this->casedataRepository->getByOrderIncrementId($orderIncrement);
 
             if ($case->isEmpty() === false && $isSuccess === "false") {
                 if ($case->getEntries('AdyenRefusedReason') == $reason) {

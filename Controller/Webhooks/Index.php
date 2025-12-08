@@ -22,7 +22,6 @@ use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\Casedata\UpdateCaseV2Factory;
 use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
-use Signifyd\Connect\Model\CasedataFactory;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\App\ResourceConnection;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
@@ -53,11 +52,6 @@ class Index extends Action
      * @var File
      */
     public $file;
-
-    /**
-     * @var CasedataFactory
-     */
-    public $casedataFactory;
 
     /**
      * @var OrderResourceModel
@@ -123,7 +117,6 @@ class Index extends Action
      * @param ConfigHelper $configHelper
      * @param FormKey $formKey
      * @param File $file
-     * @param CasedataFactory $casedataFactory
      * @param OrderResourceModel $orderResourceModel
      * @param JsonSerializer $jsonSerializer
      * @param ResourceConnection $resourceConnection
@@ -144,7 +137,6 @@ class Index extends Action
         ConfigHelper $configHelper,
         FormKey $formKey,
         File $file,
-        CasedataFactory $casedataFactory,
         OrderResourceModel $orderResourceModel,
         JsonSerializer $jsonSerializer,
         ResourceConnection $resourceConnection,
@@ -163,7 +155,6 @@ class Index extends Action
         $this->logger = $logger;
         $this->configHelper = $configHelper;
         $this->file = $file;
-        $this->casedataFactory = $casedataFactory;
         $this->orderResourceModel = $orderResourceModel;
         $this->jsonSerializer = $jsonSerializer;
         $this->resourceConnection = $resourceConnection;
@@ -285,14 +276,11 @@ class Index extends Action
                 break;
         }
 
-        /** @var \Signifyd\Connect\Model\Casedata $case */
-        $case = $this->casedataFactory->create();
-
         try {
             $httpCode = null;
 
             try {
-                $this->casedataRepository->loadForUpdate($case, (string) $caseId, 'code');
+                $case = $this->casedataRepository->getForUpdate((string) $caseId, 'code');
             } catch (\Exception $e) {
                 $httpCode = Http::STATUS_CODE_423;
                 throw new LocalizedException(__($e->getMessage()));
@@ -412,7 +400,7 @@ class Index extends Action
 
             // Triggering case save to unlock case
             if ($case instanceof CasedataRepositoryInterface) {
-                $this->casedataFactory->save($case);
+                $this->casedataRepository->save($case);
                 $context['entity'] = $case;
             }
 

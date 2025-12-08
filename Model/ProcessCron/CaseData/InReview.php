@@ -156,8 +156,7 @@ class InReview
                         ['entity' => $case]
                     );
 
-                    $this->casedataRepository->loadForUpdate($case, (string) $case->getData('entity_id'));
-
+                    $case = $this->casedataRepository->getForUpdate((string) $case->getData('entity_id'));
                     $currentCaseHash = sha1(implode(',', $case->getData()));
                     $updateCase = $this->updateCaseFactory->create();
                     $case = $updateCase($case, $response);

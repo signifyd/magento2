@@ -7,7 +7,6 @@ use Magento\Framework\App\Helper\Context;
 use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Model\ResourceModel\Casedata\CollectionFactory as CasedataCollectionFactory;
 use Signifyd\Connect\Logger\Logger;
-use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Helper\ConfigHelper;
 
 class FilterCasesByStatus extends AbstractHelper
@@ -28,11 +27,6 @@ class FilterCasesByStatus extends AbstractHelper
     public $logger;
 
     /**
-     * @var CasedataFactory
-     */
-    public $casedataFactory;
-
-    /**
      * @var ConfigHelper
      */
     public $configHelper;
@@ -44,7 +38,6 @@ class FilterCasesByStatus extends AbstractHelper
      * @param CasedataRepositoryInterface $casedataRepository
      * @param CasedataCollectionFactory $casedataCollectionFactory
      * @param Logger $logger
-     * @param CasedataFactory $casedataFactory
      * @param ConfigHelper $configHelper
      */
     public function __construct(
@@ -52,7 +45,6 @@ class FilterCasesByStatus extends AbstractHelper
         CasedataRepositoryInterface $casedataRepository,
         CasedataCollectionFactory $casedataCollectionFactory,
         Logger $logger,
-        CasedataFactory $casedataFactory,
         ConfigHelper $configHelper
     ) {
         parent::__construct($context);
@@ -60,7 +52,6 @@ class FilterCasesByStatus extends AbstractHelper
         $this->casedataRepository = $casedataRepository;
         $this->casedataCollectionFactory = $casedataCollectionFactory;
         $this->logger = $logger;
-        $this->casedataFactory = $casedataFactory;
         $this->configHelper = $configHelper;
     }
 
@@ -99,8 +90,7 @@ class FilterCasesByStatus extends AbstractHelper
         /** @var \Signifyd\Connect\Model\Casedata $case */
         foreach ($casesCollection->getItems() as $case) {
             try {
-                $caseToUpdate = $this->casedataFactory->create();
-                $this->casedataRepository->loadForUpdate($caseToUpdate, $case->getId());
+                $caseToUpdate = $this->casedataRepository->getForUpdate($case->getId());
 
                 $retries = $caseToUpdate->getData('retries');
                 $secondsAfterUpdate = $case->getData('seconds_after_update');

@@ -46,6 +46,15 @@ interface CasedataRepositoryInterface
     public function getByOrderId(int $orderId): Casedata;
 
     /**
+     * Load case by Order Increment Id
+     *
+     * @param int $orderIncrementId
+     * @return Casedata
+     * @throws NoSuchEntityException
+     */
+    public function getByOrderIncrementId(int $orderIncrementId): Casedata;
+
+    /**
      * Load case by Quote Id
      *
      * @param int $quoteId
@@ -71,6 +80,18 @@ interface CasedataRepositoryInterface
      * @throws CouldNotDeleteException
      */
     public function delete(Casedata $case): bool;
+
+    /**
+     * Retrieve loaded case
+     *
+     * @param int|string $value
+     * @param string|null $field
+     * @param int $retry
+     * @return Casedata
+     * @throws AlreadyExistsException
+     * @throws StateException
+     */
+    public function getForUpdate(int|string $value, string $field = null, int $retry = 0): Casedata;
 
     /**
      * Load case and add lock to start_lock field (case will be automatically unlocked)

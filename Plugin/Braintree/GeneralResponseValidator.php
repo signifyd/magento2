@@ -155,7 +155,7 @@ class GeneralResponseValidator
             }
 
             /** @var \Signifyd\Connect\Model\Casedata $case */
-            $case = $this->casedataRepository->getByOrderId($responseBraintree['orderId']);
+            $case = $this->casedataRepository->getByOrderIncrementId($responseBraintree['orderId']);
 
             if ($case->isEmpty() === false) {
                 switch ($reason) {

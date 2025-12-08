@@ -10,7 +10,6 @@ use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Api\DeviceFactory;
 use Signifyd\Connect\Model\Api\ShipmentsFactory;
 use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
-use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\UpdateOrderFactory;
 use Signifyd\Models\PaymentUpdateFactory;
@@ -28,11 +27,6 @@ class Reroute
      * @var PaymentUpdateFactory
      */
     public $paymentUpdateFactory;
-
-    /**
-     * @var CasedataFactory
-     */
-    public $casedataFactory;
 
     /**
      * @var ConfigHelper
@@ -94,7 +88,6 @@ class Reroute
      *
      * @param CasedataRepositoryInterface $casedataRepository
      * @param PaymentUpdateFactory $paymentUpdateFactory
-     * @param CasedataFactory $casedataFactory
      * @param ConfigHelper $configHelper
      * @param JsonSerializer $jsonSerializer
      * @param Logger $logger
@@ -110,7 +103,6 @@ class Reroute
     public function __construct(
         CasedataRepositoryInterface $casedataRepository,
         PaymentUpdateFactory $paymentUpdateFactory,
-        CasedataFactory $casedataFactory,
         ConfigHelper $configHelper,
         JsonSerializer $jsonSerializer,
         Logger $logger,
@@ -125,7 +117,6 @@ class Reroute
     ) {
         $this->casedataRepository = $casedataRepository;
         $this->paymentUpdateFactory = $paymentUpdateFactory;
-        $this->casedataFactory = $casedataFactory;
         $this->configHelper = $configHelper;
         $this->jsonSerializer = $jsonSerializer;
         $this->logger = $logger;
@@ -149,8 +140,7 @@ class Reroute
     {
         try {
             $orderId = $reroute->getOrderId();
-            $case = $this->casedataFactory->create();
-            $this->casedataRepository->loadForUpdate($case, $orderId, 'order_id');
+            $case = $this->casedataRepository->getForUpdate($orderId, 'order_id');
             $order = $this->orderFactory->create();
             $this->signifydOrderResourceModel->load($order, $orderId);
 
