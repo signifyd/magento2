@@ -211,7 +211,7 @@ class LogsFile
             $this->quoteResource->load($quote, $order->getQuoteId());
 
             $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->loadForUpdate($case, $orderId, 'order_id');
+            $this->casedataResourceModel->load($case, $orderId, 'order_id');
 
             $fileData .= 'case: ' . $case->toJson() . PHP_EOL;
             $fileData .= 'quote: ' . $quote->toJson() . PHP_EOL;
