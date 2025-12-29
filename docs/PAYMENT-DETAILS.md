@@ -180,7 +180,7 @@ Here is a list of the payment methods that have a payment data collected. If the
 
 ### Braintree
 #### Magento built in
-#### Tested on 4.5.0
+#### Tested on 4.7.0
 - Code: braintree
 
 **Available data**
@@ -193,7 +193,7 @@ Here is a list of the payment methods that have a payment data collected. If the
 
 ### Stripe Payments
 #### Link to the extension https://commercemarketplace.adobe.com/stripe-stripe-payments.html
-#### Tested on 4.4.4
+#### Tested on 4.5.4
 - Code: stripe_payments
 
 **Available data**
@@ -206,7 +206,7 @@ Here is a list of the payment methods that have a payment data collected. If the
 
 ### Adyen
 #### Link to the extension https://github.com/Adyen/adyen-magento2
-#### Tested on 9.3.0
+#### Tested on 9.20.7
 - Code: adyen_cc
 
 **Available data**
@@ -220,7 +220,7 @@ Here is a list of the payment methods that have a payment data collected. If the
 
 ### OpenPay
 #### Link to the extension https://github.com/open-pay/openpay-magento2-cards
-#### Tested on 2.3.0
+#### Tested on 3.5.15
 - Code: openpay_cards
 
 **Available data**
@@ -232,7 +232,7 @@ Here is a list of the payment methods that have a payment data collected. If the
 
 ### Authorize.Net Paradoxlabs
 #### Link to the extension https://commercemarketplace.adobe.com/paradoxlabs-authnetcim.html
-#### Tested on 5.0.1
+#### Tested on 5.1.4
 - Code: authnetcim
 
 **Available data**
