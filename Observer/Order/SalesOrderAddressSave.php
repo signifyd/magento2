@@ -123,7 +123,21 @@ class SalesOrderAddressSave implements ObserverInterface
             $this->rerouteResourceModel->save($reroute);
             ($this->processCronReroute)($reroute);
         } catch (\Exception $e) {
-            $this->logger->info('Failed to update case');
+            $context = [];
+
+            if (isset($order)) {
+                $context['entity'] = $order;
+            }
+
+            $this->logger->info('Failed to update case: ' . $e->getMessage(), $context);
+        } catch (\Error $e) {
+            $context = [];
+
+            if (isset($order)) {
+                $context['entity'] = $order;
+            }
+
+            $this->logger->info('Failed to update case: ' . $e->getMessage(), $context);
         }
     }
 }
