@@ -1,0 +1,12 @@
+extend input PaymentMethodInput {
+    signifyd_preauth_data: SignifydPreAuthDataInput
+        @doc(description: "Signifyd pre-auth data required for fraud analysis")
+}
+
+input SignifydPreAuthDataInput {
+    cardBin: String
+    cardExpiryMonth: String
+    cardExpiryYear: String
+    cardLast4: String
+    holderName: String
+}
