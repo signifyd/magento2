@@ -603,7 +603,6 @@ class Purchase implements ObserverInterface
      *
      * @param Order $order
      * @param Casedata $case
-     * @param bool $isPassive
      * @return bool
      * @throws AlreadyExistsException
      */
@@ -672,6 +671,7 @@ class Purchase implements ObserverInterface
      * Hold order method.
      *
      * @param Order $order
+     * @param Casedata $case
      * @param bool $isPassive
      * @throws AlreadyExistsException|LocalizedException
      */

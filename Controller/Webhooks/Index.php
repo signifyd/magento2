@@ -9,6 +9,9 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\Response\Http;
 use Magento\Framework\Controller\Result\Json;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Exception\AlreadyExistsException;
+use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
@@ -134,6 +137,7 @@ class Index implements HttpPostActionInterface
      * @param StoreManagerInterface $storeManagerInterface
      * @param Client $client
      * @param RequestInterface $request
+     * @param ResultFactory $resultFactory
      * @throws LocalizedException
      */
     public function __construct(
@@ -200,12 +204,12 @@ class Index implements HttpPostActionInterface
     }
 
     /**
-     * @return \Magento\Framework\Controller\ResultInterface
-     * @throws LocalizedException
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
-     * @throws \Magento\Framework\Exception\FileSystemException
+     * Execute method.
+     *
+     * @return Json|ResultInterface
+     * @throws LocalizedException|AlreadyExistsException|FileSystemException
      */
-    public function execute()
+    public function execute(): Json|ResultInterface
     {
         $request = $this->getRawPost();
 
@@ -225,15 +229,15 @@ class Index implements HttpPostActionInterface
     }
 
     /**
-     * @param $request
-     * @param $hash
-     * @param $topic
-     * @return \Magento\Framework\Controller\ResultInterface
-     * @throws LocalizedException
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
-     * @throws \Magento\Framework\Exception\FileSystemException
+     * Process request method.
+     *
+     * @param mixed $request
+     * @param ?string $hash
+     * @param ?string $topic
+     * @return Json|ResultInterface
+     * @throws AlreadyExistsException|FileSystemException|LocalizedException
      */
-    public function processRequest($request, $hash, $topic)
+    public function processRequest(mixed $request, ?string $hash, ?string $topic): Json|ResultInterface
     {
         /** @var Json $result */
         $result = $this->resultFactory->create(ResultFactory::TYPE_JSON);

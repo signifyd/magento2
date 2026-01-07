@@ -77,14 +77,26 @@ class SavedAddresses
         return $savedAddresses;
     }
 
-    public function isDefaultBilling(Address $address)
+    /**
+     * Check if is default billing address.
+     *
+     * @param Address $address
+     * @return bool
+     */
+    public function isDefaultBilling(Address $address): bool
     {
         return $address->getId() && $address->getId() == $address->getCustomer()->getDefaultBilling()
             || $address->getIsPrimaryBilling()
             || $address->getIsDefaultBilling();
     }
 
-    public function isDefaultShipping(Address $address)
+    /**
+     * Check if is default shipping address.
+     *
+     * @param Address $address
+     * @return bool
+     */
+    public function isDefaultShipping(Address $address): bool
     {
         return $address->getId() && $address->getId() == $address->getCustomer()->getDefaultShipping()
             || $address->getIsPrimaryShipping()

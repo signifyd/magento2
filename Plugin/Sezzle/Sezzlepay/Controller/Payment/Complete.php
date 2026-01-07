@@ -23,6 +23,12 @@ class Complete
         $this->registry = $registry;
     }
 
+    /**
+     * Before execute method.
+     *
+     * @param SezzleComplete $subject
+     * @return void
+     */
     public function beforeExecute(SezzleComplete $subject)
     {
         // Using registry to store payment method info from the request for use during pre_auth validation

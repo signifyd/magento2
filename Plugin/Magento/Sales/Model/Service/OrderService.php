@@ -2,10 +2,19 @@
 
 namespace Signifyd\Connect\Plugin\Magento\Sales\Model\Service;
 
-use Signifyd\Connect\Model\TransactionIntegration;
+use Closure;
+use Error;
+use Exception;
+use Magento\Framework\Exception\AlreadyExistsException;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Payment\Gateway\Command\CommandException;
 use Magento\Sales\Model\Service\OrderService as MagentoOrderService;
 use Magento\Sales\Api\Data\OrderInterface;
-use Magento\Payment\Gateway\Command\CommandException;
+use Signifyd\Connect\Model\TransactionIntegration;
+use Signifyd\Connect\Logger\Logger;
+use Signifyd\Core\Exceptions\ApiException;
+use Signifyd\Core\Exceptions\InvalidClassException;
 
 class OrderService
 {
@@ -15,30 +24,38 @@ class OrderService
     public $transactionIntegration;
 
     /**
+     * @var Logger
+     */
+    public $logger;
+
+    /**
      * OrderService constructor.
      *
      * @param TransactionIntegration $transactionIntegration
+     * @param Logger $logger
      */
     public function __construct(
-        TransactionIntegration $transactionIntegration
+        TransactionIntegration $transactionIntegration,
+        Logger $logger
     ) {
         $this->transactionIntegration = $transactionIntegration;
+        $this->logger = $logger;
     }
 
     /**
      *  Around Place method responsible for mapping the error returned by the card.
      *
      * @param MagentoOrderService $subject
-     * @param \Closure $proceed
+     * @param Closure $proceed
      * @param OrderInterface $order
      * @return mixed
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
-     * @throws \Signifyd\Core\Exceptions\ApiException
-     * @throws \Signifyd\Core\Exceptions\InvalidClassException
+     * @throws AlreadyExistsException
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     * @throws ApiException
+     * @throws InvalidClassException
      */
-    public function aroundPlace(MagentoOrderService $subject, \Closure $proceed, OrderInterface $order)
+    public function aroundPlace(MagentoOrderService $subject, Closure $proceed, OrderInterface $order): mixed
     {
         try {
             return $proceed($order);
@@ -48,30 +65,50 @@ class OrderService
                 $errorMessage = $e->getMessage();
 
                 $this->handleTransactionError($declineCode, $errorMessage);
-            } catch (\Exception $error) {
-
-            } catch (\Error $error) {
-
+            } catch (Exception|Error $error) {
+                $this->logger->warning(
+                    'Failed to map command exception error details.',
+                    [
+                        'handling_error_exception' => $error,
+                        'exception' => $e
+                    ]
+                );
             }
 
             throw $e;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             try {
                 $declineCode = $e->getError()?->decline_code;
                 $errorMessage = $e->getError()?->message;
 
                 $this->handleTransactionError($declineCode, $errorMessage);
-            } catch (\Exception $error) {
-
-            } catch (\Error $error) {
-
+            } catch (Exception|Error $error) {
+                $this->logger->warning(
+                    'Failed to map exception error details.',
+                    [
+                        'handling_error_exception' => $error,
+                        'exception' => $e
+                    ]
+                );
             }
 
             throw $e;
         }
     }
 
-    public function handleTransactionError($declineCode, $errorMessage)
+    /**
+     * Handle transaction error method.
+     *
+     * @param ?string $declineCode
+     * @param ?string $errorMessage
+     * @return void
+     * @throws AlreadyExistsException
+     * @throws ApiException
+     * @throws InvalidClassException
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     */
+    public function handleTransactionError(?string $declineCode, ?string $errorMessage): void
     {
         if (isset($declineCode) === false) {
             return;

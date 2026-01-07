@@ -9,6 +9,7 @@ use Magento\QuoteGraphQl\Model\Resolver\SetPaymentMethodOnCart as MagentoSetPaym
 use Magento\Quote\Model\MaskedQuoteIdToQuoteId;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
+
 class SetPaymentMethodOnCart
 {
     /**
@@ -49,16 +50,28 @@ class SetPaymentMethodOnCart
         $this->configHelper = $configHelper;
     }
 
+    /**
+     * After resolve method.
+     *
+     * @param MagentoSetPaymentMethodOnCart $subject
+     * @param mixed $result
+     * @param Field $field
+     * @param mixed $context
+     * @param ResolveInfo $info
+     * @param array|null $value
+     * @param array|null $args
+     * @return mixed
+     */
     public function afterResolve(
         MagentoSetPaymentMethodOnCart $subject,
-        $result,
+        mixed $result,
         Field $field,
-        $context,
+        mixed $context,
         ResolveInfo $info,
         ?array $value = null,
         ?array $args = null
-    ) {
-        try{
+    ): mixed {
+        try {
             $input = $args['input']['payment_method'] ?? null;
             if (!$input) {
                 return $result;

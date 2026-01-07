@@ -72,15 +72,16 @@ class ChargeSucceeded
      * Plugin after on process method.
      *
      * @param StripeChargeSucceeded $subject
-     * @param $arrEvent
-     * @param $object
+     * @param mixed $result
+     * @param mixed $arrEvent
+     * @param mixed $object
      * @return void
      */
     public function afterProcess(
         StripeChargeSucceeded $subject,
-        $result,
-        $arrEvent,
-        $object
+        mixed $result,
+        mixed $arrEvent,
+        mixed $object
     ) {
         try {
             $webhooksHelper = $this->objectManagerInterface->create(

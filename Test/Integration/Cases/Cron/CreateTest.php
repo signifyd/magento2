@@ -2,6 +2,7 @@
 
 namespace Signifyd\Connect\Test\Integration\Cases\Cron;
 
+use Exception;
 use Signifyd\Connect\Test\Integration\OrderTestCase;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\Casedata\UpdateCaseV2Factory;
@@ -24,18 +25,39 @@ class CreateTest extends OrderTestCase
      */
     public $paymentMethod = 'banktransfer';
 
+    /**
+     * @var UpdateCaseFactory
+     */
     public $updateCaseFactory;
 
+    /**
+     * @var UpdateOrderFactory
+     */
     public $updateOrderFactory;
 
+    /**
+     * @var LogsFile
+     */
     public $logsFile;
 
+    /**
+     * @var Filesystem
+     */
     public $filesystem;
 
+    /**
+     * @var DirectoryList
+     */
     public $directoryList;
 
+    /**
+     * @var DriverFile
+     */
     public $driverFile;
 
+    /**
+     * @inheritDoc
+     */
     public function setUp(): void
     {
         parent::setUp();
@@ -78,7 +100,14 @@ class CreateTest extends OrderTestCase
         $this->assertNotEmpty($case->getData('code'));
     }
 
-    public function getRequestJson($case, $isAcceptRequest = true)
+    /**
+     * Get request json method.
+     *
+     * @param Casedata $case
+     * @param bool $isAcceptRequest
+     * @return object
+     */
+    public function getRequestJson(Casedata $case, bool $isAcceptRequest = true): object
     {
         if ($isAcceptRequest) {
             $checkpointAction = 'ACCEPT';
@@ -110,8 +139,9 @@ class CreateTest extends OrderTestCase
      *
      * @param int $retry
      * @return bool
+     * @throws Exception
      */
-    public function tryToReviewCase($retry = 0)
+    public function tryToReviewCase(int $retry = 0): bool
     {
         $this->retryCaseJob->execute();
 
@@ -135,14 +165,24 @@ class CreateTest extends OrderTestCase
         }
     }
 
-    public function updateCaseForRetry($case = null)
+    /**
+     * Update case for retry method.
+     *
+     * @param ?Casedata $case
+     * @return void
+     * @throws Exception
+     */
+    public function updateCaseForRetry(?Casedata $case = null): void
     {
         $case = empty($case) ? $this->getCase() : $case;
         $case->setUpdated(date('Y-m-d H:i:s', time()-60));
         $case->save();
     }
 
-    public static function configFixture()
+    /**
+     * @return void
+     */
+    public static function configFixture(): void
     {
         require __DIR__ . '/../../_files/order/guest_quote_with_addresses_product_simple.php';
     }
