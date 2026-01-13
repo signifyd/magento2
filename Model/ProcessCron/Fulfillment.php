@@ -2,7 +2,7 @@
 
 namespace Signifyd\Connect\Model\ProcessCron;
 
-use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
+use Signifyd\Connect\Model\JsonSerializer;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;

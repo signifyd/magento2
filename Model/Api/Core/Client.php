@@ -3,7 +3,7 @@
 namespace Signifyd\Connect\Model\Api\Core;
 
 use Magento\Framework\Filesystem\DirectoryList;
-use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
+use Signifyd\Connect\Model\JsonSerializer;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Signifyd\Connect\Helper\ConfigHelper;
@@ -147,6 +147,7 @@ class Client
      */
     public function postCaseToSignifyd($caseData, $order)
     {
+        $caseData = $this->jsonSerializer->fixInvalidUtf8Fields($caseData, $order);
         $protectedCaseData = $this->configHelper->filterLogData($caseData, $order);
 
         $this->logger->info(
@@ -189,6 +190,7 @@ class Client
      */
     public function createReroute($updateData, $order)
     {
+        $updateData = $this->jsonSerializer->fixInvalidUtf8Fields($updateData, $order);
         $protectedUpdateData = $this->configHelper->filterLogData($updateData, $order);
 
         $this->logger->info(
@@ -309,6 +311,7 @@ class Client
      */
     public function postCaseFromQuoteToSignifyd($caseData, $quote)
     {
+        $caseData = $this->jsonSerializer->fixInvalidUtf8Fields($caseData, $quote);
         $protectedCaseData = $this->configHelper->filterLogData($caseData, $quote);
 
         $this->logger->info(
@@ -345,6 +348,7 @@ class Client
      */
     public function postTransactionToSignifyd($transactionData, $entity)
     {
+        $transactionData = $this->jsonSerializer->fixInvalidUtf8Fields($transactionData, $entity);
         $protectedTransactionData = $this->configHelper->filterLogData($transactionData, $entity);
 
         $this->logger->info(
