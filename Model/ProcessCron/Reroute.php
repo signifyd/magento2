@@ -15,7 +15,7 @@ use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\UpdateOrderFactory;
 use Signifyd\Models\PaymentUpdateFactory;
 use Signifyd\Connect\Model\ResourceModel\Reroute as RerouteResourceModel;
-use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
+use Signifyd\Connect\Model\JsonSerializer;
 
 class Reroute
 {
@@ -159,7 +159,7 @@ class Reroute
             $makeShipments = $this->shipmentsFactory->create();
             $shipments = $makeShipments($order);
             $recipient = $shipments[0]['destination'];
-            $recipientJson = $this->jsonSerializer->serialize($recipient);
+            $recipientJson = $this->jsonSerializer->serialize($recipient, $order);
             $newHashToValidateReroute = sha1($recipientJson);
             $currentHashToValidateReroute = $case->getEntries('hash');
             $failEntry = $case->getEntries('fail');

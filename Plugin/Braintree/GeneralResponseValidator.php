@@ -11,7 +11,6 @@ use Signifyd\Connect\Model\Casedata;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
-use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use Signifyd\Connect\Model\Api\TransactionsFactory;
 
 class GeneralResponseValidator
@@ -47,11 +46,6 @@ class GeneralResponseValidator
     public $quoteResourceModel;
 
     /**
-     * @var SubjectReader
-     */
-    public $subjectReader;
-
-    /**
      * @var TransactionsFactory
      */
     public $transactionsFactory;
@@ -75,7 +69,6 @@ class GeneralResponseValidator
      * @param StoreManagerInterface $storeManager
      * @param QuoteFactory $quoteFactory
      * @param QuoteResourceModel $quoteResourceModel
-     * @param SubjectReader $subjectReader
      * @param TransactionsFactory $transactionsFactory
      * @param ConfigHelper $configHelper
      * @param Client $client
@@ -87,7 +80,6 @@ class GeneralResponseValidator
         StoreManagerInterface $storeManager,
         QuoteFactory $quoteFactory,
         QuoteResourceModel $quoteResourceModel,
-        SubjectReader $subjectReader,
         TransactionsFactory $transactionsFactory,
         ConfigHelper $configHelper,
         Client $client
@@ -98,7 +90,6 @@ class GeneralResponseValidator
         $this->storeManager = $storeManager;
         $this->quoteFactory = $quoteFactory;
         $this->quoteResourceModel = $quoteResourceModel;
-        $this->subjectReader = $subjectReader;
         $this->transactionsFactory = $transactionsFactory;
         $this->configHelper = $configHelper;
         $this->client = $client;

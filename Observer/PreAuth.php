@@ -22,7 +22,7 @@ use Signifyd\Connect\Model\Registry;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
 use Magento\Framework\App\Request\Http as RequestHttp;
-use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
+use Signifyd\Connect\Model\JsonSerializer;
 use Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Model\Api\Recipient;
 
@@ -379,7 +379,7 @@ class PreAuth implements ObserverInterface
                 }
 
                 $recipient = ($this->recipient)($quote);
-                $recipientJson = $this->jsonSerializer->serialize($recipient);
+                $recipientJson = $this->jsonSerializer->serialize($recipient, $quote);
                 $hashToValidateReroute = sha1($recipientJson);
                 $case->setEntries('hash', $hashToValidateReroute);
 

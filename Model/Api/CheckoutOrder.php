@@ -3,7 +3,7 @@
 namespace Signifyd\Connect\Model\Api;
 
 use Signifyd\Connect\Model\Registry;
-use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
+use Signifyd\Connect\Model\JsonSerializer;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
 use Signifyd\Connect\Helper\ConfigHelper;
@@ -232,7 +232,7 @@ class CheckoutOrder
             );
             $evalRequest = ($policyFromMethod == 'SCA_PRE_AUTH') ? ['SCA_EVALUATION'] : null;
             $signifydOrder['additionalEvalRequests'] = $evalRequest;
-            $signifydOrder['checkoutId'] = sha1($this->jsonSerializer->serialize($signifydOrder));
+            $signifydOrder['checkoutId'] = sha1($this->jsonSerializer->serialize($signifydOrder, $quote));
             $transactions = [];
 
             if (isset($paymentMethod)) {
