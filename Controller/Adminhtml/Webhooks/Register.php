@@ -13,6 +13,7 @@ use Magento\Backend\Model\View\Result\Redirect;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\App\RequestInterface;
+
 class Register extends Action
 {
     /**

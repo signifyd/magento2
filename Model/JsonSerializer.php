@@ -42,7 +42,8 @@ class JsonSerializer
             return $this->jsonSerializer->serialize($data);
         } catch (\InvalidArgumentException $e) {
             $this->logger->info(
-                "Unable to serialize: " . print_r($data, true), ['entity' => $entity]
+                "Unable to serialize: " . print_r($data, true),
+                ['entity' => $entity]
             );
             return $this->jsonSerializer->serialize([]);
         }
@@ -78,7 +79,8 @@ class JsonSerializer
 
                     if (isset($entity)) {
                         $this->logger->info(
-                            "Fixed invalid UTF-8 value at path {$currentPath}: {$value}", ['entity' => $entity]
+                            "Fixed invalid UTF-8 value at path {$currentPath}: {$value}",
+                            ['entity' => $entity]
                         );
                     }
                 }
