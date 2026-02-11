@@ -17,6 +17,21 @@ class OrderAddressTest extends OrderTestCase
      */
     public $orderRepository;
 
+    /**
+     * @var \Signifyd\Connect\Model\Api\ShipmentsFactory
+     */
+    public $shipmentsFactory;
+
+    /**
+     * @var \Signifyd\Connect\Model\Api\Core\Client
+     */
+    public $client;
+
+    /**
+     * @var \Signifyd\Connect\Model\Api\DeviceFactory
+     */
+    public $deviceFactory;
+
     public function setUp(): void
     {
         parent::setUp();
