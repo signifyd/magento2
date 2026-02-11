@@ -12,15 +12,17 @@ class AsyncChecker extends BaseAsyncChecker
      * Invoke method.
      *
      * @param Order $order
-     * @param Casedata $casedata
+     * @param Casedata $case
      * @return bool|void
      */
-    public function __invoke(Order $order, Casedata $casedata)
+    public function __invoke(Order $order, Casedata $case)
     {
-        if ($order->getPayment()->getMethod() === 'adyen_klarna_account' && !$order->getPayment()->getCcTransId()) {
-            return false;
+        $retries = $case->getData('retries');
+
+        if ($retries >= 5 || $order->getPayment()->getCcTransId()) {
+            return true;
         }
 
-        return true;
+        return false;
     }
 }

@@ -48,11 +48,14 @@ class AsyncChecker extends BaseAsyncChecker
     public function __invoke(Order $order, Casedata $case)
     {
         $cvvCode = $this->cvvEmsCodeMapper->getData($order);
+        $retries = $case->getData('retries');
 
         if ($this->isModuleVersionAtLeast340() === false) {
-            if (($case->getOrder()->getPayment()->getMethod() === 'stripe_payments' &&
-                $case->getEntries('stripe_status') !== 'approved')
+            if (($retries >= 5 ||
+                $case->getEntries('stripe_status') === 'approved')
             ) {
+                return true;
+            } else {
                 $this->logger->info(
                     "CRON: case no: {$case->getOrderIncrement()}" .
                     " will not be sent because the stripe hasn't approved it yet",
@@ -61,7 +64,9 @@ class AsyncChecker extends BaseAsyncChecker
                 return false;
             }
         } else {
-            if (isset($cvvCode) === false) {
+            if ($retries >= 5 || isset($cvvCode)) {
+                return true;
+            } else {
                 $this->logger->info(
                     "CRON: case no: {$case->getOrderIncrement()}" .
                     " will not be sent because the CVV was not collected.",
@@ -70,8 +75,6 @@ class AsyncChecker extends BaseAsyncChecker
                 return false;
             }
         }
-
-        return true;
     }
 
     /**
