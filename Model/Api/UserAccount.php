@@ -34,17 +34,17 @@ class UserAccount
     /**
      * @var SavedPaymentsFactory
      */
-    protected $savedPaymentsFactory;
+    public $savedPaymentsFactory;
 
     /**
      * @var SavedAddressesFactory
      */
-    protected $savedAddressesFactory;
+    public $savedAddressesFactory;
 
     /**
      * @var AssociateIdFactory
      */
-    protected $associateIdFactory;
+    public $associateIdFactory;
 
     /**
      * UserAccount construct.

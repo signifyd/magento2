@@ -222,10 +222,6 @@ class Purchase implements ObserverInterface
 
             $this->logger->info('Processing Signifyd event ' . $observer->getEvent()->getName(), ['entity' => $order]);
 
-            if (isset($order) === false) {
-                return;
-            }
-
             $storeId = $order->getStoreId();
 
             $enabledConfig = $this->scopeConfigInterface->getValue(
