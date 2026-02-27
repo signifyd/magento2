@@ -214,7 +214,11 @@ class PreAuth implements ObserverInterface
                 $paymentMethod = $payment->getMethod();
             }
 
-            if ($this->configHelper->isPaymentRestricted($paymentMethod)) {
+            if (isset($paymentMethod) === false) {
+                $paymentMethod = $this->registry->getData('paymentMethod');
+            }
+
+            if (isset($paymentMethod) && $this->configHelper->isPaymentRestricted($paymentMethod)) {
                 $message = 'Case creation with payment ' . $paymentMethod . ' is restricted';
                 $this->logger->debug($message, ['entity' => $quote]);
                 return;
