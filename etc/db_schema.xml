@@ -30,6 +30,10 @@
         <index referenceId="INDEX_CODE" indexType="btree">
             <column name="code"/>
         </index>
+        <index referenceId="INDEX_QUOTE_ID_POLICY_NAME" indexType="btree">
+            <column name="quote_id"/>
+            <column name="policy_name"/>
+        </index>
 	</table>
     <table comment="signifyd_connect_fulfillment Table" engine="innodb" name="signifyd_connect_fulfillment" resource="default">
         <column length="50" name="id" nullable="false" xsi:type="varchar"/>
