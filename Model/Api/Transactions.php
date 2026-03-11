@@ -243,7 +243,7 @@ class Transactions
         $lastTransaction['gatewayStatusCode'] = 'SUCCESS';
         $lastTransaction['paymentMethod'] = ($this->paymentMethodFactory->create())($order);
         $lastTransaction['checkoutPaymentDetails'] = ($this->checkoutPaymentDetailsFactory->create())($order);
-        $lastTransaction['amount'] = $order->getGrandTotal();
+        $lastTransaction['amount'] = (float) $order->getGrandTotal();
         $lastTransaction['currency'] = $order->getOrderCurrencyCode();
         $lastTransaction['gateway'] = $order->getPayment()->getMethod();
         $lastTransaction['sourceAccountDetails'] = ($this->sourceAccountDetailsFactory->create())();
@@ -301,7 +301,7 @@ class Transactions
         $transaction['gatewayStatusCode'] = 'FAILURE';
         $transaction['paymentMethod'] = ($this->paymentMethodFactory->create())($quote);
         $transaction['checkoutPaymentDetails'] = ($this->checkoutPaymentDetailsFactory->create())($quote, $methodData);
-        $transaction['amount'] = $quote->getGrandTotal();
+        $transaction['amount'] = (float) $quote->getGrandTotal();
         $transaction['currency'] = $quote->getBaseCurrencyCode();
         $transaction['gateway'] = $gateway;
         $transaction['sourceAccountDetails'] = ($this->sourceAccountDetailsFactory->create())();
