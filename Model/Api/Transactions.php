@@ -3,6 +3,7 @@
 namespace Signifyd\Connect\Model\Api;
 
 use Braintree\Exception;
+use InvalidArgumentException;
 use Signifyd\Connect\Model\JsonSerializer;
 use Magento\Framework\Stdlib\DateTime\DateTimeFactory;
 use Magento\Quote\Model\Quote;
@@ -14,7 +15,6 @@ use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\PaymentVerificationFactory;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
-use Signifyd\Connect\Model\ScaPreAuth\ScaEvaluation;
 
 class Transactions
 {
@@ -67,11 +67,6 @@ class Transactions
      * @var CasedataResourceModel
      */
     public $casedataResourceModel;
-
-    /**
-     * @var ScaEvaluation
-     */
-    public $scaEvaluation;
 
     /**
      * @var VerificationsFactory
@@ -136,7 +131,6 @@ class Transactions
      * @param QuoteFactory $quoteFactory
      * @param CasedataFactory $casedataFactory
      * @param CasedataResourceModel $casedataResourceModel
-     * @param ScaEvaluation $scaEvaluation
      * @param VerificationsFactory $verificationsFactory
      * @param CheckoutPaymentDetailsFactory $checkoutPaymentDetailsFactory
      * @param ParentTransactionIdFactory $parentTransactionIdFactory
@@ -159,7 +153,6 @@ class Transactions
         QuoteFactory $quoteFactory,
         CasedataFactory $casedataFactory,
         CasedataResourceModel $casedataResourceModel,
-        ScaEvaluation $scaEvaluation,
         VerificationsFactory $verificationsFactory,
         CheckoutPaymentDetailsFactory $checkoutPaymentDetailsFactory,
         ParentTransactionIdFactory $parentTransactionIdFactory,
@@ -181,7 +174,6 @@ class Transactions
         $this->quoteFactory = $quoteFactory;
         $this->casedataFactory = $casedataFactory;
         $this->casedataResourceModel = $casedataResourceModel;
-        $this->scaEvaluation = $scaEvaluation;
         $this->verificationsFactory = $verificationsFactory;
         $this->checkoutPaymentDetailsFactory = $checkoutPaymentDetailsFactory;
         $this->parentTransactionIdFactory = $parentTransactionIdFactory;
@@ -252,7 +244,6 @@ class Transactions
         $lastTransaction['gatewayStatusMessage'] = ($this->gatewayStatusMessageFactory->create())();
         $lastTransaction['createdAt'] = date('c', strtotime($transactionDate));
         $lastTransaction['parentTransactionId'] = ($this->parentTransactionIdFactory->create())();
-        $lastTransaction['scaExemptionRequested'] = $this->makeScaExemptionRequested($order->getQuoteId());
         $lastTransaction['verifications'] = ($this->verificationsFactory->create())($order);
         $lastTransaction['threeDsResult'] = $this->makeThreeDsResult($order->getQuoteId());
         $lastTransaction['paypalPendingReasonCode'] = ($this->paypalPendingReasonCodeFactory->create())();
@@ -308,7 +299,6 @@ class Transactions
         $transaction['acquirerDetails'] = ($this->acquirerDetailsFactory->create())();
         $transaction['gatewayErrorCode'] = $errorCode;
         $transaction['gatewayStatusMessage'] = $statusMessage;
-        $transaction['scaExemptionRequested'] = $this->makeScaExemptionRequested($quote->getId());
         $transaction['threeDsResult'] = $this->makeThreeDsResult($quote->getId());
         $transaction['paypalPendingReasonCode'] = ($this->paypalPendingReasonCodeFactory->create())();
         $transaction['paypalProtectionEligibility'] = ($this->paypalProtectionEligibilityFactory->create())();
@@ -350,44 +340,6 @@ class Transactions
     }
 
     /**
-     * Make sca exemption requested method.
-     *
-     * @param mixed $quoteId
-     * @return string|null
-     */
-    public function makeScaExemptionRequested($quoteId = null)
-    {
-        if (isset($quoteId)) {
-            $quote = $this->quoteFactory->create();
-            $this->quoteResourceModel->load($quote, $quoteId);
-
-            if ($quote->isEmpty()) {
-                return null;
-            }
-
-            /** @var \Signifyd\Connect\Model\Casedata $case */
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $quoteId, 'quote_id');
-
-            if ($case->isEmpty()) {
-                return null;
-            }
-
-            /** @var \Signifyd\Models\ScaEvaluation $scaEvaluation */
-            $scaEvaluation = $this->scaEvaluation->getScaEvaluation($quote);
-
-            if ($scaEvaluation !== false &&
-                isset($scaEvaluation->exemptionDetails) &&
-                isset($scaEvaluation->exemptionDetails->exemption)
-            ) {
-                return $scaEvaluation->exemptionDetails->exemption;
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * MakeThreeDsResult method should be extended/intercepted by plugin to add value to it.
      *
      * These are details about the result of the 3D Secure authentication
@@ -407,7 +359,7 @@ class Transactions
 
         try {
             return $this->jsonSerializer->unserialize($case->getEntries('threeDs'));
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             return null;
         }
     }

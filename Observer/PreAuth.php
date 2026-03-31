@@ -371,13 +371,6 @@ class PreAuth implements ObserverInterface
                 $case->setOrderIncrement($quote->getReservedOrderId());
                 $case->setEntriesText("");
 
-                if (isset($caseResponse->scaEvaluation)) {
-                    $case->setEntries(
-                        'sca_pre_auth',
-                        $caseResponse->scaEvaluation->toJson()
-                    );
-                }
-
                 $recipient = ($this->recipient)($quote);
                 $recipientJson = $this->jsonSerializer->serialize($recipient, $quote);
                 $hashToValidateReroute = sha1($recipientJson);

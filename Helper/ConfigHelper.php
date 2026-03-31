@@ -397,7 +397,7 @@ class ConfigHelper
             $scopeCode
         );
 
-        return ($policyFromMethod == 'PRE_AUTH' || $policyFromMethod == 'SCA_PRE_AUTH');
+        return ($policyFromMethod == 'PRE_AUTH');
     }
 
     /**
@@ -430,7 +430,7 @@ class ConfigHelper
         }
 
         foreach ($configPolicy as $key => $value) {
-            if ($key == 'PRE_AUTH' || $key == 'SCA_PRE_AUTH' || $key == 'POST_AUTH') {
+            if ($key == 'PRE_AUTH' || $key == 'POST_AUTH') {
                 if (is_array($value) === false) {
                     continue;
                 }
