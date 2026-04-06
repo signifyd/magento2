@@ -9,7 +9,7 @@ class Last4Mapper extends Base_Last4Mapper
     /**
      * @var string[]
      */
-    public $allowedMethods = ['adyen_cc','adyen_pay_by_link'];
+    public $allowedMethods = ['adyen_cc','adyen_pay_by_link', 'adyen_applepay'];
 
     /**
      * Get payment data method.
