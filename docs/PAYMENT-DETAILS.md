@@ -218,6 +218,20 @@ Here is a list of the payment methods that have a payment data collected. If the
 - Expiry Year
 - Transaction ID
 
+### Adyen Apple Pay
+#### Link to the extension https://github.com/Adyen/adyen-magento2
+#### Tested on 9.3.0
+- Code: adyen_applepay
+
+**Available data**
+- AVS Response Code
+- CVV Response Code
+- Bin
+- Last 4
+- Expiry Month
+- Expiry Year
+- Transaction ID
+
 ### OpenPay
 #### Link to the extension https://github.com/open-pay/openpay-magento2-cards
 #### Tested on 2.3.0
