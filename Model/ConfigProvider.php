@@ -80,10 +80,12 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
 
         $isAdyenGreaterThanEightEighteen = false;
         $isAdyenGreaterThanEight = false;
+        $isAdyenGreaterThanTen = false;
         $adyenModule = $this->moduleListInterface->getOne('Adyen_Payment');
 
         if (isset($adyenModule)) {
             $adyenVersion = $this->getModuleVersionFromComposer('Adyen_Payment');
+            $isAdyenGreaterThanTen = version_compare($adyenVersion, '10.0.0') >= 0;
             $isAdyenGreaterThanEightEighteen = version_compare($adyenVersion, '8.18.0') >= 0;
             $isAdyenGreaterThanEight = version_compare($adyenVersion, '8.0.0') >= 0 &&
                 version_compare($adyenVersion, '8.17.9') <= 0;
@@ -99,7 +101,8 @@ class ConfigProvider implements \Magento\Checkout\Model\ConfigProviderInterface
         return ['signifyd' => [
             'isAdyenPreAuth' => $isAdyenPreAuth,
             'isAdyenGreaterThanEightEighteen' => $isAdyenGreaterThanEightEighteen,
-            'isAdyenGreaterThanEight' => $isAdyenGreaterThanEight]
+            'isAdyenGreaterThanEight' => $isAdyenGreaterThanEight,
+            'isAdyenGreaterThanTen' => $isAdyenGreaterThanTen]
         ];
     }
 
