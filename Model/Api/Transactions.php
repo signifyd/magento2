@@ -312,7 +312,7 @@ class Transactions
         $transaction['threeDsResult'] = $this->makeThreeDsResult($quote->getId());
         $transaction['paypalPendingReasonCode'] = ($this->paypalPendingReasonCodeFactory->create())();
         $transaction['paypalProtectionEligibility'] = ($this->paypalProtectionEligibilityFactory->create())();
-        $transaction['paypalProtectionEligibilityType'] = $this->paypalProtectionEligibilityTypeFactory->create();
+        $transaction['paypalProtectionEligibilityType'] = ($this->paypalProtectionEligibilityTypeFactory->create())();
         $transaction['transactionId'] = sha1($this->jsonSerializer->serialize($transaction));
 
         $transactions[] = $transaction;
