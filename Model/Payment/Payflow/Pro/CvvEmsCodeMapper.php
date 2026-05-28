@@ -12,33 +12,21 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     public $allowedMethods = ['payflowpro'];
 
     /**
-     * List of mapping CVV codes
-     *
-     * @var array
-     */
-    private static $cvvMap = [
-        'Y' => 'M',
-        'N' => 'N',
-        'X' => 'U'
-    ];
-
-    /**
      * Gets payment CVV verification code.
      *
+     * Returns the raw Payflow Pro CVV response code from the cvv2match field (Y, N, X).
+     *
      * @param \Magento\Sales\Model\Order $order
-     * @return string
+     * @return string|null
      * @throws \InvalidArgumentException If specified order payment has different payment method code.
      */
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $additionalInfo = $order->getPayment()->getAdditionalInformation();
+        $cvvStatus = null;
 
-        if (empty($additionalInfo['cvv2match']) == false && isset(self::$cvvMap[$additionalInfo['cvv2match']])) {
-            $cvvStatus = self::$cvvMap[$additionalInfo['cvv2match']];
-
-            if ($this->validate($cvvStatus) == false) {
-                $cvvStatus = null;
-            }
+        if (empty($additionalInfo['cvv2match']) == false) {
+            $cvvStatus = $additionalInfo['cvv2match'];
         }
 
         $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);

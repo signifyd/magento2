@@ -12,45 +12,28 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
     public $allowedMethods = ['cybersource', 'chcybersource'];
 
     /**
-     * List of mapping AVS codes
-     *
-     * @var array
-     */
-    private static $avsMap = [
-        "F" => "Z",
-        "H" => "Y",
-        "T" => "A",
-        "1" => "S",
-        "2" => "E",
-        "K" => "N",
-        "L" => "Z",
-        "O" => "A"
-    ];
-
-    /**
      * Gets payment AVS verification code.
      *
+     * Returns the raw CyberSource AVS code from additionalInformation or gateway response.
+     *
      * @param \Magento\Sales\Model\Order $order
-     * @return string
+     * @return string|null
      * @throws \InvalidArgumentException If specified order payment has different payment method code.
      */
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $additionalInfo = $order->getPayment()->getAdditionalInformation();
         $apiResponse = $this->getSignifydPaymentData();
+        $avsStatus = null;
 
-        if (isset($additionalInfo['auth_avs_code']) &&
-            isset(self::$avsMap[$additionalInfo['auth_avs_code']]) &&
-            $this->validate(self::$avsMap[$additionalInfo['auth_avs_code']])) {
-            $avsStatus = self::$avsMap[$additionalInfo['auth_avs_code']];
+        if (isset($additionalInfo['auth_avs_code']) && $additionalInfo['auth_avs_code'] !== '') {
+            $avsStatus = $additionalInfo['auth_avs_code'];
         } elseif (is_array($apiResponse) &&
             isset($apiResponse['ccAuthReply']) &&
             isset($apiResponse['ccAuthReply']->avsCode)
         ) {
             $avsStatus = $apiResponse['ccAuthReply']->avsCode;
-        } elseif (is_array($apiResponse) &&
-            isset($apiResponse['auth_avs_code'])
-        ) {
+        } elseif (is_array($apiResponse) && isset($apiResponse['auth_avs_code'])) {
             $avsStatus = $apiResponse['auth_avs_code'];
         }
 

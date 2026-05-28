@@ -14,16 +14,15 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     /**
      * Gets payment CVV verification code.
      *
+     * Returns the raw Payflow Link CVV response code from the PROCCVV2 field.
+     *
      * @param \Magento\Sales\Model\Order $order
-     * @return bool|mixed|string
+     * @return string|null
      */
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $cvvStatus = $this->getSignifydPaymentData('PROCCVV2');
-
-        if ($this->validate($cvvStatus) == false) {
-            $cvvStatus = null;
-        }
+        $cvvStatus = empty($cvvStatus) ? null : $cvvStatus;
 
         $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);
         $this->logger->debug($message, ['entity' => $order]);

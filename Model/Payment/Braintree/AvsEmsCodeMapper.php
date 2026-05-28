@@ -9,11 +9,9 @@ namespace Signifyd\Connect\Model\Payment\Braintree;
 use Signifyd\Connect\Model\Payment\Base\AvsEmsCodeMapper as Base_AvsEmsCodeMapper;
 
 /**
- * Processes AVS codes mapping from Braintree transaction to
- * electronic merchant systems standard.
+ * Processes AVS codes mapping from Braintree transaction.
  *
  * @see https://developers.braintreepayments.com/reference/response/transaction
- * @see http://www.emsecommerce.net/avs_cvv2_response_codes.htm
  */
 class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
 {
@@ -23,56 +21,36 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
     public $allowedMethods = ['braintree'];
 
     /**
-     * List of mapping AVS codes
-     *
-     * Keys are concatenation of ZIP (avsPostalCodeResponseCode) and Street (avsStreetAddressResponseCode) codes
-     *
-     * @var array
-     */
-    private static $avsMap = [
-        'MM' => 'Y',
-        'MN' => 'Z',
-        'MU' => 'Z',
-        'MI' => 'Z',
-        'NM' => 'A',
-        'NN' => 'N',
-        'NU' => 'N',
-        'NI' => 'N',
-        'UU' => 'U',
-        'II' => 'U',
-        'AA' => 'U'
-    ];
-
-    /**
      * Gets payment AVS verification code.
      *
+     * Braintree provides two separate AVS components. Returns an array with
+     * 'addressMatchCode' (street) and 'zipMatchCode' (postal) for the API v3
+     * verifications.avsResponse object.
+     *
      * @param \Magento\Sales\Model\Order $order
-     * @return string
+     * @return array|null
      * @throws \InvalidArgumentException If specified order payment has different payment method code.
      */
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $additionalInfo = $order->getPayment()->getAdditionalInformation();
 
-        if (empty($additionalInfo['avsPostalCodeResponseCode']) == false &&
-            empty($additionalInfo['avsStreetAddressResponseCode']) == false
+        if (empty($additionalInfo['avsStreetAddressResponseCode']) == false &&
+            empty($additionalInfo['avsPostalCodeResponseCode']) == false
         ) {
-            $zipCode = $additionalInfo['avsPostalCodeResponseCode'];
-            $streetCode = $additionalInfo['avsStreetAddressResponseCode'];
-            $key = $zipCode . $streetCode;
+            $avsStatus = [
+                'addressMatchCode' => $additionalInfo['avsStreetAddressResponseCode'],
+                'zipMatchCode'     => $additionalInfo['avsPostalCodeResponseCode']
+            ];
 
-            if (isset(self::$avsMap[$key]) && $this->validate(self::$avsMap[$key])) {
-                $avsStatus = self::$avsMap[$key];
-            }
+            $message = 'AVS found on payment mapper: ' .
+                $avsStatus['addressMatchCode'] . '/' . $avsStatus['zipMatchCode'];
+            $this->logger->debug($message, ['entity' => $order]);
+
+            return $avsStatus;
         }
 
-        $message = 'AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
-        $this->logger->debug($message, ['entity' => $order]);
-
-        if (empty($avsStatus)) {
-            $avsStatus = parent::getPaymentData($order);
-        }
-        
-        return $avsStatus;
+        $this->logger->debug('AVS found on payment mapper: false', ['entity' => $order]);
+        return parent::getPaymentData($order);
     }
 }

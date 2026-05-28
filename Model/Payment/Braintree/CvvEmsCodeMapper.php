@@ -9,11 +9,9 @@ namespace Signifyd\Connect\Model\Payment\Braintree;
 use Signifyd\Connect\Model\Payment\Base\CvvEmsCodeMapper as Base_CvvEmsCodeMapper;
 
 /**
- * Processes CVV codes mapping from Braintree transaction to
- * electronic merchant systems standard.
+ * Processes CVV codes mapping from Braintree transaction.
  *
  * @see https://developers.braintreepayments.com/reference/response/transaction
- * @see http://www.emsecommerce.net/avs_cvv2_response_codes.htm
  */
 class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
 {
@@ -23,39 +21,21 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     public $allowedMethods = ['braintree'];
 
     /**
-     * List of mapping CVV codes
-     *
-     * @var array
-     */
-    private static $cvvMap = [
-        'M' => 'M',
-        'N' => 'N',
-        'U' => 'P',
-        'I' => 'P',
-        'S' => 'S',
-        'A' => null,
-        'B' => 'P'
-    ];
-
-    /**
      * Gets payment CVV verification code.
      *
+     * Returns the raw Braintree CVV response code (M, N, U, I, S, A, B).
+     *
      * @param \Magento\Sales\Model\Order $order
-     * @return string
+     * @return string|null
      * @throws \InvalidArgumentException If specified order payment has different payment method code.
      */
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $additionalInfo = $order->getPayment()->getAdditionalInformation();
+        $cvvStatus = null;
 
-        if (empty($additionalInfo['cvvResponseCode']) == false &&
-            isset(self::$cvvMap[$additionalInfo['cvvResponseCode']])
-        ) {
-            $cvvStatus = self::$cvvMap[$additionalInfo['cvvResponseCode']];
-
-            if ($this->validate($cvvStatus) == false) {
-                $cvvStatus = null;
-            }
+        if (empty($additionalInfo['cvvResponseCode']) == false) {
+            $cvvStatus = $additionalInfo['cvvResponseCode'];
         }
 
         $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);

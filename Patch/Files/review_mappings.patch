@@ -1,0 +1,1087 @@
+diff --git a/Model/Api/Verifications.php b/Model/Api/Verifications.php
+index 79a33e7..e758e38 100644
+--- a/Model/Api/Verifications.php
++++ b/Model/Api/Verifications.php
+@@ -42,7 +42,14 @@ class Verifications
+     public function __invoke(Order $order)
+     {
+         $verifications = [];
+-        $verifications['avsResponseCode'] = $this->getAvsCode($order);
++        $avsData = $this->getAvsCode($order);
++
++        if (is_array($avsData)) {
++            $verifications['avsResponse'] = $avsData;
++        } else {
++            $verifications['avsResponseCode'] = $avsData;
++        }
++
+         $verifications['cvvResponseCode'] = $this->getCvvCode($order);
+         return $verifications;
+     }
+@@ -50,8 +57,12 @@ class Verifications
+     /**
+      * Gets AVS code for order payment method.
+      *
++     * Returns a string (single raw code) for gateways that provide one AVS result,
++     * or an array with 'addressMatchCode' and 'zipMatchCode' keys for gateways
++     * that provide street and postal code checks separately.
++     *
+      * @param Order $order
+-     * @return string
++     * @return string|array|null
+      */
+     public function getAvsCode(Order $order)
+     {
+@@ -67,18 +78,21 @@ class Verifications
+ 
+             $avsCode = $avsAdapter->getData($order);
+ 
+-            if (isset($avsCode) === false) {
++            if (isset($avsCode) === false || $avsCode === null) {
+                 return null;
+             }
+ 
+-            $avsCode = trim(strtoupper($avsCode));
+-            return $avsCode;
++            if (is_array($avsCode)) {
++                return $avsCode;
++            }
++
++            return trim(strtoupper((string) $avsCode));
+         } catch (Exception $e) {
+             $this->logger->error(
+                 'Error fetching AVS code: ' . $e->getMessage(),
+                 ['entity' => $order]
+             );
+-            return '';
++            return null;
+         }
+     }
+ 
+diff --git a/Model/Payment/AdyenCc/AvsEmsCodeMapper.php b/Model/Payment/AdyenCc/AvsEmsCodeMapper.php
+index c06ee5c..c5a73a9 100644
+--- a/Model/Payment/AdyenCc/AvsEmsCodeMapper.php
++++ b/Model/Payment/AdyenCc/AvsEmsCodeMapper.php
+@@ -11,66 +11,27 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
+      */
+     public $allowedMethods = ['adyen_cc','adyen_pay_by_link'];
+ 
+-    /**
+-     * List of mapping AVS codes
+-     *
+-     * @var array
+-     */
+-    private static $avsMap = [
+-        -1 => null,
+-        0 => null,
+-        1 => "A",
+-        2 => "N",
+-        3 => "U",
+-        4 => "S",
+-        5 => "U",
+-        6 => "Z",
+-        7 => "Y",
+-        8 => null,
+-        9 => "A",
+-        10 => "N",
+-        11 => null,
+-        12 => "A",
+-        13 => "N",
+-        14 => "Z",
+-        15 => "Z",
+-        16 => "N",
+-        17 => "N",
+-        18 => "U",
+-        19 => "Z",
+-        20 => "Y",
+-        21 => "A",
+-        22 => "N",
+-        23 => "Z",
+-        24 => "Y",
+-        25 => "A",
+-        26 => "N"
+-    ];
+-
+     /**
+      * Gets payment AVS verification code.
+      *
++     * Returns the raw Adyen numeric AVS result code (e.g. "7", "20", "0").
++     *
+      * @param \Magento\Sales\Model\Order $order
+-     * @return string
++     * @return string|null
+      * @throws \InvalidArgumentException If specified order payment has different payment method code.
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $additionalInfo = $order->getPayment()->getAdditionalInformation();
+-        $key = null;
++        $avsStatus = null;
+ 
+         if (isset($additionalInfo['adyen_avs_result']) && empty($additionalInfo['adyen_avs_result']) == false) {
+-            $key = explode(" ", $additionalInfo['adyen_avs_result']);
+-            $key = array_shift($key);
+-        } elseif (isset($additionalInfo['additionalData']) &&
+-            isset($additionalInfo['additionalData']['avsResult']) &&
++            $parts = explode(" ", $additionalInfo['adyen_avs_result']);
++            $avsStatus = array_shift($parts);
++        } elseif (isset($additionalInfo['additionalData']['avsResult']) &&
+             empty($additionalInfo['additionalData']['avsResult']) == false) {
+-            $keyArray = explode(" ", $additionalInfo['additionalData']['avsResult']);
+-            $key = $keyArray[0];
+-        }
+-
+-        if (isset($key) && isset(self::$avsMap[$key]) && $this->validate(self::$avsMap[$key])) {
+-            $avsStatus = self::$avsMap[$key];
++            $parts = explode(" ", $additionalInfo['additionalData']['avsResult']);
++            $avsStatus = $parts[0];
+         }
+ 
+         $message = 'AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
+diff --git a/Model/Payment/AdyenCc/CvvEmsCodeMapper.php b/Model/Payment/AdyenCc/CvvEmsCodeMapper.php
+index 4065322..b2bfc4d 100644
+--- a/Model/Payment/AdyenCc/CvvEmsCodeMapper.php
++++ b/Model/Payment/AdyenCc/CvvEmsCodeMapper.php
+@@ -11,43 +11,27 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
+      */
+     public $allowedMethods = ['adyen_cc','adyen_pay_by_link'];
+ 
+-    /**
+-     * List of mapping CVV codes
+-     *
+-     * @var array
+-     */
+-    private static $cvvMap = [
+-        '1' => 'M',
+-        '2' => 'N',
+-        '3' => 'P',
+-        '4' => 'S',
+-        '5' => 'U',
+-    ];
+-
+     /**
+      * Gets payment CVV verification code.
+      *
++     * Returns the raw Adyen numeric CVC result code (e.g. "1", "2", "3", "4", "5").
++     *
+      * @param \Magento\Sales\Model\Order $order
+-     * @return string
++     * @return string|null
+      * @throws \InvalidArgumentException If specified order payment has different payment method code.
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $additionalInfo = $order->getPayment()->getAdditionalInformation();
+-        $key = null;
++        $cvvStatus = null;
+ 
+         if (isset($additionalInfo['adyen_cvc_result']) && empty($additionalInfo['adyen_cvc_result']) === false) {
+-            $key = explode(" ", $additionalInfo['adyen_cvc_result']);
+-            $key = array_shift($key);
+-        } elseif (isset($additionalInfo['additionalData']) &&
+-            isset($additionalInfo['additionalData']['cvcResult']) &&
++            $parts = explode(" ", $additionalInfo['adyen_cvc_result']);
++            $cvvStatus = array_shift($parts);
++        } elseif (isset($additionalInfo['additionalData']['cvcResult']) &&
+             empty($additionalInfo['additionalData']['cvcResult']) === false) {
+-            $keyArray = explode(" ", $additionalInfo['additionalData']['cvcResult']);
+-            $key = $keyArray[0];
+-        }
+-
+-        if (isset($key) && isset(self::$cvvMap[$key]) && $this->validate(self::$cvvMap[$key])) {
+-            $cvvStatus = self::$cvvMap[$key];
++            $parts = explode(" ", $additionalInfo['additionalData']['cvcResult']);
++            $cvvStatus = $parts[0];
+         }
+ 
+         $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);
+diff --git a/Model/Payment/Authorizenet/CvvEmsCodeMapper.php b/Model/Payment/Authorizenet/CvvEmsCodeMapper.php
+index b3920b8..3b62943 100644
+--- a/Model/Payment/Authorizenet/CvvEmsCodeMapper.php
++++ b/Model/Payment/Authorizenet/CvvEmsCodeMapper.php
+@@ -14,23 +14,19 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
+     /**
+      * Gets payment CVV verification code.
+      *
++     * Returns the raw Authorize.net card code response (M, N, P, S, U, B).
++     *
+      * @param \Magento\Sales\Model\Order $order
+      * @return null|string
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $responseXmlDocument = $this->getSignifydPaymentData();
++        $cvvStatus = null;
+ 
+         if (is_object($responseXmlDocument)) {
+-            $cvvStatus = $responseXmlDocument->transaction->cardCodeResponse;
+-
+-            if ($cvvStatus == 'B') {
+-                $cvvStatus = 'U';
+-            }
+-
+-            if ($this->validate($cvvStatus) == false) {
+-                $cvvStatus = null;
+-            }
++            $cvvStatus = (string) $responseXmlDocument->transaction->cardCodeResponse;
++            $cvvStatus = empty($cvvStatus) ? null : $cvvStatus;
+         }
+ 
+         $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);
+diff --git a/Model/Payment/Base/AvsEmsCodeMapper.php b/Model/Payment/Base/AvsEmsCodeMapper.php
+index c466172..13c493c 100644
+--- a/Model/Payment/Base/AvsEmsCodeMapper.php
++++ b/Model/Payment/Base/AvsEmsCodeMapper.php
+@@ -6,16 +6,6 @@ use Signifyd\Connect\Model\Payment\DataMapper;
+ 
+ class AvsEmsCodeMapper extends DataMapper
+ {
+-    /**
+-     * Valid expected response codes
+-     *
+-     * @var array
+-     */
+-    public $validAvsResponseCodes = [
+-        'X', 'Y', 'A', 'W', 'Z', 'N', 'U', 'R',
+-        'E', 'S', 'D', 'M', 'B', 'P', 'C', 'I', 'G'
+-    ];
+-
+     /**
+      * Gets payment AVS verification code.
+      *
+@@ -25,7 +15,7 @@ class AvsEmsCodeMapper extends DataMapper
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $avsStatus = $order->getPayment()->getCcAvsStatus();
+-        $avsStatus = $this->validate($avsStatus) ? $avsStatus : null;
++        $avsStatus = empty($avsStatus) ? null : $avsStatus;
+ 
+         $message = 'AVS found on base mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
+         $this->logger->debug($message, ['entity' => $order]);
+@@ -33,30 +23,19 @@ class AvsEmsCodeMapper extends DataMapper
+         return $avsStatus;
+     }
+ 
+-    /**
+-     * Validate response
+-     *
+-     * @param mixed $response
+-     * @return bool
+-     */
+-    public function validate($response)
+-    {
+-        return in_array($response, $this->validAvsResponseCodes);
+-    }
+-
+     /**
+      * Get payment data from gateway response method.
+      *
+      * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
+-     * @return string
++     * @return string|null
+      */
+     public function getPaymentDataFromGatewayResponse(\Signifyd\Models\Payment\Response\ResponseInterface $response)
+     {
+         $avsStatus = $response->getAvs();
+ 
+-        $message = 'Response AVS: ' . ($response->getAvs());
++        $message = 'Response AVS: ' . $avsStatus;
+         $this->logger->debug($message);
+ 
+-        return ($this->validate($avsStatus) ? $avsStatus : null);
++        return empty($avsStatus) ? null : $avsStatus;
+     }
+ }
+diff --git a/Model/Payment/Base/CvvEmsCodeMapper.php b/Model/Payment/Base/CvvEmsCodeMapper.php
+index cb869ac..fcc10da 100644
+--- a/Model/Payment/Base/CvvEmsCodeMapper.php
++++ b/Model/Payment/Base/CvvEmsCodeMapper.php
+@@ -6,13 +6,6 @@ use Signifyd\Connect\Model\Payment\DataMapper;
+ 
+ class CvvEmsCodeMapper extends DataMapper
+ {
+-    /**
+-     * Valid expected CVV codes
+-     *
+-     * @var array
+-     */
+-    public $validCvvResponseCodes = ['M', 'N', 'P', 'S', 'U'];
+-
+     /**
+      * Gets payment CVV verification code.
+      *
+@@ -22,7 +15,7 @@ class CvvEmsCodeMapper extends DataMapper
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $cidStatus = $order->getPayment()->getCcCidStatus();
+-        $cidStatus = $this->validate($cidStatus) ? $cidStatus : null;
++        $cidStatus = empty($cidStatus) ? null : $cidStatus;
+ 
+         $message = 'CVV found on base mapper: ' . (empty($cidStatus) ? 'false' : $cidStatus);
+         $this->logger->debug($message, ['entity' => $order]);
+@@ -30,27 +23,15 @@ class CvvEmsCodeMapper extends DataMapper
+         return $cidStatus;
+     }
+ 
+-    /**
+-     * Validate method.
+-     *
+-     * @param mixed $response
+-     * @return bool
+-     */
+-    public function validate($response)
+-    {
+-        return in_array($response, $this->validCvvResponseCodes);
+-    }
+-
+     /**
+      * Get payment data from gateway response method.
+      *
+      * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
+-     * @return string
++     * @return string|null
+      */
+     public function getPaymentDataFromGatewayResponse(\Signifyd\Models\Payment\Response\ResponseInterface $response)
+     {
+         $cvvStatus = $response->getCvv();
+-
+-        return $this->validate($cvvStatus) ? $cvvStatus : null;
++        return empty($cvvStatus) ? null : $cvvStatus;
+     }
+ }
+diff --git a/Model/Payment/Braintree/AvsEmsCodeMapper.php b/Model/Payment/Braintree/AvsEmsCodeMapper.php
+index 80a1245..6d1f1c9 100644
+--- a/Model/Payment/Braintree/AvsEmsCodeMapper.php
++++ b/Model/Payment/Braintree/AvsEmsCodeMapper.php
+@@ -9,11 +9,9 @@ namespace Signifyd\Connect\Model\Payment\Braintree;
+ use Signifyd\Connect\Model\Payment\Base\AvsEmsCodeMapper as Base_AvsEmsCodeMapper;
+ 
+ /**
+- * Processes AVS codes mapping from Braintree transaction to
+- * electronic merchant systems standard.
++ * Processes AVS codes mapping from Braintree transaction.
+  *
+  * @see https://developers.braintreepayments.com/reference/response/transaction
+- * @see http://www.emsecommerce.net/avs_cvv2_response_codes.htm
+  */
+ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
+ {
+@@ -22,57 +20,37 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
+      */
+     public $allowedMethods = ['braintree'];
+ 
+-    /**
+-     * List of mapping AVS codes
+-     *
+-     * Keys are concatenation of ZIP (avsPostalCodeResponseCode) and Street (avsStreetAddressResponseCode) codes
+-     *
+-     * @var array
+-     */
+-    private static $avsMap = [
+-        'MM' => 'Y',
+-        'MN' => 'Z',
+-        'MU' => 'Z',
+-        'MI' => 'Z',
+-        'NM' => 'A',
+-        'NN' => 'N',
+-        'NU' => 'N',
+-        'NI' => 'N',
+-        'UU' => 'U',
+-        'II' => 'U',
+-        'AA' => 'U'
+-    ];
+-
+     /**
+      * Gets payment AVS verification code.
+      *
++     * Braintree provides two separate AVS components. Returns an array with
++     * 'addressMatchCode' (street) and 'zipMatchCode' (postal) for the API v3
++     * verifications.avsResponse object.
++     *
+      * @param \Magento\Sales\Model\Order $order
+-     * @return string
++     * @return array|null
+      * @throws \InvalidArgumentException If specified order payment has different payment method code.
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $additionalInfo = $order->getPayment()->getAdditionalInformation();
+ 
+-        if (empty($additionalInfo['avsPostalCodeResponseCode']) == false &&
+-            empty($additionalInfo['avsStreetAddressResponseCode']) == false
++        if (empty($additionalInfo['avsStreetAddressResponseCode']) == false &&
++            empty($additionalInfo['avsPostalCodeResponseCode']) == false
+         ) {
+-            $zipCode = $additionalInfo['avsPostalCodeResponseCode'];
+-            $streetCode = $additionalInfo['avsStreetAddressResponseCode'];
+-            $key = $zipCode . $streetCode;
+-
+-            if (isset(self::$avsMap[$key]) && $this->validate(self::$avsMap[$key])) {
+-                $avsStatus = self::$avsMap[$key];
+-            }
+-        }
++            $avsStatus = [
++                'addressMatchCode' => $additionalInfo['avsStreetAddressResponseCode'],
++                'zipMatchCode'     => $additionalInfo['avsPostalCodeResponseCode']
++            ];
+ 
+-        $message = 'AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
+-        $this->logger->debug($message, ['entity' => $order]);
++            $message = 'AVS found on payment mapper: ' .
++                $avsStatus['addressMatchCode'] . '/' . $avsStatus['zipMatchCode'];
++            $this->logger->debug($message, ['entity' => $order]);
+ 
+-        if (empty($avsStatus)) {
+-            $avsStatus = parent::getPaymentData($order);
++            return $avsStatus;
+         }
+-        
+-        return $avsStatus;
++
++        $this->logger->debug('AVS found on payment mapper: false', ['entity' => $order]);
++        return parent::getPaymentData($order);
+     }
+ }
+diff --git a/Model/Payment/Braintree/CvvEmsCodeMapper.php b/Model/Payment/Braintree/CvvEmsCodeMapper.php
+index a27c39b..4b16acd 100644
+--- a/Model/Payment/Braintree/CvvEmsCodeMapper.php
++++ b/Model/Payment/Braintree/CvvEmsCodeMapper.php
+@@ -9,11 +9,9 @@ namespace Signifyd\Connect\Model\Payment\Braintree;
+ use Signifyd\Connect\Model\Payment\Base\CvvEmsCodeMapper as Base_CvvEmsCodeMapper;
+ 
+ /**
+- * Processes CVV codes mapping from Braintree transaction to
+- * electronic merchant systems standard.
++ * Processes CVV codes mapping from Braintree transaction.
+  *
+  * @see https://developers.braintreepayments.com/reference/response/transaction
+- * @see http://www.emsecommerce.net/avs_cvv2_response_codes.htm
+  */
+ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
+ {
+@@ -22,40 +20,22 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
+      */
+     public $allowedMethods = ['braintree'];
+ 
+-    /**
+-     * List of mapping CVV codes
+-     *
+-     * @var array
+-     */
+-    private static $cvvMap = [
+-        'M' => 'M',
+-        'N' => 'N',
+-        'U' => 'P',
+-        'I' => 'P',
+-        'S' => 'S',
+-        'A' => null,
+-        'B' => 'P'
+-    ];
+-
+     /**
+      * Gets payment CVV verification code.
+      *
++     * Returns the raw Braintree CVV response code (M, N, U, I, S, A, B).
++     *
+      * @param \Magento\Sales\Model\Order $order
+-     * @return string
++     * @return string|null
+      * @throws \InvalidArgumentException If specified order payment has different payment method code.
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $additionalInfo = $order->getPayment()->getAdditionalInformation();
++        $cvvStatus = null;
+ 
+-        if (empty($additionalInfo['cvvResponseCode']) == false &&
+-            isset(self::$cvvMap[$additionalInfo['cvvResponseCode']])
+-        ) {
+-            $cvvStatus = self::$cvvMap[$additionalInfo['cvvResponseCode']];
+-
+-            if ($this->validate($cvvStatus) == false) {
+-                $cvvStatus = null;
+-            }
++        if (empty($additionalInfo['cvvResponseCode']) == false) {
++            $cvvStatus = $additionalInfo['cvvResponseCode'];
+         }
+ 
+         $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);
+diff --git a/Model/Payment/Cybersource/AvsEmsCodeMapper.php b/Model/Payment/Cybersource/AvsEmsCodeMapper.php
+index 2f9f5db..06f0f48 100644
+--- a/Model/Payment/Cybersource/AvsEmsCodeMapper.php
++++ b/Model/Payment/Cybersource/AvsEmsCodeMapper.php
+@@ -11,46 +11,29 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
+      */
+     public $allowedMethods = ['cybersource', 'chcybersource'];
+ 
+-    /**
+-     * List of mapping AVS codes
+-     *
+-     * @var array
+-     */
+-    private static $avsMap = [
+-        "F" => "Z",
+-        "H" => "Y",
+-        "T" => "A",
+-        "1" => "S",
+-        "2" => "E",
+-        "K" => "N",
+-        "L" => "Z",
+-        "O" => "A"
+-    ];
+-
+     /**
+      * Gets payment AVS verification code.
+      *
++     * Returns the raw CyberSource AVS code from additionalInformation or gateway response.
++     *
+      * @param \Magento\Sales\Model\Order $order
+-     * @return string
++     * @return string|null
+      * @throws \InvalidArgumentException If specified order payment has different payment method code.
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $additionalInfo = $order->getPayment()->getAdditionalInformation();
+         $apiResponse = $this->getSignifydPaymentData();
++        $avsStatus = null;
+ 
+-        if (isset($additionalInfo['auth_avs_code']) &&
+-            isset(self::$avsMap[$additionalInfo['auth_avs_code']]) &&
+-            $this->validate(self::$avsMap[$additionalInfo['auth_avs_code']])) {
+-            $avsStatus = self::$avsMap[$additionalInfo['auth_avs_code']];
++        if (isset($additionalInfo['auth_avs_code']) && $additionalInfo['auth_avs_code'] !== '') {
++            $avsStatus = $additionalInfo['auth_avs_code'];
+         } elseif (is_array($apiResponse) &&
+             isset($apiResponse['ccAuthReply']) &&
+             isset($apiResponse['ccAuthReply']->avsCode)
+         ) {
+             $avsStatus = $apiResponse['ccAuthReply']->avsCode;
+-        } elseif (is_array($apiResponse) &&
+-            isset($apiResponse['auth_avs_code'])
+-        ) {
++        } elseif (is_array($apiResponse) && isset($apiResponse['auth_avs_code'])) {
+             $avsStatus = $apiResponse['auth_avs_code'];
+         }
+ 
+diff --git a/Model/Payment/Cybersource/CvvEmsCodeMapper.php b/Model/Payment/Cybersource/CvvEmsCodeMapper.php
+index be8e512..28f66bc 100644
+--- a/Model/Payment/Cybersource/CvvEmsCodeMapper.php
++++ b/Model/Payment/Cybersource/CvvEmsCodeMapper.php
+@@ -11,35 +11,22 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
+      */
+     public $allowedMethods = ['cybersource', 'chcybersource'];
+ 
+-    /**
+-     * List of mapping CVV codes
+-     *
+-     * @var array
+-     */
+-    private static $cvvMap = [
+-        "D" => "U",
+-        "I" => "N",
+-        "X" => "U",
+-        "1" => "U",
+-        "2" => "N",
+-        "3" => "P"
+-    ];
+-
+     /**
+      * Gets payment CVV verification code.
+      *
++     * Returns the raw CyberSource CVV result code (M, N, P, U, D, I, X, 1, 2, 3).
++     *
+      * @param \Magento\Sales\Model\Order $order
+-     * @return string
++     * @return string|null
+      * @throws \InvalidArgumentException If specified order payment has different payment method code.
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $additionalInfo = $order->getPayment()->getAdditionalInformation();
++        $cvvStatus = null;
+ 
+-        if (isset($additionalInfo['auth_cv_result']) &&
+-            isset(self::$cvvMap[$additionalInfo['auth_cv_result']]) &&
+-            $this->validate(self::$cvvMap[$additionalInfo['auth_cv_result']])) {
+-            $cvvStatus = self::$cvvMap[$additionalInfo['auth_cv_result']];
++        if (isset($additionalInfo['auth_cv_result']) && $additionalInfo['auth_cv_result'] !== '') {
++            $cvvStatus = $additionalInfo['auth_cv_result'];
+         }
+ 
+         $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);
+diff --git a/Model/Payment/Payflow/Link/AvsEmsCodeMapper.php b/Model/Payment/Payflow/Link/AvsEmsCodeMapper.php
+index 3c3af81..1caa229 100644
+--- a/Model/Payment/Payflow/Link/AvsEmsCodeMapper.php
++++ b/Model/Payment/Payflow/Link/AvsEmsCodeMapper.php
+@@ -14,17 +14,16 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
+     /**
+      * Gets payment AVS verification code.
+      *
++     * Returns the raw Payflow Link AVS response code from the PROCAVS field.
++     *
+      * @param \Magento\Sales\Model\Order $order
+-     * @return string
++     * @return string|null
+      * @throws \InvalidArgumentException If specified order payment has different payment method code.
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $avsStatus = $this->getSignifydPaymentData('PROCAVS');
+-
+-        if ($this->validate($avsStatus) == false) {
+-            $avsStatus = null;
+-        }
++        $avsStatus = empty($avsStatus) ? null : $avsStatus;
+ 
+         $message = 'AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
+         $this->logger->debug($message, ['entity' => $order]);
+diff --git a/Model/Payment/Payflow/Link/CvvEmsCodeMapper.php b/Model/Payment/Payflow/Link/CvvEmsCodeMapper.php
+index 35dfaf6..6b2df8d 100644
+--- a/Model/Payment/Payflow/Link/CvvEmsCodeMapper.php
++++ b/Model/Payment/Payflow/Link/CvvEmsCodeMapper.php
+@@ -14,16 +14,15 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
+     /**
+      * Gets payment CVV verification code.
+      *
++     * Returns the raw Payflow Link CVV response code from the PROCCVV2 field.
++     *
+      * @param \Magento\Sales\Model\Order $order
+-     * @return bool|mixed|string
++     * @return string|null
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $cvvStatus = $this->getSignifydPaymentData('PROCCVV2');
+-
+-        if ($this->validate($cvvStatus) == false) {
+-            $cvvStatus = null;
+-        }
++        $cvvStatus = empty($cvvStatus) ? null : $cvvStatus;
+ 
+         $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);
+         $this->logger->debug($message, ['entity' => $order]);
+diff --git a/Model/Payment/Payflow/Pro/AvsEmsCodeMapper.php b/Model/Payment/Payflow/Pro/AvsEmsCodeMapper.php
+index 301bfae..26c7b5b 100644
+--- a/Model/Payment/Payflow/Pro/AvsEmsCodeMapper.php
++++ b/Model/Payment/Payflow/Pro/AvsEmsCodeMapper.php
+@@ -11,26 +11,15 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
+      */
+     public $allowedMethods = ['payflowpro'];
+ 
+-    /**
+-     * List of mapping AVS codes
+-     *
+-     * Keys are concatenation of Street (avsaddr) and ZIP (avszip) codes
+-     *
+-     * @var array
+-     */
+-    private static $avsMap = [
+-        'YN' => 'A',
+-        'NN' => 'N',
+-        'XX' => 'U',
+-        'YY' => 'Y',
+-        'NY' => 'Z'
+-    ];
+-
+     /**
+      * Gets payment AVS verification code.
+      *
++     * Payflow Pro provides two separate AVS components. Returns an array with
++     * 'addressMatchCode' (street) and 'zipMatchCode' (postal) for the API v3
++     * verifications.avsResponse object.
++     *
+      * @param \Magento\Sales\Model\Order $order
+-     * @return string
++     * @return array|null
+      * @throws \InvalidArgumentException If specified order payment has different payment method code.
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+@@ -40,22 +29,19 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
+         if (empty($additionalInfo['avsaddr']) == false &&
+             empty($additionalInfo['avszip']) == false
+         ) {
+-            $streetCode = $additionalInfo['avsaddr'];
+-            $zipCode = $additionalInfo['avszip'];
+-            $key = $streetCode . $zipCode;
+-
+-            if (isset(self::$avsMap[$key]) && $this->validate(self::$avsMap[$key])) {
+-                $avsStatus = self::$avsMap[$key];
+-            }
+-        }
++            $avsStatus = [
++                'addressMatchCode' => $additionalInfo['avsaddr'],
++                'zipMatchCode'     => $additionalInfo['avszip']
++            ];
+ 
+-        $message = 'AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
+-        $this->logger->debug($message, ['entity' => $order]);
++            $message = 'AVS found on payment mapper: ' .
++                $avsStatus['addressMatchCode'] . '/' . $avsStatus['zipMatchCode'];
++            $this->logger->debug($message, ['entity' => $order]);
+ 
+-        if (empty($avsStatus)) {
+-            $avsStatus = parent::getPaymentData($order);
++            return $avsStatus;
+         }
+ 
+-        return $avsStatus;
++        $this->logger->debug('AVS found on payment mapper: false', ['entity' => $order]);
++        return parent::getPaymentData($order);
+     }
+ }
+diff --git a/Model/Payment/Payflow/Pro/CvvEmsCodeMapper.php b/Model/Payment/Payflow/Pro/CvvEmsCodeMapper.php
+index 4e5c1a2..88137da 100644
+--- a/Model/Payment/Payflow/Pro/CvvEmsCodeMapper.php
++++ b/Model/Payment/Payflow/Pro/CvvEmsCodeMapper.php
+@@ -11,34 +11,22 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
+      */
+     public $allowedMethods = ['payflowpro'];
+ 
+-    /**
+-     * List of mapping CVV codes
+-     *
+-     * @var array
+-     */
+-    private static $cvvMap = [
+-        'Y' => 'M',
+-        'N' => 'N',
+-        'X' => 'U'
+-    ];
+-
+     /**
+      * Gets payment CVV verification code.
+      *
++     * Returns the raw Payflow Pro CVV response code from the cvv2match field (Y, N, X).
++     *
+      * @param \Magento\Sales\Model\Order $order
+-     * @return string
++     * @return string|null
+      * @throws \InvalidArgumentException If specified order payment has different payment method code.
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $additionalInfo = $order->getPayment()->getAdditionalInformation();
++        $cvvStatus = null;
+ 
+-        if (empty($additionalInfo['cvv2match']) == false && isset(self::$cvvMap[$additionalInfo['cvv2match']])) {
+-            $cvvStatus = self::$cvvMap[$additionalInfo['cvv2match']];
+-
+-            if ($this->validate($cvvStatus) == false) {
+-                $cvvStatus = null;
+-            }
++        if (empty($additionalInfo['cvv2match']) == false) {
++            $cvvStatus = $additionalInfo['cvv2match'];
+         }
+ 
+         $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);
+diff --git a/Model/Payment/PaymentServicesPaypal/AvsEmsCodeMapper.php b/Model/Payment/PaymentServicesPaypal/AvsEmsCodeMapper.php
+index d09f3b7..3127999 100644
+--- a/Model/Payment/PaymentServicesPaypal/AvsEmsCodeMapper.php
++++ b/Model/Payment/PaymentServicesPaypal/AvsEmsCodeMapper.php
+@@ -11,56 +11,25 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
+      */
+     public $allowedMethods = ['payment_services_paypal_hosted_fields', 'payment_services_paypal_smart_buttons'];
+ 
+-    /**
+-     * List of mapping AVS codes
+-     *
+-     * @var array
+-     */
+-    private static $avsMap = [
+-        'A' => 'A',
+-        'B' => 'B',
+-        'C' => 'I',
+-        'D' => 'D',
+-        'E' => 'S',
+-        'F' => 'M',
+-        'G' => 'G',
+-        'I' => 'G',
+-        'M' => 'Y',
+-        'N' => 'N',
+-        'P' => 'P',
+-        'R' => 'R',
+-        'S' => 'S',
+-        'U' => 'U',
+-        'W' => 'W',
+-        'X' => 'X',
+-        'Y' => 'Y',
+-        'Z' => 'Z'
+-    ];
+-
+     /**
+      * Gets payment AVS verification code.
+      *
++     * Returns the raw PayPal AVS response code (A, B, C, D, E, F, G, I, M, N, P, R, S, U, W, X, Y, Z).
++     *
+      * @param \Magento\Sales\Model\Order $order
+-     * @return string
++     * @return string|null
+      * @throws \InvalidArgumentException If specified order payment has different payment method code.
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $avsStatus = $order->getPayment()->getCcAvsStatus();
+ 
+-        if (isset($avsStatus)) {
+-            if (in_array($avsStatus, array_keys(self::$avsMap))) {
+-                $avsStatus =  self::$avsMap[$avsStatus];
+-            } else {
+-                $avsStatus =  'E';
+-            }
+-
+-            $message = 'AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
++        if (!empty($avsStatus)) {
++            $message = 'AVS found on payment mapper: ' . $avsStatus;
+             $this->logger->debug($message, ['entity' => $order]);
+-        } else {
+-            $avsStatus = parent::getPaymentData($order);
++            return $avsStatus;
+         }
+-        
+-        return $avsStatus;
++
++        return parent::getPaymentData($order);
+     }
+ }
+diff --git a/Model/Payment/PaymentServicesPaypal/CvvEmsCodeMapper.php b/Model/Payment/PaymentServicesPaypal/CvvEmsCodeMapper.php
+index 9953060..988fc21 100644
+--- a/Model/Payment/PaymentServicesPaypal/CvvEmsCodeMapper.php
++++ b/Model/Payment/PaymentServicesPaypal/CvvEmsCodeMapper.php
+@@ -11,46 +11,25 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
+      */
+     public $allowedMethods = ['payment_services_paypal_hosted_fields', 'payment_services_paypal_smart_buttons'];
+ 
+-    /**
+-     * List of mapping CVV codes
+-     *
+-     * @var array
+-     */
+-    private static $cvvMap = [
+-        'E' => 'E',
+-        'I' => 'I',
+-        'M' => 'M',
+-        'N' => 'N',
+-        'P' => 'P',
+-        'S' => 'N',
+-        'U' => 'U',
+-        'X' => 'X'
+-    ];
+-
+     /**
+      * Gets payment CVV verification code.
+      *
++     * Returns the raw PayPal CVV response code (E, I, M, N, P, S, U, X).
++     *
+      * @param \Magento\Sales\Model\Order $order
+-     * @return string
++     * @return string|null
+      * @throws \InvalidArgumentException If specified order payment has different payment method code.
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $cvvStatus = $order->getPayment()->getCcCidStatus();
+ 
+-        if (isset($cvvStatus)) {
+-            if (in_array($cvvStatus, array_keys(self::$cvvMap))) {
+-                $cvvStatus =  self::$cvvMap[$cvvStatus];
+-            } else {
+-                $cvvStatus = null;
+-            }
+-
+-            $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);
++        if (!empty($cvvStatus)) {
++            $message = 'CVV found on payment mapper: ' . $cvvStatus;
+             $this->logger->debug($message, ['entity' => $order]);
+-        } else {
+-            $cvvStatus = parent::getPaymentData($order);
++            return $cvvStatus;
+         }
+ 
+-        return $cvvStatus;
++        return parent::getPaymentData($order);
+     }
+ }
+diff --git a/Model/Payment/RootwaysAuthorizecimOption/AvsEmsCodeMapper.php b/Model/Payment/RootwaysAuthorizecimOption/AvsEmsCodeMapper.php
+index 95f477d..3138273 100644
+--- a/Model/Payment/RootwaysAuthorizecimOption/AvsEmsCodeMapper.php
++++ b/Model/Payment/RootwaysAuthorizecimOption/AvsEmsCodeMapper.php
+@@ -14,6 +14,8 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
+     /**
+      * Gets payment AVS verification code.
+      *
++     * Returns the raw Authorize.net CIM AVS response code (M, N, P, S, U, B, etc.).
++     *
+      * @param \Magento\Sales\Model\Order $order
+      * @return null|string
+      */
+@@ -24,13 +26,6 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
+ 
+         if (empty($additionalInfo['avs_response_code']) == false) {
+             $avsStatus = $additionalInfo['avs_response_code'];
+-            if ($avsStatus == 'B') {
+-                $avsStatus = 'U';
+-            }
+-        }
+-
+-        if ($this->validate($avsStatus) == false) {
+-            $avsStatus = null;
+         }
+ 
+         $message = 'AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
+@@ -39,6 +34,7 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
+         if (empty($avsStatus)) {
+             $avsStatus = parent::getPaymentData($order);
+         }
++
+         return $avsStatus;
+     }
+ }
+diff --git a/Model/Payment/Stripe/Payments/AvsEmsCodeMapper.php b/Model/Payment/Stripe/Payments/AvsEmsCodeMapper.php
+index 774f7be..bce5bc5 100644
+--- a/Model/Payment/Stripe/Payments/AvsEmsCodeMapper.php
++++ b/Model/Payment/Stripe/Payments/AvsEmsCodeMapper.php
+@@ -13,69 +13,43 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
+      */
+     public $allowedMethods = ['stripe_payments'];
+ 
+-    /**
+-     * List of mapping AVS codes
+-     *
+-     * Keys are concatenation of Street (address_line1_check) and postal code (address_postal_code_check) codes
+-     *
+-     * @var array
+-     */
+-    public $avsMap = [
+-        'pass_pass' => 'Y',
+-        'pass_fail' => 'A',
+-        'fail_pass' => 'Z',
+-        'fail_fail' => 'N',
+-        'pass_unchecked' => 'B',
+-        'unchecked_pass' => 'P',
+-        'unchecked_fail' => 'N',
+-        'fail_unchecked' => 'N',
+-        'unchecked_unchecked' => 'U'
+-    ];
+-
+     /**
+      * Gets payment AVS verification code.
+      *
++     * Stripe provides two separate AVS components. Returns an array with
++     * 'addressMatchCode' (street) and 'zipMatchCode' (postal) for the API v3
++     * verifications.avsResponse object.
++     *
+      * @param \Magento\Sales\Model\Order $order
+-     * @return string
++     * @return array|null
+      * @throws \InvalidArgumentException If specified order payment has different payment method code.
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $charge = $this->getCharge($order);
+ 
+-        if (is_object($charge) == false) {
+-            $avsStatus = null;
+-        }
+-
+-        if (isset($charge->payment_method_details) &&
+-            isset($charge->payment_method_details->card) &&
+-            isset($charge->payment_method_details->card->checks) &&
++        if (is_object($charge) &&
+             isset($charge->payment_method_details->card->checks->address_line1_check) &&
+             isset($charge->payment_method_details->card->checks->address_postal_code_check)
+         ) {
+             $addressLine1Check = $charge->payment_method_details->card->checks->address_line1_check;
+             $addressPostalCodeCheck = $charge->payment_method_details->card->checks->address_postal_code_check;
+ 
+-            if (isset($this->avsMap["{$addressLine1Check}_{$addressPostalCodeCheck}"])) {
+-                $avsStatus = $this->avsMap["{$addressLine1Check}_{$addressPostalCodeCheck}"];
+-            } else {
+-                $avsStatus = null;
+-            }
+-        } else {
+-            $avsStatus = null;
+-        }
+-
+-        if ($this->validate($avsStatus) == false) {
+-            $avsStatus = null;
+-        }
++            if (!empty($addressLine1Check) && !empty($addressPostalCodeCheck)) {
++                $avsStatus = [
++                    'addressMatchCode' => $addressLine1Check,
++                    'zipMatchCode'     => $addressPostalCodeCheck
++                ];
+ 
+-        $message = 'AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
+-        $this->logger->debug($message, ['entity' => $order]);
++                $message = 'AVS found on payment mapper: ' .
++                    $avsStatus['addressMatchCode'] . '/' . $avsStatus['zipMatchCode'];
++                $this->logger->debug($message, ['entity' => $order]);
+ 
+-        if (empty($avsStatus)) {
+-            $avsStatus = parent::getPaymentData($order);
++                return $avsStatus;
++            }
+         }
+ 
+-        return $avsStatus;
++        $this->logger->debug('AVS found on payment mapper: false', ['entity' => $order]);
++        return parent::getPaymentData($order);
+     }
+ }
+diff --git a/Model/Payment/Stripe/Payments/CvvEmsCodeMapper.php b/Model/Payment/Stripe/Payments/CvvEmsCodeMapper.php
+index 4403d4d..179a3fb 100644
+--- a/Model/Payment/Stripe/Payments/CvvEmsCodeMapper.php
++++ b/Model/Payment/Stripe/Payments/CvvEmsCodeMapper.php
+@@ -13,45 +13,24 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
+      */
+     public $allowedMethods = ['stripe_payments'];
+ 
+-    /**
+-     * List of mapping CVV codes
+-     *
+-     * Keys are concatenation cvc_check field from Stripe charge object
+-     *
+-     * @var array
+-     */
+-    public $cvvMap = [
+-        'pass' => 'M',
+-        'fail' => 'N',
+-        'unchecked' => 'P',
+-        'unavailable' => 'U'
+-    ];
+-
+     /**
+      * Gets payment CVV verification code.
+      *
++     * Returns the raw Stripe CVC check value (pass, fail, unchecked, unavailable).
++     *
+      * @param \Magento\Sales\Model\Order $order
+-     * @return bool|mixed|string
++     * @return string|null
+      */
+     public function getPaymentData(\Magento\Sales\Model\Order $order)
+     {
+         $charge = $this->getCharge($order);
++        $cvvStatus = null;
+ 
+         if (is_object($charge) &&
+-            isset($charge->payment_method_details) &&
+-            isset($charge->payment_method_details->card) &&
+-            isset($charge->payment_method_details->card->checks) &&
+             isset($charge->payment_method_details->card->checks->cvc_check)
+         ) {
+             $cvvCheck = $charge->payment_method_details->card->checks->cvc_check;
+-
+-            if (isset($this->cvvMap[$cvvCheck])) {
+-                $cvvStatus = $this->cvvMap[$cvvCheck];
+-            } else {
+-                $cvvStatus = null;
+-            }
+-        } else {
+-            $cvvStatus = null;
++            $cvvStatus = empty($cvvCheck) ? null : $cvvCheck;
+         }
+ 
+         $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);
+
