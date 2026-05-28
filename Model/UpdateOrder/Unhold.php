@@ -117,8 +117,15 @@ class Unhold
                 "Signifyd: order status cannot be updated, {$reason}"
             );
 
-            if ($reason == "order is not holded") {
+            //The failedToUnhold flag is used to allow a retry in cases where the order is not yet in hold status.
+            // This is necessary because there are scenarios where the Signifyd webhook is received before the order
+            // is actually placed on hold, causing the case to be completed while the order remains in hold status.
+            if ($reason == "order is not holded"
+                && $case->getEntries('failedToUnhold') == 1
+            ) {
                 $completeCase = true;
+            } else {
+                $case->setEntries('failedToUnhold', 1);
             }
         }
 
