@@ -5,10 +5,10 @@ namespace Signifyd\Connect\Model;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Store\Model\StoreManagerInterface;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\Core\Client;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
@@ -17,14 +17,14 @@ use Signifyd\Connect\Model\Api\TransactionsFactory;
 class ThreeDsIntegration
 {
     /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
+    /**
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var Logger
@@ -85,8 +85,8 @@ class ThreeDsIntegration
     /**
      * ThreeDsIntegration constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
      * @param ConfigHelper $configHelper
      * @param StoreManagerInterface $storeManager
@@ -99,8 +99,8 @@ class ThreeDsIntegration
      * @param Client $client
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         Logger $logger,
         ConfigHelper $configHelper,
         StoreManagerInterface $storeManager,
@@ -112,8 +112,8 @@ class ThreeDsIntegration
         TransactionsFactory $transactionsFactory,
         Client $client
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
         $this->configHelper = $configHelper;
         $this->storeManager = $storeManager;
@@ -166,12 +166,11 @@ class ThreeDsIntegration
 
         $quoteId = $quote->getId();
         $threeDsData = $this->validateFields($threeDsData);
-        $case = $this->casedataFactory->create();
-        $this->casedataResourceModel->load($case, $quoteId, 'quote_id');
+        $case = $this->casedataRepository->getByQuoteId($quoteId);
 
         $case->setData('quote_id', $quoteId);
         $case->setEntries('threeDs', $this->jsonSerializer->serialize($threeDsData));
-        $this->casedataResourceModel->save($case);
+        $this->casedataRepository->save($case);
 
         $this->validateSentTransaction($quoteId);
     }
@@ -185,8 +184,7 @@ class ThreeDsIntegration
     public function validateSentTransaction($quoteId)
     {
         try {
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $quoteId, 'quote_id');
+            $case = $this->casedataRepository->getByQuoteId($quoteId);
 
             $orderId = $case->getData('order_id');
             $orderIncrementId = $case->getData('order_increment');

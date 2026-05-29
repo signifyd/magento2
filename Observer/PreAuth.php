@@ -6,6 +6,7 @@ use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Store\Model\ScopeInterface;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -18,8 +19,6 @@ use Magento\Quote\Model\Quote;
 use Signifyd\Connect\Model\Api\CheckoutOrderFactory;
 use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Casedata;
-use Signifyd\Connect\Model\Registry;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\CasedataFactory;
 use Magento\Framework\App\Request\Http as RequestHttp;
 use Signifyd\Connect\Model\JsonSerializer;
@@ -28,6 +27,11 @@ use Signifyd\Connect\Model\Api\Recipient;
 
 class PreAuth implements ObserverInterface
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var Logger
      */
@@ -67,11 +71,6 @@ class PreAuth implements ObserverInterface
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var RequestHttp
@@ -116,6 +115,7 @@ class PreAuth implements ObserverInterface
     /**
      * PreAuth constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param Logger $logger
      * @param CartRepositoryInterface $quoteRepository
      * @param ResponseFactory $responseFactory
@@ -124,7 +124,6 @@ class PreAuth implements ObserverInterface
      * @param ResponseInterface $responseInterface
      * @param ScopeConfigInterface $scopeConfigInterface
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param RequestHttp $requestHttp
      * @param JsonSerializer $jsonSerializer
      * @param ConfigHelper $configHelper
@@ -135,6 +134,7 @@ class PreAuth implements ObserverInterface
      * @param Registry $registry
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         Logger $logger,
         CartRepositoryInterface $quoteRepository,
         ResponseFactory $responseFactory,
@@ -143,7 +143,6 @@ class PreAuth implements ObserverInterface
         ResponseInterface $responseInterface,
         ScopeConfigInterface $scopeConfigInterface,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         RequestHttp $requestHttp,
         JsonSerializer $jsonSerializer,
         ConfigHelper $configHelper,
@@ -153,6 +152,7 @@ class PreAuth implements ObserverInterface
         Recipient $recipient,
         Registry $registry
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->logger = $logger;
         $this->quoteRepository = $quoteRepository;
         $this->responseFactory = $responseFactory;
@@ -161,7 +161,6 @@ class PreAuth implements ObserverInterface
         $this->responseInterface = $responseInterface;
         $this->scopeConfigInterface = $scopeConfigInterface;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->requestHttp = $requestHttp;
         $this->jsonSerializer = $jsonSerializer;
         $this->configHelper = $configHelper;
@@ -233,11 +232,10 @@ class PreAuth implements ObserverInterface
 
             if ($isPreAuth === false) {
                 /** @var \Signifyd\Connect\Model\Casedata $case */
-                $case = $this->casedataFactory->create();
-                $this->casedataResourceModel->load($case, $quote->getId(), 'quote_id');
+                $case = $this->casedataRepository->getByQuoteId($quote->getId());
 
                 if ($case->isEmpty() === false && $case->getPolicyName() === Casedata::PRE_AUTH) {
-                    $this->casedataResourceModel->delete($case);
+                    $this->casedataRepository->delete($case);
                 }
 
                 return;
@@ -357,8 +355,7 @@ class PreAuth implements ObserverInterface
                 }
 
                 /** @var \Signifyd\Connect\Model\Casedata $case */
-                $case = $this->casedataFactory->create();
-                $this->casedataResourceModel->load($case, $quote->getId(), 'quote_id');
+                $case = $this->casedataRepository->getByQuoteId($quote->getId());
                 $case->setCode($caseResponse->signifydId);
                 $case->setScore(floor($caseResponse->decision->score));
                 $case->setGuarantee($caseAction);
@@ -383,7 +380,7 @@ class PreAuth implements ObserverInterface
                 $hashToValidateReroute = sha1($recipientJson);
                 $case->setEntries('hash', $hashToValidateReroute);
 
-                $this->casedataResourceModel->save($case);
+                $this->casedataRepository->save($case);
             }
         } catch (\Exception $e) {
             $caseAction = false;

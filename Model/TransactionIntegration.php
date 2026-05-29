@@ -3,24 +3,24 @@
 namespace Signifyd\Connect\Model;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Api\Core\Client;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
 use Signifyd\Connect\Model\Api\TransactionsFactory;
 
 class TransactionIntegration
 {
     /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
+    /**
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var Logger
@@ -65,8 +65,8 @@ class TransactionIntegration
     /**
      * TransactionIntegration constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param Logger $logger
      * @param StoreManagerInterface $storeManager
      * @param CheckoutSession $checkoutSession
@@ -75,8 +75,8 @@ class TransactionIntegration
      * @param Client $client
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         Logger $logger,
         StoreManagerInterface $storeManager,
         CheckoutSession $checkoutSession,
@@ -84,8 +84,8 @@ class TransactionIntegration
         ConfigHelper $configHelper,
         Client $client
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->logger = $logger;
         $this->storeManager = $storeManager;
         $this->checkoutSession = $checkoutSession;
@@ -134,10 +134,7 @@ class TransactionIntegration
             return null;
         }
 
-        $quoteId = $quote->getId();
-        $case = $this->casedataFactory->create();
-        $this->casedataResourceModel->load($case, $quoteId, 'quote_id');
-
+        $case = $this->casedataRepository->getByQuoteId($quote->getId());
         if ($case->isEmpty()) {
             return null;
         }
@@ -150,7 +147,7 @@ class TransactionIntegration
         }
 
         $case->setEntries($entryReasonField, $this->gatewayRefusedReason);
-        $this->casedataResourceModel->save($case);
+        $this->casedataRepository->save($case);
 
         $data = [];
         $data['gatewayRefusedReason'] = $this->gatewayRefusedReason;

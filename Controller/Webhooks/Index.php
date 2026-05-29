@@ -16,6 +16,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Magento\Store\Model\StoreManagerInterface;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Magento\Framework\Data\Form\FormKey;
@@ -25,8 +26,6 @@ use Signifyd\Connect\Model\Api\Core\Client;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\Casedata\UpdateCaseV2Factory;
 use Signifyd\Connect\Model\Casedata\UpdateCaseFactory;
-use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Signifyd\Connect\Model\ResourceModel\Order as SignifydOrderResourceModel;
 use Signifyd\Connect\Model\UpdateOrderFactory;
@@ -37,6 +36,11 @@ use Magento\Framework\Controller\ResultFactory;
  */
 class Index implements HttpPostActionInterface
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var Logger
      */
@@ -51,16 +55,6 @@ class Index implements HttpPostActionInterface
      * @var File
      */
     public $file;
-
-    /**
-     * @var CasedataFactory
-     */
-    public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var OrderResourceModel
@@ -121,12 +115,11 @@ class Index implements HttpPostActionInterface
      * Index constructor.
      *
      * @param Context $context
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param Logger $logger
      * @param ConfigHelper $configHelper
      * @param FormKey $formKey
      * @param File $file
-     * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
      * @param JsonSerializer $jsonSerializer
      * @param OrderFactory $orderFactory
@@ -142,12 +135,11 @@ class Index implements HttpPostActionInterface
      */
     public function __construct(
         Context $context,
+        CasedataRepositoryInterface $casedataRepository,
         Logger $logger,
         ConfigHelper $configHelper,
         FormKey $formKey,
         File $file,
-        CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
         JsonSerializer $jsonSerializer,
         OrderFactory $orderFactory,
@@ -160,11 +152,10 @@ class Index implements HttpPostActionInterface
         RequestInterface $request,
         ResultFactory $resultFactory
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->logger = $logger;
         $this->configHelper = $configHelper;
         $this->file = $file;
-        $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
         $this->jsonSerializer = $jsonSerializer;
         $this->storeManagerInterface = $storeManagerInterface;
@@ -287,14 +278,11 @@ class Index implements HttpPostActionInterface
                 break;
         }
 
-        /** @var \Signifyd\Connect\Model\Casedata $case */
-        $case = $this->casedataFactory->create();
-
         try {
             $httpCode = null;
 
             try {
-                $this->casedataResourceModel->loadForUpdate($case, (string) $caseId, 'code');
+                $case = $this->casedataRepository->getForUpdate((string) $caseId, 'code');
             } catch (\Exception $e) {
                 $result->setData(['message' => __($e->getMessage())]);
                 $result->setHttpResponseCode(Http::STATUS_CODE_423);
@@ -308,7 +296,7 @@ class Index implements HttpPostActionInterface
             }
 
             if ($case->getEntries('processed_by_gateway') === false) {
-                $this->casedataResourceModel->save($case);
+                $this->casedataRepository->save($case);
                 $result->setData(['message' => __("Case {$caseId} awaiting gateway processing")]);
                 $result->setHttpResponseCode(Http::STATUS_CODE_400);
                 return $result;
@@ -410,7 +398,7 @@ class Index implements HttpPostActionInterface
             $updateOrder = $this->updateOrderFactory->create();
             $case = $updateOrder($case);
 
-            $this->casedataResourceModel->save($case);
+            $this->casedataRepository->save($case);
 
             $result->setHttpResponseCode(Http::STATUS_CODE_200);
             return $result;
@@ -418,8 +406,8 @@ class Index implements HttpPostActionInterface
             $context = [];
 
             // Triggering case save to unlock case
-            if ($case instanceof \Signifyd\Connect\Model\ResourceModel\Casedata) {
-                $this->casedataResourceModel->save($case);
+            if ($case instanceof CasedataRepositoryInterface) {
+                $this->casedataRepository->save($case);
                 $context['entity'] = $case;
             }
 
@@ -432,8 +420,8 @@ class Index implements HttpPostActionInterface
             $context = [];
 
             // Triggering case save to unlock case
-            if ($case instanceof \Signifyd\Connect\Model\ResourceModel\Casedata) {
-                $this->casedataResourceModel->save($case);
+            if ($case instanceof CasedataRepositoryInterface) {
+                $this->casedataRepository->save($case);
                 $context['entity'] = $case;
             }
 

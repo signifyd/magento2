@@ -3,15 +3,15 @@
 namespace Signifyd\Connect\Block\Adminhtml\Grid\Column;
 
 use Magento\Backend\Block\Widget\Grid\Column\Renderer\AbstractRenderer;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Model\CasedataFactory;
 
 class SignifydGuarantee extends AbstractRenderer
 {
     /**
-     * @var CasedataResourceModel
+     * @var CasedataRepositoryInterface
      */
-    public $casedataResourceModel;
+    public $casedataRepository;
 
     /**
      * @var CasedataFactory
@@ -21,18 +21,18 @@ class SignifydGuarantee extends AbstractRenderer
     /**
      * SignifydGuarantee constructor.
      *
-     * @param CasedataResourceModel $casedataResourceModel
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param CasedataFactory $casedataFactory
      * @param \Magento\Backend\Block\Context $context
      * @param array $data
      */
     public function __construct(
-        CasedataResourceModel $casedataResourceModel,
+        CasedataRepositoryInterface $casedataRepository,
         CasedataFactory $casedataFactory,
         \Magento\Backend\Block\Context $context,
         array $data = []
     ) {
-        $this->casedataResourceModel = $casedataResourceModel;
+        $this->casedataRepository = $casedataRepository;
         $this->casedataFactory = $casedataFactory;
         parent::__construct($context, $data);
     }
@@ -49,8 +49,7 @@ class SignifydGuarantee extends AbstractRenderer
         $quoteId = $row->getData('quote_id');
 
         /** @var \Signifyd\Connect\Model\Casedata $case */
-        $case = $this->casedataFactory->create();
-        $this->casedataResourceModel->load($case, $quoteId, 'quote_id');
+        $case = $this->casedataRepository->getByQuoteId($quoteId);
 
         if ($case->isEmpty() === false) {
             $guarantee = $case->getGuarantee();

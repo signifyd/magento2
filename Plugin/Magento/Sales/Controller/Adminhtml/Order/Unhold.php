@@ -4,8 +4,7 @@ namespace Signifyd\Connect\Plugin\Magento\Sales\Controller\Adminhtml\Order;
 
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Backend\Model\Auth\Session;
-use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\OrderHelper;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\App\RequestInterface;
@@ -13,6 +12,11 @@ use Signifyd\Connect\Model\UpdateOrder\Action as UpdateOrderAction;
 
 class Unhold
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var OrderRepositoryInterface
      */
@@ -27,16 +31,6 @@ class Unhold
      * @var Session
      */
     public $authSession;
-
-    /**
-     * @var CasedataFactory
-     */
-    public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var ResourceConnection
@@ -56,30 +50,27 @@ class Unhold
     /**
      * Unhold constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderHelper $orderHelper
      * @param Session $authSession
-     * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param ResourceConnection $resourceConnection
      * @param UpdateOrderAction $updateOrderAction
      * @param RequestInterface $request
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         OrderRepositoryInterface $orderRepository,
         OrderHelper $orderHelper,
         Session $authSession,
-        CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         ResourceConnection $resourceConnection,
         UpdateOrderAction $updateOrderAction,
         RequestInterface $request
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->orderRepository = $orderRepository;
         $this->orderHelper = $orderHelper;
         $this->authSession = $authSession;
-        $this->casedataResourceModel = $casedataResourceModel;
-        $this->casedataFactory = $casedataFactory;
         $this->resourceConnection = $resourceConnection;
         $this->updateOrderAction = $updateOrderAction;
         $this->request = $request;
@@ -108,25 +99,23 @@ class Unhold
         try {
             /** @var \Magento\Sales\Model\Order $order */
             $order = $this->orderRepository->get($orderId);
-            /** @var \Signifyd\Connect\Model\Casedata $case */
-            $case = $this->casedataFactory->create();
 
             $this->orderHelper->addCommentToStatusHistory(
                 $order,
                 "Signifyd: order status updated by {$this->authSession->getUser()->getUserName()}"
             );
 
-            $this->casedataResourceModel->loadForUpdate($case, $order->getId(), 'order_id', 2);
+            $case = $this->casedataRepository->getForUpdate($order->getId(), 'order_id', 2);
 
             if ($this->updateOrderAction->isHoldReleased($case) === false) {
                 $case->setEntries('hold_released', 1);
             }
 
-            $this->casedataResourceModel->save($case);
+            $this->casedataRepository->save($case);
         } catch (\Exception $e) {
             // Triggering case save to unlock case
             if ($case instanceof \Signifyd\Connect\Model\Casedata) {
-                $this->casedataResourceModel->save($case);
+                $this->casedataRepository->save($case);
             }
         }
 

@@ -7,15 +7,20 @@
 namespace Signifyd\Connect\Plugin\StripeIntegration\Payments\Helper;
 
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use StripeIntegration\Payments\Helper\Order as StripeIntegrationOrder;
 
 class Order
 {
+    /**
+     * @var CasedataRepositoryInterface
+     */
+    public $casedataRepository;
+
     /**
      * @var Logger
      */
@@ -25,11 +30,6 @@ class Order
      * @var CasedataFactory
      */
     public $casedataFactory;
-
-    /**
-     * @var CasedataResourceModel
-     */
-    public $casedataResourceModel;
 
     /**
      * @var OrderResourceModel
@@ -44,22 +44,22 @@ class Order
     /**
      * Order constructor.
      *
+     * @param CasedataRepositoryInterface $casedataRepository
      * @param Logger $logger
      * @param CasedataFactory $casedataFactory
-     * @param CasedataResourceModel $casedataResourceModel
      * @param OrderResourceModel $orderResourceModel
      * @param OrderHelper $orderHelper
      */
     public function __construct(
+        CasedataRepositoryInterface $casedataRepository,
         Logger $logger,
         CasedataFactory $casedataFactory,
-        CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
         OrderHelper $orderHelper
     ) {
+        $this->casedataRepository = $casedataRepository;
         $this->logger = $logger;
         $this->casedataFactory = $casedataFactory;
-        $this->casedataResourceModel = $casedataResourceModel;
         $this->orderResourceModel = $orderResourceModel;
         $this->orderHelper = $orderHelper;
     }
@@ -82,9 +82,7 @@ class Order
         $transactionId
     ) {
         try {
-            $orderId = $order->getId();
-            $case = $this->casedataFactory->create();
-            $this->casedataResourceModel->load($case, $orderId, 'order_id');
+            $case = $this->casedataRepository->getByOrderId($order->getId());
 
             if ($case->isEmpty()) {
                 return;
@@ -92,7 +90,7 @@ class Order
 
             if ($case->getData('magento_status') === Casedata::ASYNC_WAIT && empty($case->getData('code'))) {
                 $case->setEntries('stripe_status', 'approved');
-                $this->casedataResourceModel->save($case);
+                $this->casedataRepository->save($case);
             }
 
             $isHoldedBeforeStripeTransaction = $order->canUnhold();
