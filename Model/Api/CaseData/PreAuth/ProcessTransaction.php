@@ -116,7 +116,13 @@ class ProcessTransaction
             $saleTransaction['orderId'] = $order->getIncrementId();
             $saleTransaction['transactions'] = ($this->transactionsFactory->create())($order);
 
-            $saleTransactionJson = $this->jsonSerializer->serialize($saleTransaction, $order);
+            $saleTransactionForHash = $saleTransaction;
+            $saleTransactionForHash['transactions'] = array_map(function ($transaction) {
+                unset($transaction['createdAt']);
+                return $transaction;
+            }, $saleTransaction['transactions']);
+
+            $saleTransactionJson = $this->jsonSerializer->serialize($saleTransactionForHash, $order);
             $newHashToValidateReroute = sha1($saleTransactionJson);
             $currentHashToValidateReroute = $case->getEntries('transaction_hash');
 
