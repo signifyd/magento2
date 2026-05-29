@@ -105,7 +105,7 @@ class PreAuth implements ObserverInterface
     /**
      * @var Registry
      */
-    public $registry;;
+    public $registry;
 
     /**
      * @var CheckoutPaymentDetailsMapperInterface
@@ -136,6 +136,8 @@ class PreAuth implements ObserverInterface
      * @param Client $client
      * @param Recipient $recipient
      * @param Registry $registry
+     * @param CheckoutPaymentDetailsMapperInterface $defaultCheckoutPaymentDetailsHandler
+     * @param array $checkoutPaymentDetailsHandlers
      */
     public function __construct(
         CasedataRepositoryInterface $casedataRepository,
