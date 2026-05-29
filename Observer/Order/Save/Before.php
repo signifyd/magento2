@@ -94,7 +94,7 @@ class Before implements ObserverInterface
 
             // Fix for Magento bug https://github.com/magento/magento2/issues/7227
             // x_forwarded_for should be copied from quote, but quote does not have the field on database
-            if (empty($order->getData('x_forwarded_for')) && is_object($this->request)) {
+            if ($order->hasData('x_forwarded_for') && empty($order->getData('x_forwarded_for')) && is_object($this->request)) {
                 $xForwardIp = $this->request->getServer('HTTP_X_FORWARDED_FOR');
 
                 if (empty($xForwardIp) == false) {
