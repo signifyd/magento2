@@ -105,10 +105,6 @@
         <plugin name="Signifyd_Connect_Plugin_Magento_Reports_Model_ResourceModel_Quote_Collection" type="\Signifyd\Connect\Plugin\Magento\Reports\Model\ResourceModel\Quote\Collection" />
     </type>
 
-    <type name="Adyen\Payment\Gateway\Request\CheckoutDataBuilder">
-        <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Gateway_Request_CheckoutDataBuilderSca" type="\Signifyd\Connect\Plugin\Adyen\Payment\Gateway\Request\CheckoutDataBuilderSca" />
-    </type>
-
     <type name="Adyen\Payment\Controller\Process\Json">
         <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Controller_Process_Json" type="\Signifyd\Connect\Plugin\Adyen\Payment\Controller\Process\Json" />
     </type>

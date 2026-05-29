@@ -220,18 +220,6 @@ class CheckoutOrder
             $signifydOrder['customerOrderRecommendation'] = ($this->customerOrderRecommendationFactory->create())();
             $signifydOrder['decisionMechanism'] = ($this->decisionMechanismFactory->create())();
 
-            $policyConfig = $this->configHelper->getPolicyName(
-                $quote->getStore()->getScopeType(),
-                $quote->getStoreId()
-            );
-            $policyFromMethod = $this->configHelper->getPolicyFromMethod(
-                $policyConfig,
-                $paymentMethod,
-                $quote->getStore()->getScopeType(),
-                $quote->getStoreId()
-            );
-            $evalRequest = ($policyFromMethod == 'SCA_PRE_AUTH') ? ['SCA_EVALUATION'] : null;
-            $signifydOrder['additionalEvalRequests'] = $evalRequest;
             $signifydOrder['checkoutId'] = sha1($this->jsonSerializer->serialize($signifydOrder, $quote));
             $transactions = [];
 
