@@ -398,6 +398,16 @@ class Index implements HttpPostActionInterface
 
             $this->casedataRepository->save($case);
 
+            if ($case->getEntries('fail') == 1 && $case->getMagentoStatus() !== Casedata::COMPLETED_STATUS) {
+                $this->logger->error(
+                    "WEBHOOK: Failed to update case {$caseId}",
+                    ['entity' => $case]
+                );
+                $result->setData(['message' => 'Webhook processing failed']);
+                $result->setHttpResponseCode(Http::STATUS_CODE_500);
+                return $result;
+            }
+
             $result->setHttpResponseCode(Http::STATUS_CODE_200);
             return $result;
         } catch (\Exception $e) {
