@@ -205,12 +205,24 @@ class LogsFile
 
             $fileData .= 'case: ' . $case->toJson() . PHP_EOL;
             $fileData .= 'quote: ' . $quote->toJson() . PHP_EOL;
-            $fileData .= 'quote_shipping_address: ' . $quote->getShippingAddress()->toJson() . PHP_EOL;
-            $fileData .= 'quote_billing_address: ' . $quote->getBillingAddress()->toJson() . PHP_EOL;
+
+            if ($quote->getShippingAddress()) {
+                $fileData .= 'quote_shipping_address: ' . $quote->getShippingAddress()->toJson() . PHP_EOL;
+            }
+
+            if ($quote->getBillingAddress()) {
+                $fileData .= 'quote_billing_address: ' . $quote->getBillingAddress()->toJson() . PHP_EOL;
+            }
 
             $fileData .= 'sales_order: ' . $order->toJson() . PHP_EOL;
-            $fileData .= 'sales_order_shipping_address: ' . $order->getShippingAddress()->toJson() . PHP_EOL;
-            $fileData .= 'sales_order_billing_address: ' . $order->getBillingAddress()->toJson() . PHP_EOL;
+
+            if ($order->getShippingAddress()) {
+                $fileData .= 'sales_order_shipping_address: ' . $order->getShippingAddress()->toJson() . PHP_EOL;
+            }
+
+            if ($order->getBillingAddress()) {
+                $fileData .= 'sales_order_billing_address: ' . $order->getBillingAddress()->toJson() . PHP_EOL;
+            }
 
             $historyCollection = $this->historyCollectionFactory->create()
                 ->addFieldToFilter('parent_id', ['eq' => $orderId]);
