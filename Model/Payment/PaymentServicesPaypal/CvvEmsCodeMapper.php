@@ -12,45 +12,24 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     public $allowedMethods = ['payment_services_paypal_hosted_fields', 'payment_services_paypal_smart_buttons'];
 
     /**
-     * List of mapping CVV codes
-     *
-     * @var array
-     */
-    private static $cvvMap = [
-        'E' => 'E',
-        'I' => 'I',
-        'M' => 'M',
-        'N' => 'N',
-        'P' => 'P',
-        'S' => 'N',
-        'U' => 'U',
-        'X' => 'X'
-    ];
-
-    /**
      * Gets payment CVV verification code.
      *
+     * Returns the raw PayPal CVV response code (E, I, M, N, P, S, U, X).
+     *
      * @param \Magento\Sales\Model\Order $order
-     * @return string
+     * @return string|null
      * @throws \InvalidArgumentException If specified order payment has different payment method code.
      */
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $cvvStatus = $order->getPayment()->getCcCidStatus();
 
-        if (isset($cvvStatus)) {
-            if (in_array($cvvStatus, array_keys(self::$cvvMap))) {
-                $cvvStatus =  self::$cvvMap[$cvvStatus];
-            } else {
-                $cvvStatus = null;
-            }
-
-            $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);
+        if (!empty($cvvStatus)) {
+            $message = 'CVV found on payment mapper: ' . $cvvStatus;
             $this->logger->debug($message, ['entity' => $order]);
-        } else {
-            $cvvStatus = parent::getPaymentData($order);
+            return $cvvStatus;
         }
 
-        return $cvvStatus;
+        return parent::getPaymentData($order);
     }
 }

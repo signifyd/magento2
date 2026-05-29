@@ -14,17 +14,16 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
     /**
      * Gets payment AVS verification code.
      *
+     * Returns the raw Payflow Link AVS response code from the PROCAVS field.
+     *
      * @param \Magento\Sales\Model\Order $order
-     * @return string
+     * @return string|null
      * @throws \InvalidArgumentException If specified order payment has different payment method code.
      */
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $avsStatus = $this->getSignifydPaymentData('PROCAVS');
-
-        if ($this->validate($avsStatus) == false) {
-            $avsStatus = null;
-        }
+        $avsStatus = empty($avsStatus) ? null : $avsStatus;
 
         $message = 'AVS found on payment mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
         $this->logger->debug($message, ['entity' => $order]);

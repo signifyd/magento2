@@ -7,16 +7,6 @@ use Signifyd\Connect\Model\Payment\DataMapper;
 class AvsEmsCodeMapper extends DataMapper
 {
     /**
-     * Valid expected response codes
-     *
-     * @var array
-     */
-    public $validAvsResponseCodes = [
-        'X', 'Y', 'A', 'W', 'Z', 'N', 'U', 'R',
-        'E', 'S', 'D', 'M', 'B', 'P', 'C', 'I', 'G'
-    ];
-
-    /**
      * Gets payment AVS verification code.
      *
      * @param \Magento\Sales\Model\Order $order
@@ -25,7 +15,7 @@ class AvsEmsCodeMapper extends DataMapper
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $avsStatus = $order->getPayment()->getCcAvsStatus();
-        $avsStatus = $this->validate($avsStatus) ? $avsStatus : null;
+        $avsStatus = empty($avsStatus) ? null : $avsStatus;
 
         $message = 'AVS found on base mapper: ' . (empty($avsStatus) ? 'false' : $avsStatus);
         $this->logger->debug($message, ['entity' => $order]);
@@ -34,29 +24,18 @@ class AvsEmsCodeMapper extends DataMapper
     }
 
     /**
-     * Validate response
-     *
-     * @param mixed $response
-     * @return bool
-     */
-    public function validate($response)
-    {
-        return in_array($response, $this->validAvsResponseCodes);
-    }
-
-    /**
      * Get payment data from gateway response method.
      *
      * @param \Signifyd\Models\Payment\Response\ResponseInterface $response
-     * @return string
+     * @return string|null
      */
     public function getPaymentDataFromGatewayResponse(\Signifyd\Models\Payment\Response\ResponseInterface $response)
     {
         $avsStatus = $response->getAvs();
 
-        $message = 'Response AVS: ' . ($response->getAvs());
+        $message = 'Response AVS: ' . $avsStatus;
         $this->logger->debug($message);
 
-        return ($this->validate($avsStatus) ? $avsStatus : null);
+        return empty($avsStatus) ? null : $avsStatus;
     }
 }
