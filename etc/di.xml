@@ -76,6 +76,18 @@
         </arguments>
     </type>
 
+    <!-- PreAuth checkout payment details handlers -->
+    <type name="Signifyd\Connect\Observer\PreAuth">
+        <arguments>
+            <argument name="defaultCheckoutPaymentDetailsHandler" xsi:type="object">Signifyd\Connect\Model\PreAuth\Base\Handler</argument>
+            <argument name="checkoutPaymentDetailsHandlers" xsi:type="array">
+                <item name="adyen_oneclick" xsi:type="object">Signifyd\Connect\Model\PreAuth\AdyenOneclick\Handler</item>
+                <item name="authnetcim" xsi:type="object">Signifyd\Connect\Model\PreAuth\Authnetcim\Handler</item>
+                <item name="rootways_authorizecim_option" xsi:type="object">Signifyd\Connect\Model\PreAuth\RootwaysAuthorizeCim\Handler</item>
+            </argument>
+        </arguments>
+    </type>
+
     <!-- Payment Mapping factory -->
     <type name="Signifyd\Connect\Model\MappingVerificationFactory">
         <arguments>
