@@ -79,9 +79,39 @@ define(
                 }
             }).mount('#cardContainer');
         },
-        //Mixin for adyen extension 8.x.x version
+        // Mixin for Adyen extension version 8.x.x or higher
         renderCCPaymentMethod: function () {
-            if (window.checkoutConfig.signifyd.isAdyenGreaterThanEightEighteen) {
+            if (window.checkoutConfig.signifyd.isAdyenGreaterThanTen) {
+                let self = this;
+
+                if (!self.getClientKey) {
+                    return false;
+                }
+
+                if (!self.cardComponent) {
+                    let componentConfig = self.buildComponentConfiguration();
+
+                    componentConfig.onBinValue = function (binData) {
+                        if (binData.binValue.length == 6) {
+                            binValue = binData.binValue;
+                        }
+                    };
+                    componentConfig.onFieldValid = function (data) {
+                        if (data.fieldType === 'encryptedCardNumber') {
+                            cardLast4 = data.endDigits;
+                        }
+                    };
+
+                    self.cardComponent = adyenCheckout.mountPaymentMethodComponent(
+                        self.checkoutComponent,
+                        'card',
+                        componentConfig,
+                        '#cardContainer'
+                    )
+                }
+
+                return true
+            } else if (window.checkoutConfig.signifyd.isAdyenGreaterThanEightEighteen) {
                 let self = this;
                 if (!self.getClientKey) {
                     return false;
