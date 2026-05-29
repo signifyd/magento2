@@ -80,10 +80,9 @@ class AsyncChecker extends BaseAsyncChecker
     /**
      * Get async payment methods from store configs
      *
-     * @param mixed $paymentMethod
      * @return bool
      */
-    public function isModuleVersionAtLeast340()
+    public function isModuleVersionAtLeast340(): bool
     {
         try {
             $stripeVersion = \StripeIntegration\Payments\Model\Config::$moduleVersion;

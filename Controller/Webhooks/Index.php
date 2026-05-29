@@ -291,8 +291,6 @@ class Index implements HttpPostActionInterface
         $case = $this->casedataFactory->create();
 
         try {
-            $httpCode = null;
-
             try {
                 $this->casedataResourceModel->loadForUpdate($case, (string) $caseId, 'code');
             } catch (\Exception $e) {
@@ -423,8 +421,7 @@ class Index implements HttpPostActionInterface
                 $context['entity'] = $case;
             }
 
-            $httpCode = empty($httpCode) ? 403 : $httpCode;
-            $result->setHttpResponseCode($httpCode);
+            $result->setHttpResponseCode(403);
             $result->setData(['message' =>$e->getMessage()]);
             $this->logger->error("WEBHOOK: {$e->getMessage()}", $context);
             return $result;
@@ -437,8 +434,7 @@ class Index implements HttpPostActionInterface
                 $context['entity'] = $case;
             }
 
-            $httpCode = empty($httpCode) ? 403 : $httpCode;
-            $result->setHttpResponseCode($httpCode);
+            $result->setHttpResponseCode(403);
             $result->setData(['message' =>$e->getMessage()]);
             $this->logger->error("WEBHOOK: {$e->getMessage()}", $context);
             return $result;
