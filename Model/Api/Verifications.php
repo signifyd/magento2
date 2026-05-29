@@ -42,7 +42,14 @@ class Verifications
     public function __invoke(Order $order)
     {
         $verifications = [];
-        $verifications['avsResponseCode'] = $this->getAvsCode($order);
+        $avsData = $this->getAvsCode($order);
+
+        if (is_array($avsData)) {
+            $verifications['avsResponse'] = $avsData;
+        } else {
+            $verifications['avsResponseCode'] = $avsData;
+        }
+
         $verifications['cvvResponseCode'] = $this->getCvvCode($order);
         return $verifications;
     }
@@ -50,8 +57,12 @@ class Verifications
     /**
      * Gets AVS code for order payment method.
      *
+     * Returns a string (single raw code) for gateways that provide one AVS result,
+     * or an array with 'addressMatchCode' and 'zipMatchCode' keys for gateways
+     * that provide street and postal code checks separately.
+     *
      * @param Order $order
-     * @return string
+     * @return string|array|null
      */
     public function getAvsCode(Order $order)
     {
@@ -67,18 +78,21 @@ class Verifications
 
             $avsCode = $avsAdapter->getData($order);
 
-            if (isset($avsCode) === false) {
+            if (isset($avsCode) === false || $avsCode === null) {
                 return null;
             }
 
-            $avsCode = trim(strtoupper($avsCode));
-            return $avsCode;
+            if (is_array($avsCode)) {
+                return $avsCode;
+            }
+
+            return trim(strtoupper((string) $avsCode));
         } catch (Exception $e) {
             $this->logger->error(
                 'Error fetching AVS code: ' . $e->getMessage(),
                 ['entity' => $order]
             );
-            return '';
+            return null;
         }
     }
 

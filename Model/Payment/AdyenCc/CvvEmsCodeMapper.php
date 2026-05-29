@@ -12,42 +12,26 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     public $allowedMethods = ['adyen_cc','adyen_pay_by_link'];
 
     /**
-     * List of mapping CVV codes
-     *
-     * @var array
-     */
-    private static $cvvMap = [
-        '1' => 'M',
-        '2' => 'N',
-        '3' => 'P',
-        '4' => 'S',
-        '5' => 'U',
-    ];
-
-    /**
      * Gets payment CVV verification code.
      *
+     * Returns the raw Adyen numeric CVC result code (e.g. "1", "2", "3", "4", "5").
+     *
      * @param \Magento\Sales\Model\Order $order
-     * @return string
+     * @return string|null
      * @throws \InvalidArgumentException If specified order payment has different payment method code.
      */
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $additionalInfo = $order->getPayment()->getAdditionalInformation();
-        $key = null;
+        $cvvStatus = null;
 
         if (isset($additionalInfo['adyen_cvc_result']) && empty($additionalInfo['adyen_cvc_result']) === false) {
-            $key = explode(" ", $additionalInfo['adyen_cvc_result']);
-            $key = array_shift($key);
-        } elseif (isset($additionalInfo['additionalData']) &&
-            isset($additionalInfo['additionalData']['cvcResult']) &&
+            $parts = explode(" ", $additionalInfo['adyen_cvc_result']);
+            $cvvStatus = array_shift($parts);
+        } elseif (isset($additionalInfo['additionalData']['cvcResult']) &&
             empty($additionalInfo['additionalData']['cvcResult']) === false) {
-            $keyArray = explode(" ", $additionalInfo['additionalData']['cvcResult']);
-            $key = $keyArray[0];
-        }
-
-        if (isset($key) && isset(self::$cvvMap[$key]) && $this->validate(self::$cvvMap[$key])) {
-            $cvvStatus = self::$cvvMap[$key];
+            $parts = explode(" ", $additionalInfo['additionalData']['cvcResult']);
+            $cvvStatus = $parts[0];
         }
 
         $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);

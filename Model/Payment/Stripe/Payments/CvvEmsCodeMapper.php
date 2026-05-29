@@ -14,44 +14,23 @@ class CvvEmsCodeMapper extends Base_CvvEmsCodeMapper
     public $allowedMethods = ['stripe_payments'];
 
     /**
-     * List of mapping CVV codes
-     *
-     * Keys are concatenation cvc_check field from Stripe charge object
-     *
-     * @var array
-     */
-    public $cvvMap = [
-        'pass' => 'M',
-        'fail' => 'N',
-        'unchecked' => 'P',
-        'unavailable' => 'U'
-    ];
-
-    /**
      * Gets payment CVV verification code.
      *
+     * Returns the raw Stripe CVC check value (pass, fail, unchecked, unavailable).
+     *
      * @param \Magento\Sales\Model\Order $order
-     * @return bool|mixed|string
+     * @return string|null
      */
     public function getPaymentData(\Magento\Sales\Model\Order $order)
     {
         $charge = $this->getCharge($order);
+        $cvvStatus = null;
 
         if (is_object($charge) &&
-            isset($charge->payment_method_details) &&
-            isset($charge->payment_method_details->card) &&
-            isset($charge->payment_method_details->card->checks) &&
             isset($charge->payment_method_details->card->checks->cvc_check)
         ) {
             $cvvCheck = $charge->payment_method_details->card->checks->cvc_check;
-
-            if (isset($this->cvvMap[$cvvCheck])) {
-                $cvvStatus = $this->cvvMap[$cvvCheck];
-            } else {
-                $cvvStatus = null;
-            }
-        } else {
-            $cvvStatus = null;
+            $cvvStatus = empty($cvvCheck) ? null : $cvvCheck;
         }
 
         $message = 'CVV found on payment mapper: ' . (empty($cvvStatus) ? 'false' : $cvvStatus);
