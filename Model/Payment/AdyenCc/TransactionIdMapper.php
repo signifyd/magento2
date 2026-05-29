@@ -9,7 +9,7 @@ class TransactionIdMapper extends Base_TransactionIdMapper
     /**
      * @var string[]
      */
-    public $allowedMethods = ['adyen_cc','adyen_pay_by_link'];
+    public $allowedMethods = ['adyen_cc','adyen_pay_by_link', 'adyen_applepay'];
 
     /**
      * Get transaction ID from database for Authorize.Net

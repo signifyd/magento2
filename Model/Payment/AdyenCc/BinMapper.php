@@ -9,7 +9,7 @@ class BinMapper extends Base_BinMapper
     /**
      * @var string[]
      */
-    public $allowedMethods = ['adyen_cc','adyen_pay_by_link'];
+    public $allowedMethods = ['adyen_cc','adyen_pay_by_link', 'adyen_applepay'];
 
     /**
      * Get payment data method.

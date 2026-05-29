@@ -103,6 +103,17 @@ git apply pre-auth-authorizenet.patch
     - Expiry date: yes
     - Cardholder name: no
 
+### Adyen Apple Pay
+#### Link to the extension https://github.com/Adyen/adyen-magento2
+#### Tested on 9.5.3
+
+- Call transaction API on failure: yes
+- Payment data available:
+    - Bin: no
+    - Last4: no
+    - Expiry date: no
+    - Cardholder name: no
+
 ### Braintree
 #### Magento built in
 #### Tested on 4.7.0

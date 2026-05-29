@@ -9,7 +9,7 @@ class AvsEmsCodeMapper extends Base_AvsEmsCodeMapper
     /**
      * @var string[]
      */
-    public $allowedMethods = ['adyen_cc','adyen_pay_by_link'];
+    public $allowedMethods = ['adyen_cc','adyen_pay_by_link', 'adyen_applepay'];
 
     /**
      * List of mapping AVS codes

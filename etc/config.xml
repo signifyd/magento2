@@ -53,6 +53,16 @@
                     <signifyd_transaction_id_adapter>Signifyd\Connect\Model\Payment\AdyenCc\TransactionIdMapper</signifyd_transaction_id_adapter>
                 </adyen_cc>
 
+                <adyen_applepay>
+                    <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\AdyenCc\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
+                    <signifyd_bin_adapter>Signifyd\Connect\Model\Payment\AdyenCc\BinMapper</signifyd_bin_adapter>
+                    <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\AdyenCc\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
+                    <signifyd_exp_month_adapter>Signifyd\Connect\Model\Payment\AdyenCc\ExpMonthMapper</signifyd_exp_month_adapter>
+                    <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\AdyenCc\ExpYearMapper</signifyd_exp_year_adapter>
+                    <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\AdyenCc\Last4Mapper</signifyd_last4_adapter>
+                    <signifyd_transaction_id_adapter>Signifyd\Connect\Model\Payment\AdyenCc\TransactionIdMapper</signifyd_transaction_id_adapter>
+                </adyen_applepay>
+
                 <adyen_hpp>
                     <signifyd_payment_method_adapter>Signifyd\Connect\Model\Payment\AdyenHpp\PaymentMethodMapper</signifyd_payment_method_adapter>
                 </adyen_hpp>
