@@ -6,12 +6,10 @@
 
 namespace Signifyd\Connect\Observer;
 
-use Magento\Framework\App\Response\Http;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Exception\StateException;
 use Signifyd\Connect\Model\Registry;
 use Signifyd\Connect\Model\JsonSerializer;
 use Magento\Sales\Model\Order;
