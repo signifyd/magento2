@@ -6,10 +6,12 @@
 
 namespace Signifyd\Connect\Observer;
 
+use Magento\Framework\App\Response\Http;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\StateException;
 use Signifyd\Connect\Model\Registry;
 use Signifyd\Connect\Model\JsonSerializer;
 use Magento\Sales\Model\Order;
@@ -360,6 +362,10 @@ class Purchase implements ObserverInterface
                 }
 
                 $this->casedataResourceModel->save($case);
+
+                /** @var \Signifyd\Connect\Model\Casedata $case */
+                $case = $this->casedataFactory->create();
+                $this->casedataResourceModel->loadForUpdate($case, $order->getId(), 'order_id');
             } elseif ($case->getData('magento_status') != Casedata::NEW) {
                 if ($isOrderProcessedByAmazon && $case->getMagentoStatus() === Casedata::AWAITING_PSP) {
                     // Hold order after Amazon capture the payment
@@ -492,15 +498,15 @@ class Purchase implements ObserverInterface
                 $case->setEntries('is_holded', 1);
             }
 
-            $this->casedataResourceModel->save($case);
-
             // Initial hold order
             $this->holdOrder($order, $case, $isPassive);
 
             if ($isPassive === false) {
                 $this->signifydOrderResourceModel->save($order);
             }
-        } catch (\Exception $ex) {
+
+            $this->casedataResourceModel->save($case);
+        } catch (\Exception | \Error $ex) {
             $context = [];
 
             if ($order instanceof Order) {
