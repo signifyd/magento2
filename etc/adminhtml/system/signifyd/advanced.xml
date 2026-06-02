@@ -3,6 +3,13 @@
     <group id="advanced" translate="label comment" type="text" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
         <label><![CDATA[Order Workflow
                     <p style="font-size: 12px;font-weight: normal;">Enabling any of the order workflows below will place all newly created orders "on-hold" until Signifyd has reviewed the order.</p>]]></label>
+        <field id="preauth_order_workflow_notice" type="note" translate="label" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Pre Auth orders are not affected by Order Workflow configurations</label>
+            <frontend_model>Signifyd\Connect\Block\Adminhtml\System\Config\Field\PreAuthNotice</frontend_model>
+            <depends>
+                <field id="signifyd/general/policy_name">PRE_AUTH</field>
+            </depends>
+        </field>
         <field id="guarantee_positive_action" translate="label comment" type="select" sortOrder="36" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Approved Guarantees</label>
             <comment>Select what action should be taken in Magento when an order is approved for guarantee.</comment>
