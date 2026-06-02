@@ -358,6 +358,9 @@ class Purchase implements ObserverInterface
                 }
 
                 $this->casedataRepository->save($case);
+
+                /** @var \Signifyd\Connect\Model\Casedata $case */
+                $case = $this->casedataRepository->getForUpdate($order->getId(), 'order_id');
             } elseif ($case->getData('magento_status') != Casedata::NEW) {
                 if ($isOrderProcessedByAmazon && $case->getMagentoStatus() === Casedata::AWAITING_PSP) {
                     // Hold order after Amazon capture the payment
@@ -497,7 +500,7 @@ class Purchase implements ObserverInterface
                 $this->signifydOrderResourceModel->save($order);
             }
 
-            $this->casedataResourceModel->save($case);
+            $this->casedataRepository->save($case);
         } catch (\Exception | \Error $ex) {
             $context = [];
 

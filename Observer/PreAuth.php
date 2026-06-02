@@ -24,6 +24,7 @@ use Magento\Framework\App\Request\Http as RequestHttp;
 use Signifyd\Connect\Model\JsonSerializer;
 use Signifyd\Connect\Model\Api\Recipient;
 use Signifyd\Connect\Model\PreAuth\CheckoutPaymentDetailsMapperInterface;
+use Signifyd\Connect\Model\Registry;
 
 class PreAuth implements ObserverInterface
 {
@@ -110,8 +111,6 @@ class PreAuth implements ObserverInterface
     /**
      * @var CheckoutPaymentDetailsMapperInterface
      */
-    public $defaultCheckoutPaymentDetailsHandler;
-
     public $defaultCheckoutPaymentDetailsHandler;
 
     public $checkoutPaymentDetailsHandlers;
