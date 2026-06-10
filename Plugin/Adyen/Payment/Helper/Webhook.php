@@ -101,6 +101,9 @@ class Webhook
             return $proceed($notification);
         }
 
+        $proceedCalled = false;
+        $returnValue = null;
+
         try {
             $isHoldedBeforeAdyenProcess = $order->canUnhold();
 
@@ -109,6 +112,7 @@ class Webhook
                 $this->orderResourceModel->save($order);
             }
 
+            $proceedCalled = true;
             $returnValue = $proceed($notification);
 
             $order = $adyenOrderHelper->getOrderByIncrementId($notification->getMerchantReference());
@@ -148,10 +152,10 @@ class Webhook
         $case->setEntries('processed_by_gateway', true);
         $this->casedataResourceModel->save($case);
 
-        if (isset($returnValue)) {
+        if ($proceedCalled) {
             return $returnValue;
-        } else {
-            return $proceed($notification);
         }
+
+        return $proceed($notification);
     }
 }
