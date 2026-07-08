@@ -5,6 +5,7 @@ namespace Signifyd\Connect\Model\Casedata;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Signifyd\Connect\Api\CasedataRepositoryInterface;
+use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Connect\Model\ResourceModel\Casedata\CollectionFactory as CasedataCollectionFactory;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Helper\ConfigHelper;
@@ -32,6 +33,11 @@ class FilterCasesByStatus extends AbstractHelper
     public $configHelper;
 
     /**
+     * @var CasedataResourceModel
+     */
+    public $casedataResourceModel;
+
+    /**
      * FilterCasesByStatus constructor.
      *
      * @param Context $context
@@ -39,13 +45,15 @@ class FilterCasesByStatus extends AbstractHelper
      * @param CasedataCollectionFactory $casedataCollectionFactory
      * @param Logger $logger
      * @param ConfigHelper $configHelper
+     * @param CasedataResourceModel $casedataResourceModel
      */
     public function __construct(
         Context $context,
         CasedataRepositoryInterface $casedataRepository,
         CasedataCollectionFactory $casedataCollectionFactory,
         Logger $logger,
-        ConfigHelper $configHelper
+        ConfigHelper $configHelper,
+        CasedataResourceModel $casedataResourceModel
     ) {
         parent::__construct($context);
 
@@ -53,6 +61,7 @@ class FilterCasesByStatus extends AbstractHelper
         $this->casedataCollectionFactory = $casedataCollectionFactory;
         $this->logger = $logger;
         $this->configHelper = $configHelper;
+        $this->casedataResourceModel = $casedataResourceModel;
     }
 
     /**

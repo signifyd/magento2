@@ -253,7 +253,6 @@ Here is a list of the payment methods that have a payment data collected. If the
 - AVS Response Code
 - Last4
 - Transaction ID
-- Last4
 - Expiry Month
 - Expiry Year
 
