@@ -496,11 +496,11 @@ class Purchase implements ObserverInterface
             // Initial hold order
             $this->holdOrder($order, $case, $isPassive);
 
+            $this->casedataRepository->save($case);
+
             if ($isPassive === false) {
                 $this->signifydOrderResourceModel->save($order);
             }
-
-            $this->casedataRepository->save($case);
         } catch (\Exception | \Error $ex) {
             $context = [];
 
