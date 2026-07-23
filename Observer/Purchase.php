@@ -373,6 +373,21 @@ class Purchase implements ObserverInterface
                 return;
             } elseif ($case->isEmpty() === false && $isPassive) {
                 return;
+            } else {
+                // Case exists with NEW status - verify lock to prevent concurrent processing
+                try {
+                    $case = $this->casedataRepository->getForUpdate($order->getId(), 'order_id');
+                } catch (\Magento\Framework\Exception\StateException $e) {
+                    $this->logger->debug(
+                        'Case for order ' . $incrementId . ' is already being processed, skipping',
+                        ['entity' => $order]
+                    );
+                    return;
+                }
+
+                if ($case->isEmpty() || $case->getData('magento_status') != Casedata::NEW) {
+                    return;
+                }
             }
 
             // Check if a payment is available for this order yet
