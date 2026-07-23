@@ -285,6 +285,12 @@ class UpdateOrder
             if ($completeCase) {
                 $case->setMagentoStatus(Casedata::COMPLETED_STATUS)
                     ->setUpdated();
+
+                // A resolved case must never be re-held by a late Stripe
+                // charge.succeeded event: clear the deferred-hold flag.
+                if ($case->getEntries('is_holded') == 1) {
+                    $case->unsetEntries('is_holded');
+                }
             }
 
             if ($enableTransaction) {

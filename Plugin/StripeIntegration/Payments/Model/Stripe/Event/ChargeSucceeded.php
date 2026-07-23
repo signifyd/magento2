@@ -7,6 +7,7 @@ use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
+use Signifyd\Connect\Model\Casedata;
 use Signifyd\Connect\Model\CasedataFactory;
 use StripeIntegration\Payments\Model\Stripe\Event\ChargeSucceeded as StripeChargeSucceeded;
 
@@ -91,6 +92,17 @@ class ChargeSucceeded
             $case = $this->casedataRepository->getByOrderId($order->getId());
 
             if ($case->isEmpty()) {
+                return $result;
+            }
+
+            // The Signifyd decision webhook may be processed before Stripe's
+            // charge.succeeded event. If the case is already completed, the
+            // decision has been reconciled and the order must NOT be re-held.
+            if ($case->getEntries('is_holded') == 1
+                && $case->getMagentoStatus() === Casedata::COMPLETED_STATUS
+            ) {
+                $case->unsetEntries('is_holded');
+                $this->casedataRepository->save($case);
                 return $result;
             }
 
