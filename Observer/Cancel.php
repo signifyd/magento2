@@ -61,6 +61,9 @@ class Cancel implements ObserverInterface
             /** @var Order $order */
             $order = $observer->getEvent()->getOrder();
 
+            /** @var \Magento\Sales\Model\Order\Creditmemo $creditmemo */
+            $creditmemo = null;
+
             if ($order instanceof Order == false) {
                 /** @var \Magento\Sales\Model\Order\Payment $payment */
                 $payment = $observer->getEvent()->getPayment();
@@ -86,7 +89,7 @@ class Cancel implements ObserverInterface
                 return;
             }
 
-            $this->client->cancelCaseOnSignifyd($order);
+            $this->client->cancelCaseOnSignifyd($order, $creditmemo);
         } catch (\Exception $ex) {
             $context = [];
 

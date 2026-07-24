@@ -73,6 +73,7 @@
             <argument name="binDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\BinMapper</argument>
             <argument name="transactionIdDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\TransactionIdMapper</argument>
             <argument name="asyncCheckDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\AsyncChecker</argument>
+            <argument name="recordReturnCheckDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\RecordReturnChecker</argument>
         </arguments>
     </type>
 
