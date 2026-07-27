@@ -7,6 +7,7 @@ use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Magento\Framework\ObjectManagerInterface;
 use Signifyd\Connect\Model\CasedataFactory;
+use Signifyd\Connect\Model\Registry;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Adyen\Payment\Helper\Webhook as AdyenWebhook;
 
@@ -42,6 +43,11 @@ class Webhook
     public $objectManagerInterface;
 
     /**
+     * @var Registry
+     */
+    public $registry;
+
+    /**
      * Webhook constructor.
      *
      * @param Logger $logger
@@ -50,6 +56,7 @@ class Webhook
      * @param OrderResourceModel $orderResourceModel
      * @param OrderHelper $orderHelper
      * @param ObjectManagerInterface $objectManagerInterface
+     * @param Registry $registry
      */
     public function __construct(
         Logger $logger,
@@ -57,7 +64,8 @@ class Webhook
         CasedataResourceModel $casedataResourceModel,
         OrderResourceModel $orderResourceModel,
         OrderHelper $orderHelper,
-        ObjectManagerInterface $objectManagerInterface
+        ObjectManagerInterface $objectManagerInterface,
+        Registry $registry
     ) {
         $this->logger = $logger;
         $this->casedataFactory = $casedataFactory;
@@ -65,6 +73,7 @@ class Webhook
         $this->orderResourceModel = $orderResourceModel;
         $this->orderHelper = $orderHelper;
         $this->objectManagerInterface = $objectManagerInterface;
+        $this->registry = $registry;
     }
 
     /**
@@ -77,6 +86,24 @@ class Webhook
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      */
     public function aroundProcessNotification(AdyenWebhook $subject, callable $proceed, $notification)
+    {
+        $this->registry->setData('signifyd_notification_event_code', $notification->getEventCode());
+
+        try {
+            return $this->doAroundProcessNotification($subject, $proceed, $notification);
+        } finally {
+            $this->registry->setData('signifyd_notification_event_code');
+        }
+    }
+
+    /**
+     * @param AdyenWebhook $subject
+     * @param callable $proceed
+     * @param mixed $notification
+     * @return mixed
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     */
+    private function doAroundProcessNotification(AdyenWebhook $subject, callable $proceed, $notification)
     {
         if ($notification->getMerchantReference() === null) {
             return $proceed($notification);

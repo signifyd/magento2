@@ -82,6 +82,7 @@
 
                 <adyen_klarna_account>
                     <signifyd_async_checker>Signifyd\Connect\Model\Payment\AdyenKlarnaAccount\AsyncChecker</signifyd_async_checker>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\AdyenCc\RecordReturnChecker</signifyd_recordreturn_checker>
                 </adyen_klarna_account>
 
                 <authorizenet_directpost>
