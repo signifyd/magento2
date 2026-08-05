@@ -25,6 +25,7 @@
         <policy id="connect-src">
             <values>
                 <value id="signifyd-imgs" type="host">https://imgs.signifyd.com</value>
+                <value id="signifyd-dp" type="host">https://dp.signifyd.com</value>
             </values>
         </policy>
     </policies>
