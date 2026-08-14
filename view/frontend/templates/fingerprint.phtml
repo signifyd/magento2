@@ -43,14 +43,13 @@ $scriptString = <<<script
                                 $.cookie('signifyd-' + dataOrderSessionId) !== 'null'
                             ) {  
                                 console.log('Fingerprint already sent');  
+                                if (typeof me.observing != "undefined") {
+                                    me.observing.dispose();
+                                }
+                                return true;
                             } else {                      
                                 console.log('Sending fingerprint...');
                                 
-                                $.cookie('signifyd-' + dataOrderSessionId, true, {
-                                    expires: 0.5,
-                                    path: '/'
-                                });
-                
                                 me.callScript(dataOrderSessionId);
                                 if (typeof me.observing != "undefined") {
                                     me.observing.dispose();
@@ -63,14 +62,52 @@ $scriptString = <<<script
                             return false;
                         }
                     },
+                    markProfilingDone: function(dataOrderSessionId) {
+                        if (this.profilingDone === true) {
+                            return;
+                        }
+
+                        this.profilingDone = true;
+
+                        $.cookie('signifyd-' + dataOrderSessionId, true, {
+                            expires: 0.5,
+                            path: '/'
+                        });
+                    },
                     callScript: function(dataOrderSessionId) {
+                        var me = this;
                         var signifydScript = document.createElement('script');
+
+                        window.tmx_profiling_complete = function() {
+                            console.log('Fingerprint profiling completed');
+                            me.markProfilingDone(dataOrderSessionId);
+                        };
+
+                        document.addEventListener('sigScriptError', function(event) {
+                            me.scriptFailed = true;
+                            console.log('Fingerprint script error');
+                            console.log(event.detail);
+                        });
+
                         signifydScript.setAttribute('async', true);
                         signifydScript.setAttribute('type', 'text/javascript');
                         signifydScript.setAttribute('id', 'sig-api');
                         signifydScript.setAttribute('data-order-session-id', dataOrderSessionId);
+                        signifydScript.onload = function() {
+                            setTimeout(function() {
+                                if (me.scriptFailed !== true &&
+                                    typeof window.sigScriptLoader !== 'undefined' &&
+                                    window.sigScriptLoader.isInitialized === true
+                                ) {
+                                    me.markProfilingDone(dataOrderSessionId);
+                                }
+                            }, 10000);
+                        };
+                        signifydScript.onerror = function() {
+                            console.log('Fingerprint script failed to load, will retry on next page view');
+                        };
                         signifydScript.setAttribute('src', 'https://cdn-scripts.signifyd.com/api/script-tag.js');
-                        $("head").append(signifydScript);
+                        document.head.appendChild(signifydScript);
                     }
                 }
             };
