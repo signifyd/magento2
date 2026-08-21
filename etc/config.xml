@@ -155,6 +155,7 @@
                     <signifyd_exp_month_adapter>Signifyd\Connect\Model\Payment\Stripe\Payments\ExpMonthMapper</signifyd_exp_month_adapter>
                     <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\Stripe\Payments\ExpYearMapper</signifyd_exp_year_adapter>
                     <signifyd_async_checker>Signifyd\Connect\Model\Payment\Stripe\Payments\AsyncChecker</signifyd_async_checker>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Stripe\Payments\RecordReturnChecker</signifyd_recordreturn_checker>
                 </stripe_payments>
 
                 <payment_services_paypal_hosted_fields>

@@ -138,6 +138,10 @@
         <plugin name="Signifyd_Connect_Plugin_StripeIntegration_Payments_Helper_Generic" type="\Signifyd\Connect\Plugin\StripeIntegration\Payments\Helper\Generic" />
     </type>
 
+    <type name="StripeIntegration\Payments\Helper\Webhooks">
+        <plugin name="Signifyd_Connect_Plugin_StripeIntegration_Payments_Helper_Webhooks" type="\Signifyd\Connect\Plugin\StripeIntegration\Payments\Helper\Webhooks" />
+    </type>
+
     <type name="StripeIntegration\Payments\Helper\Order">
         <plugin name="Signifyd_Connect_Plugin_StripeIntegration_Payments_Helper_Order" type="\Signifyd\Connect\Plugin\StripeIntegration\Payments\Helper\Order" />
     </type>
