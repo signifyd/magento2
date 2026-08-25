@@ -3,6 +3,7 @@
 namespace Signifyd\Connect\Model\Api\Core;
 
 use Magento\Framework\Filesystem\DirectoryList;
+use Signifyd\Connect\Model\Api\ChargebackFactory;
 use Signifyd\Connect\Model\JsonSerializer;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
@@ -11,6 +12,7 @@ use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
+use Signifyd\Core\Api\ChargebackApiFactory;
 use Signifyd\Core\Api\CheckoutApiFactory;
 use Signifyd\Core\Api\SaleApiFactory;
 use Signifyd\Core\Api\WebhooksApiFactory;
@@ -85,6 +87,16 @@ class Client
     public $webhooksV2ApiFactory;
 
     /**
+     * @var ChargebackApiFactory
+     */
+    public $chargebackApiFactory;
+
+    /**
+     * @var ChargebackFactory
+     */
+    public $chargebackFactory;
+
+    /**
      * Array of SignifydAPI, one for each store code
      *
      * @var array
@@ -107,6 +119,8 @@ class Client
      * @param CheckoutApiFactory $checkoutApiFactory
      * @param WebhooksApiFactory $webhooksApiFactory
      * @param WebhooksV2ApiFactory $webhooksV2ApiFactory
+     * @param ChargebackApiFactory $chargebackApiFactory
+     * @param ChargebackFactory $chargebackFactory
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -121,7 +135,9 @@ class Client
         SaleApiFactory $saleApiFactory,
         CheckoutApiFactory $checkoutApiFactory,
         WebhooksApiFactory $webhooksApiFactory,
-        WebhooksV2ApiFactory $webhooksV2ApiFactory
+        WebhooksV2ApiFactory $webhooksV2ApiFactory,
+        ChargebackApiFactory $chargebackApiFactory,
+        ChargebackFactory $chargebackFactory
     ) {
         $this->configHelper = $configHelper;
         $this->logger = $logger;
@@ -136,6 +152,8 @@ class Client
         $this->checkoutApiFactory = $checkoutApiFactory;
         $this->webhooksApiFactory = $webhooksApiFactory;
         $this->webhooksV2ApiFactory = $webhooksV2ApiFactory;
+        $this->chargebackApiFactory = $chargebackApiFactory;
+        $this->chargebackFactory = $chargebackFactory;
     }
 
     /**
@@ -426,6 +444,17 @@ class Client
     }
 
     /**
+     * Get signifyd chargeback api method.
+     *
+     * @param ?\Magento\Framework\Model\AbstractModel $entity
+     * @return \Signifyd\Core\Api\ChargebackApi
+     */
+    public function getSignifydChargebackApi(?\Magento\Framework\Model\AbstractModel $entity = null)
+    {
+        return $this->getSignifydApi('chargeback', $entity);
+    }
+
+    /**
      * Get signifyd api method.
      *
      * @param string $type
@@ -461,9 +490,70 @@ class Client
                 case 'webhookv2':
                     $this->signifydAPI[$apiId] = $this->webhooksV2ApiFactory->create(['args' => $args]);
                     break;
+
+                case 'chargeback':
+                    $this->signifydAPI[$apiId] = $this->chargebackApiFactory->create(['args' => $args]);
+                    break;
             }
         }
 
         return $this->signifydAPI[$apiId];
+    }
+
+    public function createChargeback($order, array $chargebackData)
+    {
+        $chargebackPayload = ($this->chargebackFactory->create())($order, $chargebackData);
+
+        $this->logger->info(
+            "Chargeback: sending payload for order {$order->getIncrementId()}: " . json_encode($chargebackPayload),
+            ['entity' => $order]
+        );
+
+        /** @var \Signifyd\Connect\Model\Casedata $case */
+        $case = $this->casedataRepository->getByOrderId($order->getId());
+
+        if ($case->isEmpty() || empty($case->getCode())) {
+            $this->logger->debug(
+                'Chargeback skipped: case not found for order ' . $order->getIncrementId(),
+                ['entity' => $order]
+            );
+            return false;
+        }
+
+        $signifydCaseId = trim((string) $case->getCode());
+
+        try {
+            $response = $this->getSignifydChargebackApi($order)
+                ->createChargeback($signifydCaseId, $chargebackPayload);
+        } catch (\Exception $e) {
+            $this->logger->error(
+                "Chargeback: SDK request failed for order {$order->getIncrementId()}: " . $e->getMessage(),
+                ['entity' => $order]
+            );
+            return false;
+        }
+
+        if ($response === false) {
+            $this->logger->error(
+                "Chargeback: API call failed for order {$order->getIncrementId()}",
+                ['entity' => $order]
+            );
+            return false;
+        }
+
+        if ($response->isError()) {
+            $this->logger->error(
+                "Chargeback: API returned error for order {$order->getIncrementId()}: " . $response->getErrorMessage(),
+                ['entity' => $order]
+            );
+            return false;
+        }
+
+        $this->logger->info(
+            "Chargeback: successfully submitted for order {$order->getIncrementId()}",
+            ['entity' => $order]
+        );
+
+        return $response;
     }
 }
