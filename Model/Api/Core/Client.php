@@ -128,8 +128,8 @@ class Client
      * @param WebhooksApiFactory $webhooksApiFactory
      * @param WebhooksV2ApiFactory $webhooksV2ApiFactory
      * @param PaymentVerificationFactory $paymentVerificationFactory
-     *  @param ChargebackApiFactory $chargebackApiFactory
-     *  @param ChargebackFactory $chargebackFactory
+     * @param ChargebackApiFactory $chargebackApiFactory
+     * @param ChargebackFactory $chargebackFactory
      */
     public function __construct(
         ConfigHelper $configHelper,
