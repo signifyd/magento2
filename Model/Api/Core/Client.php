@@ -6,18 +6,21 @@ use Magento\Framework\Filesystem\DirectoryList;
 use Signifyd\Connect\Model\Api\ChargebackFactory;
 use Signifyd\Connect\Model\JsonSerializer;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Creditmemo;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
-use Signifyd\Core\Api\ChargebackApiFactory;
+use Signifyd\Connect\Model\PaymentVerificationFactory;
+use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Core\Api\CheckoutApiFactory;
 use Signifyd\Core\Api\SaleApiFactory;
 use Signifyd\Core\Api\WebhooksApiFactory;
 use Signifyd\Core\Api\WebhooksV2ApiFactory;
 use Signifyd\Connect\Model\Api\RecordReturnFactory;
+use Signifyd\Core\Api\ChargebackApiFactory;
 
 class Client
 {
@@ -87,6 +90,11 @@ class Client
     public $webhooksV2ApiFactory;
 
     /**
+     * @var PaymentVerificationFactory
+     */
+    public $paymentVerificationFactory;
+
+    /**
      * @var ChargebackApiFactory
      */
     public $chargebackApiFactory;
@@ -119,8 +127,9 @@ class Client
      * @param CheckoutApiFactory $checkoutApiFactory
      * @param WebhooksApiFactory $webhooksApiFactory
      * @param WebhooksV2ApiFactory $webhooksV2ApiFactory
-     * @param ChargebackApiFactory $chargebackApiFactory
-     * @param ChargebackFactory $chargebackFactory
+     * @param PaymentVerificationFactory $paymentVerificationFactory
+     *  @param ChargebackApiFactory $chargebackApiFactory
+     *  @param ChargebackFactory $chargebackFactory
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -136,6 +145,7 @@ class Client
         CheckoutApiFactory $checkoutApiFactory,
         WebhooksApiFactory $webhooksApiFactory,
         WebhooksV2ApiFactory $webhooksV2ApiFactory,
+        PaymentVerificationFactory $paymentVerificationFactory,
         ChargebackApiFactory $chargebackApiFactory,
         ChargebackFactory $chargebackFactory
     ) {
@@ -152,6 +162,7 @@ class Client
         $this->checkoutApiFactory = $checkoutApiFactory;
         $this->webhooksApiFactory = $webhooksApiFactory;
         $this->webhooksV2ApiFactory = $webhooksV2ApiFactory;
+        $this->paymentVerificationFactory = $paymentVerificationFactory;
         $this->chargebackApiFactory = $chargebackApiFactory;
         $this->chargebackFactory = $chargebackFactory;
     }
@@ -237,9 +248,10 @@ class Client
      * Cancel case on signifyd method.
      *
      * @param Order $order
+     * @param Creditmemo $creditmemo
      * @return bool
      */
-    public function cancelCaseOnSignifyd(Order $order)
+    public function cancelCaseOnSignifyd(Order $order, ?Creditmemo $creditmemo = null)
     {
         $this->logger->debug("Trying to cancel case for order " . $order->getIncrementId(), ['entity' => $order]);
 
@@ -267,6 +279,30 @@ class Client
                 $message = 'Guarantee cancel skipped: order still have items not canceled or refunded';
                 $this->logger->debug($message, ['entity' => $order]);
                 return false;
+            }
+        }
+
+        if ($creditmemo instanceof Creditmemo) {
+            try {
+                $recordReturnChecker = $this->paymentVerificationFactory->createPaymentRecordReturnChecker(
+                    $order->getPayment()->getMethod()
+                );
+
+                if ($recordReturnChecker($order, $creditmemo)) {
+                    $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: Record Return skipped");
+                    return false;
+                }
+            } catch (\Exception $e) {
+                // A failed check is not evidence of a chargeback: fall through and record the return as usual.
+                $this->logger->error(
+                    'Record Return checker failed, falling back to default behavior: ' . $e->getMessage(),
+                    ['entity' => $order]
+                );
+            } catch (\Error $e) {
+                $this->logger->error(
+                    'Record Return checker failed, falling back to default behavior: ' . $e->getMessage(),
+                    ['entity' => $order]
+                );
             }
         }
 
