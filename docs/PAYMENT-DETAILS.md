@@ -179,8 +179,8 @@ Here is a list of the payment methods that have a payment data collected. If the
 - Transaction ID
 
 ### Braintree
-#### Magento built in
-#### Tested on 4.7.0
+#### Bundled with Magento 2.4.x (paypal/module-braintree)
+#### Tested on 4.7.0-p5
 - Code: braintree
 
 **Available data**
@@ -193,7 +193,7 @@ Here is a list of the payment methods that have a payment data collected. If the
 
 ### Stripe Payments
 #### Link to the extension https://commercemarketplace.adobe.com/stripe-stripe-payments.html
-#### Tested on 4.5.4
+#### Tested on 4.6.5
 - Code: stripe_payments
 
 **Available data**
@@ -206,7 +206,7 @@ Here is a list of the payment methods that have a payment data collected. If the
 
 ### Adyen
 #### Link to the extension https://github.com/Adyen/adyen-magento2
-#### Tested on 9.20.7
+#### Tested on 10.10.3
 - Code: adyen_cc
 
 **Available data**
@@ -246,15 +246,16 @@ Here is a list of the payment methods that have a payment data collected. If the
 
 ### Authorize.Net Paradoxlabs
 #### Link to the extension https://commercemarketplace.adobe.com/paradoxlabs-authnetcim.html
-#### Tested on 5.1.4
+#### Tested on 6.0.0
 - Code: authnetcim
 
 **Available data**
 - AVS Response Code
+- Bin
 - Last4
-- Transaction ID
 - Expiry Month
 - Expiry Year
+- Transaction ID
 
 ### Authorize.Net Rootways
 #### Link to the extension https://www.rootways.com/magento-2-authorize-net-cim-extension
@@ -265,7 +266,6 @@ Here is a list of the payment methods that have a payment data collected. If the
 - CVV Status
 - Last4
 - Transaction ID
-- Last4
 - Bin
 - Expiry Month
 - Expiry Year
