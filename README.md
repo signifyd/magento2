@@ -165,6 +165,14 @@ See: [Pass payment details – Pre-Auth](docs/PASS-PAYMENT-PRE-AUTH.md)
 
 ---
 
+### Hyvä Checkout
+
+Hyvä Checkout replaces the default checkout, so the payment methods need a dedicated integration to pass the payment details collected at checkout time to the Pre-Auth case creation. Support ships with the extension and covers Adyen, Braintree, Stripe and Authorize.net ParadoxLabs. No patch is needed and no payment method extension has to be modified.
+
+See: [Hyvä Checkout compatibility](docs/HYVA-CHECKOUT-COMPATIBILITY.md)
+
+---
+
 ## Support
 
 - **Documentation:** [developer.signifyd.com](https://developer.signifyd.com)

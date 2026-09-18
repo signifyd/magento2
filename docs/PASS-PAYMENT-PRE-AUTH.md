@@ -125,17 +125,14 @@ git apply pre-auth-authorizenet.patch
     - Expiry date: no
     - Cardholder name: no
 
-### Braintree on Hyvä Checkout
-#### Magento built in + hyva-themes/magento2-hyva-checkout-braintree Hyvä Compatibility module
-#### Tested on Braintree module 4.6.1-p5
-#### Braintree Hyvä compatibility module 1.1.0
+### Hyvä Checkout
 
-- Call transaction API on failure: yes
-- Payment data available:
-    - Bin: yes
-    - Last4: yes
-    - Expiry date: yes
-    - Cardholder name: no
+Hyvä Checkout does not submit the payment data through the payment information request, so the payment
+methods need a different integration to pass the payment data to the pre auth case creation.
+
+Adyen, Braintree, Stripe and Authorize.net ParadoxLabs are compatible with pre auth on Hyvä Checkout. The
+integration steps and the payment data available for each one of them are described on
+[Hyvä Checkout compatibility](HYVA-CHECKOUT-COMPATIBILITY.md).
 
 ### OpenPay
 #### Link to the extension https://github.com/open-pay/openpay-magento2-cards

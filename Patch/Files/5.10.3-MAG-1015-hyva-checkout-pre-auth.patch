@@ -1,0 +1,1761 @@
+diff --git a/vendor/signifyd/module-connect/Controller/Checkout/CardData.php b/vendor/signifyd/module-connect/Controller/Checkout/CardData.php
+new file mode 100644
+index 0000000..ba8d0b9
+--- /dev/null
++++ b/vendor/signifyd/module-connect/Controller/Checkout/CardData.php
+@@ -0,0 +1,153 @@
++<?php
++
++namespace Signifyd\Connect\Controller\Checkout;
++
++use Magento\Checkout\Model\Session;
++use Magento\Framework\App\Action\HttpPostActionInterface;
++use Magento\Framework\App\Request\Http as RequestHttp;
++use Magento\Framework\Controller\Result\JsonFactory;
++use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
++use Signifyd\Connect\Logger\Logger;
++use Signifyd\Connect\Model\PreAuth\Base\Handler as BaseHandler;
++
++/**
++ * Stores the payment details collected on checkouts which do not use the payment information endpoint
++ */
++class CardData implements HttpPostActionInterface
++{
++    /**
++     * Payment details the checkout is allowed to store on the quote payment
++     */
++    public const ALLOWED_CARD_DETAILS = [
++        'cardBin',
++        'cardLast4',
++        'cardExpiryMonth',
++        'cardExpiryYear',
++        'holderName',
++        'storedPaymentMethodId'
++    ];
++
++    /**
++     * @var RequestHttp
++     */
++    public $request;
++
++    /**
++     * @var JsonFactory
++     */
++    public $resultJsonFactory;
++
++    /**
++     * @var Session
++     */
++    public $checkoutSession;
++
++    /**
++     * @var QuoteResourceModel
++     */
++    public $quoteResourceModel;
++
++    /**
++     * @var Logger
++     */
++    public $logger;
++
++    /**
++     * CardData constructor.
++     *
++     * @param RequestHttp $request
++     * @param JsonFactory $resultJsonFactory
++     * @param Session $checkoutSession
++     * @param QuoteResourceModel $quoteResourceModel
++     * @param Logger $logger
++     */
++    public function __construct(
++        RequestHttp $request,
++        JsonFactory $resultJsonFactory,
++        Session $checkoutSession,
++        QuoteResourceModel $quoteResourceModel,
++        Logger $logger
++    ) {
++        $this->request = $request;
++        $this->resultJsonFactory = $resultJsonFactory;
++        $this->checkoutSession = $checkoutSession;
++        $this->quoteResourceModel = $quoteResourceModel;
++        $this->logger = $logger;
++    }
++
++    /**
++     * Store the posted payment details on the quote payment
++     *
++     * @return \Magento\Framework\Controller\Result\Json
++     */
++    public function execute()
++    {
++        $result = $this->resultJsonFactory->create();
++        $storedDetails = [];
++
++        try {
++            $cardDetails = (array) $this->request->getPostValue();
++            $receivedDetails = array_intersect(array_keys($cardDetails), self::ALLOWED_CARD_DETAILS);
++
++            // Only the keys are logged, the values are payment data
++            $this->logger->info(
++                'Checkout payment details received: ' .
++                (empty($receivedDetails) ? 'none' : implode(', ', $receivedDetails))
++            );
++
++            $quote = $this->checkoutSession->getQuote();
++
++            // A late call after the order is placed would store the card on the next quote
++            if ((int)$quote->getItemsCount() === 0) {
++                $this->logger->info('Checkout payment details discarded, there is no active cart');
++
++                return $result->setData(['stored' => false]);
++            }
++
++            $payment = $quote->getPayment();
++            $paymentMethod = (string)$payment->getMethod();
++
++            // Data collected before the shopper switched to another payment method
++            if (isset($cardDetails['paymentMethod']) && $cardDetails['paymentMethod'] !== $paymentMethod) {
++                $this->logger->info('Checkout payment details discarded, the payment method has changed');
++
++                return $result->setData(['stored' => false]);
++            }
++
++            if ($payment->getAdditionalInformation(BaseHandler::PAYMENT_METHOD_KEY) !== $paymentMethod) {
++                foreach (self::ALLOWED_CARD_DETAILS as $key) {
++                    $payment->unsAdditionalInformation($key);
++                }
++            }
++
++            foreach (self::ALLOWED_CARD_DETAILS as $key) {
++                if (isset($cardDetails[$key]) === false
++                    || is_scalar($cardDetails[$key]) === false
++                    || (string)$cardDetails[$key] === '') {
++                    continue;
++                }
++
++                $payment->setAdditionalInformation($key, (string)$cardDetails[$key]);
++                $storedDetails[] = $key;
++            }
++
++            if (empty($storedDetails)) {
++                return $result->setData(['stored' => false]);
++            }
++
++            $payment->setAdditionalInformation(BaseHandler::PAYMENT_METHOD_KEY, $paymentMethod);
++            $this->quoteResourceModel->save($quote);
++
++            $this->logger->info(
++                'Checkout payment details stored on quote ' . $quote->getId() . ': ' .
++                implode(', ', $storedDetails)
++            );
++        } catch (\Exception $e) {
++            $this->logger->error('Could not store the checkout payment details: ' . $e->getMessage());
++
++            return $result->setData(['stored' => false]);
++        }
++
++        return $result->setData(['stored' => true]);
++    }
++}
+diff --git a/vendor/signifyd/module-connect/Model/PreAuth/AdyenOneclick/Handler.php b/vendor/signifyd/module-connect/Model/PreAuth/AdyenOneclick/Handler.php
+index 54dd5df..aae68bd 100644
+--- a/vendor/signifyd/module-connect/Model/PreAuth/AdyenOneclick/Handler.php
++++ b/vendor/signifyd/module-connect/Model/PreAuth/AdyenOneclick/Handler.php
+@@ -4,12 +4,23 @@ namespace Signifyd\Connect\Model\PreAuth\AdyenOneclick;
+ 
+ use Magento\Framework\ObjectManagerInterface;
+ use Magento\Quote\Model\Quote;
++use Magento\Vault\Api\PaymentTokenManagementInterface;
+ use Signifyd\Connect\Logger\Logger;
+ use Signifyd\Connect\Model\JsonSerializer;
+-use Signifyd\Connect\Model\PreAuth\CheckoutPaymentDetailsMapperInterface;
++use Signifyd\Connect\Model\PreAuth\Base\Handler as BaseHandler;
+ 
+-class Handler implements CheckoutPaymentDetailsMapperInterface
++class Handler extends BaseHandler
+ {
++    /**
++     * Key used by the checkout to inform which stored payment method is being used
++     */
++    public const STORED_PAYMENT_METHOD_ID_KEY = 'storedPaymentMethodId';
++
++    /**
++     * Key used by Magento vault to inform which stored card is being used
++     */
++    public const PUBLIC_HASH_KEY = 'public_hash';
++
+     /**
+      * @var ObjectManagerInterface
+      */
+@@ -21,25 +32,29 @@ class Handler implements CheckoutPaymentDetailsMapperInterface
+     protected $jsonSerializer;
+ 
+     /**
+-     * @var Logger
++     * @var PaymentTokenManagementInterface
+      */
+-    protected $logger;
++    protected $paymentTokenManagement;
+ 
+     /**
+      * Handler constructor.
+      *
+      * @param ObjectManagerInterface $objectManager
+      * @param JsonSerializer $jsonSerializer
++     * @param PaymentTokenManagementInterface $paymentTokenManagement
+      * @param Logger $logger
+      */
+     public function __construct(
+         ObjectManagerInterface $objectManager,
+         JsonSerializer $jsonSerializer,
++        PaymentTokenManagementInterface $paymentTokenManagement,
+         Logger $logger
+     ) {
+         $this->objectManager = $objectManager;
+         $this->jsonSerializer = $jsonSerializer;
+-        $this->logger = $logger;
++        $this->paymentTokenManagement = $paymentTokenManagement;
++
++        parent::__construct($logger);
+     }
+ 
+     /**
+@@ -53,45 +68,25 @@ class Handler implements CheckoutPaymentDetailsMapperInterface
+     public function handle(array $checkoutPaymentDetails, array $dataArray, Quote $quote): array
+     {
+         $this->logger->info(
+-            "Collecting Checkout Payment Details using the AdyenOneClick Handler", ['entity' => $quote]
++            "Collecting Checkout Payment Details using the AdyenOneClick Handler",
++            ['entity' => $quote]
+         );
+         $additionalData = $dataArray['paymentMethod']['additional_data'];
++        $storedPaymentMethodId = null;
+ 
+         if (isset($additionalData['stateData'])) {
+             try {
+                 $stateData = $this->jsonSerializer->unserialize($additionalData['stateData']);
+-
+-                /** @var \Adyen\Payment\Model\Api\PaymentRequest $paymentRequest */
+-                $paymentRequest = $this->objectManager->create(\Adyen\Payment\Model\Api\PaymentRequest::class);
+-
+-                $customerId = $quote->getCustomer()->getId();
+-                $shopperReference = $customerId < 100
+-                    ? str_pad($customerId, 3, 0, STR_PAD_LEFT)
+-                    : $customerId;
+-
+-                $contracts = $paymentRequest->getRecurringContractsForShopper(
+-                    $shopperReference,
+-                    $quote->getStoreId()
+-                );
+-
+-                if (isset($stateData['paymentMethod']['storedPaymentMethodId'])) {
+-                    $storedPaymentMethodId = $stateData['paymentMethod']['storedPaymentMethodId'];
+-                    $checkoutPaymentDetails['cardBin'] =
+-                        $contracts[$storedPaymentMethodId]['additionalData']['cardBin'] ?? null;
+-                } else {
+-                    $checkoutPaymentDetails['cardBin'] = null;
+-                }
++                $storedPaymentMethodId = $stateData['paymentMethod'][self::STORED_PAYMENT_METHOD_ID_KEY] ?? null;
+             } catch (\Exception $e) {
+                 $this->logger->debug(
+-                    'adyen_oneclick: unable to get cardBin from stateData: ' . $e->getMessage(),
++                    'adyen_oneclick: unable to read the stateData: ' . $e->getMessage(),
+                     ['entity' => $quote]
+                 );
+-                $checkoutPaymentDetails['cardBin'] = null;
+             }
+-        } else {
+-            $checkoutPaymentDetails['cardBin'] = null;
+         }
+ 
++        $checkoutPaymentDetails['cardBin'] = $this->getCardBin($storedPaymentMethodId, $quote);
+         $checkoutPaymentDetails['holderName'] = $additionalData['holderName'] ?? null;
+         $checkoutPaymentDetails['cardLast4'] = $additionalData['cardLast4'] ?? null;
+ 
+@@ -106,4 +101,148 @@ class Handler implements CheckoutPaymentDetailsMapperInterface
+ 
+         return $checkoutPaymentDetails;
+     }
++
++    /**
++     * Handle Adyen stored cards for checkouts which store the payment data on the quote payment
++     *
++     * @param array $checkoutPaymentDetails
++     * @param Quote $quote
++     * @return array
++     */
++    public function handleQuotePayment(array $checkoutPaymentDetails, Quote $quote): array
++    {
++        $checkoutPaymentDetails = parent::handleQuotePayment($checkoutPaymentDetails, $quote);
++
++        $payment = $quote->getPayment();
++
++        if (empty($payment)) {
++            return $checkoutPaymentDetails;
++        }
++
++        $storedPaymentMethodId = $payment->getAdditionalInformation(self::STORED_PAYMENT_METHOD_ID_KEY);
++        $vaultCardData = $this->getVaultCardData(
++            $payment->getAdditionalInformation(self::PUBLIC_HASH_KEY),
++            $quote
++        );
++
++        if (empty($storedPaymentMethodId) && isset($vaultCardData['gatewayToken'])) {
++            $storedPaymentMethodId = $vaultCardData['gatewayToken'];
++        }
++
++        $vaultDataMap = [
++            'cardLast4' => 'cardLast4',
++            'cardExpiryMonth' => 'cardExpiryMonth',
++            'cardExpiryYear' => 'cardExpiryYear'
++        ];
++
++        foreach ($vaultDataMap as $detailKey => $vaultKey) {
++            if (empty($checkoutPaymentDetails[$detailKey]) && empty($vaultCardData[$vaultKey]) === false) {
++                $checkoutPaymentDetails[$detailKey] = $vaultCardData[$vaultKey];
++            }
++        }
++
++        if (empty($checkoutPaymentDetails['cardBin'])) {
++            $checkoutPaymentDetails['cardBin'] = $this->getCardBin($storedPaymentMethodId, $quote);
++        }
++
++        return $checkoutPaymentDetails;
++    }
++
++    /**
++     * Get the card data stored on the Magento vault token
++     *
++     * @param mixed $publicHash
++     * @param Quote $quote
++     * @return array
++     */
++    public function getVaultCardData($publicHash, Quote $quote): array
++    {
++        if (empty($publicHash) || empty($quote->getCustomerId())) {
++            return [];
++        }
++
++        try {
++            $paymentToken = $this->paymentTokenManagement->getByPublicHash(
++                $publicHash,
++                $quote->getCustomerId()
++            );
++
++            if (isset($paymentToken) === false) {
++                return [];
++            }
++
++            $cardData = ['gatewayToken' => $paymentToken->getGatewayToken()];
++            $tokenDetails = $this->jsonSerializer->unserialize((string)$paymentToken->getTokenDetails());
++
++            if (is_array($tokenDetails) === false) {
++                return $cardData;
++            }
++
++            if (empty($tokenDetails['maskedCC']) === false) {
++                $cardData['cardLast4'] = substr((string)$tokenDetails['maskedCC'], -4);
++            }
++
++            // Magento vault stores the expiration date as MM/YYYY
++            if (empty($tokenDetails['expirationDate']) === false) {
++                $expirationDate = explode('/', (string)$tokenDetails['expirationDate']);
++
++                if (count($expirationDate) === 2) {
++                    $cardData['cardExpiryMonth'] = $expirationDate[0];
++                    $cardData['cardExpiryYear'] = $expirationDate[1];
++                }
++            }
++
++            return $cardData;
++        } catch (\Exception $e) {
++            $this->logger->debug(
++                'adyen_oneclick: unable to read the vault token data: ' . $e->getMessage(),
++                ['entity' => $quote]
++            );
++
++            return [];
++        }
++    }
++
++    /**
++     * Get the bin of a stored card from the Adyen recurring contracts
++     *
++     * @param mixed $storedPaymentMethodId
++     * @param Quote $quote
++     * @return string|null
++     */
++    public function getCardBin($storedPaymentMethodId, Quote $quote)
++    {
++        if (empty($storedPaymentMethodId)) {
++            return null;
++        }
++
++        try {
++            /** @var \Adyen\Payment\Model\Api\PaymentRequest $paymentRequest */
++            $paymentRequest = $this->objectManager->create(\Adyen\Payment\Model\Api\PaymentRequest::class);
++
++            $customerId = $quote->getCustomer()->getId();
++
++            if (empty($customerId)) {
++                return null;
++            }
++
++            $shopperReference = $customerId < 100
++                ? str_pad((string)$customerId, 3, '0', STR_PAD_LEFT)
++                : $customerId;
++
++            $contracts = $paymentRequest->getRecurringContractsForShopper(
++                $shopperReference,
++                $quote->getStoreId()
++            );
++
++            return $contracts[$storedPaymentMethodId]['additionalData']['cardBin'] ?? null;
++        } catch (\Exception $e) {
++            $this->logger->debug(
++                'adyen_oneclick: unable to get cardBin from the recurring contracts: ' . $e->getMessage(),
++                ['entity' => $quote]
++            );
++
++            return null;
++        }
++    }
+ }
+diff --git a/vendor/signifyd/module-connect/Model/PreAuth/Authnetcim/Handler.php b/vendor/signifyd/module-connect/Model/PreAuth/Authnetcim/Handler.php
+index b478d22..c7415fc 100644
+--- a/vendor/signifyd/module-connect/Model/PreAuth/Authnetcim/Handler.php
++++ b/vendor/signifyd/module-connect/Model/PreAuth/Authnetcim/Handler.php
+@@ -6,9 +6,9 @@ use Magento\Framework\ObjectManagerInterface;
+ use Magento\Quote\Model\Quote;
+ use Signifyd\Connect\Logger\Logger;
+ use Signifyd\Connect\Model\JsonSerializer;
+-use Signifyd\Connect\Model\PreAuth\CheckoutPaymentDetailsMapperInterface;
++use Signifyd\Connect\Model\PreAuth\Base\Handler as BaseHandler;
+ 
+-class Handler implements CheckoutPaymentDetailsMapperInterface
++class Handler extends BaseHandler
+ {
+     /**
+      * @var ObjectManagerInterface
+@@ -20,11 +20,6 @@ class Handler implements CheckoutPaymentDetailsMapperInterface
+      */
+     protected $jsonSerializer;
+ 
+-    /**
+-     * @var Logger
+-     */
+-    protected $logger;
+-
+     /**
+      * Handler constructor.
+      *
+@@ -39,7 +34,8 @@ class Handler implements CheckoutPaymentDetailsMapperInterface
+     ) {
+         $this->objectManager = $objectManager;
+         $this->jsonSerializer = $jsonSerializer;
+-        $this->logger = $logger;
++
++        parent::__construct($logger);
+     }
+ 
+     /**
+@@ -53,29 +49,17 @@ class Handler implements CheckoutPaymentDetailsMapperInterface
+     public function handle(array $checkoutPaymentDetails, array $dataArray, Quote $quote): array
+     {
+         $this->logger->info(
+-            "Collecting Checkout Payment Details using the Authnetcim Handler", ['entity' => $quote]
++            "Collecting Checkout Payment Details using the Authnetcim Handler",
++            ['entity' => $quote]
+         );
+         $requestAdditionalData = $dataArray['paymentMethod']['additional_data'];
+         $additionalData = $requestAdditionalData;
+ 
+         if (isset($requestAdditionalData['card_id'])) {
+-            /** @var \ParadoxLabs\TokenBase\Model\ResourceModel\Card\Collection $cardCollection */
+-            $cardCollection = $this->objectManager->create(
+-                \ParadoxLabs\TokenBase\Model\ResourceModel\Card\CollectionFactory::class
+-            )->create()
+-                ->addFieldToFilter('hash', ['eq' => $requestAdditionalData['card_id']]);
++            $cardData = $this->getCardData($requestAdditionalData['card_id'], 'hash', $quote);
+ 
+-            $card = $cardCollection->getFirstItem();
+-
+-            if (empty($card->getData('additional')) === false) {
+-                try {
+-                    $additionalData = $this->jsonSerializer->unserialize($card->getData('additional'));
+-                } catch (\Exception $e) {
+-                    $this->logger->debug(
+-                        'authnetcim: unable to unserialize card additional data: ' . $e->getMessage(),
+-                        ['entity' => $quote]
+-                    );
+-                }
++            if (empty($cardData) === false) {
++                $additionalData = $cardData;
+             }
+         }
+ 
+@@ -87,4 +71,93 @@ class Handler implements CheckoutPaymentDetailsMapperInterface
+ 
+         return $checkoutPaymentDetails;
+     }
++
++    /**
++     * Handle Authnetcim for checkouts which store the payment data on the quote payment
++     *
++     * @param array $checkoutPaymentDetails
++     * @param Quote $quote
++     * @return array
++     */
++    public function handleQuotePayment(array $checkoutPaymentDetails, Quote $quote): array
++    {
++        $checkoutPaymentDetails = parent::handleQuotePayment($checkoutPaymentDetails, $quote);
++
++        $this->logger->info(
++            "Collecting Checkout Payment Details from the stored card using the Authnetcim Handler",
++            ['entity' => $quote]
++        );
++
++        $payment = $quote->getPayment();
++
++        if (empty($payment)) {
++            return $checkoutPaymentDetails;
++        }
++
++        $cardId = $payment->getAdditionalInformation('card_id');
++        $cardData = [];
++
++        if (empty($cardId) === false) {
++            $cardData = $this->getCardData($cardId, 'hash', $quote);
++        }
++
++        if (empty($cardData) && empty($payment->getData('tokenbase_id')) === false) {
++            $cardData = $this->getCardData($payment->getData('tokenbase_id'), 'id', $quote);
++        }
++
++        if (empty($cardData)) {
++            return $checkoutPaymentDetails;
++        }
++
++        $cardDataMap = [
++            'cardBin' => 'cc_bin',
++            'cardLast4' => 'cc_last4',
++            'cardExpiryMonth' => 'cc_exp_month',
++            'cardExpiryYear' => 'cc_exp_year'
++        ];
++
++        foreach ($cardDataMap as $detailKey => $cardKey) {
++            if (empty($checkoutPaymentDetails[$detailKey]) && isset($cardData[$cardKey])) {
++                $checkoutPaymentDetails[$detailKey] = $cardData[$cardKey];
++            }
++        }
++
++        return $checkoutPaymentDetails;
++    }
++
++    /**
++     * Load the additional data of a stored card
++     *
++     * @param mixed $cardId
++     * @param string $field
++     * @param Quote $quote
++     * @return array
++     */
++    public function getCardData($cardId, $field, Quote $quote): array
++    {
++        try {
++            /** @var \ParadoxLabs\TokenBase\Model\ResourceModel\Card\Collection $cardCollection */
++            $cardCollection = $this->objectManager->create(
++                \ParadoxLabs\TokenBase\Model\ResourceModel\Card\CollectionFactory::class
++            )->create()
++                ->addFieldToFilter($field, ['eq' => $cardId]);
++
++            $card = $cardCollection->getFirstItem();
++
++            if (empty($card->getData('additional'))) {
++                return [];
++            }
++
++            $cardData = $this->jsonSerializer->unserialize($card->getData('additional'));
++
++            return is_array($cardData) ? $cardData : [];
++        } catch (\Exception $e) {
++            $this->logger->debug(
++                'authnetcim: unable to read the stored card data: ' . $e->getMessage(),
++                ['entity' => $quote]
++            );
++
++            return [];
++        }
++    }
+ }
+diff --git a/vendor/signifyd/module-connect/Model/PreAuth/Base/Handler.php b/vendor/signifyd/module-connect/Model/PreAuth/Base/Handler.php
+index f3e511b..c057263 100644
+--- a/vendor/signifyd/module-connect/Model/PreAuth/Base/Handler.php
++++ b/vendor/signifyd/module-connect/Model/PreAuth/Base/Handler.php
+@@ -5,9 +5,26 @@ namespace Signifyd\Connect\Model\PreAuth\Base;
+ use Magento\Quote\Model\Quote;
+ use Signifyd\Connect\Logger\Logger;
+ use Signifyd\Connect\Model\PreAuth\CheckoutPaymentDetailsMapperInterface;
++use Signifyd\Connect\Model\PreAuth\QuotePaymentDetailsMapperInterface;
+ 
+-class Handler implements CheckoutPaymentDetailsMapperInterface
++class Handler implements CheckoutPaymentDetailsMapperInterface, QuotePaymentDetailsMapperInterface
+ {
++    /**
++     * Payment method the stored payment data was collected for
++     */
++    public const PAYMENT_METHOD_KEY = 'signifydPaymentMethod';
++
++    /**
++     * Payment data collected on checkout, as stored on the quote payment additional information
++     */
++    public const QUOTE_PAYMENT_KEYS = [
++        'cardBin',
++        'holderName',
++        'cardLast4',
++        'cardExpiryMonth',
++        'cardExpiryYear'
++    ];
++
+     /**
+      * @var Logger
+      */
+@@ -52,4 +69,36 @@ class Handler implements CheckoutPaymentDetailsMapperInterface
+ 
+         return $checkoutPaymentDetails;
+     }
++
++    /**
++     * Handle Base for checkouts which store the payment data on the quote payment
++     *
++     * @param array $checkoutPaymentDetails
++     * @param Quote $quote
++     * @return array
++     */
++    public function handleQuotePayment(array $checkoutPaymentDetails, Quote $quote): array
++    {
++        $this->logger->info(
++            "Collecting Checkout Payment Details from the quote payment using the base Handler",
++            ['entity' => $quote]
++        );
++
++        $payment = $quote->getPayment();
++
++        if (empty($payment)) {
++            return $checkoutPaymentDetails;
++        }
++
++        $paymentMethod = $payment->getAdditionalInformation(self::PAYMENT_METHOD_KEY);
++
++        // Data collected for a payment method the shopper did not place the order with is not used
++        $isSamePaymentMethod = $paymentMethod === null || $paymentMethod === $payment->getMethod();
++
++        foreach (self::QUOTE_PAYMENT_KEYS as $key) {
++            $checkoutPaymentDetails[$key] = $isSamePaymentMethod ? $payment->getAdditionalInformation($key) : null;
++        }
++
++        return $checkoutPaymentDetails;
++    }
+ }
+diff --git a/vendor/signifyd/module-connect/Model/PreAuth/QuotePaymentDetailsMapperInterface.php b/vendor/signifyd/module-connect/Model/PreAuth/QuotePaymentDetailsMapperInterface.php
+new file mode 100644
+index 0000000..d7fffa0
+--- /dev/null
++++ b/vendor/signifyd/module-connect/Model/PreAuth/QuotePaymentDetailsMapperInterface.php
+@@ -0,0 +1,17 @@
++<?php
++
++namespace Signifyd\Connect\Model\PreAuth;
++
++use Magento\Quote\Model\Quote;
++
++interface QuotePaymentDetailsMapperInterface
++{
++    /**
++     * Handle Checkout Payment stored on the quote payment
++     *
++     * @param array $checkoutPaymentDetails
++     * @param Quote $quote
++     * @return array
++     */
++    public function handleQuotePayment(array $checkoutPaymentDetails, Quote $quote): array;
++}
+diff --git a/vendor/signifyd/module-connect/Model/PreAuth/RootwaysAuthorizeCim/Handler.php b/vendor/signifyd/module-connect/Model/PreAuth/RootwaysAuthorizeCim/Handler.php
+index 951dcbf..c1d199d 100644
+--- a/vendor/signifyd/module-connect/Model/PreAuth/RootwaysAuthorizeCim/Handler.php
++++ b/vendor/signifyd/module-connect/Model/PreAuth/RootwaysAuthorizeCim/Handler.php
+@@ -3,27 +3,10 @@
+ namespace Signifyd\Connect\Model\PreAuth\RootwaysAuthorizeCim;
+ 
+ use Magento\Quote\Model\Quote;
+-use Signifyd\Connect\Logger\Logger;
+-use Signifyd\Connect\Model\PreAuth\CheckoutPaymentDetailsMapperInterface;
++use Signifyd\Connect\Model\PreAuth\Base\Handler as BaseHandler;
+ 
+-class Handler implements CheckoutPaymentDetailsMapperInterface
++class Handler extends BaseHandler
+ {
+-    /**
+-     * @var Logger
+-     */
+-    protected $logger;
+-
+-    /**
+-     * Handler constructor.
+-     *
+-     * @param Logger $logger
+-     */
+-    public function __construct(
+-        Logger $logger
+-    ) {
+-        $this->logger = $logger;
+-    }
+-
+     /**
+      * Handle Rootways Authorize Cim
+      *
+@@ -35,7 +18,8 @@ class Handler implements CheckoutPaymentDetailsMapperInterface
+     public function handle(array $checkoutPaymentDetails, array $dataArray, Quote $quote): array
+     {
+         $this->logger->info(
+-            "Collecting Checkout Payment Details using the RootwaysAuthorizeCim Handler", ['entity' => $quote]
++            "Collecting Checkout Payment Details using the RootwaysAuthorizeCim Handler",
++            ['entity' => $quote]
+         );
+         $additionalData = $dataArray['paymentMethod']['additional_data'];
+ 
+diff --git a/vendor/signifyd/module-connect/Observer/PreAuth.php b/vendor/signifyd/module-connect/Observer/PreAuth.php
+index 67520a8..812dd9e 100644
+--- a/vendor/signifyd/module-connect/Observer/PreAuth.php
++++ b/vendor/signifyd/module-connect/Observer/PreAuth.php
+@@ -24,6 +24,7 @@ use Magento\Framework\App\Request\Http as RequestHttp;
+ use Signifyd\Connect\Model\JsonSerializer;
+ use Signifyd\Connect\Model\Api\Recipient;
+ use Signifyd\Connect\Model\PreAuth\CheckoutPaymentDetailsMapperInterface;
++use Signifyd\Connect\Model\PreAuth\QuotePaymentDetailsMapperInterface;
+ use Signifyd\Connect\Model\Registry;
+ 
+ class PreAuth implements ObserverInterface
+@@ -253,11 +254,13 @@ class PreAuth implements ObserverInterface
+             }
+ 
+             $checkoutPaymentDetails = [];
++            $handler = $this->checkoutPaymentDetailsHandlers[$paymentMethod]
++                ?? $this->defaultCheckoutPaymentDetailsHandler;
+ 
+             if (isset($dataArray['paymentMethod']) && isset($dataArray['paymentMethod']['additional_data'])) {
+-                $handler = $this->checkoutPaymentDetailsHandlers[$paymentMethod]
+-                    ?? $this->defaultCheckoutPaymentDetailsHandler;
+                 $checkoutPaymentDetails = $handler->handle($checkoutPaymentDetails, $dataArray, $quote);
++            } elseif (isset($payment) && $handler instanceof QuotePaymentDetailsMapperInterface) {
++                $checkoutPaymentDetails = $handler->handleQuotePayment($checkoutPaymentDetails, $quote);
+             } elseif (isset($payment)) {
+                 $checkoutPaymentDetails['cardBin'] = $payment->getAdditionalInformation('cardBin');
+                 $checkoutPaymentDetails['cardExpiryMonth'] = $payment->getAdditionalInformation('cardExpiryMonth');
+diff --git a/vendor/signifyd/module-connect/Patch/pre-auth-braintree-hyva-checkout.patch b/vendor/signifyd/module-connect/Patch/pre-auth-braintree-hyva-checkout.patch
+deleted file mode 100644
+index 8b5a3f8..0000000
+--- a/vendor/signifyd/module-connect/Patch/pre-auth-braintree-hyva-checkout.patch
++++ /dev/null
+@@ -1,111 +0,0 @@
+-diff --git a/vendor/signifyd/module-connect/Model/Magewire/Checkout/Payment/Method/Signifyd.php b/vendor/signifyd/module-connect/Model/Magewire/Checkout/Payment/Method/Signifyd.php
+-new file mode 100644
+-index 0000000..b1e2470
+---- /dev/null
+-+++ b/vendor/signifyd/module-connect/Model/Magewire/Checkout/Payment/Method/Signifyd.php
+-@@ -0,0 +1,63 @@
+-+<?php
+-+declare(strict_types=1);
+-+
+-+namespace Signifyd\Connect\Model\Magewire\Checkout\Payment\Method;
+-+
+-+use Exception;
+-+use Magento\Checkout\Model\Session;
+-+use Magento\Framework\Exception\LocalizedException;
+-+use Magento\Framework\Exception\NoSuchEntityException;
+-+use Magento\Quote\Model\ResourceModel\Quote as QuoteResourceModel;
+-+use Magewirephp\Magewire\Component\Form;
+-+use Rakit\Validation\Validator;
+-+
+-+class Signifyd extends Form
+-+{
+-+    /**
+-+     * @var Session
+-+     */
+-+    private Session $sessionCheckout;
+-+
+-+    /**
+-+     * @var QuoteResourceModel
+-+     */
+-+    private QuoteResourceModel $quoteResourceModel;
+-+
+-+    /**
+-+     * Signifyd constructor.
+-+     *
+-+     * @param Validator $validator
+-+     * @param Session $sessionCheckout
+-+     * @param QuoteResourceModel $quoteResourceModel
+-+     */
+-+    public function __construct(
+-+        Validator $validator,
+-+        Session $sessionCheckout,
+-+        QuoteResourceModel $quoteResourceModel
+-+    ) {
+-+        $this->sessionCheckout = $sessionCheckout;
+-+        $this->quoteResourceModel = $quoteResourceModel;
+-+        parent::__construct($validator);
+-+    }
+-+
+-+    /**
+-+     * Set setCardData
+-+     *
+-+     * @param array $cardDetails
+-+     * @return void
+-+     * @throws LocalizedException
+-+     * @throws NoSuchEntityException
+-+     * @throws Exception
+-+     */
+-+    public function setCardData(array $cardDetails): void
+-+    {
+-+        $quote = $this->sessionCheckout->getQuote();
+-+
+-+        $quote->getPayment()
+-+            ->setAdditionalInformation(
+-+                $cardDetails
+-+            );
+-+
+-+        $this->quoteResourceModel->save($quote);
+-+    }
+-+}
+-diff --git a/vendor/signifyd/module-connect/view/frontend/layout/hyva_checkout_components.xml b/vendor/signifyd/module-connect/view/frontend/layout/hyva_checkout_components.xml
+-new file mode 100644
+-index 0000000..0dc4401
+---- /dev/null
+-+++ b/vendor/signifyd/module-connect/view/frontend/layout/hyva_checkout_components.xml
+-@@ -0,0 +1,18 @@
+-+<?xml version="1.0"?>
+-+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+-+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+-+    <body>
+-+        <referenceContainer name="checkout.payment.methods.before">
+-+            <block name="checkout.payment.method.signifyd"
+-+                   as="signifyd"
+-+                   after="-"
+-+                   template="Signifyd_Connect::checkout/payment/method/signifyd.phtml">
+-+                <arguments>
+-+                    <argument name="magewire" xsi:type="object">
+-+                        \Signifyd\Connect\Model\Magewire\Checkout\Payment\Method\Signifyd
+-+                    </argument>
+-+                </arguments>
+-+            </block>
+-+        </referenceContainer>
+-+    </body>
+-+</page>
+-\ No newline at end of file
+-diff --git a/vendor/signifyd/module-connect/view/frontend/templates/checkout/payment/method/signifyd.phtml b/vendor/signifyd/module-connect/view/frontend/templates/checkout/payment/method/signifyd.phtml
+-new file mode 100644
+-index 0000000..497c4b8
+---- /dev/null
+-+++ b/vendor/signifyd/module-connect/view/frontend/templates/checkout/payment/method/signifyd.phtml
+-@@ -0,0 +1,10 @@
+-+<?php
+-+
+-+/** @var Escaper $escaper */
+-+
+-+use Magento\Framework\Escaper;
+-+
+-+?>
+-+
+-+<div id="signifyd">
+-+</div>
+-\ No newline at end of file
+diff --git a/vendor/signifyd/module-connect/README.md b/vendor/signifyd/module-connect/README.md
+index f87165c..94aceb3 100644
+--- a/vendor/signifyd/module-connect/README.md
++++ b/vendor/signifyd/module-connect/README.md
+@@ -165,6 +165,14 @@ See: [Pass payment details – Pre-Auth](docs/PASS-PAYMENT-PRE-AUTH.md)
+ 
+ ---
+ 
++### Hyvä Checkout
++
++Hyvä Checkout replaces the default checkout, so the payment methods need a dedicated integration to pass the payment details collected at checkout time to the Pre-Auth case creation. Support ships with the extension and covers Adyen, Braintree, Stripe and Authorize.net ParadoxLabs. No patch is needed and no payment method extension has to be modified.
++
++See: [Hyvä Checkout compatibility](docs/HYVA-CHECKOUT-COMPATIBILITY.md)
++
++---
++
+ ## Support
+ 
+ - **Documentation:** [developer.signifyd.com](https://developer.signifyd.com)
+diff --git a/vendor/signifyd/module-connect/docs/HYVA-CHECKOUT-COMPATIBILITY.md b/vendor/signifyd/module-connect/docs/HYVA-CHECKOUT-COMPATIBILITY.md
+index d5f59e3..315a89c 100644
+--- a/vendor/signifyd/module-connect/docs/HYVA-CHECKOUT-COMPATIBILITY.md
++++ b/vendor/signifyd/module-connect/docs/HYVA-CHECKOUT-COMPATIBILITY.md
+@@ -7,25 +7,143 @@ Because of this, any custom functionality or third-party extension designed for
+ 
+ If you plan to use Hyvä Checkout, make sure to apply the compatibility patches we’ve provided to ensure proper integration with the module.
+ 
+-## Compatible methods
++## How it works
+ 
+-### Braintree on Hyvä Checkout
+-#### Magento built in + hyva-themes/magento2-hyva-checkout-braintree Hyvä Compatibility module
+-#### Tested on Braintree module 4.6.1-p5
+-#### Braintree Hyvä compatibility module 1.1.0
++On the default checkout the payment data collected by JavaScript is submitted to Magento together with the payment information request, and the extension reads it from that request. Hyvä Checkout does not use that request, so the payment data has to reach the backend through a different path.
+ 
+-## Steps to apply the compatibility patch
++The extension adds a script to the checkout payment step which stores the payment data on the quote payment. When the order is placed, the extension reads the data from the quote payment and includes it on the pre auth case creation request.
+ 
+-To apply the compatibility patches, follow these steps:
++The data is collected in two ways. Payment methods which expose the card data through a JavaScript SDK are read by intercepting that SDK, so the payment method extension does not need to be modified. Payment methods which do not expose the data send it through the global helper:
+ 
+-1. Copy the patch to the root directory of your Magento installation
+ ```
+-cd [MAGENTO_ROOT]
+-cp vendor/signifyd/module-connect/Patch/pre-auth-braintree-hyva-checkout.patch .
++await window.signifydSetCardData({
++    cardBin: '411111',
++    cardLast4: '1111',
++    cardExpiryMonth: '09',
++    cardExpiryYear: '2030',
++    holderName: 'J. Smith'
++});
+ ```
+ 
+-2. Apply the path
++Only the keys above are accepted, any other data is discarded. The helper can be safely called with only part of the data, the keys with no value are ignored. Data collected for a payment method is not used when the order is placed with another one.
++
++Payment methods which render the card fields on the store page are read from the fields themselves,
++through the `autocomplete` attributes of the HTML standard. Only the bin, the last four digits and the
++expiry date are kept, the card number is never stored nor sent.
++
++Payment methods which store the payment data on the backend before the order is placed do not need any
++JavaScript at all, the extension reads the data directly from the quote payment.
++
++## Steps to apply the compatibility
++
++Hyvä Checkout support ships with the extension. No patch is needed, and no payment method extension has
++to be modified. Deploy the extension as usual:
++
+ ```
+-git apply pre-auth-braintree-hyva-checkout.patch
++bin/magento setup:upgrade
++bin/magento cache:flush
+ ```
+ 
++## Compatible methods
++
++### Adyen on Hyvä Checkout
++#### Tested on adyen/module-payment 10.x with hyva-themes/magento2-hyva-checkout-adyen-payment-v2 on Hyvä Checkout 1.3
++#### Also implemented for adyen/module-hyva-checkout 1.3.0
++#### No patch required
++
++The Adyen compatibility module is not modified. The extension intercepts the Adyen web SDK to read the card
++data from the callbacks of the card component, and stores it on the quote payment right before the order is
++placed. Both the `AdyenWeb` global of the web SDK 6 and the `AdyenCheckout` global of the web SDK 5 are
++supported, so it works with either Adyen compatibility module.
++
++#### New cards (adyen_cc)
++
++The expiry date is encrypted by the Adyen client side encryption and never exposed to the checkout, so it
++cannot be collected. The cardholder name is only available when the card holder name field is enabled on
++the Adyen payment method configuration.
++
++- Payment data available:
++    - Bin: yes
++    - Last4: yes
++    - Expiry date: no
++    - Cardholder name: yes (when the card holder name field is enabled)
++
++#### Stored cards (adyen_cc_vault)
++
++Nothing is collected on the checkout for stored cards. Last4 and expiry date are read from the Magento
++vault token. On Adyen 9.x and earlier the bin is fetched from the Adyen recurring contracts of the shopper,
++Adyen 10 removed that API.
++
++- Payment data available:
++    - Bin: only on Adyen 9.x and earlier, for registered customers
++    - Last4: yes
++    - Expiry date: yes
++    - Cardholder name: no
++
++### Braintree on Hyvä Checkout
++#### Bundled with Magento 2.4.x (paypal/module-braintree) + hyva-themes/magento2-hyva-checkout-braintree Hyvä Compatibility module
++#### Tested on Braintree module 4.6.1-p5
++#### Braintree Hyvä compatibility module 1.1.0
++#### No patch required
++
++The Braintree compatibility module is not modified. Braintree renders the card fields on iframes of its
++own, so the extension intercepts the Braintree web SDK to read the card data from the payload of the
++tokenization, which happens before the order is placed.
++
++- Payment data available:
++    - Bin: yes
++    - Last4: yes
++    - Expiry date: yes
++    - Cardholder name: no
++
++### Authorize.net ParadoxLabs on Hyvä Checkout
++#### Link to the extension https://github.com/ParadoxLabs-Inc/authnetcim-hyva-checkout
++#### Implemented against paradoxlabs/authnetcim-hyva-checkout 3.1.0
++#### No patch required
++
++What can be collected depends on the payment form type configured on the payment method. The Hyvä
++compatibility module of the payment method supports Accept.js and Accept Hosted only.
++
++#### Accept.js form
++
++The card fields are rendered on the store page, so the bin, the last four digits and the expiry date
++are read from the fields. There is no cardholder name field on the form, the billing name is used
++instead by the extension.
++
++- Payment data available:
++    - Bin: yes
++    - Last4: yes
++    - Expiry date: yes
++    - Cardholder name: no
++
++#### Accept Hosted form, and stored cards on either form
++
++The card is typed inside an Authorize.net iframe, or it is already tokenized, so nothing is available
++on the checkout. The payment method tokenizes the card before the order is placed, and the extension
++reads the payment data from the stored card assigned to the quote payment. The bin is only stored by
++the payment method when its `can_store_bin` setting is enabled.
++
++- Payment data available:
++    - Bin: yes (when enabled on the payment method configuration)
++    - Last4: yes
++    - Expiry date: yes
++    - Cardholder name: no
++
++### Stripe on Hyvä Checkout
++#### Link to the extension https://commercemarketplace.adobe.com/stripe-stripe-payments.html
++#### Implemented against hyva-themes/magento2-hyva-checkout-stripe with stripe/stripe-payments 4.6
++#### No patch required
++
++The Stripe compatibility module is not modified. Stripe renders the card fields inside the Payment Element
++iframe, so the card data is never available on the store page. The extension intercepts the Stripe SDK to
++read the card preview of the token which the checkout creates while it validates the payment, which happens
++before the order is placed.
++
++> [!IMPORTANT]
++> The card bin is not exposed to the browser by Stripe, so it cannot be collected on the pre auth flow
++
++- Payment data available:
++    - Bin: no
++    - Last4: yes
++    - Expiry date: yes
++    - Cardholder name: yes (the billing details name of the payment form)
+diff --git a/vendor/signifyd/module-connect/docs/PASS-PAYMENT-PRE-AUTH.md b/vendor/signifyd/module-connect/docs/PASS-PAYMENT-PRE-AUTH.md
+index 61e01ef..eaa8761 100644
+--- a/vendor/signifyd/module-connect/docs/PASS-PAYMENT-PRE-AUTH.md
++++ b/vendor/signifyd/module-connect/docs/PASS-PAYMENT-PRE-AUTH.md
+@@ -125,17 +125,14 @@ git apply pre-auth-authorizenet.patch
+     - Expiry date: no
+     - Cardholder name: no
+ 
+-### Braintree on Hyvä Checkout
+-#### Magento built in + hyva-themes/magento2-hyva-checkout-braintree Hyvä Compatibility module
+-#### Tested on Braintree module 4.6.1-p5
+-#### Braintree Hyvä compatibility module 1.1.0
++### Hyvä Checkout
+ 
+-- Call transaction API on failure: yes
+-- Payment data available:
+-    - Bin: yes
+-    - Last4: yes
+-    - Expiry date: yes
+-    - Cardholder name: no
++Hyvä Checkout does not submit the payment data through the payment information request, so the payment
++methods need a different integration to pass the payment data to the pre auth case creation.
++
++Adyen, Braintree, Stripe and Authorize.net ParadoxLabs are compatible with pre auth on Hyvä Checkout. The
++integration steps and the payment data available for each one of them are described on
++[Hyvä Checkout compatibility](HYVA-CHECKOUT-COMPATIBILITY.md).
+ 
+ ### OpenPay
+ #### Link to the extension https://github.com/open-pay/openpay-magento2-cards
+diff --git a/vendor/signifyd/module-connect/etc/di.xml b/vendor/signifyd/module-connect/etc/di.xml
+index a2fd055..1516bd1 100644
+--- a/vendor/signifyd/module-connect/etc/di.xml
++++ b/vendor/signifyd/module-connect/etc/di.xml
+@@ -82,6 +82,7 @@
+             <argument name="defaultCheckoutPaymentDetailsHandler" xsi:type="object">Signifyd\Connect\Model\PreAuth\Base\Handler</argument>
+             <argument name="checkoutPaymentDetailsHandlers" xsi:type="array">
+                 <item name="adyen_oneclick" xsi:type="object">Signifyd\Connect\Model\PreAuth\AdyenOneclick\Handler</item>
++                <item name="adyen_cc_vault" xsi:type="object">Signifyd\Connect\Model\PreAuth\AdyenOneclick\Handler</item>
+                 <item name="authnetcim" xsi:type="object">Signifyd\Connect\Model\PreAuth\Authnetcim\Handler</item>
+                 <item name="rootways_authorizecim_option" xsi:type="object">Signifyd\Connect\Model\PreAuth\RootwaysAuthorizeCim\Handler</item>
+             </argument>
+diff --git a/vendor/signifyd/module-connect/view/frontend/layout/hyva_checkout_components.xml b/vendor/signifyd/module-connect/view/frontend/layout/hyva_checkout_components.xml
+new file mode 100644
+index 0000000..2832d62
+--- /dev/null
++++ b/vendor/signifyd/module-connect/view/frontend/layout/hyva_checkout_components.xml
+@@ -0,0 +1,13 @@
++<?xml version="1.0"?>
++<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
++    <body>
++        <!-- Loaded with the payment method APIs, on page load, so the payment method scripts can be -->
++        <!-- intercepted before they register themselves on Hyva Checkout.                           -->
++        <referenceContainer name="hyva.checkout.api-v1.payment-methods">
++            <block name="signifyd.checkout.payment.api"
++                   before="-"
++                   template="Signifyd_Connect::checkout/payment/signifyd-api.phtml"/>
++        </referenceContainer>
++    </body>
++</page>
+diff --git a/vendor/signifyd/module-connect/view/frontend/templates/checkout/payment/signifyd-api.phtml b/vendor/signifyd/module-connect/view/frontend/templates/checkout/payment/signifyd-api.phtml
+new file mode 100644
+index 0000000..3e7a190
+--- /dev/null
++++ b/vendor/signifyd/module-connect/view/frontend/templates/checkout/payment/signifyd-api.phtml
+@@ -0,0 +1,644 @@
++<?php
++
++/** @var Escaper $escaper */
++/** @var ViewModelRegistry $viewModels */
++
++use Hyva\Theme\Model\ViewModelRegistry;
++use Hyva\Theme\ViewModel\HyvaCsp;
++use Magento\Framework\Escaper;
++use Magento\Framework\View\Element\Template;
++
++/** @var Template $block */
++/** @var HyvaCsp $hyvaCsp */
++$hyvaCsp = $viewModels->require(HyvaCsp::class);
++
++?>
++
++<script>
++    (function () {
++        'use strict';
++
++        var cardData = {};
++        var status = {sdk: false, registry: false, sent: false, stripe: [], braintree: []};
++        var activePaymentMethod = null;
++        var lastStored = null;
++        var sendQueue = Promise.resolve();
++
++        /**
++         * Exposed to allow checking what was collected while testing an integration.
++         */
++        window.signifydCheckout = {
++            getCardData: function () {
++                return cardData;
++            },
++            getStatus: function () {
++                return status;
++            }
++        };
++
++        var cardDataUrl = '<?= $escaper->escapeJs($block->getUrl('signifyd_connect/checkout/carddata')) ?>';
++
++        function getFormKey() {
++            if (window.hyva && typeof hyva.getFormKey === 'function') {
++                return hyva.getFormKey();
++            }
++
++            var match = document.cookie.match(/(?:^|;\s*)form_key=([^;]+)/);
++
++            return match ? decodeURIComponent(match[1]) : '';
++        }
++
++        /**
++         * Store the collected payment details on the quote payment, one request at a time.
++         */
++        function sendCardData(data) {
++            var paymentMethod = activePaymentMethod;
++
++            sendQueue = sendQueue.then(function () {
++                return storeCardData(data, paymentMethod);
++            });
++
++            return sendQueue;
++        }
++
++        async function storeCardData(data, paymentMethod) {
++            try {
++                var cardDetails = new FormData();
++                var hasDetails = false;
++
++                Object.keys(data || {}).forEach(function (key) {
++                    if (data[key]) {
++                        cardDetails.append(key, String(data[key]));
++                        hasDetails = true;
++                    }
++                });
++
++                if (hasDetails === false) {
++                    return;
++                }
++
++                // The fields are read while the shopper types, the same data is not stored twice
++                var signature = JSON.stringify(data) + paymentMethod;
++
++                if (signature === lastStored) {
++                    return;
++                }
++
++                if (paymentMethod) {
++                    cardDetails.append('paymentMethod', paymentMethod);
++                }
++
++                cardDetails.append('form_key', getFormKey());
++
++                var response = await fetch(cardDataUrl, {
++                    method: 'POST',
++                    body: cardDetails,
++                    credentials: 'same-origin',
++                    headers: {'X-Requested-With': 'XMLHttpRequest'}
++                });
++                var result = await response.json();
++
++                if (result.stored === true) {
++                    lastStored = signature;
++                    status.sent = true;
++                }
++            } catch (error) {
++                console.log('Unable to collect the payment details', error);
++            }
++        }
++
++        /**
++         * Payment methods which collect the data on their own scripts use this helper.
++         */
++        window.signifydSetCardData = sendCardData;
++
++        var sendTimer = null;
++
++        /**
++         * The data is stored while the shopper types, it does not depend on the order placement.
++         */
++        function scheduleSendCardData() {
++            if (sendTimer !== null) {
++                clearTimeout(sendTimer);
++            }
++
++            sendTimer = setTimeout(function () {
++                sendTimer = null;
++                sendCardData(cardData);
++            }, 600);
++        }
++
++        /**
++         * Card fields rendered on the store page, like the Accept.js form. The card number is never stored nor sent.
++         */
++        function collectCardField(field) {
++            if (!field || typeof field.value !== 'string' || !field.getAttribute) {
++                return;
++            }
++
++            var fieldType = (field.getAttribute('autocomplete') || '').toLowerCase();
++
++            if (fieldType === 'cc-number') {
++                var digits = field.value.replace(/\D/g, '');
++
++                if (digits.length >= 12) {
++                    cardData.cardBin = digits.substring(0, 6);
++                    cardData.cardLast4 = digits.substring(digits.length - 4);
++                    scheduleSendCardData();
++                }
++
++                return;
++            }
++
++            if (fieldType === 'cc-exp') {
++                var expiry = field.value.replace(/\s/g, '').split('/');
++
++                if (expiry.length !== 2) {
++                    return;
++                }
++
++                var month = parseInt(expiry[0], 10);
++                var year = expiry[1];
++
++                if (month >= 1 && month <= 12 && (year.length === 2 || year.length === 4)) {
++                    cardData.cardExpiryMonth = (month < 10 ? '0' : '') + month;
++                    cardData.cardExpiryYear = year.length === 2 ? '20' + year : year;
++                    scheduleSendCardData();
++                }
++
++                return;
++            }
++
++            if (fieldType === 'cc-name' && field.value.trim() !== '') {
++                cardData.holderName = field.value.trim();
++                scheduleSendCardData();
++            }
++        }
++
++        document.addEventListener('input', function (event) {
++            collectCardField(event.target);
++        }, true);
++
++        document.addEventListener('change', function (event) {
++            collectCardField(event.target);
++        }, true);
++
++        /**
++         * Switching the payment method must not carry the data collected for the previous one.
++         */
++        window.addEventListener('checkout:payment:method-activate', function (event) {
++            cardData = {};
++            lastStored = null;
++            activePaymentMethod = (event.detail && event.detail.method) || null;
++        });
++
++        /**
++         * Adyen only exposes the card data on the callbacks of the card component.
++         */
++        function wrapComponentConfiguration(configuration) {
++            if (!configuration || typeof configuration !== 'object') {
++                return configuration;
++            }
++
++            var originalOnBinValue = configuration.onBinValue;
++            var originalOnFieldValid = configuration.onFieldValid;
++            var originalOnChange = configuration.onChange;
++
++            configuration.onBinValue = function (binData) {
++                var binValue = binData && binData.binValue;
++
++                if (typeof binValue === 'string' && binValue.length >= 6) {
++                    cardData.cardBin = binValue.substring(0, 6);
++                    scheduleSendCardData();
++                }
++
++                if (typeof originalOnBinValue === 'function') {
++                    originalOnBinValue.apply(this, arguments);
++                }
++            };
++
++            configuration.onFieldValid = function (fieldData) {
++                if (fieldData && fieldData.fieldType === 'encryptedCardNumber' && fieldData.endDigits) {
++                    cardData.cardLast4 = fieldData.endDigits;
++                    scheduleSendCardData();
++                }
++
++                if (typeof originalOnFieldValid === 'function') {
++                    originalOnFieldValid.apply(this, arguments);
++                }
++            };
++
++            configuration.onChange = function (componentState) {
++                var paymentMethod = componentState && componentState.data && componentState.data.paymentMethod;
++                var holderName = (paymentMethod && paymentMethod.holderName)
++                    || (componentState && componentState.data && componentState.data.holderName);
++
++                if (holderName) {
++                    cardData.holderName = holderName;
++                    scheduleSendCardData();
++                }
++
++                if (typeof originalOnChange === 'function') {
++                    originalOnChange.apply(this, arguments);
++                }
++            };
++
++            return configuration;
++        }
++
++        function wrapCheckoutInstance(instance) {
++            if (!instance || typeof instance.create !== 'function' || instance.signifydWrapped) {
++                return instance;
++            }
++
++            instance.signifydWrapped = true;
++            var originalCreate = instance.create;
++
++            instance.create = function (type, configuration) {
++                return originalCreate.call(this, type, wrapComponentConfiguration(configuration));
++            };
++
++            return instance;
++        }
++
++        /**
++         * Adyen web SDK 6, used by hyva-themes/magento2-hyva-checkout-adyen-payment-v2
++         */
++        function wrapAdyenWeb(adyenWeb) {
++            if (!adyenWeb || adyenWeb.signifydWrapped) {
++                return adyenWeb;
++            }
++
++            adyenWeb.signifydWrapped = true;
++            status.sdk = true;
++
++            if (typeof adyenWeb.createComponent === 'function') {
++                var originalCreateComponent = adyenWeb.createComponent;
++
++                adyenWeb.createComponent = function (txVariant, checkout, configuration) {
++                    return originalCreateComponent.call(
++                        this,
++                        txVariant,
++                        checkout,
++                        wrapComponentConfiguration(configuration)
++                    );
++                };
++            }
++
++            if (typeof adyenWeb.AdyenCheckout === 'function') {
++                var originalAdyenCheckout = adyenWeb.AdyenCheckout;
++
++                adyenWeb.AdyenCheckout = async function () {
++                    return wrapCheckoutInstance(await originalAdyenCheckout.apply(this, arguments));
++                };
++            }
++
++            return adyenWeb;
++        }
++
++        /**
++         * Adyen web SDK 5, used by adyen/module-hyva-checkout
++         */
++        function wrapAdyenCheckout(adyenCheckout) {
++            if (typeof adyenCheckout !== 'function' || adyenCheckout.signifydWrapped) {
++                return adyenCheckout;
++            }
++
++            status.sdk = true;
++
++            var wrapped = async function () {
++                return wrapCheckoutInstance(await adyenCheckout.apply(this, arguments));
++            };
++
++            wrapped.signifydWrapped = true;
++
++            return wrapped;
++        }
++
++        function interceptGlobal(name, wrapper) {
++            try {
++                if (window[name]) {
++                    window[name] = wrapper(window[name]);
++                    return;
++                }
++
++                var stored;
++
++                Object.defineProperty(window, name, {
++                    configurable: true,
++                    get: function () {
++                        return stored;
++                    },
++                    set: function (value) {
++                        stored = wrapper(value);
++                    }
++                });
++            } catch (error) {
++                console.log('Unable to collect the payment details for ' + name, error);
++            }
++        }
++
++        interceptGlobal('AdyenWeb', wrapAdyenWeb);
++        interceptGlobal('AdyenCheckout', wrapAdyenCheckout);
++
++        /**
++         * Stripe only exposes the card data, without the bin, on the token created to validate the payment.
++         */
++        function collectStripeCardData(preview) {
++            if (!preview || typeof preview !== 'object') {
++                return false;
++            }
++
++            var card = preview.card;
++            var holderName = preview.billing_details && preview.billing_details.name;
++
++            if (card && typeof card === 'object') {
++                if (card.last4) {
++                    cardData.cardLast4 = String(card.last4);
++                }
++
++                var month = parseInt(card.exp_month, 10);
++
++                if (month >= 1 && month <= 12) {
++                    cardData.cardExpiryMonth = (month < 10 ? '0' : '') + month;
++                }
++
++                if (card.exp_year) {
++                    cardData.cardExpiryYear = String(card.exp_year);
++                }
++            }
++
++            if (typeof holderName === 'string' && holderName.trim() !== '') {
++                cardData.holderName = holderName.trim();
++            }
++
++            return true;
++        }
++
++        var wrappedStripeInstances = new WeakSet();
++
++        function wrapStripeTokenizer(instance, methodName, getCardPreview) {
++            var originalTokenizer = instance[methodName];
++
++            if (typeof originalTokenizer !== 'function') {
++                return;
++            }
++
++            var wrapped = async function () {
++                var result = await originalTokenizer.apply(this, arguments);
++
++                try {
++                    if (result && !result.error && collectStripeCardData(getCardPreview(result))) {
++                        // Tokenized while the checkout validates the payment, before the order is placed
++                        await sendCardData(cardData);
++                    }
++                } catch (error) {
++                    console.log('Unable to collect the payment details', error);
++                }
++
++                return result;
++            };
++
++            // The Stripe SDK exposes the methods through getters, the wrapper shadows them on the instance
++            Object.defineProperty(instance, methodName, {
++                configurable: true,
++                writable: true,
++                value: wrapped
++            });
++
++            status.stripe.push(methodName);
++        }
++
++        function wrapStripe(stripe) {
++            if (typeof stripe !== 'function' || stripe.signifydWrapped) {
++                return stripe;
++            }
++
++            status.sdk = true;
++
++            var wrapped = function () {
++                var instance = stripe.apply(this, arguments);
++
++                try {
++                    if (instance && typeof instance === 'object' && wrappedStripeInstances.has(instance) === false) {
++                        wrappedStripeInstances.add(instance);
++
++                        wrapStripeTokenizer(instance, 'createConfirmationToken', function (result) {
++                            return result.confirmationToken && result.confirmationToken.payment_method_preview;
++                        });
++
++                        wrapStripeTokenizer(instance, 'createPaymentMethod', function (result) {
++                            return result.paymentMethod;
++                        });
++                    }
++                } catch (error) {
++                    // Collecting the payment details must never break the checkout.
++                    console.log('Unable to collect the payment details', error);
++                }
++
++                return instance;
++            };
++
++            wrapped.signifydWrapped = true;
++
++            return wrapped;
++        }
++
++        interceptGlobal('Stripe', wrapStripe);
++
++        /**
++         * Braintree only exposes the card data on the payload of the tokenization.
++         */
++        function collectBraintreeCardData(payload) {
++            var details = payload && payload.details;
++
++            if (!details || typeof details !== 'object') {
++                return false;
++            }
++
++            if (details.bin) {
++                cardData.cardBin = String(details.bin).substring(0, 6);
++            }
++
++            if (details.lastFour) {
++                cardData.cardLast4 = String(details.lastFour);
++            }
++
++            var month = parseInt(details.expirationMonth, 10);
++
++            if (month >= 1 && month <= 12) {
++                cardData.cardExpiryMonth = (month < 10 ? '0' : '') + month;
++            }
++
++            if (details.expirationYear) {
++                var year = String(details.expirationYear);
++                cardData.cardExpiryYear = year.length === 2 ? '20' + year : year;
++            }
++
++            var holderName = details.cardholderName || details.holderName;
++
++            if (typeof holderName === 'string' && holderName.trim() !== '') {
++                cardData.holderName = holderName.trim();
++            }
++
++            return true;
++        }
++
++        /**
++         * The Braintree methods accept both a callback and a promise.
++         */
++        function callBraintreeMethod(originalMethod, context, args, onResult) {
++            var parameters = Array.prototype.slice.call(args);
++            var callback = typeof parameters[parameters.length - 1] === 'function'
++                ? parameters.pop()
++                : null;
++
++            var running = Promise.resolve(originalMethod.apply(context, parameters)).then(onResult);
++
++            if (callback === null) {
++                return running;
++            }
++
++            running.then(
++                function (result) {
++                    callback(null, result);
++                },
++                function (error) {
++                    callback(error);
++                }
++            );
++        }
++
++        function wrapBraintreeTokenize(instance) {
++            var originalTokenize = instance && instance.tokenize;
++
++            if (typeof originalTokenize !== 'function') {
++                return instance;
++            }
++
++            Object.defineProperty(instance, 'tokenize', {
++                configurable: true,
++                writable: true,
++                value: function () {
++                    return callBraintreeMethod(originalTokenize, this, arguments, async function (payload) {
++                        try {
++                            if (collectBraintreeCardData(payload)) {
++                                await sendCardData(cardData);
++                            }
++                        } catch (error) {
++                            console.log('Unable to collect the payment details', error);
++                        }
++
++                        return payload;
++                    });
++                }
++            });
++
++            status.braintree.push('tokenize');
++
++            return instance;
++        }
++
++        function wrapBraintreeHostedFields(hostedFields) {
++            if (!hostedFields || typeof hostedFields.create !== 'function' || hostedFields.signifydWrapped) {
++                return hostedFields;
++            }
++
++            hostedFields.signifydWrapped = true;
++            status.braintree.push('create');
++            var originalCreate = hostedFields.create;
++
++            hostedFields.create = function () {
++                return callBraintreeMethod(originalCreate, this, arguments, function (instance) {
++                    try {
++                        return wrapBraintreeTokenize(instance);
++                    } catch (error) {
++                        console.log('Unable to collect the payment details', error);
++
++                        return instance;
++                    }
++                });
++            };
++
++            return hostedFields;
++        }
++
++        /**
++         * The SDK namespace is assembled by one script per component.
++         */
++        function wrapBraintree(braintree) {
++            if (!braintree || typeof braintree !== 'object') {
++                return braintree;
++            }
++
++            try {
++                status.sdk = true;
++
++                if (braintree.hostedFields) {
++                    wrapBraintreeHostedFields(braintree.hostedFields);
++
++                    return braintree;
++                }
++
++                var storedHostedFields;
++
++                Object.defineProperty(braintree, 'hostedFields', {
++                    configurable: true,
++                    get: function () {
++                        return storedHostedFields;
++                    },
++                    set: function (value) {
++                        storedHostedFields = wrapBraintreeHostedFields(value);
++                    }
++                });
++            } catch (error) {
++                console.log('Unable to collect the payment details', error);
++            }
++
++            return braintree;
++        }
++
++        interceptGlobal('braintree', wrapBraintree);
++
++        /**
++         * Stores the collected data right before the order is placed, for the methods registered on Hyva Checkout.
++         */
++        function wrapRegisterMethod() {
++            if (!window.hyvaCheckout
++                || !hyvaCheckout.payment
++                || typeof hyvaCheckout.payment.registerMethod !== 'function'
++                || hyvaCheckout.payment.signifydWrapped) {
++                return false;
++            }
++
++            hyvaCheckout.payment.signifydWrapped = true;
++            status.registry = true;
++            var originalRegisterMethod = hyvaCheckout.payment.registerMethod;
++
++            hyvaCheckout.payment.registerMethod = function (definition) {
++                if (definition && definition.method && typeof definition.method.placeOrder === 'function') {
++                    var originalPlaceOrder = definition.method.placeOrder;
++
++                    definition.method.placeOrder = async function () {
++                        await sendCardData(cardData);
++
++                        return originalPlaceOrder.apply(this, arguments);
++                    };
++                }
++
++                return originalRegisterMethod.apply(this, arguments);
++            };
++
++            return true;
++        }
++
++        if (wrapRegisterMethod() === false) {
++            if (window.hyvaCheckout && hyvaCheckout.api && typeof hyvaCheckout.api.priority === 'function') {
++                hyvaCheckout.api.priority(wrapRegisterMethod);
++            }
++
++            window.addEventListener('magewire:available', wrapRegisterMethod, {once: true});
++        }
++    })();
++</script>
++<?php $hyvaCsp->registerInlineScript() ?>
+
