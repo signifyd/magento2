@@ -16,6 +16,9 @@ use Signifyd\Core\Api\SaleApiFactory;
 use Signifyd\Core\Api\WebhooksApiFactory;
 use Signifyd\Core\Api\WebhooksV2ApiFactory;
 use Signifyd\Connect\Model\Api\RecordReturnFactory;
+use Signifyd\Connect\Helper\PaymentStatusHelper;
+use Signifyd\Connect\Model\Api\CaseData\PreAuth\ProcessTransactionFactory;
+use Signifyd\Connect\Model\Api\GatewayStatusCode;
 
 class Client
 {
@@ -85,6 +88,16 @@ class Client
     public $webhooksV2ApiFactory;
 
     /**
+     * @var PaymentStatusHelper
+     */
+    public $paymentStatusHelper;
+
+    /**
+     * @var ProcessTransactionFactory
+     */
+    public $processTransactionFactory;
+
+    /**
      * Array of SignifydAPI, one for each store code
      *
      * @var array
@@ -107,6 +120,8 @@ class Client
      * @param CheckoutApiFactory $checkoutApiFactory
      * @param WebhooksApiFactory $webhooksApiFactory
      * @param WebhooksV2ApiFactory $webhooksV2ApiFactory
+     * @param PaymentStatusHelper $paymentStatusHelper
+     * @param ProcessTransactionFactory $processTransactionFactory
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -121,7 +136,9 @@ class Client
         SaleApiFactory $saleApiFactory,
         CheckoutApiFactory $checkoutApiFactory,
         WebhooksApiFactory $webhooksApiFactory,
-        WebhooksV2ApiFactory $webhooksV2ApiFactory
+        WebhooksV2ApiFactory $webhooksV2ApiFactory,
+        PaymentStatusHelper $paymentStatusHelper,
+        ProcessTransactionFactory $processTransactionFactory
     ) {
         $this->configHelper = $configHelper;
         $this->logger = $logger;
@@ -136,6 +153,8 @@ class Client
         $this->checkoutApiFactory = $checkoutApiFactory;
         $this->webhooksApiFactory = $webhooksApiFactory;
         $this->webhooksV2ApiFactory = $webhooksV2ApiFactory;
+        $this->paymentStatusHelper = $paymentStatusHelper;
+        $this->processTransactionFactory = $processTransactionFactory;
     }
 
     /**
@@ -253,6 +272,13 @@ class Client
             }
         }
 
+        // An order whose payment never concluded was never a purchase, so there is nothing to
+        // return. The final transaction is posted instead, so Signifyd learns why it never concluded
+        if ($this->paymentStatusHelper->isPaymentUnresolved($order)) {
+            $this->cancelUnauthorizedOrder($order);
+            return false;
+        }
+
         $this->logger->debug('Return case ' . $case->getData('order_id'), ['entity' => $order]);
         $recordReturnData = ($this->recordReturnFactory->create())($order);
 
@@ -296,6 +322,34 @@ class Client
             $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: failed to record a return");
 
             return false;
+        }
+    }
+
+    /**
+     * Handles the cancellation of an order whose payment never concluded.
+     *
+     * No return is recorded, the transaction is re-posted carrying the reason it never concluded.
+     *
+     * @param Order $order
+     * @return void
+     */
+    public function cancelUnauthorizedOrder(Order $order)
+    {
+        $statusCode = $this->paymentStatusHelper->getGatewayStatusCode($order) ?? GatewayStatusCode::CANCELLED;
+
+        $message = 'Record a return skipped: payment for order ' . $order->getIncrementId() .
+            ' never concluded, posting transaction as ' . $statusCode . ' instead';
+        $this->logger->info($message, ['entity' => $order]);
+
+        $this->paymentStatusHelper->recordGatewayStatus($order, $statusCode);
+
+        try {
+            ($this->processTransactionFactory->create())($order);
+        } catch (\Exception $e) {
+            $this->logger->error(
+                'Failed to post final transaction for order ' . $order->getIncrementId() . ': ' . $e->getMessage(),
+                ['entity' => $order]
+            );
         }
     }
 

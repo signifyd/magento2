@@ -9,8 +9,13 @@ use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Payment\Gateway\Command\CommandException;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Service\OrderService as MagentoOrderService;
 use Magento\Sales\Api\Data\OrderInterface;
+use Signifyd\Connect\Helper\PaymentStatusHelper;
+use Signifyd\Connect\Model\Api\CaseData\PreAuth\ProcessTransactionFactory;
+use Signifyd\Connect\Model\Api\GatewayStatusCode;
+use Signifyd\Connect\Model\Payment\Base\GatewayErrorCodeMapper;
 use Signifyd\Connect\Model\TransactionIntegration;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Core\Exceptions\ApiException;
@@ -29,17 +34,41 @@ class OrderService
     public $logger;
 
     /**
+     * @var GatewayErrorCodeMapper
+     */
+    public $gatewayErrorCodeMapper;
+
+    /**
+     * @var PaymentStatusHelper
+     */
+    public $paymentStatusHelper;
+
+    /**
+     * @var ProcessTransactionFactory
+     */
+    public $processTransactionFactory;
+
+    /**
      * OrderService constructor.
      *
      * @param TransactionIntegration $transactionIntegration
      * @param Logger $logger
+     * @param GatewayErrorCodeMapper $gatewayErrorCodeMapper
+     * @param PaymentStatusHelper $paymentStatusHelper
+     * @param ProcessTransactionFactory $processTransactionFactory
      */
     public function __construct(
         TransactionIntegration $transactionIntegration,
-        Logger $logger
+        Logger $logger,
+        GatewayErrorCodeMapper $gatewayErrorCodeMapper,
+        PaymentStatusHelper $paymentStatusHelper,
+        ProcessTransactionFactory $processTransactionFactory
     ) {
         $this->transactionIntegration = $transactionIntegration;
         $this->logger = $logger;
+        $this->gatewayErrorCodeMapper = $gatewayErrorCodeMapper;
+        $this->paymentStatusHelper = $paymentStatusHelper;
+        $this->processTransactionFactory = $processTransactionFactory;
     }
 
     /**
@@ -64,7 +93,7 @@ class OrderService
                 $declineCode = $e->getCode();
                 $errorMessage = $e->getMessage();
 
-                $this->handleTransactionError($declineCode, $errorMessage);
+                $this->handleTransactionError($declineCode, $errorMessage, null, $order);
             } catch (Exception|Error $error) {
                 $this->logger->warning(
                     'Failed to map command exception error details.',
@@ -78,10 +107,12 @@ class OrderService
             throw $e;
         } catch (Exception $e) {
             try {
-                $declineCode = $e->getError()?->decline_code;
-                $errorMessage = $e->getError()?->message;
+                $gatewayError = $this->getGatewayError($e);
+                $declineCode = $gatewayError['decline_code'] ?? null;
+                $errorCode = $gatewayError['code'] ?? null;
+                $errorMessage = $gatewayError['message'] ?? null;
 
-                $this->handleTransactionError($declineCode, $errorMessage);
+                $this->handleTransactionError($declineCode, $errorMessage, $errorCode, $order);
             } catch (Exception|Error $error) {
                 $this->logger->warning(
                     'Failed to map exception error details.',
@@ -97,10 +128,46 @@ class OrderService
     }
 
     /**
+     * Reads the gateway error details out of an exception raised while placing the order.
+     *
+     * Stripe throws its own exceptions, which carry a \Stripe\ErrorObject. Other gateways wrap the
+     * original error before rethrowing it, so the previous exception is inspected as well.
+     *
+     * @param \Throwable $exception
+     * @return array
+     */
+    public function getGatewayError(\Throwable $exception)
+    {
+        $candidates = [$exception, $exception->getPrevious()];
+
+        foreach ($candidates as $candidate) {
+            if (isset($candidate) === false || method_exists($candidate, 'getError') === false) {
+                continue;
+            }
+
+            $error = $candidate->getError();
+
+            if (isset($error) === false) {
+                continue;
+            }
+
+            return [
+                'decline_code' => $error->decline_code ?? null,
+                'code' => $error->code ?? null,
+                'message' => $error->message ?? $candidate->getMessage(),
+            ];
+        }
+
+        return [];
+    }
+
+    /**
      * Handle transaction error method.
      *
      * @param ?string $declineCode
      * @param ?string $errorMessage
+     * @param ?string $errorCode
+     * @param ?OrderInterface $order
      * @return void
      * @throws AlreadyExistsException
      * @throws ApiException
@@ -108,110 +175,23 @@ class OrderService
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */
-    public function handleTransactionError(?string $declineCode, ?string $errorMessage): void
-    {
-        if (isset($declineCode) === false) {
+    public function handleTransactionError(
+        ?string $declineCode,
+        ?string $errorMessage,
+        ?string $errorCode = null,
+        ?OrderInterface $order = null
+    ): void {
+        $signifydReason = ($this->gatewayErrorCodeMapper)($declineCode, $errorCode);
+
+        if (isset($signifydReason) === false) {
             return;
         }
 
-        switch ($declineCode) {
-            case 'call_issuer':
-                $signifydReason = 'CALL_ISSUER';
-                break;
-
-            case 'expired_card':
-                $signifydReason = 'EXPIRED_CARD';
-                break;
-
-            case 'fraudulent':
-                $signifydReason = 'FRAUD_DECLINE';
-                break;
-
-            case 'incorrect_number':
-                $signifydReason = 'INCORRECT_NUMBER';
-                break;
-
-            case 'incorrect_cvc':
-                $signifydReason = 'INCORRECT_CVC';
-                break;
-
-            case 'incorrect_zip':
-                $signifydReason = 'INCORRECT_ZIP';
-                break;
-
-            case 'insufficient_funds':
-                $signifydReason = 'INSUFFICIENT_FUNDS';
-                break;
-
-            case 'invalid_cvc':
-                $signifydReason = 'INVALID_CVC';
-                break;
-
-            case 'invalid_expiry_month':
-            case 'invalid_expiry_year':
-                $signifydReason = 'INVALID_EXPIRY_DATE';
-                break;
-
-            case 'invalid_number':
-                $signifydReason = 'INVALID_NUMBER';
-                break;
-
-            case 'pickup_card':
-                $signifydReason = 'PICK_UP_CARD';
-                break;
-
-            case 'processing_error':
-                $signifydReason = 'PROCESSING_ERROR';
-                break;
-
-            case 'restricted_card':
-                $signifydReason = 'RESTRICTED_CARD';
-                break;
-
-            case 'stolen_card':
-                $signifydReason = 'STOLEN_CARD';
-                break;
-
-            case 'testmode_decline':
-                $signifydReason = 'TEST_CARD_DECLINE';
-                break;
-
-            case 'authentication_required':
-            case 'approve_with_id':
-            case 'card_not_supported':
-            case 'card_velocity_exceeded':
-            case 'currency_not_supported':
-            case 'do_not_honor':
-            case 'do_not_try_again':
-            case 'duplicate_transaction':
-            case 'generic_decline':
-            case 'incorrect_pin':
-            case 'invalid_account':
-            case 'invalid_amount':
-            case 'invalid_pin':
-            case 'issuer_not_available':
-            case 'lost_card':
-            case 'merchant_blacklist':
-            case 'new_account_information_available':
-            case 'no_action_taken':
-            case 'not_permitted':
-            case 'offline_pin_required':
-            case 'online_or_offline_pin_required':
-            case 'pin_try_exceeded':
-            case 'reenter_transaction':
-            case 'revocation_of_all_authorizations':
-            case 'revocation_of_authorization':
-            case 'security_violation':
-            case 'service_not_allowed':
-            case 'stop_payment_order':
-            case 'transaction_not_allowed':
-            case 'try_again_later':
-            case 'withdrawal_count_limit_exceeded':
-                $signifydReason = 'CARD_DECLINED';
-                break;
-        }
-
-        if (isset($signifydReason) === false) {
+        // The gateway refused the payment of an order that had already been persisted, e.g. a
+        // redirect or 3DS flow that failed on a retry. That is an order level transaction, not a
+        // checkout one, so it goes through the same path used when the order gets canceled
+        if ($order instanceof Order && empty($order->getId()) === false) {
+            $this->handleOrderTransactionError($order, $signifydReason, $errorMessage);
             return;
         }
 
@@ -221,5 +201,33 @@ class OrderService
 
         $this->transactionIntegration->setGatewayRefusedReason($signifydReason);
         $this->transactionIntegration->submitToTransactionApi();
+    }
+
+    /**
+     * Records the gateway verdict on an already placed order and re-posts its transaction.
+     *
+     * @param Order $order
+     * @param string $signifydReason
+     * @param ?string $errorMessage
+     * @return void
+     */
+    public function handleOrderTransactionError(Order $order, string $signifydReason, ?string $errorMessage): void
+    {
+        if ($this->paymentStatusHelper->hasPaymentRegistered($order)) {
+            return;
+        }
+
+        $recorded = $this->paymentStatusHelper->recordGatewayStatus(
+            $order,
+            GatewayStatusCode::FAILURE,
+            $signifydReason,
+            $errorMessage
+        );
+
+        if ($recorded === false) {
+            return;
+        }
+
+        ($this->processTransactionFactory->create())($order);
     }
 }

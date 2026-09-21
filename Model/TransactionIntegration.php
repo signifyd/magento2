@@ -142,6 +142,15 @@ class TransactionIntegration
             return null;
         }
 
+        // An order was already placed for this quote, so its transaction is posted at order level,
+        // carrying the state of the payment. A checkout transaction here would overwrite it
+        if (empty($case->getData('order_id')) === false) {
+            $this->logger->info(
+                "Order {$case->getOrderIncrement()} already placed, checkout transaction will not be sent"
+            );
+            return null;
+        }
+
         $entryReasonField = $paymentMethod . "RefusedReason";
 
         if ($case->getEntries($entryReasonField) === $this->gatewayRefusedReason) {
