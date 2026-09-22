@@ -165,6 +165,11 @@ class PaymentStatusHelper
     /**
      * Whether an authorization or a capture was registered for this order.
      *
+     * A registration made while the payment loop is still open does not count: redirect/3DS
+     * gateways (e.g. Stripe) write the authorization amounts on the payment at placement,
+     * before the customer concludes the challenge, so those alone do not mean the payment
+     * actually went through.
+     *
      * @param Order $order
      * @return bool
      */
@@ -173,6 +178,10 @@ class PaymentStatusHelper
         $payment = $order->getPayment();
 
         if (isset($payment) === false) {
+            return false;
+        }
+
+        if ($this->isPaymentPending($order)) {
             return false;
         }
 
