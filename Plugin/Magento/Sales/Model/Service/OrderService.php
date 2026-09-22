@@ -93,7 +93,8 @@ class OrderService
                 $declineCode = $e->getCode();
                 $errorMessage = $e->getMessage();
 
-                $this->handleTransactionError($declineCode, $errorMessage, null, $order);
+                // A failed payment command is a refusal reported by the gateway itself
+                $this->handleTransactionError($declineCode, $errorMessage, null, $order, true);
             } catch (Exception|Error $error) {
                 $this->logger->warning(
                     'Failed to map command exception error details.',
@@ -110,9 +111,17 @@ class OrderService
                 $gatewayError = $this->getGatewayError($e);
                 $declineCode = $gatewayError['decline_code'] ?? null;
                 $errorCode = $gatewayError['code'] ?? null;
-                $errorMessage = $gatewayError['message'] ?? null;
+                $errorMessage = $gatewayError['message'] ?? $e->getMessage();
 
-                $this->handleTransactionError($declineCode, $errorMessage, $errorCode, $order);
+                // With no gateway error attached, the exception is an authorization process
+                // error, not a verdict given by the gateway
+                $this->handleTransactionError(
+                    $declineCode,
+                    $errorMessage,
+                    $errorCode,
+                    $order,
+                    empty($gatewayError) === false
+                );
             } catch (Exception|Error $error) {
                 $this->logger->warning(
                     'Failed to map exception error details.',
@@ -168,6 +177,7 @@ class OrderService
      * @param ?string $errorMessage
      * @param ?string $errorCode
      * @param ?OrderInterface $order
+     * @param bool $gatewayVerdict whether the failure was reported by the gateway itself
      * @return void
      * @throws AlreadyExistsException
      * @throws ApiException
@@ -179,19 +189,20 @@ class OrderService
         ?string $declineCode,
         ?string $errorMessage,
         ?string $errorCode = null,
-        ?OrderInterface $order = null
+        ?OrderInterface $order = null,
+        bool $gatewayVerdict = true
     ): void {
         $signifydReason = ($this->gatewayErrorCodeMapper)($declineCode, $errorCode);
 
-        if (isset($signifydReason) === false) {
+        // The payment of an order that had already been persisted failed, e.g. a redirect or
+        // 3DS flow that failed on a retry. That is an order level transaction, not a checkout
+        // one, so it goes through the same path used when the order gets canceled
+        if ($order instanceof Order && empty($order->getId()) === false) {
+            $this->handleOrderTransactionError($order, $signifydReason, $errorMessage, $gatewayVerdict);
             return;
         }
 
-        // The gateway refused the payment of an order that had already been persisted, e.g. a
-        // redirect or 3DS flow that failed on a retry. That is an order level transaction, not a
-        // checkout one, so it goes through the same path used when the order gets canceled
-        if ($order instanceof Order && empty($order->getId()) === false) {
-            $this->handleOrderTransactionError($order, $signifydReason, $errorMessage);
+        if (isset($signifydReason) === false) {
             return;
         }
 
@@ -206,20 +217,39 @@ class OrderService
     /**
      * Records the gateway verdict on an already placed order and re-posts its transaction.
      *
+     * FAILURE when the gateway refused the payment (with the enumerated reason when it could be
+     * mapped), ERROR when the authorization process errored out with no verdict from the gateway.
+     *
      * @param Order $order
-     * @param string $signifydReason
+     * @param ?string $signifydReason
      * @param ?string $errorMessage
+     * @param bool $gatewayVerdict
      * @return void
      */
-    public function handleOrderTransactionError(Order $order, string $signifydReason, ?string $errorMessage): void
-    {
+    public function handleOrderTransactionError(
+        Order $order,
+        ?string $signifydReason,
+        ?string $errorMessage,
+        bool $gatewayVerdict = true
+    ): void {
         if ($this->paymentStatusHelper->hasPaymentRegistered($order)) {
+            return;
+        }
+
+        if (isset($signifydReason) || $gatewayVerdict) {
+            $statusCode = GatewayStatusCode::FAILURE;
+        } elseif ($this->paymentStatusHelper->isPaymentUnresolved($order)) {
+            // Exception raised while the payment loop was still open: an authorization process
+            // error. Orders with no sign of an unfinished payment are left alone, the exception
+            // may have nothing to do with the payment
+            $statusCode = GatewayStatusCode::ERROR;
+        } else {
             return;
         }
 
         $recorded = $this->paymentStatusHelper->recordGatewayStatus(
             $order,
-            GatewayStatusCode::FAILURE,
+            $statusCode,
             $signifydReason,
             $errorMessage
         );

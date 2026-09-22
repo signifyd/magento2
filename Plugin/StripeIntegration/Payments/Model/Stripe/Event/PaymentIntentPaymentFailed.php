@@ -108,6 +108,13 @@ class PaymentIntentPaymentFailed
                     continue;
                 }
 
+                // The Stripe module cancels abandoned/expired payments while processing this
+                // same event, and the cancellation flow already posted the final transaction
+                // (CANCELLED). A verdict recorded here would overwrite it with FAILURE
+                if ($this->paymentStatusHelper->isOrderCanceled($order)) {
+                    continue;
+                }
+
                 $recorded = $this->paymentStatusHelper->recordGatewayStatus(
                     $order,
                     GatewayStatusCode::FAILURE,

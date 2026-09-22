@@ -36,6 +36,14 @@ class PaymentStatusHelper
     public const GATEWAY_STATUS_MESSAGE_ENTRY = 'gateway_status_message';
 
     /**
+     * Case entry holding the id of the order the recorded gateway status belongs to.
+     *
+     * The case outlives the order when the cart is recovered after a cancellation, so a verdict
+     * is only valid for the order it was recorded for.
+     */
+    public const GATEWAY_STATUS_ORDER_ID_ENTRY = 'gateway_status_order_id';
+
+    /**
      * Gateway verdicts that describe a payment that will never conclude. Once one of them is
      * recorded for an order it is kept until the payment actually succeeds.
      *
@@ -187,6 +195,9 @@ class PaymentStatusHelper
     /**
      * Last terminal status code reported by the gateway for this order, if any.
      *
+     * A verdict recorded for a previous order of the same case (the cart was recovered after a
+     * cancellation and a new order was placed) does not describe this one and is not returned.
+     *
      * @param Order $order
      * @return string|null
      */
@@ -198,28 +209,47 @@ class PaymentStatusHelper
             return null;
         }
 
+        $recordedOrderId = $this->getCaseEntry($order, self::GATEWAY_STATUS_ORDER_ID_ENTRY);
+
+        if ((string) $recordedOrderId !== (string) $order->getId()) {
+            return null;
+        }
+
         return $statusCode;
     }
 
     /**
      * Last error code reported by the gateway for this order, if any.
      *
+     * Only meaningful while the payment remains unresolved: once it concludes, the recorded
+     * error belongs to a past attempt and must not be attached to a successful transaction.
+     *
      * @param Order $order
      * @return string|null
      */
     public function getGatewayErrorCode(Order $order)
     {
+        if ($this->isPaymentUnresolved($order) === false || $this->getGatewayStatusCode($order) === null) {
+            return null;
+        }
+
         return $this->getCaseEntry($order, self::GATEWAY_ERROR_CODE_ENTRY);
     }
 
     /**
      * Last status message reported by the gateway for this order, if any.
      *
+     * Only meaningful while the payment remains unresolved, see getGatewayErrorCode().
+     *
      * @param Order $order
      * @return string|null
      */
     public function getGatewayStatusMessage(Order $order)
     {
+        if ($this->isPaymentUnresolved($order) === false || $this->getGatewayStatusCode($order) === null) {
+            return null;
+        }
+
         return $this->getCaseEntry($order, self::GATEWAY_STATUS_MESSAGE_ENTRY);
     }
 
@@ -248,13 +278,23 @@ class PaymentStatusHelper
             return false;
         }
 
-        if ($case->getEntries(self::GATEWAY_STATUS_CODE_ENTRY) === $statusCode &&
-            $case->getEntries(self::GATEWAY_ERROR_CODE_ENTRY) === $errorCode
+        $sameOrder = (string) $case->getEntries(self::GATEWAY_STATUS_ORDER_ID_ENTRY) === (string) $order->getId();
+
+        if ($sameOrder &&
+            $case->getEntries(self::GATEWAY_STATUS_CODE_ENTRY) === $statusCode &&
+            ($errorCode === null || $case->getEntries(self::GATEWAY_ERROR_CODE_ENTRY) === $errorCode)
         ) {
             return true;
         }
 
+        // Error details recorded for a previous order of this case do not describe this one
+        if ($sameOrder === false) {
+            $case->unsetEntries(self::GATEWAY_ERROR_CODE_ENTRY);
+            $case->unsetEntries(self::GATEWAY_STATUS_MESSAGE_ENTRY);
+        }
+
         $case->setEntries(self::GATEWAY_STATUS_CODE_ENTRY, $statusCode);
+        $case->setEntries(self::GATEWAY_STATUS_ORDER_ID_ENTRY, (string) $order->getId());
 
         if (isset($errorCode)) {
             $case->setEntries(self::GATEWAY_ERROR_CODE_ENTRY, $errorCode);
