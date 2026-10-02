@@ -351,12 +351,24 @@ class Purchase implements ObserverInterface
                 $case->setData('quote_id', $order->getQuoteId());
                 $case->setData('policy_name', Casedata::POST_AUTH);
 
-                if (is_object($this->storeManager)) {
-                    $isAdmin = ('adminhtml' === $this->appState->getAreaCode());
-                    $storeCode = $this->storeManager->getStore($isAdmin ? 'admin' : true)->getCode();
-                    if (!empty($storeCode)) {
-                        $case->setData('origin_store_code', $storeCode);
-                    }
+                $areaCode = $this->appState->getAreaCode();
+
+                if ('adminhtml' === $areaCode) {
+                    $storeCode = 'admin';
+                } else {
+                    $storeCode = $order->getStore()->getCode();
+                }
+
+                if (!empty($storeCode)) {
+                    $case->setData('origin_store_code', $storeCode);
+                }
+
+                if ($areaCode !== 'frontend' && $areaCode !== 'adminhtml') {
+                    $this->logger->debug(
+                        "Case for order {$order->getIncrementId()} created in area {$areaCode}," .
+                        " origin store code set to {$storeCode}",
+                        ['entity' => $order]
+                    );
                 }
 
                 $this->casedataResourceModel->save($case);
