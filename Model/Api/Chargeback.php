@@ -72,28 +72,33 @@ class Chargeback
         }
 
         $fulfillments = [];
+        $shipper = ($this->carrierFactory->create())($order->getShippingMethod());
+        $fulfillmentMethod = $this->shipments->getFulfillmentMethodMapping(
+            $order->getShippingMethod(),
+            ScopeInterface::SCOPE_STORES,
+            $order->getStoreId()
+        );
 
         foreach ($order->getShipmentsCollection() as $shipment) {
-            $trackingNumbers = $this->fulfillmentHelper->getTrackingNumbers($shipment);
+            /**
+             * A fulfillment carries a single tracking number, so a shipment holding more than one
+             * is reported as one fulfillment for each of them, instead of only the first one.
+             */
+            foreach ($this->fulfillmentHelper->getTrackingNumbers($shipment) as $trackingNumber) {
+                $fulfillment = [];
+                $fulfillment['shipper'] = $shipper;
+                $fulfillment['trackingNumber'] = $trackingNumber;
+                $fulfillment['fulfillmentMethod'] = $fulfillmentMethod;
 
-            if (empty($trackingNumbers)) {
-                continue;
+                $fulfillments[] = $fulfillment;
             }
-
-            $fulfillment = [];
-            $fulfillment['shipper'] = ($this->carrierFactory->create())($order->getShippingMethod());
-            $fulfillment['trackingNumber'] = $trackingNumbers[0];
-            $fulfillment['fulfillmentMethod'] = $this->shipments->getFulfillmentMethodMapping(
-                $order->getShippingMethod(),
-                ScopeInterface::SCOPE_STORES,
-                $order->getStoreId()
-            );
-
-            $fulfillments[] = $fulfillment;
         }
 
-        $chargeback['fulfillments'] = empty($fulfillments) ? null : $fulfillments;
-        
+        // The field is optional, so it is left out when the order has no tracking numbers at all
+        if (empty($fulfillments) === false) {
+            $chargeback['fulfillments'] = $fulfillments;
+        }
+
         return $chargeback;
     }
 }

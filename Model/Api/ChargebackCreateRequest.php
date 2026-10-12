@@ -8,6 +8,11 @@ use Magento\Sales\Model\Order;
 class ChargebackCreateRequest
 {
     /**
+     * Highest chargeback fee amount the API accepts, higher values fail validation.
+     */
+    public const MAX_CHARGEBACK_FEE_AMOUNT = 30;
+
+    /**
      * @var DateTimeFactory
      */
     public $dateTimeFactory;
@@ -41,7 +46,7 @@ class ChargebackCreateRequest
     public function __invoke(Order $order, array $chargebackData)
     {
         $dateTime = $this->dateTimeFactory->create();
-        $now = date('c', strtotime($dateTime->gmtDate()));
+        $now = gmdate('c', $dateTime->gmtTimestamp());
 
         $chargebackAmount   = $chargebackData['chargebackAmount'] ?? $order->getGrandTotal();
         $chargebackCurrency = $chargebackData['chargebackCurrency'] ?? $order->getOrderCurrencyCode();
@@ -60,14 +65,13 @@ class ChargebackCreateRequest
             $createRequest['reason'] = $this->makeReason($chargebackData);
         }
 
-        $createRequest['issuerReportedDate'] = (
-            isset($chargebackData['chargebackDate'])
-                ? date('c', strtotime($chargebackData['chargebackDate']))
-                : $now
-        );
+        $issuerReportedDate = $this->makeIso8601Date($chargebackData['chargebackDate'] ?? null);
+        $createRequest['issuerReportedDate'] = $issuerReportedDate ?? $now;
 
-        if (empty($chargebackData['disputeDeadlineAt']) === false) {
-            $createRequest['dueDate'] = (date('c', strtotime($chargebackData['disputeDeadlineAt'])));
+        $dueDate = $this->makeIso8601Date($chargebackData['disputeDeadlineAt'] ?? null);
+
+        if (isset($dueDate)) {
+            $createRequest['dueDate'] = $dueDate;
         }
 
         if (empty($chargebackData['paymentProcessor']) === false) {
@@ -82,17 +86,38 @@ class ChargebackCreateRequest
             $createRequest['chargebackStage'] = $chargebackData['chargebackStage'];
         }
 
-        if (empty($chargebackData['cardholderEmail']) === false) {
-            $createRequest['cardholderEmail'] = $chargebackData['cardholderEmail'];
+        /**
+         * Cardholder details are reported by the payment processor on the dispute evidence, which
+         * is filled in by the merchant and often comes empty. The order holds the same information
+         * and is always available, so it is used as the fallback.
+         */
+        $cardholderEmail = $chargebackData['cardholderEmail'] ?? null;
+
+        if (empty($cardholderEmail)) {
+            $cardholderEmail = $order->getCustomerEmail();
         }
 
-        if (empty($chargebackData['cardholderName']) === false) {
-            $createRequest['cardholderName'] = $chargebackData['cardholderName'];
+        if (empty($cardholderEmail) === false) {
+            $createRequest['cardholderEmail'] = $cardholderEmail;
+        }
+
+        $cardholderName = $chargebackData['cardholderName'] ?? null;
+
+        if (empty($cardholderName)) {
+            $cardholderName = $this->getOrderCardholderName($order);
+        }
+
+        if (empty($cardholderName) === false) {
+            $createRequest['cardholderName'] = $cardholderName;
         }
 
         if (empty($chargebackData['chargebackFeeAmount']) === false) {
             $chargebackFees = [];
-            $chargebackFees['amount'] = (float) $chargebackData['chargebackFeeAmount'];
+            // Capped because the API rejects the whole request when the fee is above the limit
+            $chargebackFees['amount'] = (float) min(
+                (float) $chargebackData['chargebackFeeAmount'],
+                self::MAX_CHARGEBACK_FEE_AMOUNT
+            );
             $chargebackFees['currencyCode'] =
                 (string) ($chargebackData['chargebackFeeCurrency'] ?? $chargebackCurrency);
 
@@ -105,6 +130,57 @@ class ChargebackCreateRequest
         }
 
         return $createRequest;
+    }
+
+    /**
+     * Convert a date to the UTC ISO 8601 format the API expects.
+     *
+     * Rendered with gmdate so that the reported offset always matches the instant being sent,
+     * no matter the time zone the store is running on.
+     *
+     * @param mixed $date
+     * @return string|null
+     */
+    public function makeIso8601Date($date)
+    {
+        if (empty($date)) {
+            return null;
+        }
+
+        $timestamp = is_numeric($date) ? (int) $date : strtotime((string) $date);
+
+        if (empty($timestamp)) {
+            return null;
+        }
+
+        return gmdate('c', $timestamp);
+    }
+
+    /**
+     * Get the cardholder name from the order.
+     *
+     * @param Order $order
+     * @return string|null
+     */
+    public function getOrderCardholderName(Order $order)
+    {
+        $billingAddress = $order->getBillingAddress();
+
+        if (isset($billingAddress)) {
+            $billingName = trim(
+                (string) $billingAddress->getFirstname() . ' ' . (string) $billingAddress->getLastname()
+            );
+
+            if (empty($billingName) === false) {
+                return $billingName;
+            }
+        }
+
+        $customerName = trim(
+            (string) $order->getCustomerFirstname() . ' ' . (string) $order->getCustomerLastname()
+        );
+
+        return empty($customerName) ? null : $customerName;
     }
 
     /**
