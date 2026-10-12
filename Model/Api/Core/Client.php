@@ -14,6 +14,7 @@ use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\PaymentVerificationFactory;
+use Signifyd\Connect\Model\Registry;
 use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Core\Api\CheckoutApiFactory;
 use Signifyd\Core\Api\SaleApiFactory;
@@ -28,6 +29,11 @@ class Client
      * @var CasedataRepositoryInterface
      */
     public $casedataRepository;
+
+    /**
+     * @var Registry
+     */
+    public $registry;
 
     /**
      * @var ConfigHelper
@@ -130,6 +136,7 @@ class Client
      * @param PaymentVerificationFactory $paymentVerificationFactory
      * @param ChargebackApiFactory $chargebackApiFactory
      * @param ChargebackFactory $chargebackFactory
+     * @param Registry $registry
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -147,7 +154,8 @@ class Client
         WebhooksV2ApiFactory $webhooksV2ApiFactory,
         PaymentVerificationFactory $paymentVerificationFactory,
         ChargebackApiFactory $chargebackApiFactory,
-        ChargebackFactory $chargebackFactory
+        ChargebackFactory $chargebackFactory,
+        Registry $registry
     ) {
         $this->configHelper = $configHelper;
         $this->logger = $logger;
@@ -165,6 +173,7 @@ class Client
         $this->paymentVerificationFactory = $paymentVerificationFactory;
         $this->chargebackApiFactory = $chargebackApiFactory;
         $this->chargebackFactory = $chargebackFactory;
+        $this->registry = $registry;
     }
 
     /**
@@ -290,7 +299,8 @@ class Client
 
                 if ($recordReturnChecker($order, $creditmemo)) {
                     $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: Record Return skipped");
-                    return false;
+
+                    return $this->createChargeback($order, $case);
                 }
             } catch (\Exception $e) {
                 // A failed check is not evidence of a chargeback: fall through and record the return as usual.
@@ -536,60 +546,66 @@ class Client
         return $this->signifydAPI[$apiId];
     }
 
-    public function createChargeback($order, array $chargebackData)
+    /**
+     * Create chargeback on signifyd method.
+     *
+     * Reported in place of the Record Return when the credit memo comes from a payment dispute.
+     * The payment integration handling the dispute notification leaves its data on the registry.
+     *
+     * @param Order $order
+     * @param \Signifyd\Connect\Model\Casedata $case
+     * @return bool
+     */
+    public function createChargeback(Order $order, $case)
     {
-        $chargebackPayload = ($this->chargebackFactory->create())($order, $chargebackData);
+        $chargebackData = $this->registry->getData(Registry::CHARGEBACK_DATA_REGISTRY_KEY);
+
+        if (is_array($chargebackData) === false || empty($chargebackData['chargebackId'])) {
+            $this->logger->error(
+                'Chargeback skipped: no chargeback data available for order ' . $order->getIncrementId(),
+                ['entity' => $order]
+            );
+
+            return false;
+        }
+
+        $this->logger->debug('Chargeback case ' . $case->getData('order_id'), ['entity' => $order]);
+        $chargeback = ($this->chargebackFactory->create())($order, $chargebackData);
 
         $this->logger->info(
-            "Chargeback: sending payload for order {$order->getIncrementId()}: " . json_encode($chargebackPayload),
+            "Call create a chargeback with: " . $this->jsonSerializer->serialize($chargeback),
             ['entity' => $order]
         );
 
-        /** @var \Signifyd\Connect\Model\Casedata $case */
-        $case = $this->casedataRepository->getByOrderId($order->getId());
-
-        if ($case->isEmpty() || empty($case->getCode())) {
-            $this->logger->debug(
-                'Chargeback skipped: case not found for order ' . $order->getIncrementId(),
-                ['entity' => $order]
-            );
-            return false;
-        }
-
-        $signifydCaseId = trim((string) $case->getCode());
-
-        try {
-            $response = $this->getSignifydChargebackApi($order)
-                ->createChargeback($signifydCaseId, $chargebackPayload);
-        } catch (\Exception $e) {
-            $this->logger->error(
-                "Chargeback: SDK request failed for order {$order->getIncrementId()}: " . $e->getMessage(),
-                ['entity' => $order]
-            );
-            return false;
-        }
-
-        if ($response === false) {
-            $this->logger->error(
-                "Chargeback: API call failed for order {$order->getIncrementId()}",
-                ['entity' => $order]
-            );
-            return false;
-        }
-
-        if ($response->isError()) {
-            $this->logger->error(
-                "Chargeback: API returned error for order {$order->getIncrementId()}: " . $response->getErrorMessage(),
-                ['entity' => $order]
-            );
-            return false;
-        }
+        $chargebackResponse = $this->getSignifydChargebackApi($order)
+            ->createChargeback($case->getCode(), $chargeback);
 
         $this->logger->info(
-            "Chargeback: successfully submitted for order {$order->getIncrementId()}",
+            "Create a chargeback response: " . $this->jsonSerializer->serialize($chargebackResponse),
             ['entity' => $order]
         );
 
-        return $response;
+        $signifydId = $chargebackResponse->getSignifydId();
+
+        // A non 2xx response only carries the raw API body on the messages, with no signifyd id
+        if (isset($signifydId) === false) {
+            $this->logger->error(
+                "Chargeback failed to be recorded: " . $this->jsonSerializer->serialize(
+                    $chargebackResponse->getMessages()
+                ),
+                ['entity' => $order]
+            );
+
+            return false;
+        }
+
+        $chargebackId = $chargebackData['chargebackId'];
+        $this->logger->debug("Chargeback {$chargebackId} recorded on case {$signifydId}", ['entity' => $order]);
+        $this->orderHelper->addCommentToStatusHistory(
+            $order,
+            "Signifyd: Chargeback recorded with id {$chargebackId}"
+        );
+
+        return true;
     }
 }
