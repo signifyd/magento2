@@ -136,7 +136,7 @@ class CasedataRepository implements CasedataRepositoryInterface
     /**
      * @inheritDoc
      */
-    public function getForUpdate(int|string $value, string $field = null, int $retry = 0): Casedata
+    public function getForUpdate(int|string $value, ?string $field = null, int $retry = 0): Casedata
     {
         $case = $this->casedataFactory->create();
         $this->loadForUpdate($case, $value, $field, $retry);
@@ -147,7 +147,7 @@ class CasedataRepository implements CasedataRepositoryInterface
     /**
      * @inheritDoc
      */
-    public function loadForUpdate(Casedata $case, int|string $value, string $field = null, int $retry = 0): AbstractDb
+    public function loadForUpdate(Casedata $case, int|string $value, ?string $field = null, int $retry = 0): AbstractDb
     {
         $this->casedataResource->beginTransaction();
         $this->casedataResource->loadForUpdate = true;

@@ -91,7 +91,7 @@ interface CasedataRepositoryInterface
      * @throws AlreadyExistsException
      * @throws StateException
      */
-    public function getForUpdate(int|string $value, string $field = null, int $retry = 0): Casedata;
+    public function getForUpdate(int|string $value, ?string $field = null, int $retry = 0): Casedata;
 
     /**
      * Load case and add lock to start_lock field (case will be automatically unlocked)
@@ -103,7 +103,7 @@ interface CasedataRepositoryInterface
      * @return AbstractDb
      * @throws StateException|AlreadyExistsException
      */
-    public function loadForUpdate(Casedata $case, int|string $value, string $field = null, int $retry = 0): AbstractDb;
+    public function loadForUpdate(Casedata $case, int|string $value, ?string $field = null, int $retry = 0): AbstractDb;
 
     /**
      * Check if case is locked
