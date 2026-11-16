@@ -3,19 +3,25 @@
 namespace Signifyd\Connect\Model\Api\Core;
 
 use Magento\Framework\Filesystem\DirectoryList;
+use Signifyd\Connect\Model\Api\ChargebackFactory;
 use Signifyd\Connect\Model\JsonSerializer;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Creditmemo;
 use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
 use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Helper\OrderHelper;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
+use Signifyd\Connect\Model\PaymentVerificationFactory;
+use Signifyd\Connect\Model\Registry;
+use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
 use Signifyd\Core\Api\CheckoutApiFactory;
 use Signifyd\Core\Api\SaleApiFactory;
 use Signifyd\Core\Api\WebhooksApiFactory;
 use Signifyd\Core\Api\WebhooksV2ApiFactory;
 use Signifyd\Connect\Model\Api\RecordReturnFactory;
+use Signifyd\Core\Api\ChargebackApiFactory;
 
 class Client
 {
@@ -23,6 +29,11 @@ class Client
      * @var CasedataRepositoryInterface
      */
     public $casedataRepository;
+
+    /**
+     * @var Registry
+     */
+    public $registry;
 
     /**
      * @var ConfigHelper
@@ -85,6 +96,21 @@ class Client
     public $webhooksV2ApiFactory;
 
     /**
+     * @var PaymentVerificationFactory
+     */
+    public $paymentVerificationFactory;
+
+    /**
+     * @var ChargebackApiFactory
+     */
+    public $chargebackApiFactory;
+
+    /**
+     * @var ChargebackFactory
+     */
+    public $chargebackFactory;
+
+    /**
      * Array of SignifydAPI, one for each store code
      *
      * @var array
@@ -107,6 +133,10 @@ class Client
      * @param CheckoutApiFactory $checkoutApiFactory
      * @param WebhooksApiFactory $webhooksApiFactory
      * @param WebhooksV2ApiFactory $webhooksV2ApiFactory
+     * @param PaymentVerificationFactory $paymentVerificationFactory
+     * @param ChargebackApiFactory $chargebackApiFactory
+     * @param ChargebackFactory $chargebackFactory
+     * @param Registry $registry
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -121,7 +151,11 @@ class Client
         SaleApiFactory $saleApiFactory,
         CheckoutApiFactory $checkoutApiFactory,
         WebhooksApiFactory $webhooksApiFactory,
-        WebhooksV2ApiFactory $webhooksV2ApiFactory
+        WebhooksV2ApiFactory $webhooksV2ApiFactory,
+        PaymentVerificationFactory $paymentVerificationFactory,
+        ChargebackApiFactory $chargebackApiFactory,
+        ChargebackFactory $chargebackFactory,
+        Registry $registry
     ) {
         $this->configHelper = $configHelper;
         $this->logger = $logger;
@@ -136,6 +170,10 @@ class Client
         $this->checkoutApiFactory = $checkoutApiFactory;
         $this->webhooksApiFactory = $webhooksApiFactory;
         $this->webhooksV2ApiFactory = $webhooksV2ApiFactory;
+        $this->paymentVerificationFactory = $paymentVerificationFactory;
+        $this->chargebackApiFactory = $chargebackApiFactory;
+        $this->chargebackFactory = $chargebackFactory;
+        $this->registry = $registry;
     }
 
     /**
@@ -219,9 +257,10 @@ class Client
      * Cancel case on signifyd method.
      *
      * @param Order $order
+     * @param Creditmemo $creditmemo
      * @return bool
      */
-    public function cancelCaseOnSignifyd(Order $order)
+    public function cancelCaseOnSignifyd(Order $order, ?Creditmemo $creditmemo = null)
     {
         $this->logger->debug("Trying to cancel case for order " . $order->getIncrementId(), ['entity' => $order]);
 
@@ -249,6 +288,31 @@ class Client
                 $message = 'Guarantee cancel skipped: order still have items not canceled or refunded';
                 $this->logger->debug($message, ['entity' => $order]);
                 return false;
+            }
+        }
+
+        if ($creditmemo instanceof Creditmemo) {
+            try {
+                $recordReturnChecker = $this->paymentVerificationFactory->createPaymentRecordReturnChecker(
+                    $order->getPayment()->getMethod()
+                );
+
+                if ($recordReturnChecker($order, $creditmemo)) {
+                    $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: Record Return skipped");
+
+                    return $this->createChargeback($order, $case);
+                }
+            } catch (\Exception $e) {
+                // A failed check is not evidence of a chargeback: fall through and record the return as usual.
+                $this->logger->error(
+                    'Record Return checker failed, falling back to default behavior: ' . $e->getMessage(),
+                    ['entity' => $order]
+                );
+            } catch (\Error $e) {
+                $this->logger->error(
+                    'Record Return checker failed, falling back to default behavior: ' . $e->getMessage(),
+                    ['entity' => $order]
+                );
             }
         }
 
@@ -426,6 +490,17 @@ class Client
     }
 
     /**
+     * Get signifyd chargeback api method.
+     *
+     * @param ?\Magento\Framework\Model\AbstractModel $entity
+     * @return \Signifyd\Core\Api\ChargebackApi
+     */
+    public function getSignifydChargebackApi(?\Magento\Framework\Model\AbstractModel $entity = null)
+    {
+        return $this->getSignifydApi('chargeback', $entity);
+    }
+
+    /**
      * Get signifyd api method.
      *
      * @param string $type
@@ -461,9 +536,76 @@ class Client
                 case 'webhookv2':
                     $this->signifydAPI[$apiId] = $this->webhooksV2ApiFactory->create(['args' => $args]);
                     break;
+
+                case 'chargeback':
+                    $this->signifydAPI[$apiId] = $this->chargebackApiFactory->create(['args' => $args]);
+                    break;
             }
         }
 
         return $this->signifydAPI[$apiId];
+    }
+
+    /**
+     * Create chargeback on signifyd method.
+     *
+     * Reported in place of the Record Return when the credit memo comes from a payment dispute.
+     * The payment integration handling the dispute notification leaves its data on the registry.
+     *
+     * @param Order $order
+     * @param \Signifyd\Connect\Model\Casedata $case
+     * @return bool
+     */
+    public function createChargeback(Order $order, $case)
+    {
+        $chargebackData = $this->registry->getData(Registry::CHARGEBACK_DATA_REGISTRY_KEY);
+
+        if (is_array($chargebackData) === false || empty($chargebackData['chargebackId'])) {
+            $this->logger->error(
+                'Chargeback skipped: no chargeback data available for order ' . $order->getIncrementId(),
+                ['entity' => $order]
+            );
+
+            return false;
+        }
+
+        $this->logger->debug('Chargeback case ' . $case->getData('order_id'), ['entity' => $order]);
+        $chargeback = ($this->chargebackFactory->create())($order, $chargebackData);
+
+        $this->logger->info(
+            "Call create a chargeback with: " . $this->jsonSerializer->serialize($chargeback),
+            ['entity' => $order]
+        );
+
+        $chargebackResponse = $this->getSignifydChargebackApi($order)
+            ->createChargeback($case->getCode(), $chargeback);
+
+        $this->logger->info(
+            "Create a chargeback response: " . $this->jsonSerializer->serialize($chargebackResponse),
+            ['entity' => $order]
+        );
+
+        $signifydId = $chargebackResponse->getSignifydId();
+
+        // A non 2xx response only carries the raw API body on the messages, with no signifyd id
+        if (isset($signifydId) === false) {
+            $this->logger->error(
+                "Chargeback failed to be recorded: " . $this->jsonSerializer->serialize(
+                    $chargebackResponse->getMessages()
+                ),
+                ['entity' => $order]
+            );
+
+            return false;
+        }
+
+        $chargebackId = $chargebackData['chargebackId'];
+        $this->logger->debug("Chargeback {$chargebackId} recorded on case {$signifydId}", ['entity' => $order]);
+        $this->orderHelper->addCommentToStatusHistory(
+            $order,
+            "Signifyd: Chargeback recorded with id {$chargebackId}"
+        );
+
+        return true;
     }
 }

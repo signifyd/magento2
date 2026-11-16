@@ -8,6 +8,7 @@ use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Signifyd\Connect\Helper\ConfigHelper;
 use Signifyd\Connect\Api\AsyncCheckerInterface;
+use Signifyd\Connect\Api\RecordReturnCheckerInterface;
 
 /**
  * Creates verification service for provided payment method, or PaymentVerificationInterface::class
@@ -71,6 +72,11 @@ class PaymentVerificationFactory
     public $asyncCheckDefaultAdapter;
 
     /**
+     * @var RecordReturnCheckerInterface
+     */
+    public $recordReturnCheckDefaultAdapter;
+
+    /**
      * @var ConfigHelper
      */
     public $configHelper;
@@ -89,6 +95,7 @@ class PaymentVerificationFactory
      * @param PaymentVerificationInterface $binDefaultAdapter
      * @param PaymentVerificationInterface $transactionIdDefaultAdapter
      * @param AsyncCheckerInterface $asyncCheckDefaultAdapter
+     * @param RecordReturnCheckerInterface $recordReturnCheckDefaultAdapter
      * @param ConfigHelper $configHelper
      */
     public function __construct(
@@ -103,6 +110,7 @@ class PaymentVerificationFactory
         PaymentVerificationInterface $binDefaultAdapter,
         PaymentVerificationInterface $transactionIdDefaultAdapter,
         AsyncCheckerInterface $asyncCheckDefaultAdapter,
+        RecordReturnCheckerInterface $recordReturnCheckDefaultAdapter,
         ConfigHelper $configHelper
     ) {
         $this->config = $config;
@@ -116,6 +124,7 @@ class PaymentVerificationFactory
         $this->binDefaultAdapter = $binDefaultAdapter;
         $this->transactionIdDefaultAdapter = $transactionIdDefaultAdapter;
         $this->asyncCheckDefaultAdapter = $asyncCheckDefaultAdapter;
+        $this->recordReturnCheckDefaultAdapter = $recordReturnCheckDefaultAdapter;
         $this->configHelper = $configHelper;
     }
 
@@ -246,6 +255,20 @@ class PaymentVerificationFactory
     }
 
     /**
+     * Creates instance of record return checker.
+     *
+     * Exception will be thrown if mapper does not implement RecordReturnCheckerInterface.
+     *
+     * @param string $paymentCode
+     * @return RecordReturnCheckerInterface
+     * @throws \Exception
+     */
+    public function createPaymentRecordReturnChecker($paymentCode)
+    {
+        return $this->create($this->recordReturnCheckDefaultAdapter, $paymentCode, 'signifyd_recordreturn_checker');
+    }
+
+    /**
      * Creates instance of PaymentVerificationInterface.
      *
      * Default implementation will be returned if payment method does not implement PaymentVerificationInterface.
@@ -254,12 +277,12 @@ class PaymentVerificationFactory
      * If not found will try for signifyd/payment/[method]/[config_key]
      * We keep looking on payment/[method]/[config_key] because this is the path on 3.5.1 and older versions
      *
-     * @param PaymentVerificationInterface|AsyncCheckerInterface $defaultAdapter
+     * @param PaymentVerificationInterface|AsyncCheckerInterface|RecordReturnCheckerInterface $defaultAdapter
      * @param string $paymentCode
      * @param string $configKey
      * @return PaymentVerificationInterface
      * @throws LocalizedException If payment verification instance
-     * @return PaymentVerificationInterface|AsyncCheckerInterface
+     * @return PaymentVerificationInterface|AsyncCheckerInterface|RecordReturnCheckerInterface
      * does not implement PaymentVerificationInterface.
      */
     private function create($defaultAdapter, $paymentCode, $configKey)
@@ -276,7 +299,10 @@ class PaymentVerificationFactory
         }
 
         $mapper = $this->objectManager->create($verificationClass);
-        if (!$mapper instanceof PaymentVerificationInterface && !$mapper instanceof AsyncCheckerInterface) {
+        if (!$mapper instanceof PaymentVerificationInterface
+            && !$mapper instanceof AsyncCheckerInterface
+            && !$mapper instanceof RecordReturnCheckerInterface
+        ) {
             throw new LocalizedException(
                 __(
                     'Signifyd_Connect: %1 must implement %2',

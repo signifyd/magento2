@@ -1,0 +1,468 @@
+diff --git a/vendor/signifyd/module-connect/Api/RecordReturnCheckerInterface.php b/vendor/signifyd/module-connect/Api/RecordReturnCheckerInterface.php
+new file mode 100644
+index 0000000..82031a0
+--- /dev/null
++++ b/vendor/signifyd/module-connect/Api/RecordReturnCheckerInterface.php
+@@ -0,0 +1,18 @@
++<?php
++
++namespace Signifyd\Connect\Api;
++
++use Magento\Sales\Model\Order;
++use Magento\Sales\Model\Order\Creditmemo;
++
++interface RecordReturnCheckerInterface
++{
++    /**
++     * Invoke method.
++     *
++     * @param Order $order
++     * @param Creditmemo $creditmemo
++     * @return bool
++     */
++    public function __invoke(Order $order, Creditmemo $creditmemo);
++}
+diff --git a/vendor/signifyd/module-connect/Model/Api/Core/Client.php b/vendor/signifyd/module-connect/Model/Api/Core/Client.php
+index b919839..473d35c 100644
+--- a/vendor/signifyd/module-connect/Model/Api/Core/Client.php
++++ b/vendor/signifyd/module-connect/Model/Api/Core/Client.php
+@@ -5,11 +5,13 @@ namespace Signifyd\Connect\Model\Api\Core;
+ use Magento\Framework\Filesystem\DirectoryList;
+ use Signifyd\Connect\Model\JsonSerializer;
+ use Magento\Sales\Model\Order;
++use Magento\Sales\Model\Order\Creditmemo;
+ use Magento\Sales\Model\ResourceModel\Order as OrderResourceModel;
+ use Signifyd\Connect\Helper\ConfigHelper;
+ use Signifyd\Connect\Helper\OrderHelper;
+ use Signifyd\Connect\Logger\Logger;
+ use Signifyd\Connect\Model\CasedataFactory;
++use Signifyd\Connect\Model\PaymentVerificationFactory;
+ use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
+ use Signifyd\Core\Api\CheckoutApiFactory;
+ use Signifyd\Core\Api\SaleApiFactory;
+@@ -84,6 +86,11 @@ class Client
+      */
+     public $webhooksV2ApiFactory;
+ 
++    /**
++     * @var PaymentVerificationFactory
++     */
++    public $paymentVerificationFactory;
++
+     /**
+      * Array of SignifydAPI, one for each store code
+      *
+@@ -107,6 +114,7 @@ class Client
+      * @param CheckoutApiFactory $checkoutApiFactory
+      * @param WebhooksApiFactory $webhooksApiFactory
+      * @param WebhooksV2ApiFactory $webhooksV2ApiFactory
++     * @param PaymentVerificationFactory $paymentVerificationFactory
+      */
+     public function __construct(
+         ConfigHelper $configHelper,
+@@ -121,7 +129,8 @@ class Client
+         SaleApiFactory $saleApiFactory,
+         CheckoutApiFactory $checkoutApiFactory,
+         WebhooksApiFactory $webhooksApiFactory,
+-        WebhooksV2ApiFactory $webhooksV2ApiFactory
++        WebhooksV2ApiFactory $webhooksV2ApiFactory,
++        PaymentVerificationFactory $paymentVerificationFactory
+     ) {
+         $this->configHelper = $configHelper;
+         $this->logger = $logger;
+@@ -136,6 +145,7 @@ class Client
+         $this->checkoutApiFactory = $checkoutApiFactory;
+         $this->webhooksApiFactory = $webhooksApiFactory;
+         $this->webhooksV2ApiFactory = $webhooksV2ApiFactory;
++        $this->paymentVerificationFactory = $paymentVerificationFactory;
+     }
+ 
+     /**
+@@ -219,9 +229,10 @@ class Client
+      * Cancel case on signifyd method.
+      *
+      * @param Order $order
++     * @param Creditmemo $creditmemo
+      * @return bool
+      */
+-    public function cancelCaseOnSignifyd(Order $order)
++    public function cancelCaseOnSignifyd(Order $order, ?Creditmemo $creditmemo = null)
+     {
+         $this->logger->debug("Trying to cancel case for order " . $order->getIncrementId(), ['entity' => $order]);
+ 
+@@ -253,6 +264,30 @@ class Client
+             }
+         }
+ 
++        if ($creditmemo instanceof Creditmemo) {
++            try {
++                $recordReturnChecker = $this->paymentVerificationFactory->createPaymentRecordReturnChecker(
++                    $order->getPayment()->getMethod()
++                );
++
++                if ($recordReturnChecker($order, $creditmemo)) {
++                    $this->orderHelper->addCommentToStatusHistory($order, "Signifyd: Record Return skipped");
++                    return false;
++                }
++            } catch (\Exception $e) {
++                // A failed check is not evidence of a chargeback: fall through and record the return as usual.
++                $this->logger->error(
++                    'Record Return checker failed, falling back to default behavior: ' . $e->getMessage(),
++                    ['entity' => $order]
++                );
++            } catch (\Error $e) {
++                $this->logger->error(
++                    'Record Return checker failed, falling back to default behavior: ' . $e->getMessage(),
++                    ['entity' => $order]
++                );
++            }
++        }
++
+         $this->logger->debug('Return case ' . $case->getData('order_id'), ['entity' => $order]);
+         $recordReturnData = ($this->recordReturnFactory->create())($order);
+ 
+diff --git a/vendor/signifyd/module-connect/Model/Payment/AdyenCc/RecordReturnChecker.php b/vendor/signifyd/module-connect/Model/Payment/AdyenCc/RecordReturnChecker.php
+new file mode 100644
+index 0000000..d1bf6e3
+--- /dev/null
++++ b/vendor/signifyd/module-connect/Model/Payment/AdyenCc/RecordReturnChecker.php
+@@ -0,0 +1,67 @@
++<?php
++
++namespace Signifyd\Connect\Model\Payment\AdyenCc;
++
++use Magento\Sales\Model\Order;
++use Magento\Sales\Model\Order\Creditmemo;
++use Signifyd\Connect\Logger\Logger;
++use Signifyd\Connect\Model\Registry;
++use Signifyd\Connect\Model\Payment\Base\RecordReturnChecker as BaseRecordReturnChecker;
++
++class RecordReturnChecker extends BaseRecordReturnChecker
++{
++    /**
++     * Adyen notification event codes that make the Adyen module create a credit memo on its own.
++     */
++    public const CHARGEBACK_EVENT_CODES = ['CHARGEBACK', 'SECOND_CHARGEBACK'];
++
++    /**
++     * @var Logger
++     */
++    public $logger;
++
++    /**
++     * @var Registry
++     */
++    public $registry;
++
++    /**
++     * RecordReturnChecker construct.
++     *
++     * @param Logger $logger
++     * @param Registry $registry
++     */
++    public function __construct(
++        Logger $logger,
++        Registry $registry
++    ) {
++        $this->logger = $logger;
++        $this->registry = $registry;
++    }
++
++    /**
++     * Invoke method.
++     *
++     * Suppresses the Record Return when the credit memo is being created during the processing
++     * of an Adyen chargeback webhook notification, instead of a manual/refund flow.
++     *
++     * @param Order $order
++     * @param Creditmemo $creditmemo
++     * @return bool
++     */
++    public function __invoke(Order $order, Creditmemo $creditmemo)
++    {
++        $eventCode = $this->registry->getData('signifyd_notification_event_code');
++        $isChargebackDriven = in_array($eventCode, self::CHARGEBACK_EVENT_CODES, true);
++
++        if ($isChargebackDriven) {
++            $this->logger->info(
++                'Record Return skipped: credit memo originated from Adyen chargeback for order '
++                    . $order->getIncrementId(),
++                ['entity' => $order]
++            );
++        }
++
++        return $isChargebackDriven;
++    }
++}
+diff --git a/vendor/signifyd/module-connect/Model/Payment/Base/RecordReturnChecker.php b/vendor/signifyd/module-connect/Model/Payment/Base/RecordReturnChecker.php
+new file mode 100644
+index 0000000..52b5acc
+--- /dev/null
++++ b/vendor/signifyd/module-connect/Model/Payment/Base/RecordReturnChecker.php
+@@ -0,0 +1,22 @@
++<?php
++
++namespace Signifyd\Connect\Model\Payment\Base;
++
++use Magento\Sales\Model\Order;
++use Magento\Sales\Model\Order\Creditmemo;
++use Signifyd\Connect\Api\RecordReturnCheckerInterface;
++
++class RecordReturnChecker implements RecordReturnCheckerInterface
++{
++    /**
++     * Invoke method.
++     *
++     * @param Order $order
++     * @param Creditmemo $creditmemo
++     * @return bool
++     */
++    public function __invoke(Order $order, Creditmemo $creditmemo)
++    {
++        return false;
++    }
++}
+diff --git a/vendor/signifyd/module-connect/Model/PaymentVerificationFactory.php b/vendor/signifyd/module-connect/Model/PaymentVerificationFactory.php
+index 695fdc9..9a9f4ac 100644
+--- a/vendor/signifyd/module-connect/Model/PaymentVerificationFactory.php
++++ b/vendor/signifyd/module-connect/Model/PaymentVerificationFactory.php
+@@ -8,6 +8,7 @@ use Magento\Payment\Gateway\ConfigInterface;
+ use Magento\Framework\Exception\LocalizedException;
+ use Signifyd\Connect\Helper\ConfigHelper;
+ use Signifyd\Connect\Api\AsyncCheckerInterface;
++use Signifyd\Connect\Api\RecordReturnCheckerInterface;
+ 
+ /**
+  * Creates verification service for provided payment method, or PaymentVerificationInterface::class
+@@ -70,6 +71,11 @@ class PaymentVerificationFactory
+      */
+     public $asyncCheckDefaultAdapter;
+ 
++    /**
++     * @var RecordReturnCheckerInterface
++     */
++    public $recordReturnCheckDefaultAdapter;
++
+     /**
+      * @var ConfigHelper
+      */
+@@ -89,6 +95,7 @@ class PaymentVerificationFactory
+      * @param PaymentVerificationInterface $binDefaultAdapter
+      * @param PaymentVerificationInterface $transactionIdDefaultAdapter
+      * @param AsyncCheckerInterface $asyncCheckDefaultAdapter
++     * @param RecordReturnCheckerInterface $recordReturnCheckDefaultAdapter
+      * @param ConfigHelper $configHelper
+      */
+     public function __construct(
+@@ -103,6 +110,7 @@ class PaymentVerificationFactory
+         PaymentVerificationInterface $binDefaultAdapter,
+         PaymentVerificationInterface $transactionIdDefaultAdapter,
+         AsyncCheckerInterface $asyncCheckDefaultAdapter,
++        RecordReturnCheckerInterface $recordReturnCheckDefaultAdapter,
+         ConfigHelper $configHelper
+     ) {
+         $this->config = $config;
+@@ -116,6 +124,7 @@ class PaymentVerificationFactory
+         $this->binDefaultAdapter = $binDefaultAdapter;
+         $this->transactionIdDefaultAdapter = $transactionIdDefaultAdapter;
+         $this->asyncCheckDefaultAdapter = $asyncCheckDefaultAdapter;
++        $this->recordReturnCheckDefaultAdapter = $recordReturnCheckDefaultAdapter;
+         $this->configHelper = $configHelper;
+     }
+ 
+@@ -245,6 +254,20 @@ class PaymentVerificationFactory
+         return $this->create($this->asyncCheckDefaultAdapter, $paymentCode, 'signifyd_async_checker');
+     }
+ 
++    /**
++     * Creates instance of record return checker.
++     *
++     * Exception will be thrown if mapper does not implement RecordReturnCheckerInterface.
++     *
++     * @param string $paymentCode
++     * @return RecordReturnCheckerInterface
++     * @throws \Exception
++     */
++    public function createPaymentRecordReturnChecker($paymentCode)
++    {
++        return $this->create($this->recordReturnCheckDefaultAdapter, $paymentCode, 'signifyd_recordreturn_checker');
++    }
++
+     /**
+      * Creates instance of PaymentVerificationInterface.
+      *
+@@ -254,12 +277,12 @@ class PaymentVerificationFactory
+      * If not found will try for signifyd/payment/[method]/[config_key]
+      * We keep looking on payment/[method]/[config_key] because this is the path on 3.5.1 and older versions
+      *
+-     * @param PaymentVerificationInterface|AsyncCheckerInterface $defaultAdapter
++     * @param PaymentVerificationInterface|AsyncCheckerInterface|RecordReturnCheckerInterface $defaultAdapter
+      * @param string $paymentCode
+      * @param string $configKey
+      * @return PaymentVerificationInterface
+      * @throws LocalizedException If payment verification instance
+-     * @return PaymentVerificationInterface|AsyncCheckerInterface
++     * @return PaymentVerificationInterface|AsyncCheckerInterface|RecordReturnCheckerInterface
+      * does not implement PaymentVerificationInterface.
+      */
+     private function create($defaultAdapter, $paymentCode, $configKey)
+@@ -276,7 +299,10 @@ class PaymentVerificationFactory
+         }
+ 
+         $mapper = $this->objectManager->create($verificationClass);
+-        if (!$mapper instanceof PaymentVerificationInterface && !$mapper instanceof AsyncCheckerInterface) {
++        if (!$mapper instanceof PaymentVerificationInterface
++            && !$mapper instanceof AsyncCheckerInterface
++            && !$mapper instanceof RecordReturnCheckerInterface
++        ) {
+             throw new LocalizedException(
+                 __(
+                     'Signifyd_Connect: %1 must implement %2',
+diff --git a/vendor/signifyd/module-connect/Observer/Cancel.php b/vendor/signifyd/module-connect/Observer/Cancel.php
+index 888cf20..bbc04cf 100644
+--- a/vendor/signifyd/module-connect/Observer/Cancel.php
++++ b/vendor/signifyd/module-connect/Observer/Cancel.php
+@@ -61,6 +61,9 @@ class Cancel implements ObserverInterface
+             /** @var Order $order */
+             $order = $observer->getEvent()->getOrder();
+ 
++            /** @var \Magento\Sales\Model\Order\Creditmemo $creditmemo */
++            $creditmemo = null;
++
+             if ($order instanceof Order == false) {
+                 /** @var \Magento\Sales\Model\Order\Payment $payment */
+                 $payment = $observer->getEvent()->getPayment();
+@@ -86,7 +89,7 @@ class Cancel implements ObserverInterface
+                 return;
+             }
+ 
+-            $this->client->cancelCaseOnSignifyd($order);
++            $this->client->cancelCaseOnSignifyd($order, $creditmemo);
+         } catch (\Exception $ex) {
+             $context = [];
+ 
+diff --git a/vendor/signifyd/module-connect/Plugin/Adyen/Payment/Helper/Webhook.php b/vendor/signifyd/module-connect/Plugin/Adyen/Payment/Helper/Webhook.php
+index 32e8852..9f59828 100644
+--- a/vendor/signifyd/module-connect/Plugin/Adyen/Payment/Helper/Webhook.php
++++ b/vendor/signifyd/module-connect/Plugin/Adyen/Payment/Helper/Webhook.php
+@@ -7,6 +7,7 @@ use Signifyd\Connect\Helper\OrderHelper;
+ use Signifyd\Connect\Logger\Logger;
+ use Magento\Framework\ObjectManagerInterface;
+ use Signifyd\Connect\Model\CasedataFactory;
++use Signifyd\Connect\Model\Registry;
+ use Signifyd\Connect\Model\ResourceModel\Casedata as CasedataResourceModel;
+ use Adyen\Payment\Helper\Webhook as AdyenWebhook;
+ 
+@@ -41,6 +42,11 @@ class Webhook
+      */
+     public $objectManagerInterface;
+ 
++    /**
++     * @var Registry
++     */
++    public $registry;
++
+     /**
+      * Webhook constructor.
+      *
+@@ -50,6 +56,7 @@ class Webhook
+      * @param OrderResourceModel $orderResourceModel
+      * @param OrderHelper $orderHelper
+      * @param ObjectManagerInterface $objectManagerInterface
++     * @param Registry $registry
+      */
+     public function __construct(
+         Logger $logger,
+@@ -57,7 +64,8 @@ class Webhook
+         CasedataResourceModel $casedataResourceModel,
+         OrderResourceModel $orderResourceModel,
+         OrderHelper $orderHelper,
+-        ObjectManagerInterface $objectManagerInterface
++        ObjectManagerInterface $objectManagerInterface,
++        Registry $registry
+     ) {
+         $this->logger = $logger;
+         $this->casedataFactory = $casedataFactory;
+@@ -65,6 +73,7 @@ class Webhook
+         $this->orderResourceModel = $orderResourceModel;
+         $this->orderHelper = $orderHelper;
+         $this->objectManagerInterface = $objectManagerInterface;
++        $this->registry = $registry;
+     }
+ 
+     /**
+@@ -77,6 +86,24 @@ class Webhook
+      * @throws \Magento\Framework\Exception\AlreadyExistsException
+      */
+     public function aroundProcessNotification(AdyenWebhook $subject, callable $proceed, $notification)
++    {
++        $this->registry->setData('signifyd_notification_event_code', $notification->getEventCode());
++
++        try {
++            return $this->doAroundProcessNotification($subject, $proceed, $notification);
++        } finally {
++            $this->registry->setData('signifyd_notification_event_code');
++        }
++    }
++
++    /**
++     * @param AdyenWebhook $subject
++     * @param callable $proceed
++     * @param mixed $notification
++     * @return mixed
++     * @throws \Magento\Framework\Exception\AlreadyExistsException
++     */
++    private function doAroundProcessNotification(AdyenWebhook $subject, callable $proceed, $notification)
+     {
+         if ($notification->getMerchantReference() === null) {
+             return $proceed($notification);
+diff --git a/vendor/signifyd/module-connect/etc/config.xml b/vendor/signifyd/module-connect/etc/config.xml
+index 49194b4..6f6ecce 100644
+--- a/vendor/signifyd/module-connect/etc/config.xml
++++ b/vendor/signifyd/module-connect/etc/config.xml
+@@ -51,10 +51,12 @@
+                     <signifyd_exp_year_adapter>Signifyd\Connect\Model\Payment\AdyenCc\ExpYearMapper</signifyd_exp_year_adapter>
+                     <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\AdyenCc\Last4Mapper</signifyd_last4_adapter>
+                     <signifyd_transaction_id_adapter>Signifyd\Connect\Model\Payment\AdyenCc\TransactionIdMapper</signifyd_transaction_id_adapter>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\AdyenCc\RecordReturnChecker</signifyd_recordreturn_checker>
+                 </adyen_cc>
+ 
+                 <adyen_hpp>
+                     <signifyd_payment_method_adapter>Signifyd\Connect\Model\Payment\AdyenHpp\PaymentMethodMapper</signifyd_payment_method_adapter>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\AdyenCc\RecordReturnChecker</signifyd_recordreturn_checker>
+                 </adyen_hpp>
+ 
+                 <adyen_pay_by_link>
+@@ -67,10 +69,20 @@
+                     <signifyd_last4_adapter>Signifyd\Connect\Model\Payment\AdyenCc\Last4Mapper</signifyd_last4_adapter>
+                     <signifyd_transaction_id_adapter>Signifyd\Connect\Model\Payment\AdyenCc\TransactionIdMapper</signifyd_transaction_id_adapter>
+                     <signifyd_payment_method_adapter>Signifyd\Connect\Model\Payment\AdyenPayByLink\PaymentMethodMapper</signifyd_payment_method_adapter>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\AdyenCc\RecordReturnChecker</signifyd_recordreturn_checker>
+                 </adyen_pay_by_link>
+ 
++                <adyen_oneclick>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\AdyenCc\RecordReturnChecker</signifyd_recordreturn_checker>
++                </adyen_oneclick>
++
++                <adyen_cc_vault>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\AdyenCc\RecordReturnChecker</signifyd_recordreturn_checker>
++                </adyen_cc_vault>
++
+                 <adyen_klarna_account>
+                     <signifyd_async_checker>Signifyd\Connect\Model\Payment\AdyenKlarnaAccount\AsyncChecker</signifyd_async_checker>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\AdyenCc\RecordReturnChecker</signifyd_recordreturn_checker>
+                 </adyen_klarna_account>
+ 
+                 <authorizenet_directpost>
+diff --git a/vendor/signifyd/module-connect/etc/di.xml b/vendor/signifyd/module-connect/etc/di.xml
+index 7be4da7..8e9f758 100644
+--- a/vendor/signifyd/module-connect/etc/di.xml
++++ b/vendor/signifyd/module-connect/etc/di.xml
+@@ -73,6 +73,7 @@
+             <argument name="binDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\BinMapper</argument>
+             <argument name="transactionIdDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\TransactionIdMapper</argument>
+             <argument name="asyncCheckDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\AsyncChecker</argument>
++            <argument name="recordReturnCheckDefaultAdapter" xsi:type="object">Signifyd\Connect\Model\Payment\Base\RecordReturnChecker</argument>
+         </arguments>
+     </type>
+ 
