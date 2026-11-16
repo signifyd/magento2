@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- Loaded with the payment method APIs, on page load, so the payment method scripts can be -->
+        <!-- intercepted before they register themselves on Hyva Checkout.                           -->
+        <referenceContainer name="hyva.checkout.api-v1.payment-methods">
+            <block name="signifyd.checkout.payment.api"
+                   before="-"
+                   template="Signifyd_Connect::checkout/payment/signifyd-api.phtml"/>
+        </referenceContainer>
+    </body>
+</page>

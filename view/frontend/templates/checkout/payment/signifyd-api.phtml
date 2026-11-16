@@ -1,0 +1,644 @@
+<?php
+
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\HyvaCsp;
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+/** @var Template $block */
+/** @var HyvaCsp $hyvaCsp */
+$hyvaCsp = $viewModels->require(HyvaCsp::class);
+
+?>
+
+<script>
+    (function () {
+        'use strict';
+
+        var cardData = {};
+        var status = {sdk: false, registry: false, sent: false, stripe: [], braintree: []};
+        var activePaymentMethod = null;
+        var lastStored = null;
+        var sendQueue = Promise.resolve();
+
+        /**
+         * Exposed to allow checking what was collected while testing an integration.
+         */
+        window.signifydCheckout = {
+            getCardData: function () {
+                return cardData;
+            },
+            getStatus: function () {
+                return status;
+            }
+        };
+
+        var cardDataUrl = '<?= $escaper->escapeJs($block->getUrl('signifyd_connect/checkout/carddata')) ?>';
+
+        function getFormKey() {
+            if (window.hyva && typeof hyva.getFormKey === 'function') {
+                return hyva.getFormKey();
+            }
+
+            var match = document.cookie.match(/(?:^|;\s*)form_key=([^;]+)/);
+
+            return match ? decodeURIComponent(match[1]) : '';
+        }
+
+        /**
+         * Store the collected payment details on the quote payment, one request at a time.
+         */
+        function sendCardData(data) {
+            var paymentMethod = activePaymentMethod;
+
+            sendQueue = sendQueue.then(function () {
+                return storeCardData(data, paymentMethod);
+            });
+
+            return sendQueue;
+        }
+
+        async function storeCardData(data, paymentMethod) {
+            try {
+                var cardDetails = new FormData();
+                var hasDetails = false;
+
+                Object.keys(data || {}).forEach(function (key) {
+                    if (data[key]) {
+                        cardDetails.append(key, String(data[key]));
+                        hasDetails = true;
+                    }
+                });
+
+                if (hasDetails === false) {
+                    return;
+                }
+
+                // The fields are read while the shopper types, the same data is not stored twice
+                var signature = JSON.stringify(data) + paymentMethod;
+
+                if (signature === lastStored) {
+                    return;
+                }
+
+                if (paymentMethod) {
+                    cardDetails.append('paymentMethod', paymentMethod);
+                }
+
+                cardDetails.append('form_key', getFormKey());
+
+                var response = await fetch(cardDataUrl, {
+                    method: 'POST',
+                    body: cardDetails,
+                    credentials: 'same-origin',
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                });
+                var result = await response.json();
+
+                if (result.stored === true) {
+                    lastStored = signature;
+                    status.sent = true;
+                }
+            } catch (error) {
+                console.log('Unable to collect the payment details', error);
+            }
+        }
+
+        /**
+         * Payment methods which collect the data on their own scripts use this helper.
+         */
+        window.signifydSetCardData = sendCardData;
+
+        var sendTimer = null;
+
+        /**
+         * The data is stored while the shopper types, it does not depend on the order placement.
+         */
+        function scheduleSendCardData() {
+            if (sendTimer !== null) {
+                clearTimeout(sendTimer);
+            }
+
+            sendTimer = setTimeout(function () {
+                sendTimer = null;
+                sendCardData(cardData);
+            }, 600);
+        }
+
+        /**
+         * Card fields rendered on the store page, like the Accept.js form. The card number is never stored nor sent.
+         */
+        function collectCardField(field) {
+            if (!field || typeof field.value !== 'string' || !field.getAttribute) {
+                return;
+            }
+
+            var fieldType = (field.getAttribute('autocomplete') || '').toLowerCase();
+
+            if (fieldType === 'cc-number') {
+                var digits = field.value.replace(/\D/g, '');
+
+                if (digits.length >= 12) {
+                    cardData.cardBin = digits.substring(0, 6);
+                    cardData.cardLast4 = digits.substring(digits.length - 4);
+                    scheduleSendCardData();
+                }
+
+                return;
+            }
+
+            if (fieldType === 'cc-exp') {
+                var expiry = field.value.replace(/\s/g, '').split('/');
+
+                if (expiry.length !== 2) {
+                    return;
+                }
+
+                var month = parseInt(expiry[0], 10);
+                var year = expiry[1];
+
+                if (month >= 1 && month <= 12 && (year.length === 2 || year.length === 4)) {
+                    cardData.cardExpiryMonth = (month < 10 ? '0' : '') + month;
+                    cardData.cardExpiryYear = year.length === 2 ? '20' + year : year;
+                    scheduleSendCardData();
+                }
+
+                return;
+            }
+
+            if (fieldType === 'cc-name' && field.value.trim() !== '') {
+                cardData.holderName = field.value.trim();
+                scheduleSendCardData();
+            }
+        }
+
+        document.addEventListener('input', function (event) {
+            collectCardField(event.target);
+        }, true);
+
+        document.addEventListener('change', function (event) {
+            collectCardField(event.target);
+        }, true);
+
+        /**
+         * Switching the payment method must not carry the data collected for the previous one.
+         */
+        window.addEventListener('checkout:payment:method-activate', function (event) {
+            cardData = {};
+            lastStored = null;
+            activePaymentMethod = (event.detail && event.detail.method) || null;
+        });
+
+        /**
+         * Adyen only exposes the card data on the callbacks of the card component.
+         */
+        function wrapComponentConfiguration(configuration) {
+            if (!configuration || typeof configuration !== 'object') {
+                return configuration;
+            }
+
+            var originalOnBinValue = configuration.onBinValue;
+            var originalOnFieldValid = configuration.onFieldValid;
+            var originalOnChange = configuration.onChange;
+
+            configuration.onBinValue = function (binData) {
+                var binValue = binData && binData.binValue;
+
+                if (typeof binValue === 'string' && binValue.length >= 6) {
+                    cardData.cardBin = binValue.substring(0, 6);
+                    scheduleSendCardData();
+                }
+
+                if (typeof originalOnBinValue === 'function') {
+                    originalOnBinValue.apply(this, arguments);
+                }
+            };
+
+            configuration.onFieldValid = function (fieldData) {
+                if (fieldData && fieldData.fieldType === 'encryptedCardNumber' && fieldData.endDigits) {
+                    cardData.cardLast4 = fieldData.endDigits;
+                    scheduleSendCardData();
+                }
+
+                if (typeof originalOnFieldValid === 'function') {
+                    originalOnFieldValid.apply(this, arguments);
+                }
+            };
+
+            configuration.onChange = function (componentState) {
+                var paymentMethod = componentState && componentState.data && componentState.data.paymentMethod;
+                var holderName = (paymentMethod && paymentMethod.holderName)
+                    || (componentState && componentState.data && componentState.data.holderName);
+
+                if (holderName) {
+                    cardData.holderName = holderName;
+                    scheduleSendCardData();
+                }
+
+                if (typeof originalOnChange === 'function') {
+                    originalOnChange.apply(this, arguments);
+                }
+            };
+
+            return configuration;
+        }
+
+        function wrapCheckoutInstance(instance) {
+            if (!instance || typeof instance.create !== 'function' || instance.signifydWrapped) {
+                return instance;
+            }
+
+            instance.signifydWrapped = true;
+            var originalCreate = instance.create;
+
+            instance.create = function (type, configuration) {
+                return originalCreate.call(this, type, wrapComponentConfiguration(configuration));
+            };
+
+            return instance;
+        }
+
+        /**
+         * Adyen web SDK 6, used by hyva-themes/magento2-hyva-checkout-adyen-payment-v2
+         */
+        function wrapAdyenWeb(adyenWeb) {
+            if (!adyenWeb || adyenWeb.signifydWrapped) {
+                return adyenWeb;
+            }
+
+            adyenWeb.signifydWrapped = true;
+            status.sdk = true;
+
+            if (typeof adyenWeb.createComponent === 'function') {
+                var originalCreateComponent = adyenWeb.createComponent;
+
+                adyenWeb.createComponent = function (txVariant, checkout, configuration) {
+                    return originalCreateComponent.call(
+                        this,
+                        txVariant,
+                        checkout,
+                        wrapComponentConfiguration(configuration)
+                    );
+                };
+            }
+
+            if (typeof adyenWeb.AdyenCheckout === 'function') {
+                var originalAdyenCheckout = adyenWeb.AdyenCheckout;
+
+                adyenWeb.AdyenCheckout = async function () {
+                    return wrapCheckoutInstance(await originalAdyenCheckout.apply(this, arguments));
+                };
+            }
+
+            return adyenWeb;
+        }
+
+        /**
+         * Adyen web SDK 5, used by adyen/module-hyva-checkout
+         */
+        function wrapAdyenCheckout(adyenCheckout) {
+            if (typeof adyenCheckout !== 'function' || adyenCheckout.signifydWrapped) {
+                return adyenCheckout;
+            }
+
+            status.sdk = true;
+
+            var wrapped = async function () {
+                return wrapCheckoutInstance(await adyenCheckout.apply(this, arguments));
+            };
+
+            wrapped.signifydWrapped = true;
+
+            return wrapped;
+        }
+
+        function interceptGlobal(name, wrapper) {
+            try {
+                if (window[name]) {
+                    window[name] = wrapper(window[name]);
+                    return;
+                }
+
+                var stored;
+
+                Object.defineProperty(window, name, {
+                    configurable: true,
+                    get: function () {
+                        return stored;
+                    },
+                    set: function (value) {
+                        stored = wrapper(value);
+                    }
+                });
+            } catch (error) {
+                console.log('Unable to collect the payment details for ' + name, error);
+            }
+        }
+
+        interceptGlobal('AdyenWeb', wrapAdyenWeb);
+        interceptGlobal('AdyenCheckout', wrapAdyenCheckout);
+
+        /**
+         * Stripe only exposes the card data, without the bin, on the token created to validate the payment.
+         */
+        function collectStripeCardData(preview) {
+            if (!preview || typeof preview !== 'object') {
+                return false;
+            }
+
+            var card = preview.card;
+            var holderName = preview.billing_details && preview.billing_details.name;
+
+            if (card && typeof card === 'object') {
+                if (card.last4) {
+                    cardData.cardLast4 = String(card.last4);
+                }
+
+                var month = parseInt(card.exp_month, 10);
+
+                if (month >= 1 && month <= 12) {
+                    cardData.cardExpiryMonth = (month < 10 ? '0' : '') + month;
+                }
+
+                if (card.exp_year) {
+                    cardData.cardExpiryYear = String(card.exp_year);
+                }
+            }
+
+            if (typeof holderName === 'string' && holderName.trim() !== '') {
+                cardData.holderName = holderName.trim();
+            }
+
+            return true;
+        }
+
+        var wrappedStripeInstances = new WeakSet();
+
+        function wrapStripeTokenizer(instance, methodName, getCardPreview) {
+            var originalTokenizer = instance[methodName];
+
+            if (typeof originalTokenizer !== 'function') {
+                return;
+            }
+
+            var wrapped = async function () {
+                var result = await originalTokenizer.apply(this, arguments);
+
+                try {
+                    if (result && !result.error && collectStripeCardData(getCardPreview(result))) {
+                        // Tokenized while the checkout validates the payment, before the order is placed
+                        await sendCardData(cardData);
+                    }
+                } catch (error) {
+                    console.log('Unable to collect the payment details', error);
+                }
+
+                return result;
+            };
+
+            // The Stripe SDK exposes the methods through getters, the wrapper shadows them on the instance
+            Object.defineProperty(instance, methodName, {
+                configurable: true,
+                writable: true,
+                value: wrapped
+            });
+
+            status.stripe.push(methodName);
+        }
+
+        function wrapStripe(stripe) {
+            if (typeof stripe !== 'function' || stripe.signifydWrapped) {
+                return stripe;
+            }
+
+            status.sdk = true;
+
+            var wrapped = function () {
+                var instance = stripe.apply(this, arguments);
+
+                try {
+                    if (instance && typeof instance === 'object' && wrappedStripeInstances.has(instance) === false) {
+                        wrappedStripeInstances.add(instance);
+
+                        wrapStripeTokenizer(instance, 'createConfirmationToken', function (result) {
+                            return result.confirmationToken && result.confirmationToken.payment_method_preview;
+                        });
+
+                        wrapStripeTokenizer(instance, 'createPaymentMethod', function (result) {
+                            return result.paymentMethod;
+                        });
+                    }
+                } catch (error) {
+                    // Collecting the payment details must never break the checkout.
+                    console.log('Unable to collect the payment details', error);
+                }
+
+                return instance;
+            };
+
+            wrapped.signifydWrapped = true;
+
+            return wrapped;
+        }
+
+        interceptGlobal('Stripe', wrapStripe);
+
+        /**
+         * Braintree only exposes the card data on the payload of the tokenization.
+         */
+        function collectBraintreeCardData(payload) {
+            var details = payload && payload.details;
+
+            if (!details || typeof details !== 'object') {
+                return false;
+            }
+
+            if (details.bin) {
+                cardData.cardBin = String(details.bin).substring(0, 6);
+            }
+
+            if (details.lastFour) {
+                cardData.cardLast4 = String(details.lastFour);
+            }
+
+            var month = parseInt(details.expirationMonth, 10);
+
+            if (month >= 1 && month <= 12) {
+                cardData.cardExpiryMonth = (month < 10 ? '0' : '') + month;
+            }
+
+            if (details.expirationYear) {
+                var year = String(details.expirationYear);
+                cardData.cardExpiryYear = year.length === 2 ? '20' + year : year;
+            }
+
+            var holderName = details.cardholderName || details.holderName;
+
+            if (typeof holderName === 'string' && holderName.trim() !== '') {
+                cardData.holderName = holderName.trim();
+            }
+
+            return true;
+        }
+
+        /**
+         * The Braintree methods accept both a callback and a promise.
+         */
+        function callBraintreeMethod(originalMethod, context, args, onResult) {
+            var parameters = Array.prototype.slice.call(args);
+            var callback = typeof parameters[parameters.length - 1] === 'function'
+                ? parameters.pop()
+                : null;
+
+            var running = Promise.resolve(originalMethod.apply(context, parameters)).then(onResult);
+
+            if (callback === null) {
+                return running;
+            }
+
+            running.then(
+                function (result) {
+                    callback(null, result);
+                },
+                function (error) {
+                    callback(error);
+                }
+            );
+        }
+
+        function wrapBraintreeTokenize(instance) {
+            var originalTokenize = instance && instance.tokenize;
+
+            if (typeof originalTokenize !== 'function') {
+                return instance;
+            }
+
+            Object.defineProperty(instance, 'tokenize', {
+                configurable: true,
+                writable: true,
+                value: function () {
+                    return callBraintreeMethod(originalTokenize, this, arguments, async function (payload) {
+                        try {
+                            if (collectBraintreeCardData(payload)) {
+                                await sendCardData(cardData);
+                            }
+                        } catch (error) {
+                            console.log('Unable to collect the payment details', error);
+                        }
+
+                        return payload;
+                    });
+                }
+            });
+
+            status.braintree.push('tokenize');
+
+            return instance;
+        }
+
+        function wrapBraintreeHostedFields(hostedFields) {
+            if (!hostedFields || typeof hostedFields.create !== 'function' || hostedFields.signifydWrapped) {
+                return hostedFields;
+            }
+
+            hostedFields.signifydWrapped = true;
+            status.braintree.push('create');
+            var originalCreate = hostedFields.create;
+
+            hostedFields.create = function () {
+                return callBraintreeMethod(originalCreate, this, arguments, function (instance) {
+                    try {
+                        return wrapBraintreeTokenize(instance);
+                    } catch (error) {
+                        console.log('Unable to collect the payment details', error);
+
+                        return instance;
+                    }
+                });
+            };
+
+            return hostedFields;
+        }
+
+        /**
+         * The SDK namespace is assembled by one script per component.
+         */
+        function wrapBraintree(braintree) {
+            if (!braintree || typeof braintree !== 'object') {
+                return braintree;
+            }
+
+            try {
+                status.sdk = true;
+
+                if (braintree.hostedFields) {
+                    wrapBraintreeHostedFields(braintree.hostedFields);
+
+                    return braintree;
+                }
+
+                var storedHostedFields;
+
+                Object.defineProperty(braintree, 'hostedFields', {
+                    configurable: true,
+                    get: function () {
+                        return storedHostedFields;
+                    },
+                    set: function (value) {
+                        storedHostedFields = wrapBraintreeHostedFields(value);
+                    }
+                });
+            } catch (error) {
+                console.log('Unable to collect the payment details', error);
+            }
+
+            return braintree;
+        }
+
+        interceptGlobal('braintree', wrapBraintree);
+
+        /**
+         * Stores the collected data right before the order is placed, for the methods registered on Hyva Checkout.
+         */
+        function wrapRegisterMethod() {
+            if (!window.hyvaCheckout
+                || !hyvaCheckout.payment
+                || typeof hyvaCheckout.payment.registerMethod !== 'function'
+                || hyvaCheckout.payment.signifydWrapped) {
+                return false;
+            }
+
+            hyvaCheckout.payment.signifydWrapped = true;
+            status.registry = true;
+            var originalRegisterMethod = hyvaCheckout.payment.registerMethod;
+
+            hyvaCheckout.payment.registerMethod = function (definition) {
+                if (definition && definition.method && typeof definition.method.placeOrder === 'function') {
+                    var originalPlaceOrder = definition.method.placeOrder;
+
+                    definition.method.placeOrder = async function () {
+                        await sendCardData(cardData);
+
+                        return originalPlaceOrder.apply(this, arguments);
+                    };
+                }
+
+                return originalRegisterMethod.apply(this, arguments);
+            };
+
+            return true;
+        }
+
+        if (wrapRegisterMethod() === false) {
+            if (window.hyvaCheckout && hyvaCheckout.api && typeof hyvaCheckout.api.priority === 'function') {
+                hyvaCheckout.api.priority(wrapRegisterMethod);
+            }
+
+            window.addEventListener('magewire:available', wrapRegisterMethod, {once: true});
+        }
+    })();
+</script>
+<?php $hyvaCsp->registerInlineScript() ?>

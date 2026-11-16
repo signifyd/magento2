@@ -24,6 +24,7 @@ use Magento\Framework\App\Request\Http as RequestHttp;
 use Signifyd\Connect\Model\JsonSerializer;
 use Signifyd\Connect\Model\Api\Recipient;
 use Signifyd\Connect\Model\PreAuth\CheckoutPaymentDetailsMapperInterface;
+use Signifyd\Connect\Model\PreAuth\QuotePaymentDetailsMapperInterface;
 use Signifyd\Connect\Model\Registry;
 
 class PreAuth implements ObserverInterface
@@ -253,11 +254,13 @@ class PreAuth implements ObserverInterface
             }
 
             $checkoutPaymentDetails = [];
+            $handler = $this->checkoutPaymentDetailsHandlers[$paymentMethod]
+                ?? $this->defaultCheckoutPaymentDetailsHandler;
 
             if (isset($dataArray['paymentMethod']) && isset($dataArray['paymentMethod']['additional_data'])) {
-                $handler = $this->checkoutPaymentDetailsHandlers[$paymentMethod]
-                    ?? $this->defaultCheckoutPaymentDetailsHandler;
                 $checkoutPaymentDetails = $handler->handle($checkoutPaymentDetails, $dataArray, $quote);
+            } elseif (isset($payment) && $handler instanceof QuotePaymentDetailsMapperInterface) {
+                $checkoutPaymentDetails = $handler->handleQuotePayment($checkoutPaymentDetails, $quote);
             } elseif (isset($payment)) {
                 $checkoutPaymentDetails['cardBin'] = $payment->getAdditionalInformation('cardBin');
                 $checkoutPaymentDetails['cardExpiryMonth'] = $payment->getAdditionalInformation('cardExpiryMonth');
@@ -317,12 +320,12 @@ class PreAuth implements ObserverInterface
                 try {
                     /** @var \Signifyd\Connect\Model\Casedata $existingCase */
                     $existingCase = $this->casedataFactory->create();
-                    $this->casedataResourceModel->load($existingCase, $quote->getId(), 'quote_id');
+                    $this->casedataRepository->loadForUpdate($existingCase, $quote->getId(), 'quote_id');
 
                     if ($existingCase->isEmpty() === false &&
                         $existingCase->getPolicyName() === Casedata::PRE_AUTH
                     ) {
-                        $this->casedataResourceModel->delete($existingCase);
+                        $this->casedataRepository->delete($existingCase);
                         $this->logger->info(
                             "Pre auth case deleted for quote {$quote->getId()} to allow post-auth fallback",
                             ['quote' => $quote]
