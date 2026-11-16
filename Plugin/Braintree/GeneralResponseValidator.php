@@ -191,24 +191,24 @@ class GeneralResponseValidator
                     ['entity' => $case]
                 );
 
-                $branitreeData = [];
-                $branitreeData['gatewayRefusedReason'] = $signifydReason;
-                $branitreeData['gateway'] = 'braintree';
+                $braintreeData = [];
+                $braintreeData['gatewayRefusedReason'] = $signifydReason;
+                $braintreeData['gateway'] = 'braintree';
 
                 $case->setEntries("BraintreeRefusedReason", $signifydReason);
                 $this->casedataRepository->save($case);
 
                 if (isset($responseBraintree['creditCard'])) {
-                    $branitreeData['cardLast4'] = $responseBraintree['creditCard']['last4'] ?? null;
-                    $branitreeData['cardExpiryMonth'] = $responseBraintree['creditCard']['expirationMonth'] ?? null;
-                    $branitreeData['cardExpiryYear'] = $responseBraintree['creditCard']['expirationYear'] ?? null;
+                    $braintreeData['cardLast4'] = $responseBraintree['creditCard']['last4'] ?? null;
+                    $braintreeData['cardExpiryMonth'] = $responseBraintree['creditCard']['expirationMonth'] ?? null;
+                    $braintreeData['cardExpiryYear'] = $responseBraintree['creditCard']['expirationYear'] ?? null;
                 }
 
                 $quote = $this->quoteFactory->create();
                 $this->quoteResourceModel->load($quote, $case->getQuoteId());
 
                 $makeTransactions = $this->transactionsFactory->create();
-                $transaction = $makeTransactions($quote, $case->getCheckoutToken(), $branitreeData);
+                $transaction = $makeTransactions($quote, $case->getCheckoutToken(), $braintreeData);
                 $this->client->postTransactionToSignifyd($transaction, $quote);
             }
         }
