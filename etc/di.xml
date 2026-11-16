@@ -163,6 +163,10 @@
         <plugin name="Signifyd_Connect_Plugin_Braintree_Controller_Webhook_FraudProtection" type="\Signifyd\Connect\Plugin\Braintree\Controller\Webhook\FraudProtection" />
     </type>
 
+    <type name="StripeIntegration\Payments\Model\Stripe\Event\PaymentIntentPaymentFailed">
+        <plugin name="Signifyd_Connect_Plugin_StripeIntegration_Payments_PaymentIntentPaymentFailed" type="\Signifyd\Connect\Plugin\StripeIntegration\Payments\Model\Stripe\Event\PaymentIntentPaymentFailed" />
+    </type>
+
     <type name="Adyen\Payment\Helper\Webhook">
         <plugin name="Signifyd_Connect_Plugin_Adyen_Payment_Helper_Webhook" type="\Signifyd\Connect\Plugin\Adyen\Payment\Helper\Webhook" />
     </type>

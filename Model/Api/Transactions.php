@@ -15,6 +15,7 @@ use Signifyd\Connect\Api\CasedataRepositoryInterface;
 use Signifyd\Connect\Logger\Logger;
 use Signifyd\Connect\Model\CasedataFactory;
 use Signifyd\Connect\Model\PaymentVerificationFactory;
+use Signifyd\Connect\Helper\PaymentStatusHelper;
 
 class Transactions
 {
@@ -119,6 +120,16 @@ class Transactions
     public $acquirerDetailsFactory;
 
     /**
+     * @var GatewayStatusCodeFactory
+     */
+    public $gatewayStatusCodeFactory;
+
+    /**
+     * @var PaymentStatusHelper
+     */
+    public $paymentStatusHelper;
+
+    /**
      * Transactions construct.
      *
      * @param CasedataRepositoryInterface $casedataRepository
@@ -141,6 +152,8 @@ class Transactions
      * @param PaypalProtectionEligibilityTypeFactory $paypalProtectionEligibilityTypeFactory
      * @param SourceAccountDetailsFactory $sourceAccountDetailsFactory
      * @param AcquirerDetailsFactory $acquirerDetailsFactory
+     * @param GatewayStatusCodeFactory $gatewayStatusCodeFactory
+     * @param PaymentStatusHelper $paymentStatusHelper
      */
     public function __construct(
         CasedataRepositoryInterface $casedataRepository,
@@ -162,7 +175,9 @@ class Transactions
         PaypalProtectionEligibilityFactory $paypalProtectionEligibilityFactory,
         PaypalProtectionEligibilityTypeFactory $paypalProtectionEligibilityTypeFactory,
         SourceAccountDetailsFactory $sourceAccountDetailsFactory,
-        AcquirerDetailsFactory $acquirerDetailsFactory
+        AcquirerDetailsFactory $acquirerDetailsFactory,
+        GatewayStatusCodeFactory $gatewayStatusCodeFactory,
+        PaymentStatusHelper $paymentStatusHelper
     ) {
         $this->casedataRepository = $casedataRepository;
         $this->transactionCollectionFactory = $transactionCollectionFactory;
@@ -184,6 +199,8 @@ class Transactions
         $this->paypalProtectionEligibilityTypeFactory = $paypalProtectionEligibilityTypeFactory;
         $this->sourceAccountDetailsFactory = $sourceAccountDetailsFactory;
         $this->acquirerDetailsFactory = $acquirerDetailsFactory;
+        $this->gatewayStatusCodeFactory = $gatewayStatusCodeFactory;
+        $this->paymentStatusHelper = $paymentStatusHelper;
     }
 
     /**
@@ -232,7 +249,7 @@ class Transactions
 
         $transactionId = $this->getTransactionId($order);
 
-        $lastTransaction['gatewayStatusCode'] = 'SUCCESS';
+        $lastTransaction['gatewayStatusCode'] = ($this->gatewayStatusCodeFactory->create())($order);
         $lastTransaction['paymentMethod'] = ($this->paymentMethodFactory->create())($order);
         $lastTransaction['checkoutPaymentDetails'] = ($this->checkoutPaymentDetailsFactory->create())($order);
         $lastTransaction['amount'] = (float) $order->getGrandTotal();
@@ -240,8 +257,10 @@ class Transactions
         $lastTransaction['gateway'] = $order->getPayment()->getMethod();
         $lastTransaction['sourceAccountDetails'] = ($this->sourceAccountDetailsFactory->create())();
         $lastTransaction['acquirerDetails'] = ($this->acquirerDetailsFactory->create())();
-        $lastTransaction['gatewayErrorCode'] = ($this->gatewayErrorCodeFactory->create())();
-        $lastTransaction['gatewayStatusMessage'] = ($this->gatewayStatusMessageFactory->create())();
+        $lastTransaction['gatewayErrorCode'] = ($this->gatewayErrorCodeFactory->create())() ??
+            $this->paymentStatusHelper->getGatewayErrorCode($order);
+        $lastTransaction['gatewayStatusMessage'] = ($this->gatewayStatusMessageFactory->create())() ??
+            $this->paymentStatusHelper->getGatewayStatusMessage($order);
         $lastTransaction['createdAt'] = date('c', strtotime($transactionDate));
         $lastTransaction['parentTransactionId'] = ($this->parentTransactionIdFactory->create())();
         $lastTransaction['verifications'] = ($this->verificationsFactory->create())($order);
