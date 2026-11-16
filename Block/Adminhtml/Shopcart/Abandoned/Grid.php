@@ -68,8 +68,8 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
      * @param \Magento\Backend\Block\Template\Context $context
      * @param \Magento\Backend\Helper\Data $backendHelper
      * @param \Magento\Reports\Model\ResourceModel\Quote\CollectionFactory $quotesFactory
-     * @param DecoderInterface $urlDecoder
-     * @param Parameters $parameters
+     * @param DecoderInterface|null $urlDecoder
+     * @param Parameters|null $parameters
      * @param array $data
      * @return void
      */
@@ -78,8 +78,8 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Shopcart\Abandoned\Grid
         \Magento\Backend\Block\Template\Context $context,
         \Magento\Backend\Helper\Data $backendHelper,
         \Magento\Reports\Model\ResourceModel\Quote\CollectionFactory $quotesFactory,
-        DecoderInterface $urlDecoder,
-        Parameters $parameters,
+        ?DecoderInterface $urlDecoder,
+        ?Parameters $parameters,
         array $data
     ) {
         if (version_compare($productMetadataInterface->getVersion(), '2.4.7') >= 0) {
