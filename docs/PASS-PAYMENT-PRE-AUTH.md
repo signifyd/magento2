@@ -83,7 +83,7 @@ git apply pre-auth-authorizenet.patch
 
 ### Adyen
 #### Link to the extension https://github.com/Adyen/adyen-magento2
-#### Tested on 9.20.7
+#### Tested on 10.10.3
 
 - Call transaction API on failure: yes
 - Payment data available:
@@ -94,7 +94,7 @@ git apply pre-auth-authorizenet.patch
 
 ### Adyen One-click (saved cards)
 #### Link to the extension https://github.com/Adyen/adyen-magento2
-#### Tested on 9.20.7
+#### Tested on 10.10.3
 
 - Call transaction API on failure: yes
 - Payment data available:
@@ -115,8 +115,8 @@ git apply pre-auth-authorizenet.patch
     - Cardholder name: no
 
 ### Braintree
-#### Magento built in
-#### Tested on 4.7.0
+#### Bundled with Magento 2.4.x (paypal/module-braintree)
+#### Tested on 4.7.0-p5
 
 - Call transaction API on failure: yes
 - Payment data available:
@@ -126,7 +126,7 @@ git apply pre-auth-authorizenet.patch
     - Cardholder name: no
 
 ### Braintree on Hyvä Checkout
-#### Magento built in + hyva-themes/magento2-hyva-checkout-braintree Hyvä Compatibility module
+#### Bundled with Magento 2.4.x (paypal/module-braintree) + hyva-themes/magento2-hyva-checkout-braintree Hyvä Compatibility module
 #### Tested on Braintree module 4.6.1-p5
 #### Braintree Hyvä compatibility module 1.1.0
 
@@ -150,7 +150,7 @@ git apply pre-auth-authorizenet.patch
 
 ### Stripe
 #### Link to the extension https://commercemarketplace.adobe.com/stripe-stripe-payments.html
-#### Tested on 4.5.4
+#### Tested on 4.6.5
 
 > [!IMPORTANT]
 > Stripe is compatible with pre auth, however it's not possible to collect any payment data
@@ -164,7 +164,7 @@ git apply pre-auth-authorizenet.patch
 
 ### Authorize.net ParadoxLabs
 #### Link to the extension https://commercemarketplace.adobe.com/paradoxlabs-authnetcim.html
-#### Tested on 5.1.4
+#### Tested on 6.0.0
 
 - Call transaction API on failure: yes
 - Payment data available:
