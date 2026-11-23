@@ -281,6 +281,86 @@ index 0000000..187a63e
 +        return gmdate('c', $timestamp);
 +    }
 +}
+diff --git a/Model/Payment/Braintree/RecordReturnChecker.php b/Model/Payment/Braintree/RecordReturnChecker.php
+new file mode 100644
+index 0000000..3fc902f
+--- /dev/null
++++ b/Model/Payment/Braintree/RecordReturnChecker.php
+@@ -0,0 +1,74 @@
++<?php
++
++namespace Signifyd\Connect\Model\Payment\Braintree;
++
++use Magento\Sales\Model\Order;
++use Magento\Sales\Model\Order\Creditmemo;
++use Signifyd\Connect\Logger\Logger;
++use Signifyd\Connect\Model\Payment\Base\RecordReturnChecker as BaseRecordReturnChecker;
++
++class RecordReturnChecker extends BaseRecordReturnChecker
++{
++    /**
++     * Order attribute the Braintree module keeps the status of the dispute on.
++     */
++    public const DISPUTE_STATUS_ATTRIBUTE = 'dispute_status';
++
++    /**
++     * Braintree dispute statuses where the dispute itself took the money, so the chargeback was
++     * already reported by Signifyd\Connect\Plugin\Braintree\Controller\Webhook\FraudProtection
++     * and a credit memo created afterwards is only bookkeeping. A won dispute is left out, as the
++     * merchant kept the money and a refund issued later is a return of its own.
++     */
++    public const CHARGEBACK_DISPUTE_STATUSES = [
++        'opened',
++        'disputed',
++        'accepted',
++        'auto accepted',
++        'lost',
++        'expired',
++    ];
++
++    /**
++     * @var Logger
++     */
++    public $logger;
++
++    /**
++     * RecordReturnChecker construct.
++     *
++     * @param Logger $logger
++     */
++    public function __construct(
++        Logger $logger
++    ) {
++        $this->logger = $logger;
++    }
++
++    /**
++     * Invoke method.
++     *
++     * Suppresses the Record Return of a disputed order. Braintree creates no credit memo for a
++     * dispute, as done for Adyen and Stripe, so the credit memo reaching here is a manual one
++     * created after the chargeback was reported, and the return it would record never happened.
++     *
++     * @param Order $order
++     * @param Creditmemo $creditmemo
++     * @return bool
++     */
++    public function __invoke(Order $order, Creditmemo $creditmemo)
++    {
++        $disputeStatus = strtolower(trim((string) $order->getData(self::DISPUTE_STATUS_ATTRIBUTE)));
++        $isDisputeDriven = in_array($disputeStatus, self::CHARGEBACK_DISPUTE_STATUSES, true);
++
++        if ($isDisputeDriven) {
++            $this->logger->info(
++                'Record Return skipped: order ' . $order->getIncrementId()
++                    . ' has a Braintree dispute with status ' . $disputeStatus,
++                ['entity' => $order]
++            );
++        }
++
++        return $isDisputeDriven;
++    }
++}
 diff --git a/Plugin/Braintree/Controller/Webhook/FraudProtection.php b/Plugin/Braintree/Controller/Webhook/FraudProtection.php
 new file mode 100644
 index 0000000..9ad5b30
@@ -546,11 +626,77 @@ index 0000000..9ad5b30
 +        }
 +    }
 +}
+diff --git a/etc/config.xml b/etc/config.xml
+index f2b2571..9fc103f 100644
+--- a/etc/config.xml
++++ b/etc/config.xml
+@@ -103,8 +103,61 @@
+                 <braintree>
+                     <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Braintree\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
+                     <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Braintree\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
+                 </braintree>
+ 
++                <braintree_cc_vault>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
++                </braintree_cc_vault>
++
++                <braintree_paypal>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
++                </braintree_paypal>
++
++                <braintree_paypal_vault>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
++                </braintree_paypal_vault>
++
++                <braintree_paypal_credit>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
++                </braintree_paypal_credit>
++
++                <braintree_applepay>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
++                </braintree_applepay>
++
++                <braintree_applepay_vault>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
++                </braintree_applepay_vault>
++
++                <braintree_googlepay>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
++                </braintree_googlepay>
++
++                <braintree_googlepay_vault>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
++                </braintree_googlepay_vault>
++
++                <braintree_venmo>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
++                </braintree_venmo>
++
++                <braintree_venmo_vault>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
++                </braintree_venmo_vault>
++
++                <braintree_ach_direct_debit>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
++                </braintree_ach_direct_debit>
++
++                <braintree_ach_direct_debit_vault>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
++                </braintree_ach_direct_debit_vault>
++
++                <braintree_local_payment>
++                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
++                </braintree_local_payment>
++
+                 <cybersource>
+                     <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Cybersource\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
+                     <signifyd_bin_adapter>Signifyd\Connect\Model\Payment\Cybersource\BinMapper</signifyd_bin_adapter>
 diff --git a/etc/di.xml b/etc/di.xml
-index 937aab6..88bfe49 100644
+index a2fd055..37f1305 100644
 --- a/etc/di.xml
 +++ b/etc/di.xml
-@@ -158,6 +158,10 @@
+@@ -153,6 +153,10 @@
          <plugin name="Signifyd_Connect_Plugin_StripeIntegration_Payments_ChargeSucceeded" type="\Signifyd\Connect\Plugin\StripeIntegration\Payments\Model\Stripe\Event\ChargeSucceeded" />
      </type>
  
