@@ -103,7 +103,60 @@
                 <braintree>
                     <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Braintree\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
                     <signifyd_cvv_ems_adapter>Signifyd\Connect\Model\Payment\Braintree\CvvEmsCodeMapper</signifyd_cvv_ems_adapter>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
                 </braintree>
+
+                <braintree_cc_vault>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
+                </braintree_cc_vault>
+
+                <braintree_paypal>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
+                </braintree_paypal>
+
+                <braintree_paypal_vault>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
+                </braintree_paypal_vault>
+
+                <braintree_paypal_credit>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
+                </braintree_paypal_credit>
+
+                <braintree_applepay>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
+                </braintree_applepay>
+
+                <braintree_applepay_vault>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
+                </braintree_applepay_vault>
+
+                <braintree_googlepay>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
+                </braintree_googlepay>
+
+                <braintree_googlepay_vault>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
+                </braintree_googlepay_vault>
+
+                <braintree_venmo>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
+                </braintree_venmo>
+
+                <braintree_venmo_vault>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
+                </braintree_venmo_vault>
+
+                <braintree_ach_direct_debit>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
+                </braintree_ach_direct_debit>
+
+                <braintree_ach_direct_debit_vault>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
+                </braintree_ach_direct_debit_vault>
+
+                <braintree_local_payment>
+                    <signifyd_recordreturn_checker>Signifyd\Connect\Model\Payment\Braintree\RecordReturnChecker</signifyd_recordreturn_checker>
+                </braintree_local_payment>
 
                 <cybersource>
                     <signifyd_avs_ems_adapter>Signifyd\Connect\Model\Payment\Cybersource\AvsEmsCodeMapper</signifyd_avs_ems_adapter>
