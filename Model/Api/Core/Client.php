@@ -615,7 +615,13 @@ class Client
         $chargebackData = $this->registry->getData(Registry::CHARGEBACK_DATA_REGISTRY_KEY);
 
         if (is_array($chargebackData) === false || empty($chargebackData['chargebackId'])) {
-            $this->logger->error(
+            /**
+             * Expected whenever the payment integration reports the chargeback on its own, as done
+             * for Braintree, where the dispute notification creates no credit memo and the
+             * chargeback is already recorded by the time a manual credit memo reaches here. The
+             * return was still correctly suppressed, so this is traceability, not a failure.
+             */
+            $this->logger->debug(
                 'Chargeback skipped: no chargeback data available for order ' . $order->getIncrementId(),
                 ['entity' => $order]
             );

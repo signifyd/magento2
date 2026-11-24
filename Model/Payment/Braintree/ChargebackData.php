@@ -80,6 +80,10 @@ class ChargebackData
             $dispute = $this->getDispute($notification);
 
             if ($dispute === null) {
+                $this->logger->debug(
+                    'Braintree webhook ignored: no dispute to report for kind ' . $this->getKind($notification)
+                );
+
                 return null;
             }
 
@@ -117,6 +121,22 @@ class ChargebackData
         }
 
         return $notification->dispute;
+    }
+
+    /**
+     * Get the kind of the notification, so the webhooks no chargeback is created for are still
+     * traceable on the log. Covers the check webhook the Braintree panel sends to validate the URL.
+     *
+     * @param \Braintree\WebhookNotification $notification
+     * @return string
+     */
+    public function getKind($notification)
+    {
+        if (is_object($notification) === false || empty($notification->kind)) {
+            return 'unknown';
+        }
+
+        return (string) $notification->kind;
     }
 
     /**
